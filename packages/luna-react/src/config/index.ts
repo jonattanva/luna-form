@@ -1,10 +1,16 @@
-import { fetcher, type DataSource, type Environment } from '@luna-form/core'
+import { fetcher, type Environment, type Protocol } from '@luna-form/core'
 import type { Config, InputConfig } from '../type'
 
 export function defineConfig<T extends React.ElementType>(
   options: Readonly<{
     env?: Environment
-    fetcher?: <T>(dataSource: DataSource) => Promise<T>
+    fetcher?: {
+      remotePatterns?: Array<{
+        hostname?: string
+        port?: number
+        protocol?: Protocol
+      }>
+    }
     inputs: Array<InputConfig<T>>
     style?: {
       compact?: boolean
@@ -18,7 +24,10 @@ export function defineConfig<T extends React.ElementType>(
 ): Config {
   const config = {
     env: options.env,
-    fetcher,
+    fetcher: {
+      provider: fetcher,
+      remotePatterns: options.fetcher?.remotePatterns,
+    },
     inputs: {},
     style: options.style,
   } as Config

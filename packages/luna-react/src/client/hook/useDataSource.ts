@@ -1,37 +1,19 @@
-import useSWR from 'swr'
-import { getArray } from '@luna-form/core'
-import type { DataSource, Nullable } from '@luna-form/core'
+import { reportSourceAtom } from '../lib/source-store'
+import { resolveSource, type Field } from '@luna-form/core'
+import { useAtom } from 'jotai'
+import { useFetch } from './useFetch'
 import type { Config } from '../../type'
 
-export function useDataSource<T>(
-  dataSource: Nullable<DataSource | T[]> = null,
+export function useDataSource(
+  field: Field,
   config: Config,
-  disabled = false
-): [Nullable<T[]>] {
-  const { data } = useSWR<Record<string, T> | T[]>(
-    buildSource(dataSource, disabled),
-    config.fetcher
-  )
+  value?: Record<string, unknown>
+) {
+  const dataSource = resolveSource(field, value)
+  const [source, setSource] = useAtom(reportSourceAtom(field.name))
 
-  if (dataSource) {
-    if (Array.isArray(dataSource)) {
-      return [dataSource]
-    }
+  const currentSource = source ?? dataSource
+  const [data] = useFetch(currentSource, config, field.disabled)
 
-    if (data) {
-      return [getArray(data, dataSource.namespace)]
-    }
-  }
-
-  return [null]
-}
-
-function buildSource<T>(
-  dataSource: Nullable<DataSource | Array<T>> = null,
-  disabled = false
-): Nullable<DataSource | Array<T>> {
-  if (dataSource && !Array.isArray(dataSource) && !disabled) {
-    return dataSource
-  }
-  return null
+  return [data, setSource] as const
 }

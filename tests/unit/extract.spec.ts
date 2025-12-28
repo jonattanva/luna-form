@@ -5,6 +5,8 @@ import {
   getArray,
   getCurrentValue,
   getValue,
+  getEntity,
+  toOptions,
 } from '@/packages/luna-core/src/util/extract'
 
 test.describe('Extract', { tag: ['@unit'] }, () => {
@@ -97,5 +99,85 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
     expect(getType('select/options')).toBe('options')
     expect(getType('text')).toBe('text')
     expect(getType()).toBe('text')
+  })
+
+  test('should get entity correctly', () => {
+    const collection = [
+      { label: 'Option 1', value: '1' },
+      { label: 'Option 2', value: '2' },
+    ]
+
+    expect(getEntity('1', collection)).toEqual({
+      label: 'Option 1',
+      value: '1',
+    })
+    expect(getEntity('3', collection)).toEqual({ value: '3' })
+    expect(getEntity('2', collection, 'value')).toEqual({
+      label: 'Option 2',
+      value: '2',
+    })
+  })
+
+  test('should get entity when value is a number and selected is a string', () => {
+    const collection = [
+      { label: 'Option 1', value: 1 },
+      { label: 'Option 2', value: 2 },
+    ]
+
+    expect(getEntity('1', collection)).toEqual({ label: 'Option 1', value: 1 })
+  })
+
+  test('should return default object when collection is empty', () => {
+    expect(getEntity('1', [])).toEqual({ value: '1' })
+  })
+
+  test('should convert data to options correctly', () => {
+    const data = [
+      { label: 'Option 1', value: 1 },
+      { label: 'Option 2', value: 2 },
+    ]
+
+    expect(toOptions(data)).toEqual([
+      { label: 'Option 1', value: '1' },
+      { label: 'Option 2', value: '2' },
+    ])
+  })
+
+  test('should convert data to options with custom keys', () => {
+    const data = [
+      { name: 'John', id: 101 },
+      { name: 'Jane', id: 102 },
+    ]
+
+    expect(toOptions(data, { label: 'name', value: 'id' })).toEqual([
+      { label: 'John', value: '101' },
+      { label: 'Jane', value: '102' },
+    ])
+  })
+
+  test('should handle nested paths in toOptions', () => {
+    const data = [
+      { info: { name: 'John' }, meta: { id: 1 } },
+      { info: { name: 'Jane' }, meta: { id: 2 } },
+    ]
+
+    expect(toOptions(data, { label: 'info.name', value: 'meta.id' })).toEqual([
+      { label: 'John', value: '1' },
+      { label: 'Jane', value: '2' },
+    ])
+  })
+
+  test('should return original item if label or value is missing', () => {
+    const data = [
+      { label: 'Only Label' },
+      { value: 'Only Value' },
+      'Not an object',
+    ]
+
+    expect(toOptions(data)).toEqual([
+      { label: 'Only Label' },
+      { value: 'Only Value' },
+      'Not an object',
+    ])
   })
 })

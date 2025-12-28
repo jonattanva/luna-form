@@ -1,7 +1,7 @@
 {
   "name": "react-luna-form",
   "version": "0.0.5",
-  "description": "A React library for building forms based on JSON Schema",
+  "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
   "types": "./dist/types/client/index.d.ts",
@@ -28,6 +28,7 @@
     "@luna-form/core": "workspace:*"
   },
   "peerDependencies": {
+    "fast-equals": "^6.0.0",
     "jotai": "^2.0.0",
     "jotai-family": "^1.0.0",
     "react": "^18.2.0 || ^19.0.0",

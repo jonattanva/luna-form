@@ -1,20 +1,27 @@
 import { Description } from '../../component/description'
 import { FieldError } from '../../component/field-error'
 import { reportInputErrorAtom } from '../lib/error-store'
+import { startTransition } from 'react'
 import { useAtom } from 'jotai'
 import { useDataSource } from '../hook/useDataSource'
 import { useInput } from '../hook/useInput'
 import {
+  FETCH,
+  getEntity,
   getInputValue,
-  mergeOptionsProps,
+  getOptions,
   getPreselectedValue,
-  resolveSource,
+  interpolate,
+  isDataSource,
+  mergeOptionsProps,
   type AriaAttributes,
+  type ChangeEvent,
   type CommonProps,
   type DataAttributes,
+  type DataSource,
   type Field,
+  type Nullable,
   type Schema,
-  type Source,
 } from '@luna-form/core'
 import type { Config } from '../../type'
 
@@ -27,18 +34,22 @@ export function Input(
     field: Field
     onMount: (name: string, schema: Schema) => void
     onUnmount: (name: string) => void
-    source?: Source
     value?: Record<string, unknown>
     withinColumn?: boolean
   }>
 ) {
   const currentValue = getInputValue(props.field, props.value)
-  const source = resolveSource(props.field, props.value, props.source)
 
   const [errors, setErrors] = useAtom(reportInputErrorAtom(props.field.name))
-
   const [schema] = useInput(props.field, props.onMount, props.onUnmount)
-  const [options] = useDataSource(source, props.config, props.field.disabled)
+
+  const [data, setSource] = useDataSource(
+    props.field,
+    props.config,
+    props.value
+  )
+
+  const options = getOptions(props.field, data)
 
   const commonPropsWithOptions = mergeOptionsProps(
     props.field,
@@ -53,16 +64,26 @@ export function Input(
   )
 
   function onChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value
     if (props.config.validation.change) {
-      const target = event.target.value
-      validated(target)
+      validated(value)
+    }
+
+    const changeEvents = props.field.event?.change
+    if (changeEvents) {
+      const selected = getEntity(value, data, props.field.advanced?.entity)
+      startTransition(() => {
+        handleFetchEvent(selected, changeEvents, (target, source) => {
+          setSource(target, source)
+        })
+      })
     }
   }
 
   function onBlur(event: React.FocusEvent<HTMLInputElement>) {
+    const value = event.target.value
     if (props.config.validation.blur) {
-      const target = event.target.value
-      validated(target)
+      validated(value)
     }
   }
 
@@ -80,8 +101,8 @@ export function Input(
   return (
     <>
       <Component
-        {...props.ariaAttributes}
         {...commonPropsWithOptions}
+        {...props.ariaAttributes}
         {...props.dataAttributes}
         defaultValue={defaultValue}
         onBlur={onBlur}
@@ -95,4 +116,29 @@ export function Input(
       )}
     </>
   )
+}
+
+function handleFetchEvent(
+  selected: Nullable<Record<string, unknown>> = null,
+  changes: ChangeEvent = [],
+  setSource: (name: string, source: Nullable<DataSource>) => void
+) {
+  changes
+    .filter((event) => event.action === FETCH)
+    .forEach((event) => {
+      const { target, source } = event
+
+      if (!selected) {
+        setSource(target, null)
+        return
+      }
+
+      if (isDataSource(source)) {
+        const newUrl = interpolate(source.url, selected)
+        setSource(target, {
+          ...source,
+          url: newUrl,
+        })
+      }
+    })
 }

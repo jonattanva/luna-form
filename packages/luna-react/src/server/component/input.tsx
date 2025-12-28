@@ -1,6 +1,7 @@
 import { Description } from '../../component/description'
 import {
   getInputValue,
+  getOptions,
   getPreselectedValue,
   mergeOptionsProps,
   resolveSource,
@@ -24,12 +25,16 @@ export function Input(
   }>
 ) {
   const currentValue = getInputValue(props.field, props.value)
-  const source = resolveSource(props.field, props.value, props.source)
+  const source = resolveSource(props.field, props.value)
+
+  const options = Array.isArray(source)
+    ? getOptions(props.field, source)
+    : source
 
   const commonPropsWithOptions = mergeOptionsProps(
     props.field,
     props.commonProps,
-    source
+    options
   )
 
   const defaultValue = getPreselectedValue(

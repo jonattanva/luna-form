@@ -3,7 +3,7 @@ import { FieldSet } from './field-set'
 import { Fragment } from 'react'
 import { Group } from './group'
 import { Separator } from './separator'
-import { prepare, type Sections } from '@luna-form/core'
+import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Slot } from '../type'
 
 export function Form(
@@ -12,12 +12,13 @@ export function Form(
     children: Slot
     config: Config
     control?: React.ReactNode
+    definition?: Definition
     noValidate?: boolean
     readOnly?: boolean
     sections: Sections
   }>
 ) {
-  const sections = prepare(props.sections)
+  const sections = prepare(props.sections, props.definition)
 
   return (
     <div className="h-full w-full">

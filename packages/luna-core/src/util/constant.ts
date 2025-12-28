@@ -5,6 +5,7 @@ export const INPUT_TEXTAREA = 'textarea'
 
 export const COLUMN = 'column'
 export const FIELDS = 'fields'
+export const LABEL = 'label'
 export const RADIO = 'radio'
 export const VALUE = 'value'
 
@@ -31,3 +32,7 @@ export const MIN = 'min'
 export const MAX = 'max'
 export const MIN_LENGTH = 'minLength'
 export const MAX_LENGTH = 'maxLength'
+
+export const $REF = '$ref'
+export const FETCH = 'fetch'
+export const SET = 'set'

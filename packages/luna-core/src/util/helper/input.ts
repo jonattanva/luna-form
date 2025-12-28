@@ -1,27 +1,28 @@
+import { OPTIONS } from '../constant'
 import { buildOptions, buildSource } from '../build'
-import { getCurrentValue } from '../extract'
+import { getCurrentValue, toOptions } from '../extract'
 import { isOptions, isSelect, isValidValue } from '../is-input'
 import type {
   CommonProps,
   DataSource,
   Field,
   Nullable,
-  Source,
   Value,
 } from '../../type'
-import { OPTIONS } from '../constant'
 
-export function resolveSource(
-  field: Field,
-  value?: Record<string, unknown>,
-  source?: Source
-) {
-  const defaultSource = buildOptions(field, value)
-  return buildSource(field, source) ?? defaultSource
+export function resolveSource(field: Field, value?: Record<string, unknown>) {
+  const current = buildSource(field)
+  if (current) {
+    return current
+  }
+  return buildOptions(field, value)
 }
 
 export function getInputValue(field: Field, value?: Record<string, unknown>) {
-  return getCurrentValue(field.name ? value?.[field.name] : undefined)
+  return getCurrentValue(
+    field.name ? value?.[field.name] : undefined,
+    field.advanced?.entity
+  )
 }
 
 export function mergeOptionsProps(
@@ -52,22 +53,9 @@ export function getPreselectedValue(
   return value
 }
 
-/*
-
-export function getPreselectedValue(field: Field, commonProps: CommonProps) {
-  if (field.required && isSelect(field)) {
-    if (field.advanced?.preselected !== false && OPTIONS in commonProps) {
-      const options = commonProps[OPTIONS]
-      if (Array.isArray(options) && options.length === 1) {
-        return {
-          ...commonProps,
-          defaultValue: options[0],
-        }
-      }
-    }
+export function getOptions<T>(field: Field, data?: Nullable<T[]>) {
+  if (isSelect(field) && Array.isArray(data)) {
+    return toOptions(data, field.advanced?.options)
   }
-  return commonProps
+  return data
 }
-
-
-*/

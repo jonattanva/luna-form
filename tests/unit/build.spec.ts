@@ -8,40 +8,34 @@ import {
 test.describe('Build', { tag: ['@unit'] }, () => {
   test('should build source for radio fields', () => {
     const field = {
-      type: 'radio',
-      name: 'gender',
-    }
-
-    const source = {
-      gender: [
+      source: [
         {
           label: 'Male',
           value: 'male',
         },
       ],
+      type: 'radio',
+      name: 'gender',
     }
 
-    const result = buildSource(field, source)
+    const result = buildSource(field)
     expect(result).toEqual([{ label: 'Male', value: 'male' }])
   })
 
   test('should build source for select fields', () => {
     const field = {
-      type: 'select',
-      name: 'country',
-      disabled: false,
-    }
-
-    const source = {
-      country: [
+      source: [
         {
           label: 'USA',
           value: 'us',
         },
       ],
+      type: 'select',
+      name: 'country',
+      disabled: false,
     }
 
-    const result = buildSource(field, source)
+    const result = buildSource(field)
     expect(result).toEqual([{ label: 'USA', value: 'us' }])
   })
 

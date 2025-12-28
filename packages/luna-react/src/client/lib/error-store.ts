@@ -1,3 +1,4 @@
+import { deepEqual } from 'fast-equals'
 import { atom } from 'jotai'
 import { atomFamily } from 'jotai-family'
 
@@ -10,8 +11,8 @@ export const reportInputErrorAtom = atomFamily((name: string) =>
       const current = get(inputErrorAtom)
 
       if (errors.length > 0) {
-        const equals = current[name]?.every((err) => errors.includes(err))
-        if (!equals) {
+        const currentErrors = current[name]
+        if (!currentErrors || !deepEqual(currentErrors, errors)) {
           set(inputErrorAtom, { ...current, [name]: errors })
         }
       } else if (current[name]) {
@@ -45,39 +46,8 @@ export const reportErrorAtom = atom(
   (get, set, error: Record<string, string[]>) => {
     const current = get(inputErrorAtom)
 
-    if (areErrorsPresent(current, error)) {
+    if (!deepEqual(current, error)) {
       set(inputErrorAtom, error)
     }
   }
 )
-
-function areErrorsPresent(
-  current: Record<string, string[]>,
-  errors: Record<string, string[]>
-): boolean {
-  const currentKeys = Object.keys(current)
-  const errorKeys = Object.keys(errors)
-
-  if (currentKeys.length !== errorKeys.length) {
-    return true
-  }
-
-  for (const key of errorKeys) {
-    const currentErrors = current[key]
-    const newErrors = errors[key]
-
-    if (!currentErrors || currentErrors.length !== newErrors.length) {
-      return true
-    }
-
-    if (currentErrors.length > 0) {
-      const currentSet = new Set(currentErrors)
-      const allMatch = newErrors.every((err) => currentSet.has(err))
-      if (!allMatch) {
-        return true
-      }
-    }
-  }
-
-  return false
-}

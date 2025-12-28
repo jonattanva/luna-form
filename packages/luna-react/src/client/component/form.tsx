@@ -3,7 +3,7 @@ import { Input } from './input'
 import { Slot } from './slot'
 import { useFormAction } from '../hook/useFormAction'
 import { useSchema } from '../hook/useSchema'
-import type { Sections, Source } from '@luna-form/core'
+import type { Definition, Sections } from '@luna-form/core'
 import type { Config } from '../../type'
 
 export function Form(
@@ -11,9 +11,9 @@ export function Form(
     action?: (formData: FormData) => Promise<void> | void
     children?: React.ReactNode
     config: Config
+    definition?: Definition
     readOnly?: boolean
     sections: Sections
-    source?: Source
     value?: Record<string, unknown>
   }>
 ) {
@@ -28,6 +28,7 @@ export function Form(
       action={action}
       config={props.config}
       control={props.children}
+      definition={props.definition}
       noValidate
       readOnly={props.readOnly}
       sections={props.sections}
@@ -40,7 +41,6 @@ export function Form(
               config={props.config}
               onMount={onMount}
               onUnmount={onUnmount}
-              source={props.source}
               value={props.value}
             />
           )}

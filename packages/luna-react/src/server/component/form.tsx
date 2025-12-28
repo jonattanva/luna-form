@@ -2,12 +2,13 @@ import { Form as Component } from '../../component/form'
 import { Input } from './input'
 import { Slot } from '../../component/slot/slot'
 import type { Config } from '../../type'
-import type { Sections, Source } from '@luna-form/core'
+import type { Definition, Sections, Source } from '@luna-form/core'
 
 export function Form(
   props: Readonly<{
     children?: React.ReactNode
     config: Config
+    definition?: Definition
     readOnly?: boolean
     sections: Sections
     source?: Source
@@ -18,6 +19,7 @@ export function Form(
     <Component
       config={props.config}
       control={props.children}
+      definition={props.definition}
       readOnly={props.readOnly}
       sections={props.sections}
     >

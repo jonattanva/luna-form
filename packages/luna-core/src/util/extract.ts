@@ -1,6 +1,25 @@
 import { isObject, isValue } from './is-type'
-import { INPUT, TYPE_TEXT, VALUE } from './constant'
-import type { Nullable, Value } from '../type'
+import { INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
+import type { Nullable, Option, Value } from '../type'
+
+const REGEX_TYPE = /[^/]+$/
+
+export function getEntity<T>(
+  selected: string,
+  collection: Nullable<T[]> = [],
+  entity = VALUE
+) {
+  if (Array.isArray(collection)) {
+    return (
+      collection.find((item) => {
+        const current = getCurrentValue(item, entity)
+        if (current !== undefined && `${current}` === selected) {
+          return item
+        }
+      }) ?? { value: selected }
+    )
+  }
+}
 
 export function getCurrentValue<T>(
   value: T,
@@ -72,9 +91,30 @@ export function extract<T>(
   return result as T
 }
 
+export function toOptions<T>(
+  data: T[],
+  options: Option = { label: LABEL, value: VALUE }
+) {
+  return data.map((item) => {
+    if (isObject(item)) {
+      const label = extract(item, options.label)
+      const value = extract(item, options.value)
+
+      if (isValue(label) && isValue(value)) {
+        return {
+          label: `${label}`,
+          value: `${value}`,
+        }
+      }
+    }
+
+    return item
+  })
+}
+
 export function getType(value: string = TYPE_TEXT): string {
   if (value) {
-    const result = value.match(/[^/]+$/)
+    const result = value.match(REGEX_TYPE)
     if (result) {
       const [type] = result
       if (type !== INPUT) {

@@ -1,6 +1,7 @@
+import { $REF } from './constant'
 import { isObject } from './is-type'
 import { isRadio, isSelect } from './is-input'
-import type { Field, Source } from '../type'
+import type { Field } from '../type'
 
 export function buildOptions(
   field: Field,
@@ -14,15 +15,11 @@ export function buildOptions(
   }
 }
 
-export function buildSource(field: Field, source?: Source) {
-  if (source) {
-    const current = source[field.name]
-    if (isRadio(field)) {
-      return current
-    }
-
-    if (isSelect(field) && !field.disabled) {
-      return current
+export function buildSource(field: Field) {
+  if (isRadio(field) || (isSelect(field) && !field.disabled)) {
+    const source = field.source
+    if (Array.isArray(source) || (isObject(source) && !($REF in source))) {
+      return source
     }
   }
 }
