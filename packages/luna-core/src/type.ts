@@ -13,10 +13,6 @@ export type AriaAttributes = {
   [key: `aria-${string}`]: string | number | boolean
 }
 
-export type Reference = {
-  $ref: string
-}
-
 export type DataSource = {
   url: string
   body?: BodyInit | Record<string, unknown>
@@ -74,7 +70,7 @@ export type Column = {
 
 export type FetchEvent = {
   action: 'fetch'
-  source: DataSource | Reference
+  source: DataSource
   target: string
 }
 
