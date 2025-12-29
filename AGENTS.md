@@ -6,8 +6,9 @@
 ## Setup commands
 
 - Install deps: `pnpm install`
-- Start dev server: `pnpm dev --port 3001`
+- Start dev server: `pnpm run serve`
 - Run unit tests: `pnpm run test:unit`
+- Run e2e tests: `pnpm run test:e2e`
 
 ## Code style
 

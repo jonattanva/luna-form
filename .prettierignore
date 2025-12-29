@@ -1,5 +1,8 @@
 examples
 
+apps/**/.next
+apps/**/.turbo
+
 packages/**/.turbo
 packages/**/dist
 

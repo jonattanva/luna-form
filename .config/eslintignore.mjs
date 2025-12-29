@@ -1,7 +1,8 @@
 import { globalIgnores } from 'eslint/config'
 
 export default globalIgnores([
-  './turbo',
+  '.next',
+  '.turbo',
   'dist/',
   'examples/',
   'node_modules/',

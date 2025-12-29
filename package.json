@@ -9,11 +9,13 @@
   "scripts": {
     "build": "turbo run build",
     "lint": "eslint . --cache",
-    "typescript": "turbo run typescript",
     "prepare": "husky",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "test:unit": "npx playwright test --grep '@unit' --project=chromium"
+    "serve": "pnpm --filter luna-editor dev",
+    "test:e2e": "npx playwright test --grep '@e2e'",
+    "test:unit": "npx playwright test --grep '@unit' --project=chromium",
+    "typescript": "turbo run typescript"
   },
   "devDependencies": {
     "@playwright/test": "1.57.0",
