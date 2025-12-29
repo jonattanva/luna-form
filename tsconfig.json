@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["tests/**/*", "playwright.config.ts"],
   "exclude": ["node_modules", "dist"]
