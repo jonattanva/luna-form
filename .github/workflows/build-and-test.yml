@@ -148,7 +148,7 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium, firefox, webkit
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Start application server
         run: pnpm serve &
