@@ -51,5 +51,8 @@ test.describe('Date', { tag: ['@unit'] }, () => {
     expect(getConvert('2020')).toBe(2020)
     expect(getConvert(' 2021 ')).toBe(2021)
     expect(getConvert('invalid')).toBe(currentYear)
+    expect(getConvert('2024abc')).toBe(currentYear)
+    expect(getConvert('20 24')).toBe(currentYear)
+    expect(getConvert('')).toBe(currentYear)
   })
 })

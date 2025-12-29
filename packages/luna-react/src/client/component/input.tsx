@@ -6,21 +6,16 @@ import { useAtom } from 'jotai'
 import { useDataSource } from '../hook/useDataSource'
 import { useInput } from '../hook/useInput'
 import {
-  FETCH,
   getEntity,
   getInputValue,
   getOptions,
   getPreselectedValue,
-  interpolate,
-  isDataSource,
+  handleFetchEvent,
   mergeOptionsProps,
   type AriaAttributes,
-  type ChangeEvent,
   type CommonProps,
   type DataAttributes,
-  type DataSource,
   type Field,
-  type Nullable,
   type Schema,
 } from '@luna-form/core'
 import type { Config } from '../../type'
@@ -116,29 +111,4 @@ export function Input(
       )}
     </>
   )
-}
-
-function handleFetchEvent(
-  selected: Nullable<Record<string, unknown>> = null,
-  changes: ChangeEvent = [],
-  setSource: (name: string, source: Nullable<DataSource>) => void
-) {
-  changes
-    .filter((event) => event.action === FETCH)
-    .forEach((event) => {
-      const { target, source } = event
-
-      if (!selected) {
-        setSource(target, null)
-        return
-      }
-
-      if (isDataSource(source)) {
-        const newUrl = interpolate(source.url, selected)
-        setSource(target, {
-          ...source,
-          url: newUrl,
-        })
-      }
-    })
 }

@@ -1,3 +1,5 @@
+const REGEX_DIGITS = /^\d+$/
+
 export function getMonth() {
   return Array.from({ length: 12 }, (_, i) => ({
     value: (i + 1).toString(),
@@ -49,9 +51,8 @@ export function getConvert(value: string | number, current?: number): number {
     return now
   }
 
-  const parsed = parseInt(trimmed, 10)
-  if (!isNaN(parsed)) {
-    return parsed
+  if (REGEX_DIGITS.test(trimmed)) {
+    return parseInt(trimmed, 10)
   }
 
   return now

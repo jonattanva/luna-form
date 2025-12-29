@@ -1,5 +1,5 @@
 import { clearInputErrorAtom } from '../lib/error-store'
-import { useCallback, useRef } from 'react'
+import { startTransition, useCallback, useRef } from 'react'
 import { useSetAtom } from 'jotai'
 import type { Schema, Schemas } from '@luna-form/core'
 
@@ -21,7 +21,7 @@ export function useSchema() {
         delete schemaRef.current[name]
         pendingUnmounts.current.add(name)
 
-        queueMicrotask(() => {
+        startTransition(() => {
           if (pendingUnmounts.current.size > 0) {
             clearErrors(Array.from(pendingUnmounts.current))
             pendingUnmounts.current.clear()

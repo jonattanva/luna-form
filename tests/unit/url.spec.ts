@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   isExternalUrl,
   matchRemotePattern,
-} from '@/packages/luna-core/src/util/helper/url'
+} from '@/packages/luna-core/src/helper/url'
 
 test.describe('URL Helper', { tag: ['@unit'] }, () => {
   test.describe('isExternalUrl', () => {

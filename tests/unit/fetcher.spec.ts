@@ -30,14 +30,32 @@ test.describe('Fetcher', { tag: ['@unit'] }, () => {
   })
 
   test('should throw error for invalid URL', async () => {
-    const dataSource = {
-      url: 'http://example.com/undefined',
-      method: 'GET',
-    }
+    const invalidUrls = [
+      'http://example.com/undefined',
+      'http://example.com/null',
+      'http://example.com/api?id=null',
+      'http://example.com/api?id=undefined',
+      'http://example.com/{id}',
+    ]
 
-    await expect(fetcher(dataSource)).rejects.toThrow(
-      `Invalid URL: ${dataSource.url}`
-    )
+    for (const url of invalidUrls) {
+      const dataSource = { url, method: 'GET' }
+      await expect(fetcher(dataSource)).rejects.toThrow(`Invalid URL: ${url}`)
+    }
+  })
+
+  test('should allow valid URLs with null/undefined as substrings', async () => {
+    const validUrls = [
+      'http://example.com/nullify',
+      'http://example.com/annullment',
+      'http://example.com/api/null-pointer',
+    ]
+
+    for (const url of validUrls) {
+      const dataSource = { url, method: 'GET' }
+      const result = await fetcher(dataSource)
+      expect(result).toEqual({ ok: true })
+    }
   })
 
   test('should append query parameters for GET requests', async () => {
@@ -80,5 +98,59 @@ test.describe('Fetcher', { tag: ['@unit'] }, () => {
     expect(calls[0]?.init?.headers).toMatchObject({
       'Content-Type': 'application/json',
     })
+  })
+
+  test('should send FormData without JSON headers', async () => {
+    const formData = new FormData()
+    formData.append('key', 'value')
+
+    const dataSource = {
+      url: 'http://example.com/api',
+      method: 'POST',
+      body: formData,
+    }
+
+    const result = await fetcher(dataSource)
+
+    expect(result).toEqual({ ok: true })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.init?.body).toBeInstanceOf(FormData)
+    expect(calls[0]?.init?.headers).not.toHaveProperty('Content-Type')
+  })
+
+  test('should send string body with JSON headers', async () => {
+    const body = JSON.stringify({ key: 'value' })
+    const dataSource = {
+      url: 'http://example.com/api',
+      method: 'POST',
+      body,
+    }
+
+    const result = await fetcher(dataSource)
+
+    expect(result).toEqual({ ok: true })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.init?.body).toBe(body)
+    expect(calls[0]?.init?.headers).toMatchObject({
+      'Content-Type': 'application/json',
+    })
+  })
+
+  test('should handle circular references by not setting JSON headers', async () => {
+    const circular: Record<string, unknown> = { key: 'value' }
+    circular.self = circular
+
+    const dataSource = {
+      url: 'http://example.com/api',
+      method: 'POST',
+      body: circular,
+    }
+
+    const result = await fetcher(dataSource)
+
+    expect(result).toEqual({ ok: true })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.init?.body).toBe(circular)
+    expect(calls[0]?.init?.headers).not.toHaveProperty('Content-Type')
   })
 })

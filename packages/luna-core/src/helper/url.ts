@@ -1,4 +1,4 @@
-import type { RemotePattern } from '../../type'
+import type { RemotePattern } from '../type'
 
 /**
  * Validates a URL against a list of allowed remote patterns.

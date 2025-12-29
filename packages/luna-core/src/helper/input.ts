@@ -1,14 +1,8 @@
-import { OPTIONS } from '../constant'
-import { buildOptions, buildSource } from '../build'
-import { getCurrentValue, toOptions } from '../extract'
-import { isOptions, isSelect, isValidValue } from '../is-input'
-import type {
-  CommonProps,
-  DataSource,
-  Field,
-  Nullable,
-  Value,
-} from '../../type'
+import { OPTIONS } from '../util/constant'
+import { buildOptions, buildSource } from '../util/build'
+import { getCurrentValue, toOptions } from '../util/extract'
+import { isOptions, isSelect, isValidValue } from '../util/is-input'
+import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
 
 export function resolveSource(field: Field, value?: Record<string, unknown>) {
   const current = buildSource(field)

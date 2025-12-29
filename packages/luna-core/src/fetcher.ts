@@ -1,4 +1,8 @@
+import { isInterpolated } from './helper/string'
 import type { DataSource } from './type'
+import { isString } from './util/is-type'
+
+const REGEX_INVALID_URL_SEGMENTS = /(^|[\/?=&])(null|undefined)([\/?=&]|$)/
 
 export async function fetcher(dataSource: DataSource) {
   const [url, method] = buildRequest(dataSource)
@@ -8,7 +12,7 @@ export async function fetcher(dataSource: DataSource) {
 
   if (body && !isGetMethod(method)) {
     const bodyStringify = stringify(body)
-    if (bodyStringify) {
+    if (bodyStringify !== null) {
       body = bodyStringify
       headers = asJson(headers)
     }
@@ -57,7 +61,10 @@ function asJson(headers: HeadersInit) {
 }
 
 function isValid(value: string) {
-  return !value.includes('undefined') && !value.includes('null')
+  if (isInterpolated(value)) {
+    return false
+  }
+  return !REGEX_INVALID_URL_SEGMENTS.test(value)
 }
 
 function buildMethod(dataSource: DataSource) {
@@ -78,6 +85,14 @@ function isGetMethod(method: string) {
 
 function stringify(body: BodyInit | Record<string, unknown>) {
   try {
+    if (body instanceof FormData) {
+      throw new Error('Cannot stringify FormData')
+    }
+
+    if (isString(body)) {
+      return body
+    }
+
     return JSON.stringify(body)
   } catch {
     return null

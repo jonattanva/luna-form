@@ -1,6 +1,3 @@
-// Core utilities and types for Luna Form
-// This will be populated as we migrate utilities from luna-react
-
 export * from './type'
 export * from './fetcher'
 export * from './util/attributes'
@@ -13,6 +10,7 @@ export * from './util/is-input'
 export * from './util/is-type'
 export * from './util/prepare'
 export * from './util/schema'
-export * from './util/helper/input'
-export * from './util/helper/string'
-export * from './util/helper/url'
+export * from './helper/input'
+export * from './helper/string'
+export * from './helper/url'
+export * from './handle/fetch-event'
