@@ -34,9 +34,8 @@ test.describe('Columns form', { tag: ['@e2e'] }, () => {
     const fields = page.locator('[data-slot="field"]')
     await expect(fields).toHaveCount(2)
 
-    const parents = fields.locator('..')
-    await expect(parents.nth(0)).toHaveClass(/md:grid-cols-2/)
-    await expect(parents.nth(1)).toHaveClass(/md:grid-cols-2/)
+    const grid = fields.first().locator('..')
+    await expect(grid).toHaveClass(/md:grid-cols-2/)
   })
 
   test('advanced cols and field span', async ({ page }) => {

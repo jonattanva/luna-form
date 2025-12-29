@@ -114,7 +114,7 @@ jobs:
         with:
           name: playwright-report-unit
           path: playwright-report/
-          retention-days: 7
+          retention-days: 1
 
   e2e-test:
     name: e2e-test
@@ -137,6 +137,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Build project
+        run: pnpm build
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
@@ -153,7 +164,7 @@ jobs:
       - name: Start application server
         run: pnpm serve &
 
-      - name: Run unit tests
+      - name: Run e2e tests
         run: pnpm test:e2e
 
       - uses: actions/upload-artifact@v4
@@ -161,4 +172,4 @@ jobs:
         with:
           name: playwright-report-e2e
           path: playwright-report/
-          retention-days: 7
+          retention-days: 1
