@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import {
   interpolate,
   isInterpolated,
-} from '@/packages/luna-core/src/helper/string'
+} from '@/packages/luna-core/src/util/string'
 
 test.describe('String Helper', { tag: ['@unit'] }, () => {
   test('should interpolate simple values', () => {

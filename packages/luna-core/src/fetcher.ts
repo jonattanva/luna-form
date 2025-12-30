@@ -1,6 +1,7 @@
-import { isInterpolated } from './helper/string'
+import { isInterpolated } from './util/string'
 import { stringify } from './util/stringify'
 import type { DataSource } from './type'
+import { isString } from './util/is-type'
 
 const REGEX_INVALID_URL_SEGMENTS = /(^|[\/?=&])(null|undefined)([\/?=&]|$)/
 
@@ -61,7 +62,7 @@ function asJson(headers: HeadersInit) {
 }
 
 function isValid(value: string) {
-  if (isInterpolated(value)) {
+  if (!isString(value) || isInterpolated(value)) {
     return false
   }
   return !REGEX_INVALID_URL_SEGMENTS.test(value)

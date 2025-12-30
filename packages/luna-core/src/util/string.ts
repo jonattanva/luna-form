@@ -1,5 +1,5 @@
-import { extract } from '../util/extract'
-import { isObject, isString, isValue } from '../util/is-type'
+import { extract } from './extract'
+import { isObject, isString, isValue } from './is-type'
 
 /**
  * Replaces placeholders in the format {key} with values from the provided object.

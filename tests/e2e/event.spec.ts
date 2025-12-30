@@ -172,4 +172,101 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await expect(form).toContainText('bulbasaur')
     await expect(form).toContainText('overgrow')
   })
+
+  test('should merge data sources from two different fields', async ({
+    page,
+  }) => {
+    await page.route('**/api/items*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ label: 'Merged Item', value: 'merged' }]),
+      })
+    })
+
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Country",
+                "name": "country",
+                "type": "select",
+                "source": [
+                  { "label": "USA", "value": "usa" },
+                  { "label": "Spain", "value": "es" }
+                ],
+                "event": {
+                  "change": [
+                    {
+                      "action": "source",
+                      "target": "item",
+                      "source": { "url": "/api/items?country={value}" }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Category",
+                "name": "category",
+                "type": "select",
+                "source": [
+                  { "label": "Food", "value": "food" },
+                  { "label": "Tech", "value": "tech" }
+                ],
+                "event": {
+                  "change": [
+                    {
+                      "action": "source",
+                      "target": "item",
+                      "source": { "url": "/api/items?category={value}" }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Item",
+                "name": "item",
+                "type": "select"
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const country = page.getByRole('combobox', { name: 'Country (Optional)' })
+    await country.click()
+
+    const usa = page.getByRole('option', { name: 'USA' })
+    await usa.click()
+
+    await Promise.all([
+      page.waitForRequest(
+        (req) =>
+          req.url().includes('/api/items') &&
+          req.url().includes('country=usa') &&
+          req.url().includes('category=tech')
+      ),
+      (async () => {
+        const category = page.getByRole('combobox', {
+          name: 'Category (Optional)',
+        })
+        await category.click()
+
+        const option = page.getByRole('option', { name: 'Tech' })
+        await option.click()
+      })(),
+    ])
+
+    const item = page.getByRole('combobox', { name: 'Item (Optional)' })
+    await item.click()
+
+    const option = page.getByRole('option', { name: 'Merged Item' })
+    await expect(option).toBeVisible()
+  })
 })

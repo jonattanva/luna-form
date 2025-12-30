@@ -1,5 +1,5 @@
 import { SOURCE } from '../util/constant'
-import { interpolate } from '../helper/string'
+import { interpolate } from '../util/string'
 import { isDataSource } from '../util/is-type'
 import type { ChangeEvent, DataSource, Nullable } from '../type'
 

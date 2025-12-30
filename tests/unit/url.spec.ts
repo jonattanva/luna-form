@@ -2,7 +2,8 @@ import { expect, test } from '@playwright/test'
 import {
   isExternalUrl,
   matchRemotePattern,
-} from '@/packages/luna-core/src/helper/url'
+  mergeUrl,
+} from '@/packages/luna-core/src/util/url'
 
 test.describe('URL Helper', { tag: ['@unit'] }, () => {
   test('should return true for absolute http URLs', () => {
@@ -78,5 +79,31 @@ test.describe('URL Helper', { tag: ['@unit'] }, () => {
     expect(matchRemotePattern('http://', [{ hostname: 'example.com' }])).toBe(
       false
     )
+  })
+
+  test('should merge query parameters from two relative URLs', () => {
+    const result = mergeUrl('/api/data?a=1', '/api/data?b=2')
+    expect(result).toBe('/api/data?a=1&b=2')
+  })
+
+  test('should overwrite existing query parameters', () => {
+    const result = mergeUrl('/api/data?a=1', '/api/data?a=2')
+    expect(result).toBe('/api/data?a=2')
+  })
+
+  test('should handle absolute URLs', () => {
+    const result = mergeUrl(
+      'https://api.com/data?a=1',
+      'https://api.com/data?b=2'
+    )
+    expect(result).toBe('https://api.com/data?a=1&b=2')
+  })
+
+  test('should return target if base is empty', () => {
+    expect(mergeUrl('', '/api/data')).toBe('/api/data')
+  })
+
+  test('should return base if target is empty', () => {
+    expect(mergeUrl('/api/data', '')).toBe('/api/data')
   })
 })

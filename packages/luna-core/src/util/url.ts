@@ -1,5 +1,7 @@
 import type { RemotePattern } from '../type'
 
+const COMMON_URL = 'http://luna.internal'
+
 /**
  * Validates a URL against a list of allowed remote patterns.
  * Internal URLs are allowed by default.
@@ -50,4 +52,30 @@ function getPort(protocol: string) {
 
 export function isExternalUrl(url: string): boolean {
   return /^(https?:)?\/\//.test(url)
+}
+
+export function mergeUrl(baseUrl: string, targetUrl: string): string {
+  try {
+    if (!baseUrl) {
+      return targetUrl
+    }
+
+    if (!targetUrl) {
+      return baseUrl
+    }
+
+    const url1 = new URL(baseUrl, COMMON_URL)
+    const url2 = new URL(targetUrl, COMMON_URL)
+
+    url2.searchParams.forEach((value, key) => {
+      url1.searchParams.set(key, value)
+    })
+
+    const result = url1.toString()
+    return baseUrl.startsWith('/') || !baseUrl.includes('://')
+      ? result.replace(COMMON_URL, '')
+      : result
+  } catch {
+    return targetUrl || baseUrl
+  }
 }
