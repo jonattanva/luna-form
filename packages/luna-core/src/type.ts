@@ -68,18 +68,18 @@ export type Column = {
   type: 'column' | (string & {})
 } & Base
 
-export type FetchEvent = {
-  action: 'fetch'
+export type SourceEvent = {
+  action: 'source'
   source: DataSource
   target: string
 }
 
-export type SetEvent = {
-  action: 'set'
+export type ValueEvent = {
+  action: 'value'
   value: Record<string, Value | Array<Record<string, unknown>>>
 }
 
-export type ChangeEvent = Array<FetchEvent | SetEvent>
+export type ChangeEvent = Array<SourceEvent | ValueEvent>
 
 export type Field = CommonProps & {
   advanced?: {

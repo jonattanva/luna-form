@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Input form', { tag: ['@e2e'] }, () => {
-  test('Required input field shows error message', async ({ page }) => {
+  test('should show error message for required input field', async ({
+    page,
+  }) => {
     await inject(
       page,
       `{
@@ -34,7 +36,7 @@ test.describe('Input form', { tag: ['@e2e'] }, () => {
     await expect(message).toBeVisible()
   })
 
-  test('Input field accepts valid email', async ({ page }) => {
+  test('should accept valid email in input field', async ({ page }) => {
     await inject(
       page,
       `{
@@ -66,7 +68,9 @@ test.describe('Input form', { tag: ['@e2e'] }, () => {
     await expect(message).toHaveCount(0)
   })
 
-  test('Input field shows error for invalid email', async ({ page }) => {
+  test('should show error for invalid email in input field', async ({
+    page,
+  }) => {
     await inject(
       page,
       `{
@@ -100,7 +104,7 @@ test.describe('Input form', { tag: ['@e2e'] }, () => {
     await expect(message).toBeVisible()
   })
 
-  test("Optional input field doesn't show error when empty", async ({
+  test('should not show error for empty optional input field', async ({
     page,
   }) => {
     await inject(
@@ -134,7 +138,9 @@ test.describe('Input form', { tag: ['@e2e'] }, () => {
     await expect(message).toHaveCount(0)
   })
 
-  test('Input min length validation works correctly', async ({ page }) => {
+  test('should work correctly with input min length validation', async ({
+    page,
+  }) => {
     await inject(
       page,
       `{

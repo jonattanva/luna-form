@@ -9,9 +9,7 @@ test.describe('Column', { tag: ['@unit'] }, () => {
     expect(getColumn(3)).toBe('md:grid-cols-3')
     expect(getColumn(4)).toBe('md:grid-cols-2')
   })
-})
 
-test.describe('getSpan', { tag: ['@unit'] }, () => {
   test('should return the correct span class', () => {
     expect(getSpan(1)).toBe('md:col-span-1')
     expect(getSpan(2)).toBe('md:col-span-2')

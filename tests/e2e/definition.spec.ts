@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Definition form', { tag: ['@e2e'] }, () => {
-  test('Definition source works correctly', async ({ page }) => {
+  test('should work correctly with definition source', async ({ page }) => {
     await inject(
       page,
       `{

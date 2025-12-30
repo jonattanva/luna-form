@@ -1,5 +1,5 @@
 import {
-  Select,
+  Select as Adapter,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -7,23 +7,32 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export function SelectAdapter({
+export function Select({
   ...props
 }: {
-  onBlur?: (event: React.FocusEvent<HTMLButtonElement>) => void
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   options?: Array<{ value: string; label: string }>
   placeholder?: string
 }) {
   const {
-    onBlur,
     options = [],
     placeholder = 'Select an option',
+    onChange,
     ...selectProps
   } = props
 
+  function handleValueChange(value: string) {
+    if (onChange) {
+      const event = {
+        target: { value },
+      } as React.ChangeEvent<HTMLInputElement>
+      onChange(event)
+    }
+  }
+
   return (
-    <Select {...selectProps}>
-      <SelectTrigger className="w-45" onBlur={onBlur}>
+    <Adapter onValueChange={handleValueChange}>
+      <SelectTrigger className="w-45" {...selectProps}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -35,6 +44,6 @@ export function SelectAdapter({
           ))}
         </SelectGroup>
       </SelectContent>
-    </Select>
+    </Adapter>
   )
 }

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Columns form', { tag: ['@e2e'] }, () => {
-  test('default columns', async ({ page }) => {
+  test('should show default columns', async ({ page }) => {
     await inject(
       page,
       `{
@@ -38,7 +38,7 @@ test.describe('Columns form', { tag: ['@e2e'] }, () => {
     await expect(grid).toHaveClass(/md:grid-cols-2/)
   })
 
-  test('advanced cols and field span', async ({ page }) => {
+  test('should show advanced cols and field span', async ({ page }) => {
     await inject(
       page,
       `{

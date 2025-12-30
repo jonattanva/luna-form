@@ -34,5 +34,5 @@ export const MIN_LENGTH = 'minLength'
 export const MAX_LENGTH = 'maxLength'
 
 export const $REF = '$ref'
-export const FETCH = 'fetch'
+export const SOURCE = 'source'
 export const SET = 'set'

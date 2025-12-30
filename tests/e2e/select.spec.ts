@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Select form', { tag: ['@e2e'] }, () => {
-  test('Select month input type works correctly', async ({ page }) => {
+  test('should work correctly with select month input type', async ({
+    page,
+  }) => {
     await inject(
       page,
       `{
@@ -32,7 +34,9 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(form).toContainText('May')
   })
 
-  test('Select year input type works correctly', async ({ page }) => {
+  test('should work correctly with select year input type', async ({
+    page,
+  }) => {
     await inject(
       page,
       `{
@@ -65,7 +69,7 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(form).toContainText(targetYear.toString())
   })
 
-  test('Required validation works correctly', async ({ page }) => {
+  test('should work correctly with required validation', async ({ page }) => {
     await inject(
       page,
       `{
@@ -99,7 +103,7 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(message).toBeVisible()
   })
 
-  test('Select array source render correctly', async ({ page }) => {
+  test('should render select array source correctly', async ({ page }) => {
     await inject(
       page,
       `{
@@ -136,7 +140,7 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(cherryOption).toBeVisible()
   })
 
-  test('Select fetch source render correctly', async ({ page }) => {
+  test('should render select fetch source correctly', async ({ page }) => {
     await inject(
       page,
       `{

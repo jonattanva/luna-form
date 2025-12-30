@@ -1,6 +1,6 @@
 import { isInterpolated } from './helper/string'
+import { stringify } from './util/stringify'
 import type { DataSource } from './type'
-import { isString } from './util/is-type'
 
 const REGEX_INVALID_URL_SEGMENTS = /(^|[\/?=&])(null|undefined)([\/?=&]|$)/
 
@@ -81,22 +81,6 @@ function buildHeaders(dataSource: DataSource): HeadersInit {
 
 function isGetMethod(method: string) {
   return method.toUpperCase() === 'GET'
-}
-
-function stringify(body: BodyInit | Record<string, unknown>) {
-  try {
-    if (body instanceof FormData) {
-      throw new Error('Cannot stringify FormData')
-    }
-
-    if (isString(body)) {
-      return body
-    }
-
-    return JSON.stringify(body)
-  } catch {
-    return null
-  }
 }
 
 function buildBody(method: string, body?: BodyInit | Record<string, unknown>) {

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Visibility form', { tag: ['@e2e'] }, () => {
-  test('Hidden field is not visible', async ({ page }) => {
+  test('should not show hidden field', async ({ page }) => {
     await inject(
       page,
       `{
@@ -32,7 +32,7 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     await expect(hiddenField).toHaveCount(0)
   })
 
-  test('Order fields', async ({ page }) => {
+  test('should order fields correctly', async ({ page }) => {
     await inject(
       page,
       `{
@@ -78,7 +78,7 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     await expect(fields.nth(1)).toContainText('Field A')
   })
 
-  test('Title and description visibility', async ({ page }) => {
+  test('should show title and description', async ({ page }) => {
     await inject(
       page,
       `{
@@ -107,7 +107,7 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     await expect(sectionDescription).toBeVisible()
   })
 
-  test('Field without label is visible', async ({ page }) => {
+  test('should show field without label', async ({ page }) => {
     await inject(
       page,
       `{
@@ -135,7 +135,7 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     await expect(field).toBeVisible()
   })
 
-  test('Field with empty label is visible', async ({ page }) => {
+  test('should show field with empty label', async ({ page }) => {
     await inject(
       page,
       `{
@@ -159,7 +159,7 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     await expect(field).toBeVisible()
   })
 
-  test('Separator visibility', async ({ page }) => {
+  test('should show separator', async ({ page }) => {
     await inject(
       page,
       `{

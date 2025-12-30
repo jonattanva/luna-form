@@ -10,7 +10,7 @@ import {
   getInputValue,
   getOptions,
   getPreselectedValue,
-  handleFetchEvent,
+  handleSourceEvent,
   mergeOptionsProps,
   type AriaAttributes,
   type CommonProps,
@@ -68,7 +68,7 @@ export function Input(
     if (changeEvents) {
       const selected = getEntity(value, data, props.field.advanced?.entity)
       startTransition(() => {
-        handleFetchEvent(selected, changeEvents, (target, source) => {
+        handleSourceEvent(selected, changeEvents, (target, source) => {
           setSource(target, source)
         })
       })

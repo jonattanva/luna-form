@@ -1,15 +1,15 @@
-import { FETCH } from '../util/constant'
+import { SOURCE } from '../util/constant'
 import { interpolate } from '../helper/string'
 import { isDataSource } from '../util/is-type'
 import type { ChangeEvent, DataSource, Nullable } from '../type'
 
-export function handleFetchEvent(
+export function handleSourceEvent(
   selected: Nullable<Record<string, unknown>> = null,
   changes: ChangeEvent = [],
   setSource: (name: string, source: Nullable<DataSource>) => void
 ) {
   changes
-    .filter((event) => event.action === FETCH)
+    .filter((event) => event.action === SOURCE)
     .forEach((event) => {
       const { target, source } = event
 
@@ -20,9 +20,14 @@ export function handleFetchEvent(
 
       if (isDataSource(source)) {
         const newUrl = interpolate(source.url, selected)
+        const newBody = source.body
+          ? interpolate(source.body, selected)
+          : source.body
+
         setSource(target, {
           ...source,
           url: newUrl,
+          body: newBody,
         })
       }
     })
