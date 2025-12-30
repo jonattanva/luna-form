@@ -1,12 +1,9 @@
-import { clearInputErrorAtom } from '../lib/error-store'
-import { clearInputSourceAtom } from '../lib/source-store'
 import { startTransition, useCallback, useRef } from 'react'
-import { useSetAtom } from 'jotai'
+import { useStore } from './store'
 import type { Schema, Schemas } from '@luna-form/core'
 
 export function useSchema() {
-  const clearErrors = useSetAtom(clearInputErrorAtom)
-  const clearSources = useSetAtom(clearInputSourceAtom)
+  const clear = useStore()
 
   const schemaRef = useRef<Schemas>({})
   const pendingUnmounts = useRef<Set<string>>(new Set())
@@ -25,15 +22,13 @@ export function useSchema() {
 
         startTransition(() => {
           if (pendingUnmounts.current.size > 0) {
-            const names = Array.from(pendingUnmounts.current)
-            clearErrors(names)
-            clearSources(names)
+            clear(Array.from(pendingUnmounts.current))
             pendingUnmounts.current.clear()
           }
         })
       }
     },
-    [clearErrors, clearSources]
+    [clear]
   )
 
   function getSchema() {

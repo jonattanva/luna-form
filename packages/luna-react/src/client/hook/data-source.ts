@@ -1,7 +1,7 @@
 import { reportSourceAtom } from '../lib/source-store'
 import { resolveSource, type Field } from '@luna-form/core'
 import { useAtom } from 'jotai'
-import { useFetch } from './useFetch'
+import { useFetch } from './fetch'
 import type { Config } from '../../type'
 
 export function useDataSource(

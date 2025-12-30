@@ -3,8 +3,8 @@ import { FieldError } from '../../component/field-error'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { startTransition } from 'react'
 import { useAtom } from 'jotai'
-import { useDataSource } from '../hook/useDataSource'
-import { useInput } from '../hook/useInput'
+import { useDataSource } from '../hook/data-source'
+import { useInput } from '../hook/input'
 import {
   getEntity,
   getInputValue,
