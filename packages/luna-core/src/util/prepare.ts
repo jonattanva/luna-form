@@ -18,23 +18,33 @@ export function prepare<T extends Base>(
     : []
 }
 
-export function resolveRefs(obj: unknown, definition?: Definition): unknown {
+export function resolveRefs(
+  obj: unknown,
+  definition?: Definition,
+  visited = new WeakSet<object>()
+): unknown {
   if (!definition || !obj || !isObject(obj)) {
     if (Array.isArray(obj)) {
-      return obj.map((item) => resolveRefs(item, definition))
+      return obj.map((item) => resolveRefs(item, definition, visited))
     }
     return obj
   }
 
+  if (visited.has(obj)) {
+    return obj
+  }
+
+  visited.add(obj)
+
   if ($REF in obj && isString(obj[$REF])) {
     const path = obj[$REF].replace(REGEX_REF, '')
     const resolved = extract(definition, path)
-    return resolved !== null ? resolved : obj
+    return resolved !== null ? resolveRefs(resolved, definition, visited) : obj
   }
 
   const result: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
-    result[key] = resolveRefs(value, definition)
+    result[key] = resolveRefs(value, definition, visited)
   }
   return result
 }
