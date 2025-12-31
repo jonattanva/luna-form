@@ -19,6 +19,7 @@ export async function fetcher(dataSource: DataSource) {
     }
   }
 
+  console.log('Fetching URL:', url)
   const request = await fetch(url.toString(), {
     body: buildBody(method, body),
     cache: dataSource.cache,

@@ -176,6 +176,11 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
   test('should merge data sources from two different fields', async ({
     page,
   }) => {
+    // show logs
+    page.on('console', (msg) => {
+      console.log('Info:', msg.text())
+    })
+
     await page.route('**/api/items*', async (route) => {
       await route.fulfill({
         status: 200,
@@ -249,8 +254,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
       page.waitForRequest(
         (req) =>
           req.url().includes('/api/items') &&
-          req.url().includes('category=tech'),
-        { timeout: 60000 }
+          req.url().includes('category=tech')
       ),
       (async () => {
         const category = page.getByRole('combobox', {
