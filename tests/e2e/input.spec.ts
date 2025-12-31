@@ -187,4 +187,36 @@ test.describe('Input form', { tag: ['@e2e'] }, () => {
       exact: true,
     })
   })
+
+  test('should show error for invalid textarea input', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Description",
+                            "name": "description",
+                            "type": "textarea",
+                            "required": true,
+                            "validation": {
+                                "required": "This field is required"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const textarea = page.locator('textarea[name="description"]')
+    await textarea.fill('')
+    await textarea.blur()
+
+    const message = page.getByText('This field is required', { exact: true })
+    await expect(message).toBeVisible()
+  })
 })
