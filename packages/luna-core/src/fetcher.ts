@@ -1,7 +1,8 @@
+import { COMMON_URL } from './util/constant'
 import { isInterpolated } from './util/string'
+import { isString } from './util/is-type'
 import { stringify } from './util/stringify'
 import type { DataSource } from './type'
-import { isString } from './util/is-type'
 
 const REGEX_INVALID_URL_SEGMENTS = /(^|[\/?=&])(null|undefined)([\/?=&]|$)/
 
@@ -19,8 +20,12 @@ export async function fetcher(dataSource: DataSource) {
     }
   }
 
-  console.log('Fetching URL:', url)
-  const request = await fetch(url.toString(), {
+  const target =
+    url.origin === COMMON_URL
+      ? url.toString().replace(COMMON_URL, '')
+      : url.toString()
+
+  const request = await fetch(target, {
     body: buildBody(method, body),
     cache: dataSource.cache,
     headers,
@@ -41,7 +46,7 @@ function buildRequest(dataSource: DataSource) {
     throw new Error(`Invalid URL: ${dataSource.url}`)
   }
 
-  const url = new URL(current)
+  const url = new URL(current, COMMON_URL)
   const method = buildMethod(dataSource)
 
   if (dataSource.body && isGetMethod(method)) {

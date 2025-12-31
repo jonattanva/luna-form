@@ -36,3 +36,5 @@ export const MAX_LENGTH = 'maxLength'
 export const $REF = '$ref'
 export const SOURCE = 'source'
 export const SET = 'set'
+
+export const COMMON_URL = 'http://luna.internal'

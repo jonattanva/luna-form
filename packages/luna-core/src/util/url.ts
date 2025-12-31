@@ -1,6 +1,5 @@
+import { COMMON_URL } from './constant'
 import type { RemotePattern } from '../type'
-
-const COMMON_URL = 'http://luna.internal'
 
 /**
  * Validates a URL against a list of allowed remote patterns.
