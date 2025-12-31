@@ -176,11 +176,6 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
   test('should merge data sources from two different fields', async ({
     page,
   }) => {
-    // show logs
-    page.on('console', (msg) => {
-      console.log('Info:', msg.text())
-    })
-
     await page.route('**/api/items*', async (route) => {
       await route.fulfill({
         status: 200,

@@ -100,10 +100,10 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const sectionTitle = page.getByText('Section Title')
+    const sectionTitle = page.getByText('Section Title').first()
     await expect(sectionTitle).toBeVisible()
 
-    const sectionDescription = page.getByText('This is a description.')
+    const sectionDescription = page.getByText('This is a description.').first()
     await expect(sectionDescription).toBeVisible()
   })
 
