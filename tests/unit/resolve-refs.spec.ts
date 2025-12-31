@@ -2,6 +2,24 @@ import { expect, test } from '@playwright/test'
 import { resolveRefs } from '../../packages/luna-core/src/util/prepare'
 
 test.describe('Resolve refs', { tag: ['@unit'] }, () => {
+  test('should return the original value if definition is invalid', () => {
+    const obj = { $ref: '#/definition/nonexistent' }
+    const result = resolveRefs(obj, undefined)
+    expect(result).toEqual(obj)
+  })
+
+  test('should return the original value if base is not an object', () => {
+    const obj = 'not-an-object'
+    const result = resolveRefs(obj, { someDef: {} })
+    expect(result).toBe(obj)
+  })
+
+  test('should return the original value if $ref is not a string', () => {
+    const obj = { $ref: 123 }
+    const result = resolveRefs(obj, { someDef: {} })
+    expect(result).toEqual(obj)
+  })
+
   test('should resolve simple references', () => {
     const definition = {
       input: { type: 'text', label: 'Name' },

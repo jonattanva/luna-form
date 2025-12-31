@@ -19,40 +19,63 @@ export function prepare<T extends Base>(
 }
 
 export function resolveRefs(
-  obj: unknown,
+  base: unknown,
   definition?: Definition,
+  cache = new Map<object, unknown>(),
   visited = new WeakSet<object>()
 ): unknown {
-  if (!definition || !obj || !isObject(obj)) {
-    if (Array.isArray(obj)) {
-      return obj.map((item) => resolveRefs(item, definition, visited))
-    }
-    return obj
+  if (!isDefinition(definition) || !base || typeof base !== 'object') {
+    return base
   }
 
-  if (visited.has(obj)) {
-    return obj
+  if (cache.has(base)) {
+    return cache.get(base)
   }
 
-  visited.add(obj)
+  if (visited.has(base)) {
+    return base
+  }
 
-  if ($REF in obj && isString(obj[$REF])) {
-    const path = obj[$REF].replace(REGEX_REF, '')
+  visited.add(base)
+  if (Array.isArray(base)) {
+    return base.map((item) => resolveRefs(item, definition, cache, visited))
+  }
+
+  if ($REF in base && isString(base[$REF])) {
+    const path = base[$REF].replace(REGEX_REF, '')
     const resolved = extract(definition, path)
-    return resolved !== null ? resolveRefs(resolved, definition, visited) : obj
+
+    if (resolved !== null) {
+      return resolveRefs(resolved, definition, cache, visited)
+    }
+    return base
   }
 
   const result: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(obj)) {
-    result[key] = resolveRefs(value, definition, visited)
+  for (const [key, value] of Object.entries(base)) {
+    result[key] = resolveRefs(value, definition, cache, visited)
   }
+
+  visited.delete(base)
+  cache.set(base, result)
+
   return result
+}
+
+export function entries<T>(values?: Nullable<Record<string, T>>) {
+  return Object.entries(values ?? {}) as [key: string, value: T][]
 }
 
 function getOrder(item: Base) {
   return item.order ?? Number.MAX_VALUE
 }
 
-export function entries<T>(values?: Nullable<Record<string, T>>) {
-  return Object.entries(values ?? {}) as [key: string, value: T][]
+function isDefinition(
+  definition?: Nullable<Definition>
+): definition is Definition {
+  return (
+    definition !== undefined &&
+    isObject(definition) &&
+    Object.keys(definition).length > 0
+  )
 }

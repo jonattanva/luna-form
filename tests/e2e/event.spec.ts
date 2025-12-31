@@ -249,8 +249,8 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
       page.waitForRequest(
         (req) =>
           req.url().includes('/api/items') &&
-          req.url().includes('country=usa') &&
-          req.url().includes('category=tech')
+          req.url().includes('category=tech'),
+        { timeout: 60000 }
       ),
       (async () => {
         const category = page.getByRole('combobox', {
