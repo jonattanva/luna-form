@@ -1,6 +1,8 @@
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
 
+const REGEX_MARKDOWN_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
+
 /**
  * Replaces placeholders in the format {key} with values from the provided object.
  * Supports nested objects using dot notation (e.g., {user.id}).
@@ -57,4 +59,44 @@ function replacePlaceholders(
     }
     return match
   })
+}
+
+export function formatMarkdown<K>(
+  text?: string,
+  callback?: (index: number, url: string, text?: string) => K
+): (string | K)[] | string | null {
+  if (!text || text.trim().length === 0) {
+    return null
+  }
+
+  let match
+  let lastIndex = 0
+  let hasMatch = false
+
+  const parts: (string | K)[] = []
+
+  while ((match = REGEX_MARKDOWN_LINK.exec(text)) !== null) {
+    const [fullMatch, linkText, url] = match
+    const index = match.index
+    hasMatch = true
+
+    if (index > lastIndex) {
+      parts.push(text.substring(lastIndex, index))
+    }
+
+    const value = callback ? callback(index, url, linkText) : fullMatch
+    parts.push(value)
+
+    lastIndex = index + fullMatch.length
+  }
+
+  if (!hasMatch) {
+    return text
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
+  }
+
+  return parts
 }

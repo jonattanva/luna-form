@@ -1,4 +1,5 @@
 import { Description } from '../../component/description'
+import { formatMarkdown } from '../../lib/string'
 import {
   getInputValue,
   getOptions,
@@ -57,7 +58,7 @@ export function Input(
         defaultValue={defaultValue}
       />
       {props.field.description && (
-        <Description>{props.field.description}</Description>
+        <Description>{formatMarkdown(props.field.description)}</Description>
       )}
     </>
   )

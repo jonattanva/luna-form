@@ -1,16 +1,19 @@
 import { Description } from '../../component/description'
 import { FieldError } from '../../component/field-error'
+import { formatMarkdown } from '../../lib/string'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { startTransition } from 'react'
 import { useAtom } from 'jotai'
 import { useDataSource } from '../hook/data-source'
 import { useInput } from '../hook/input'
+import { useTimeout } from '../hook/timeout'
 import {
   getEntity,
   getInputValue,
   getOptions,
   getPreselectedValue,
   handleSourceEvent,
+  isSelect,
   mergeOptionsProps,
   type AriaAttributes,
   type CommonProps,
@@ -58,6 +61,19 @@ export function Input(
     currentValue
   )
 
+  const [setTimeoutRef] = useTimeout()
+
+  function handleTriggerEvent(value: string, callback: <T>(value?: T) => void) {
+    if (isSelect(props.field)) {
+      callback(getEntity(value, data, props.field.advanced?.entity))
+      return
+    }
+
+    setTimeoutRef(() => {
+      callback({ value })
+    }, 500)
+  }
+
   function onChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value
     if (props.config.validation.change) {
@@ -66,10 +82,11 @@ export function Input(
 
     const changeEvents = props.field.event?.change
     if (changeEvents) {
-      const selected = getEntity(value, data, props.field.advanced?.entity)
-      startTransition(() => {
-        handleSourceEvent(selected, changeEvents, (target, source) => {
-          setSource(target, source)
+      handleTriggerEvent(value, (selected) => {
+        startTransition(() => {
+          handleSourceEvent(selected, changeEvents, (target, source) => {
+            setSource(target, source)
+          })
         })
       })
     }
@@ -104,7 +121,7 @@ export function Input(
         onChange={onChange}
       />
       {props.field.description && (
-        <Description>{props.field.description}</Description>
+        <Description>{formatMarkdown(props.field.description)}</Description>
       )}
       {!props.withinColumn && (
         <FieldError name={props.field.name} errors={errors} />

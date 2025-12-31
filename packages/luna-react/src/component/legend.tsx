@@ -1,3 +1,5 @@
+import { formatMarkdown } from '../lib/string'
+
 export function Legend(
   props: Readonly<{
     title?: string
@@ -7,10 +9,10 @@ export function Legend(
   return (
     <>
       <legend className="mb-3 font-medium text-slate-800 dark:text-slate-200">
-        {props.title}
+        {formatMarkdown(props.title)}
       </legend>
       <p className="-mt-2 text-sm leading-normal font-normal text-slate-600 dark:text-slate-400">
-        {props.description}
+        {formatMarkdown(props.description)}
       </p>
     </>
   )

@@ -268,4 +268,58 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const option = page.getByRole('option', { name: 'Merged Item' })
     await expect(option).toBeVisible()
   })
+
+  test('should set new source from input text', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Pokemon Name",
+                            "name": "pokemon",
+                            "type": "input/text",
+                            "event": {
+                                "change": [{
+                                    "action": "source",
+                                    "source": {
+                                        "url": "https://pokeapi.co/api/v2/pokemon/{value}",
+                                        "namespace": "abilities"
+                                    },
+                                    "target": "abilities"
+                                }]
+                            }
+                        },
+                        {
+                            "advanced": {
+                                "options": {
+                                    "label": "ability.name",
+                                    "value": "ability.name"
+                                }
+                            },
+                            "label": "Abilities",
+                            "name": "abilities",
+                            "type": "select"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const input = page.locator('input[name="pokemon"]')
+    await input.fill('charmander')
+    await input.blur()
+
+    const abilities = page.getByRole('combobox', {
+      name: 'Abilities (Optional)',
+    })
+    await abilities.click()
+
+    const blaze = page.getByRole('option', { name: 'blaze' })
+    await expect(blaze).toBeVisible()
+  })
 })

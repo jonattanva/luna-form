@@ -194,4 +194,57 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
     const separator = page.locator('form [data-slot="field-separator"]')
     await expect(separator).toBeVisible()
   })
+
+  test('should show fieldset with url in description', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "title": "FieldSet Title",
+                    "description": "Please visit [Luna](https://example.com) for more info.",
+                    "fields": [
+                        {
+                            "label": "Field Inside FieldSet",
+                            "name": "fieldInsideFieldSet",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const link = page.getByRole('link', { name: 'Luna' })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', 'https://example.com')
+  })
+
+  test('should show link in input description', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Field with Link",
+                            "name": "fieldWithLink",
+                            "type": "input/text",
+                            "description": "Please visit [Luna](https://example.com) for more info."
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const link = page.getByRole('link', { name: 'Luna' })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', 'https://example.com')
+  })
 })

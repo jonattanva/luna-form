@@ -3,8 +3,8 @@ import { interpolate } from '../util/string'
 import { isDataSource } from '../util/is-type'
 import type { ChangeEvent, DataSource, Nullable } from '../type'
 
-export function handleSourceEvent(
-  selected: Nullable<Record<string, unknown>> = null,
+export function handleSourceEvent<T>(
+  selected: Nullable<T> = null,
   changes: ChangeEvent = [],
   setSource: (name: string, source: Nullable<DataSource>) => void
 ) {
