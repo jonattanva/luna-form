@@ -20,7 +20,7 @@ export function buildCommon(
   disabled: boolean = false
 ): CommonProps {
   const commonProps: CommonProps = {
-    disabled: disabled ?? field.readonly,
+    disabled,
     id: field.name,
     name: field.name,
     placeholder: field.placeholder,

@@ -27,7 +27,7 @@ export function Form(
           {sections.map((section, index) => (
             <Fragment key={index}>
               <FieldSet
-                compact={props.config.style?.compact}
+                compact={section.compact}
                 description={section.description}
                 title={section.title}
               >

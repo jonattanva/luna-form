@@ -1,13 +1,14 @@
 import {
+  CHECKBOX,
   COLUMN,
   INPUT,
   INPUT_EMAIL,
   INPUT_NUMBER,
-  INPUT_TEXTAREA,
   RADIO,
   SELECT,
   SELECT_MONTH,
   SELECT_YEAR,
+  TEXTAREA,
   TYPE_EMAIL,
   TYPE_NUMBER,
   TYPE_PASSWORD,
@@ -28,6 +29,7 @@ export function isOptions(field: Field): field is Input {
   return isSelect(field) || isRadio(field)
 }
 
+export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isInput = createTypeChecker<Input>(INPUT)
 export const isRadio = createTypeChecker<Select>(RADIO)
 export const isSelect = createTypeChecker<Select>(SELECT)
@@ -41,7 +43,7 @@ export function isField(slot: Field | Column): slot is Field {
 }
 
 export function isTextArea(field: Field): field is Input {
-  return field.type === INPUT_TEXTAREA
+  return field.type === TEXTAREA
 }
 
 export function isText(field: Field): field is Input {
@@ -65,7 +67,7 @@ function createTypeChecker<T extends Field>(
   type: string
 ): (field: Field) => field is T {
   return (field): field is T =>
-    field.type === type || field.type.startsWith(`${type}/`)
+    field.type === type || field.type?.startsWith(`${type}/`)
 }
 
 export function isValidValue(value?: Value): boolean {

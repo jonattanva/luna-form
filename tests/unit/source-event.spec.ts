@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { handleSourceEvent } from '@/packages/luna-core/src/handle/source-event'
-import type { DataSource, Nullable } from '@/packages/luna-core/src/type'
+import type { DataSource } from '@/packages/luna-core/src/type'
 
 test.describe('handle source event', { tag: ['@unit'] }, () => {
   test('should do nothing if changes is empty', () => {
@@ -12,9 +12,9 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
     expect(called).toBe(false)
   })
 
-  test('should call setSource with null if selected is null', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+  test('should call setSource with undefined if selected is null', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
 
@@ -25,12 +25,12 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
     )
 
     expect(calls).toHaveLength(1)
-    expect(calls[0]).toEqual({ name: 'user', source: null })
+    expect(calls[0]).toEqual({ name: 'user', source: undefined })
   })
 
   test('should interpolate URL and call setSource when action is fetch', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
     const selected = { id: 123 }
@@ -64,8 +64,8 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
   })
 
   test('should handle multiple fetch events', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
     const selected = { id: 123, type: 'admin' }
@@ -89,8 +89,8 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
   })
 
   test('should interpolate body if present', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
     const selected = { userId: 456, category: 'electronics' }
@@ -118,8 +118,8 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
   })
 
   test('should handle nested interpolation in URL and body', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
     const selected = {
@@ -146,8 +146,8 @@ test.describe('handle source event', { tag: ['@unit'] }, () => {
   })
 
   test('should keep placeholders if values are missing in selected', () => {
-    const calls: { name: string; source: Nullable<DataSource> }[] = []
-    const setSource = (name: string, source: Nullable<DataSource>) => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
     }
     const selected = { id: 123 }

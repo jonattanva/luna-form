@@ -53,3 +53,26 @@ export function getOptions<T>(field: Field, data?: Nullable<T[]>) {
   }
   return data
 }
+
+export function prepareInputProps<T>(
+  field: Field,
+  commonProps: CommonProps,
+  data?: Nullable<DataSource | T[]>,
+  value?: Record<string, unknown>
+) {
+  const currentValue = getInputValue(field, value)
+  const options = Array.isArray(data) ? getOptions(field, data) : data
+
+  const commonPropsWithOptions = mergeOptionsProps(field, commonProps, options)
+
+  const defaultValue = getPreselectedValue(
+    field,
+    commonPropsWithOptions,
+    currentValue
+  )
+
+  return {
+    commonPropsWithOptions,
+    defaultValue,
+  }
+}

@@ -1,0 +1,61 @@
+{
+    "sections": [
+        {
+            "title": "Show these items on the desktop",
+            "description": "Select the items you want to show on the desktop.",
+            "separator": true,
+            "compact": true,
+            "fields": [
+                {
+                    "label": "Hard disk",
+                    "name": "hard_disk",
+                    "type": "checkbox",
+                    "required": true
+                },
+                {
+                    "label": "External disk",
+                    "name": "external_disk",
+                    "type": "checkbox",
+                    "required": true
+                },
+                {
+                    "label": "CDs, DVDs, and iPods",
+                    "name": "cds_dvds_ipods",
+                    "type": "checkbox",
+                    "required": true
+                },
+                {
+                    "label": "Connected servers",
+                    "name": "connected_servers",
+                    "type": "checkbox",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "fields": [
+                {
+                    "label": "Sync Desktop & Documents folders",
+                    "name": "sync_desktop_documents",
+                    "type": "checkbox",
+                    "description": "Your Desktop & Documents folders are being synced with iCloud Drive. You can access them from other devices.",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "title": "Responses",
+            "description": "Get notified when ChatGPT responds to requests that take time, likere search or image generation.",
+            "separator": true,
+            "fields": [
+                {
+                    "label": "Push notifications",
+                    "name": "push_notifications",
+                    "type": "checkbox",
+                    "readonly": true
+                }
+            ],
+            "order": 1
+        }
+    ]
+}

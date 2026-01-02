@@ -54,6 +54,7 @@ export type CommonProps = {
 }
 
 export type Section = {
+  compact?: boolean
   description?: string
   fields?: Fields
   separator?: boolean
@@ -81,6 +82,8 @@ export type ValueEvent = {
 
 export type ChangeEvent = Array<SourceEvent | ValueEvent>
 
+export type Orientation = 'horizontal' | 'vertical'
+
 export type Field = CommonProps & {
   advanced?: {
     aria?: AriaAttributes
@@ -88,6 +91,7 @@ export type Field = CommonProps & {
     cols?: number
     data?: DataAttributes
     entity?: string
+    orientation?: Orientation
   }
   event?: {
     change?: ChangeEvent
@@ -144,9 +148,6 @@ export type BaseConfig<T> = {
   }
   inputs: {
     [key: string]: T
-  }
-  style?: {
-    compact?: boolean
   }
   validation: {
     blur?: boolean

@@ -1,6 +1,6 @@
-import { $REF } from './constant'
+import { $REF, HORIZONTAL, VERTICAL } from './constant'
 import { isObject } from './is-type'
-import { isRadio, isSelect } from './is-input'
+import { isCheckbox, isRadio, isSelect } from './is-input'
 import type { Field } from '../type'
 
 export function buildOptions(
@@ -13,6 +13,18 @@ export function buildOptions(
       return [current]
     }
   }
+}
+
+export function buildOrientation(field: Field) {
+  if (isRadio(field) || isCheckbox(field)) {
+    return HORIZONTAL
+  }
+  return field.advanced?.orientation ?? VERTICAL
+}
+
+export function buildDisabled(field: Field, disabled?: boolean) {
+  const readonly = field.readonly ?? false
+  return disabled ? disabled : readonly
 }
 
 export function buildSource(field: Field) {

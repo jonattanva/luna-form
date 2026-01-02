@@ -23,7 +23,7 @@ export function InputBase(
 
   const field = {
     ...props.field,
-    disabled: props.disabled,
+    disabled: commonProps.disabled,
   }
 
   return props.children({

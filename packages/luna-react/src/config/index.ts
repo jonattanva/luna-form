@@ -1,4 +1,13 @@
-import { fetcher, type Environment, type Protocol } from '@luna-form/core'
+import {
+  CHECKBOX,
+  INPUTS,
+  RADIO,
+  SELECTS,
+  TEXTAREA,
+  fetcher,
+  type Environment,
+  type Protocol,
+} from '@luna-form/core'
 import type { Config, InputConfig } from '../type'
 
 export function defineConfig<T extends React.ElementType>(
@@ -12,9 +21,6 @@ export function defineConfig<T extends React.ElementType>(
       }>
     }
     inputs: Array<InputConfig<T>>
-    style?: {
-      compact?: boolean
-    }
     validation?: {
       blur?: boolean
       change?: boolean
@@ -29,7 +35,6 @@ export function defineConfig<T extends React.ElementType>(
       remotePatterns: options.fetcher?.remotePatterns,
     },
     inputs: {},
-    style: options.style,
   } as Config
 
   config.validation = options.validation ?? {
@@ -48,39 +53,22 @@ export function defineConfig<T extends React.ElementType>(
   return config
 }
 
-export function defineInput<T extends React.ElementType>(
-  input: React.ComponentProps<T>
-): InputConfig<T> {
-  return {
-    types: [
-      'input',
-      'input/email',
-      'input/number',
-      'input/password',
-      'input/tel',
-      'input/text',
-    ],
-    input,
+function createDefineFunction<T extends React.ElementType>(
+  types: string | string[]
+) {
+  return (input: React.ComponentProps<T>): InputConfig<T> => {
+    return {
+      types,
+      input,
+    }
   }
 }
 
-export function defineTextArea<T extends React.ElementType>(
-  input: React.ComponentProps<T>
-): InputConfig<T> {
-  return {
-    types: ['textarea'],
-    input,
-  }
-}
-
-export function defineSelect<T extends React.ElementType>(
-  input: React.ComponentProps<T>
-): InputConfig<T> {
-  return {
-    types: ['select', 'select/year', 'select/month'],
-    input,
-  }
-}
+export const defineCheckbox = createDefineFunction([CHECKBOX])
+export const defineInput = createDefineFunction(INPUTS)
+export const defineRadio = createDefineFunction([RADIO])
+export const defineSelect = createDefineFunction(SELECTS)
+export const defineTextArea = createDefineFunction([TEXTAREA])
 
 export function defineCustomInput<T extends React.ElementType>(
   types: string | string[],

@@ -1,20 +1,16 @@
-import { Description } from '../../component/description'
-import { FieldError } from '../../component/field-error'
-import { formatMarkdown } from '../../lib/string'
+import { InputGroup } from '../../component/input-group'
+import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { startTransition } from 'react'
 import { useAtom } from 'jotai'
 import { useDataSource } from '../hook/data-source'
-import { useInput } from '../hook/input'
-import { useTimeout } from '../hook/timeout'
+import { useInput } from '../hook/use-input'
+import { useTimeout } from '../hook/use-timeout'
 import {
   getEntity,
-  getInputValue,
-  getOptions,
-  getPreselectedValue,
   handleSourceEvent,
   isSelect,
-  mergeOptionsProps,
+  prepareInputProps,
   type AriaAttributes,
   type CommonProps,
   type DataAttributes,
@@ -36,8 +32,6 @@ export function Input(
     withinColumn?: boolean
   }>
 ) {
-  const currentValue = getInputValue(props.field, props.value)
-
   const [errors, setErrors] = useAtom(reportInputErrorAtom(props.field.name))
   const [schema] = useInput(props.field, props.onMount, props.onUnmount)
 
@@ -47,18 +41,11 @@ export function Input(
     props.value
   )
 
-  const options = getOptions(props.field, data)
-
-  const commonPropsWithOptions = mergeOptionsProps(
+  const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
     props.commonProps,
-    options
-  )
-
-  const defaultValue = getPreselectedValue(
-    props.field,
-    commonPropsWithOptions,
-    currentValue
+    data,
+    props.value
   )
 
   const [setTimeoutRef] = useTimeout()
@@ -105,13 +92,12 @@ export function Input(
     setErrors(errors)
   }
 
-  const Component = props.config.inputs[props.field.type]
-  if (!Component) {
-    return null
-  }
-
-  return (
-    <>
+  return renderIfExists(props.config.inputs[props.field.type], (Component) => (
+    <InputGroup
+      errors={errors}
+      field={props.field}
+      withinColumn={props.withinColumn}
+    >
       <Component
         {...commonPropsWithOptions}
         {...props.ariaAttributes}
@@ -120,12 +106,6 @@ export function Input(
         onBlur={onBlur}
         onChange={onChange}
       />
-      {props.field.description && (
-        <Description>{formatMarkdown(props.field.description)}</Description>
-      )}
-      {!props.withinColumn && (
-        <FieldError name={props.field.name} errors={errors} />
-      )}
-    </>
-  )
+    </InputGroup>
+  ))
 }

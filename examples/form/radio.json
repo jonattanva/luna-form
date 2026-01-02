@@ -1,0 +1,30 @@
+{
+    "sections": [
+        {
+            "title": "Subscription Plan",
+            "description": "Yearly and lifetime plans offer significant savings.",
+            "compact": true,
+            "fields": [
+                {
+                    "name": "subscription",
+                    "type": "radio",
+                    "source": [
+                        {
+                            "label": "Monthly ($9.99/month)",
+                            "value": "monthly"
+                        },
+                        {
+                            "label": "Yearly ($99.99/year)",
+                            "value": "yearly"
+                        },
+                        {
+                            "label": "Lifetime ($299.99)",
+                            "value": "lifetime"
+                        }
+                    ],
+                    "required": true
+                }
+            ]
+        }
+    ]
+}

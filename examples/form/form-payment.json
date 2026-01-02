@@ -1,0 +1,70 @@
+{
+    "sections": [
+        {
+            "title": "Payment Method",
+            "description": "All transactions are secure and encrypted",
+            "separator": true,
+            "fields": [
+                {
+                    "label": "Name on card",
+                    "name": "name",
+                    "type": "input/text",
+                    "required": true
+                },
+                {
+                    "label": "Card number",
+                    "name": "card_number",
+                    "type": "input/text",
+                    "required": true,
+                    "description": "Enter your 16-digit card number",
+                    "placeholder": "1234 5678 9012 3456"
+                },
+                {
+                    "advanced": {
+                        "cols": 3
+                    },
+                    "type": "column",
+                    "fields": [
+                        {
+                            "label": "Month",
+                            "name": "month",
+                            "type": "select/month",
+                            "required": true
+                        },
+                        {
+                            "label": "year",
+                            "name": "year",
+                            "type": "select/year",
+                            "required": true
+                        },
+                        {
+                            "label": "CVV",
+                            "name": "cvv",
+                            "type": "input/number",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Billing Address",
+            "description": "The billing address associated with your payment method",
+            "fields": [
+                {
+                    "label": "Same as shipping address",
+                    "name": "accept",
+                    "type": "checkbox",
+                    "required": true
+                },
+                {
+                    "label": "Comments",
+                    "name": "comments",
+                    "type": "textarea",
+                    "required": true,
+                    "placeholder": "Add any additional comments"
+                }
+            ]
+        }
+    ]
+}

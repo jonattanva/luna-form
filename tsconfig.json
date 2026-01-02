@@ -12,6 +12,6 @@
     },
     "strictNullChecks": true
   },
-  "include": ["benchmarks/**/*", "tests/**/*", "playwright.config.ts"],
+  "include": ["benchmark/**/*", "tests/**/*", "playwright.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

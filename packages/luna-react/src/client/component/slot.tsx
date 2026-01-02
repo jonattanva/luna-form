@@ -1,5 +1,4 @@
-import { Column } from './wrapper/column'
-import { Field } from './wrapper/field'
+import { Column, Field } from './wrapper'
 import { SlotBase } from '../../component/slot/slot-base'
 import type { Children } from '../../type'
 import type { Fields } from '@luna-form/core'

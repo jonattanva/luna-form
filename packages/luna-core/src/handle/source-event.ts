@@ -6,7 +6,7 @@ import type { ChangeEvent, DataSource, Nullable } from '../type'
 export function handleSourceEvent<T>(
   selected: Nullable<T> = null,
   changes: ChangeEvent = [],
-  setSource: (name: string, source: Nullable<DataSource>) => void
+  setSource: (name: string, source?: DataSource) => void
 ) {
   changes
     .filter((event) => event.action === SOURCE)
@@ -14,7 +14,7 @@ export function handleSourceEvent<T>(
       const { target, source } = event
 
       if (!selected) {
-        setSource(target, null)
+        setSource(target, undefined)
         return
       }
 

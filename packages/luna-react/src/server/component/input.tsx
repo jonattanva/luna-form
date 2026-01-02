@@ -1,10 +1,8 @@
-import { Description } from '../../component/description'
-import { formatMarkdown } from '../../lib/string'
+import { FormattedDescription } from '../../component/formatted-description'
+import { InputGroup } from '../../component/input-group'
+import { renderIfExists } from '../../lib/render-If-exists'
 import {
-  getInputValue,
-  getOptions,
-  getPreselectedValue,
-  mergeOptionsProps,
+  prepareInputProps,
   resolveSource,
   type AriaAttributes,
   type CommonProps,
@@ -25,41 +23,24 @@ export function Input(
     value?: Record<string, unknown>
   }>
 ) {
-  const currentValue = getInputValue(props.field, props.value)
   const source = resolveSource(props.field, props.value)
 
-  const options = Array.isArray(source)
-    ? getOptions(props.field, source)
-    : source
-
-  const commonPropsWithOptions = mergeOptionsProps(
+  const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
     props.commonProps,
-    options
+    source,
+    props.value
   )
 
-  const defaultValue = getPreselectedValue(
-    props.field,
-    commonPropsWithOptions,
-    currentValue
-  )
-
-  const Component = props.config.inputs[props.field.type]
-  if (!Component) {
-    return null
-  }
-
-  return (
-    <>
+  return renderIfExists(props.config.inputs[props.field.type], (Component) => (
+    <InputGroup field={props.field}>
       <Component
         {...props.ariaAttributes}
         {...commonPropsWithOptions}
         {...props.dataAttributes}
         defaultValue={defaultValue}
       />
-      {props.field.description && (
-        <Description>{formatMarkdown(props.field.description)}</Description>
-      )}
-    </>
-  )
+      <FormattedDescription text={props.field.description} />
+    </InputGroup>
+  ))
 }

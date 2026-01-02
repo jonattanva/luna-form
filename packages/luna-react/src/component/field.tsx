@@ -1,7 +1,6 @@
-import { DATA_INVALID, getSpan, type Field } from '@luna-form/core'
+import { FieldGroup } from './field-group'
 import { InputBase } from './input/input-base'
-import { Label } from './label'
-import { twMerge } from 'tailwind-merge'
+import { buildDisabled, buildOrientation, type Field } from '@luna-form/core'
 import type { Children } from '../type'
 
 export type FieldProps = Readonly<{
@@ -13,30 +12,27 @@ export type FieldProps = Readonly<{
 }>
 
 export function Field(props: FieldProps) {
+  const cols = props.field.advanced?.cols
   const errors = props.field.name ? props.errors?.[props.field.name] : undefined
 
+  const orientation = buildOrientation(props.field)
+  const disabled = buildDisabled(props.field, props.disabled)
+
   return (
-    <div
-      {...(errors && { [DATA_INVALID]: 'true' })}
-      data-slot="field"
-      className={twMerge(
-        'flex w-full flex-col gap-3 *:w-full data-[invalid=true]:text-red-500',
-        getSpan(props.field.advanced?.cols)
-      )}
+    <FieldGroup
+      cols={cols}
+      disabled={disabled}
+      errors={errors}
+      orientation={orientation}
     >
-      {props.field.name && props.field.label && (
-        <Label name={props.field.name} required={props.field.required}>
-          {props.field.label}
-        </Label>
-      )}
       <InputBase
-        disabled={props.disabled}
+        disabled={disabled}
         errors={errors}
         field={props.field}
         withinColumn={props.withinColumn}
       >
         {props.children}
       </InputBase>
-    </div>
+    </FieldGroup>
   )
 }
