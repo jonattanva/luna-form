@@ -1,0 +1,38 @@
+{
+    "sections": [
+        {
+            "title": "Profile",
+            "description": "Fill in your profile information.",
+            "separator": true
+        },
+        {
+            "separator": true,
+            "fields": [
+                {
+                    "advanced": {
+                        "orientation": "horizontal"
+                    },
+                    "label": "Name",
+                    "name": "name",
+                    "type": "input/text",
+                    "required": true,
+                    "description": "Provide your full name for identification"
+                }
+            ]
+        },
+        {
+            "fields": [
+                {
+                    "advanced": {
+                        "orientation": "horizontal"
+                    },
+                    "label": "Message",
+                    "name": "message",
+                    "type": "textarea",
+                    "required": true,
+                    "description": "You can write your message here. Keep it short, preferably under 100 characters."
+                }
+            ]
+        }
+    ]
+}

@@ -10,7 +10,6 @@ import type {
 export type Slot = (props: {
   disabled?: boolean
   fields?: Fields
-  withinColumn?: boolean
 }) => React.ReactNode
 
 export type Children = (props: {
@@ -18,7 +17,6 @@ export type Children = (props: {
   commonProps: CommonProps
   dataAttributes?: DataAttributes
   field: Field
-  withinColumn?: boolean
 }) => React.ReactNode
 
 export type InputConfig<T extends React.ElementType> = {

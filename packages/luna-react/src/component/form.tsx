@@ -1,5 +1,5 @@
 import { Control } from './control'
-import { FieldSet } from './field-set'
+import { FieldSet } from './field/field-set'
 import { Fragment } from 'react'
 import { Group } from './group'
 import { Separator } from './separator'
@@ -26,11 +26,7 @@ export function Form(
         <Group>
           {sections.map((section, index) => (
             <Fragment key={index}>
-              <FieldSet
-                compact={section.compact}
-                description={section.description}
-                title={section.title}
-              >
+              <FieldSet section={section}>
                 {props.children({
                   disabled: props.readOnly,
                   fields: section.fields,

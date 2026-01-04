@@ -32,7 +32,7 @@
                             "required": true
                         },
                         {
-                            "label": "year",
+                            "label": "Year",
                             "name": "year",
                             "type": "select/year",
                             "required": true

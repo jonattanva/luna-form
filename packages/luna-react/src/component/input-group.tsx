@@ -1,4 +1,3 @@
-import { FieldError } from './field-error'
 import { FormattedDescription } from './formatted-description'
 import { InputLabel } from './input-label'
 import { buildOrientation, VERTICAL, type Field } from '@luna-form/core'
@@ -6,9 +5,7 @@ import { buildOrientation, VERTICAL, type Field } from '@luna-form/core'
 export function InputGroup(
   props: Readonly<{
     children: React.ReactNode
-    errors?: string[]
     field: Field
-    withinColumn?: boolean
   }>
 ) {
   const orientation = buildOrientation(props.field)
@@ -19,11 +16,8 @@ export function InputGroup(
         <InputLabel field={props.field} orientation={orientation} />
       )}
       {props.children}
-      {orientation === VERTICAL && (
+      {orientation === VERTICAL && props.field.description && (
         <FormattedDescription text={props.field.description} />
-      )}
-      {!props.withinColumn && (
-        <FieldError name={props.field.name} errors={props.errors} />
       )}
     </>
   )

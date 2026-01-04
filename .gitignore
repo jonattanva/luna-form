@@ -12,7 +12,8 @@ test-results
 packages/**/dist
 
 # Playwright
-/playwright-report/
+.playwright-mcp
 /blob-report/
-/playwright/.cache/
+/playwright-report/
 /playwright/.auth/
+/playwright/.cache/

@@ -2,7 +2,7 @@ import { isColumn, isField, prepare, type Fields } from '@luna-form/core'
 import { Fragment } from 'react'
 import type { Children } from '../../type'
 import type { ColumnProps } from '../column'
-import type { FieldProps } from '../field'
+import type { FieldProps } from '../field/field'
 
 export function SlotBase<
   T extends {
@@ -14,7 +14,6 @@ export function SlotBase<
     children: Children
     disabled?: boolean
     fields?: Fields
-    withinColumn?: boolean
     components: T
   }>
 ) {
@@ -26,15 +25,11 @@ export function SlotBase<
     <Fragment key={index}>
       {isColumn(field) && (
         <Column column={field}>
-          <SlotBase {...props} fields={field.fields} withinColumn={true} />
+          <SlotBase {...props} fields={field.fields} />
         </Column>
       )}
       {isField(field) && (
-        <Field
-          disabled={props.disabled}
-          field={field}
-          withinColumn={props.withinColumn}
-        >
+        <Field disabled={props.disabled} field={field}>
           {props.children}
         </Field>
       )}

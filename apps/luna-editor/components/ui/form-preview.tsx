@@ -1,6 +1,7 @@
 'use client'
 
 import config from '@/luna.config'
+import { Button } from './button'
 import { Form } from 'react-luna-form'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
@@ -11,12 +12,14 @@ export function FormPreview() {
   const form = convertCodeToForm(code)
 
   return (
-    <div className="flex h-full flex-1 flex-col items-stretch">
-      <div className="flex min-h-full items-center justify-center">
-        <div className="flex min-h-full w-full max-w-3xl flex-col items-center justify-between">
-          <div className="w-full max-w-md p-6">
-            <Form {...form} config={config} />
-          </div>
+    <div className="flex h-full flex-1 flex-col items-stretch overflow-y-auto">
+      <div className="flex w-full justify-center">
+        <div className="w-full max-w-md p-6">
+          <Form {...form} config={config}>
+            <div className="flex w-full justify-end">
+              <Button type="submit">Submit</Button>
+            </div>
+          </Form>
         </div>
       </div>
     </div>

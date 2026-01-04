@@ -2,9 +2,9 @@ import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { startTransition } from 'react'
-import { useAtom } from 'jotai'
 import { useDataSource } from '../hook/data-source'
 import { useInput } from '../hook/use-input'
+import { useSetAtom } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
 import {
   getEntity,
@@ -29,10 +29,9 @@ export function Input(
     onMount: (name: string, schema: Schema) => void
     onUnmount: (name: string) => void
     value?: Record<string, unknown>
-    withinColumn?: boolean
   }>
 ) {
-  const [errors, setErrors] = useAtom(reportInputErrorAtom(props.field.name))
+  const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
   const [schema] = useInput(props.field, props.onMount, props.onUnmount)
 
   const [data, setSource] = useDataSource(
@@ -93,11 +92,7 @@ export function Input(
   }
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
-    <InputGroup
-      errors={errors}
-      field={props.field}
-      withinColumn={props.withinColumn}
-    >
+    <InputGroup field={props.field}>
       <Component
         {...commonPropsWithOptions}
         {...props.ariaAttributes}

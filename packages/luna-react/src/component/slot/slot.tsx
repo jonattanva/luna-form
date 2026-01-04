@@ -1,6 +1,6 @@
-import { SlotBase } from './slot-base'
 import { Column } from '../column'
-import { Field } from '../field'
+import { Field } from '../field/field'
+import { SlotBase } from './slot-base'
 import type { Children } from '../../type'
 import type { Fields } from '@luna-form/core'
 

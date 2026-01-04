@@ -1,14 +1,14 @@
+import { FieldError } from './field-error'
 import { FieldGroup } from './field-group'
-import { InputBase } from './input/input-base'
+import { InputBase } from '../input/input-base'
 import { buildDisabled, buildOrientation, type Field } from '@luna-form/core'
-import type { Children } from '../type'
+import type { Children } from '../../type'
 
 export type FieldProps = Readonly<{
   children: Children
   disabled?: boolean
   errors?: Record<string, string[]>
   field: Field
-  withinColumn?: boolean
 }>
 
 export function Field(props: FieldProps) {
@@ -19,20 +19,18 @@ export function Field(props: FieldProps) {
   const disabled = buildDisabled(props.field, props.disabled)
 
   return (
-    <FieldGroup
-      cols={cols}
-      disabled={disabled}
-      errors={errors}
-      orientation={orientation}
-    >
-      <InputBase
+    <div className="flex flex-col gap-3">
+      <FieldGroup
+        cols={cols}
         disabled={disabled}
         errors={errors}
-        field={props.field}
-        withinColumn={props.withinColumn}
+        orientation={orientation}
       >
-        {props.children}
-      </InputBase>
-    </FieldGroup>
+        <InputBase disabled={disabled} errors={errors} field={props.field}>
+          {props.children}
+        </InputBase>
+      </FieldGroup>
+      <FieldError errors={errors} name={props.field.name} />
+    </div>
   )
 }

@@ -16,6 +16,7 @@ import {
   TYPE_TEXT,
 } from './constant'
 import type { Column, Field, Input, Select, Value } from '../type'
+import { isString } from './is-type'
 
 export function isSelectMonth(field: Field): boolean {
   return field.type === SELECT_MONTH
@@ -66,8 +67,13 @@ export function isEmail(field: Field): field is Input {
 function createTypeChecker<T extends Field>(
   type: string
 ): (field: Field) => field is T {
-  return (field): field is T =>
-    field.type === type || field.type?.startsWith(`${type}/`)
+  return (field): field is T => {
+    const inputType = isString(field.type) ? field.type : undefined
+    if (inputType) {
+      return inputType === type || inputType?.startsWith(`${type}/`)
+    }
+    return false
+  }
 }
 
 export function isValidValue(value?: Value): boolean {
