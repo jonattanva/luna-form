@@ -149,6 +149,10 @@ export type BaseConfig<T> = {
   inputs: {
     [key: string]: T
   }
+  style?: {
+    compact?: boolean
+    orientation?: Orientation
+  }
   validation: {
     blur?: boolean
     change?: boolean

@@ -6,6 +6,7 @@ import {
   TEXTAREA,
   fetcher,
   type Environment,
+  type Orientation,
   type Protocol,
 } from '@luna-form/core'
 import type { Config, InputConfig } from '../type'
@@ -21,6 +22,10 @@ export function defineConfig<T extends React.ElementType>(
       }>
     }
     inputs: Array<InputConfig<T>>
+    style?: {
+      compact?: boolean
+      orientation?: Orientation
+    }
     validation?: {
       blur?: boolean
       change?: boolean
@@ -35,6 +40,7 @@ export function defineConfig<T extends React.ElementType>(
       remotePatterns: options.fetcher?.remotePatterns,
     },
     inputs: {},
+    style: options.style,
   } as Config
 
   config.validation = options.validation ?? {
