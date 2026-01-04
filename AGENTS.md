@@ -9,6 +9,7 @@
 - Start dev server: `pnpm run serve`
 - Run unit tests: `pnpm run test:unit`
 - Run e2e tests: `pnpm run test:e2e`
+- Ensure the local server is running (pnpm run serve) before executing the e2e tests.
 
 ## Code style
 
