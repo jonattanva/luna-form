@@ -1,8 +1,13 @@
 import { expect, test } from '@playwright/test'
 import {
+  isEmail,
+  isNumber,
   isOptions,
+  isRadio,
   isSelectMonth,
   isSelectYear,
+  isText,
+  isTextArea,
 } from '@/packages/luna-core/src/util/is-input'
 
 test.describe('Is Input Utility', { tag: ['@unit'] }, () => {
@@ -59,5 +64,119 @@ test.describe('Is Input Utility', { tag: ['@unit'] }, () => {
     }
 
     expect(isOptions(fieldText)).toBe(false)
+  })
+
+  test('should identify radio inputs as options', () => {
+    const fieldRadio = {
+      name: 'gender',
+      type: 'radio',
+      options: ['Male', 'Female', 'Other'],
+    }
+
+    expect(isOptions(fieldRadio)).toBe(true)
+  })
+
+  test('should identify non-radio inputs correctly', () => {
+    const fieldNumber = {
+      name: 'age',
+      type: 'number',
+    }
+
+    expect(isOptions(fieldNumber)).toBe(false)
+  })
+
+  test('should identify nom-radio inputs type incorrectly', () => {
+    const field = {
+      name: 'age',
+      type: 1234,
+    }
+
+    // @ts-expect-error Testing invalid type
+    expect(isRadio(field)).toBe(false)
+  })
+
+  test('should identify textarea inputs correctly', () => {
+    expect(
+      isTextArea({
+        name: 'description',
+        type: 'textarea',
+      })
+    ).toBe(true)
+
+    expect(
+      isTextArea({
+        name: 'description',
+        type: 'textarea/',
+      })
+    ).toBe(true)
+  })
+
+  test('should identify email inputs type correctly', () => {
+    expect(
+      isEmail({
+        name: 'email',
+        type: 'input/email',
+      })
+    ).toBe(true)
+
+    expect(
+      isEmail({
+        name: 'email',
+        type: 'email',
+      })
+    ).toBe(true)
+
+    expect(
+      isEmail({
+        name: 'email',
+        type: 'text/',
+      })
+    ).toBe(false)
+  })
+
+  test('should identify text inputs correctly', () => {
+    expect(
+      isText({
+        name: 'firstName',
+        type: 'text',
+      })
+    ).toBe(true)
+
+    expect(
+      isText({
+        name: 'firstName',
+        type: 'email',
+      })
+    ).toBe(true)
+
+    expect(
+      isText({
+        name: 'firstName',
+        type: 'textarea/',
+      })
+    ).toBe(false)
+  })
+
+  test('should identify number inputs correctly', () => {
+    expect(
+      isNumber({
+        name: 'age',
+        type: 'input/number',
+      })
+    ).toBe(true)
+
+    expect(
+      isNumber({
+        name: 'age',
+        type: 'number',
+      })
+    ).toBe(true)
+
+    expect(
+      isNumber({
+        name: 'age',
+        type: 'text/',
+      })
+    ).toBe(false)
   })
 })

@@ -34,7 +34,7 @@ test.describe('Columns form', { tag: ['@e2e'] }, () => {
     const fields = page.locator('[data-slot="field"]')
     await expect(fields).toHaveCount(2)
 
-    const grid = fields.first().locator('..')
+    const grid = fields.first().locator('..').locator('..')
     await expect(grid).toHaveClass(/md:grid-cols-2/)
   })
 
@@ -79,7 +79,7 @@ test.describe('Columns form', { tag: ['@e2e'] }, () => {
     const fields = page.locator('[data-slot="field"]')
     await expect(fields).toHaveCount(2)
 
-    const grid = fields.first().locator('..')
+    const grid = fields.first().locator('..').locator('..')
     await expect(grid).toHaveClass(/md:grid-cols-3/)
 
     const usernameField = page.locator(

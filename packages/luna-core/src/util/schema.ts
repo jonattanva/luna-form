@@ -1,5 +1,12 @@
 import { MAX, MIN } from './constant'
-import { isEmail, isNumber, isSelectMonth, isSelectYear } from './is-input'
+import {
+  isCheckbox,
+  isEmail,
+  isNumber,
+  isRadio,
+  isSelectMonth,
+  isSelectYear,
+} from './is-input'
 import { z } from 'zod'
 import type { Input, Schemas } from '../type'
 
@@ -13,6 +20,8 @@ const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isEmail, getEmail],
   [isSelectYear, getYearSchema],
   [isSelectMonth, getMonthSchema],
+  [isCheckbox, getBoolean],
+  [isRadio, getRadio],
 ]
 
 export function buildSchema(schemas: Schemas) {
@@ -43,6 +52,26 @@ export function getEmail(input: Input) {
   const schema = z.email().trim()
   if (input.required) {
     return schema.min(1, input.validation?.required)
+  }
+  return schema.or(z.literal('')).nullable()
+}
+
+export function getBoolean(input: Input) {
+  let schema = z.coerce.boolean()
+  if (input.required) {
+    schema = schema.refine((value) => value === true, {
+      message: input.validation?.required,
+    })
+    return z.preprocess((value) => (value === null ? false : value), schema)
+  }
+  return schema.nullable()
+}
+
+export function getRadio(input: Input) {
+  let schema = z.coerce.string()
+  if (input.required) {
+    schema = schema.min(1, input.validation?.required)
+    return z.preprocess((value) => (value === null ? '' : value), schema)
   }
   return schema.or(z.literal('')).nullable()
 }

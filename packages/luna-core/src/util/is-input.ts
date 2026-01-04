@@ -15,25 +15,29 @@ import {
   TYPE_TEL,
   TYPE_TEXT,
 } from './constant'
-import type { Column, Field, Input, Select, Value } from '../type'
 import { isString } from './is-type'
+import type { Column, Field, Input, Select, Value } from '../type'
 
-export function isSelectMonth(field: Field): boolean {
-  return field.type === SELECT_MONTH
-}
+export const isSelectMonth = (field: Field): boolean =>
+  createTypeChecker(SELECT_MONTH)(field)
 
-export function isSelectYear(field: Field): boolean {
-  return field.type === SELECT_YEAR
-}
-
-export function isOptions(field: Field): field is Input {
-  return isSelect(field) || isRadio(field)
-}
+export const isSelectYear = (field: Field): boolean =>
+  createTypeChecker(SELECT_YEAR)(field)
 
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isInput = createTypeChecker<Input>(INPUT)
 export const isRadio = createTypeChecker<Select>(RADIO)
 export const isSelect = createTypeChecker<Select>(SELECT)
+export const isTextArea = createTypeChecker<Input>(TEXTAREA)
+export const isText = createTypeChecker<Input>(
+  TYPE_TEXT,
+  TYPE_EMAIL,
+  TYPE_PASSWORD,
+  TYPE_TEL
+)
+
+export const isEmail = createTypeChecker<Input>(INPUT_EMAIL, TYPE_EMAIL)
+export const isNumber = createTypeChecker<Input>(INPUT_NUMBER, TYPE_NUMBER)
 
 export function isColumn(slot: Field | Column): slot is Column {
   return slot.type === COLUMN
@@ -43,39 +47,25 @@ export function isField(slot: Field | Column): slot is Field {
   return slot.type !== COLUMN
 }
 
-export function isTextArea(field: Field): field is Input {
-  return field.type === TEXTAREA
-}
-
-export function isText(field: Field): field is Input {
-  return (
-    field.type === TYPE_TEXT ||
-    field.type === TYPE_EMAIL ||
-    field.type === TYPE_PASSWORD ||
-    field.type === TYPE_TEL
-  )
-}
-
-export function isNumber(field: Field): field is Input {
-  return field.type === INPUT_NUMBER || field.type === TYPE_NUMBER
-}
-
-export function isEmail(field: Field): field is Input {
-  return field.type === INPUT_EMAIL || field.type === TYPE_EMAIL
-}
-
-function createTypeChecker<T extends Field>(
-  type: string
-): (field: Field) => field is T {
-  return (field): field is T => {
-    const inputType = isString(field.type) ? field.type : undefined
-    if (inputType) {
-      return inputType === type || inputType?.startsWith(`${type}/`)
-    }
-    return false
-  }
+export function isOptions(field: Field): field is Input {
+  return isSelect(field) || isRadio(field)
 }
 
 export function isValidValue(value?: Value): boolean {
   return value !== undefined && value !== null && value !== ''
+}
+
+function createTypeChecker<T extends Field>(
+  ...types: string[]
+): (field: Field) => field is T {
+  return (field): field is T => {
+    const inputType = isString(field.type) ? field.type : undefined
+    if (!inputType) {
+      return false
+    }
+
+    return types.some((type) => {
+      return inputType === type || inputType?.startsWith(`${type}/`)
+    })
+  }
 }

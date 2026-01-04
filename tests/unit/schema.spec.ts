@@ -287,4 +287,48 @@ test.describe('Schema Utility', { tag: ['@unit'] }, () => {
     expect(schema.safeParse('abcdef').success).toBe(false)
     expect(schema.safeParse('abc').success).toBe(true)
   })
+
+  test('should create a boolean schema with required validation', () => {
+    const input = {
+      name: 'terms',
+      required: true,
+      type: 'checkbox',
+      validation: {
+        required: 'You must accept the terms',
+      },
+    }
+
+    const schema = getSchema(input)
+    expect(schema.safeParse(false).success).toBe(false)
+    expect(schema.safeParse(true).success).toBe(true)
+  })
+
+  test('should create a radio schema with required validation', () => {
+    const input = {
+      name: 'gender',
+      required: true,
+      type: 'radio',
+      validation: {
+        required: 'Gender is required',
+      },
+    }
+
+    const schema = getSchema(input)
+    expect(schema.safeParse('').success).toBe(false)
+    expect(schema.safeParse(null).success).toBe(false)
+    expect(schema.safeParse('male').success).toBe(true)
+  })
+
+  test('should create a radio schema without required validation', () => {
+    const input = {
+      name: 'gender',
+      required: false,
+      type: 'radio',
+    }
+
+    const schema = getSchema(input)
+    expect(schema.safeParse('').success).toBe(true)
+    expect(schema.safeParse(null).success).toBe(true)
+    expect(schema.safeParse('male').success).toBe(true)
+  })
 })
