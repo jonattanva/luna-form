@@ -1,5 +1,5 @@
 {
-  "name": "react-luna-form",
+  "name": "luna-react",
   "version": "0.0.5",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",

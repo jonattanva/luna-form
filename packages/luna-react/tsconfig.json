@@ -10,10 +10,7 @@
     "strict": true,
     "stripInternal": true,
     "target": "es2020",
-    "verbatimModuleSyntax": true,
-    "paths": {
-      "@luna-form/core": ["../luna-core/src/index.ts"]
-    }
+    "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules", "./dist/**/*"]
 }

@@ -11,7 +11,7 @@ import {
   defineRadio,
   defineSelect,
   defineTextArea,
-} from 'react-luna-form/config'
+} from 'luna-react/config'
 
 export default defineConfig({
   inputs: [

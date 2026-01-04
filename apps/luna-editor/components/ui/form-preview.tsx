@@ -2,7 +2,7 @@
 
 import config from '@/luna.config'
 import { Button } from './button'
-import { Form } from 'react-luna-form'
+import { Form } from 'luna-react'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { useAtomValue } from 'jotai'
