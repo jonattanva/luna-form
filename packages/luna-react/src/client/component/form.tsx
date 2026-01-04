@@ -1,8 +1,8 @@
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
-import { useFormAction } from '../hook/form-action'
-import { useSchema } from '../hook/schema'
+import { useFormAction } from '../hook/use-form-action'
+import { useSchema } from '../hook/use-schema'
 import type { Definition, Sections } from '@luna-form/core'
 import type { Config } from '../../type'
 

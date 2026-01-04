@@ -1,5 +1,5 @@
 import { startTransition, useCallback, useRef } from 'react'
-import { useStore } from './store'
+import { useStore } from './use-store'
 import type { Schema, Schemas } from '@luna-form/core'
 
 export function useSchema() {
