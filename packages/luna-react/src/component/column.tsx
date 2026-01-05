@@ -12,17 +12,12 @@ export type ColumnProps = Readonly<{
 export function Column(props: ColumnProps) {
   const cols = getColumn(props.column?.advanced?.cols)
 
-  const localStyle = {
-    orientation: props.column?.advanced?.orientation,
-  }
-  const { compact, orientation } = useStyle(props.style, localStyle)
+  const { compact } = useStyle(props.style)
 
   return (
     <div className="flex w-full flex-col gap-4">
       <div className={twMerge('grid grid-cols-1 gap-8 sm:gap-4', cols)}>
-        <Group compact={compact} orientation={orientation}>
-          {props.children}
-        </Group>
+        <Group compact={compact}>{props.children}</Group>
       </div>
     </div>
   )

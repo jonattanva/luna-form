@@ -64,7 +64,6 @@ export type Section = {
 export type Column = {
   advanced?: {
     cols?: number
-    orientation?: Orientation
   }
   fields: Array<Field>
   type: 'column' | (string & {})
