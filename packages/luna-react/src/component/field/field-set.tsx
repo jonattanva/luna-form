@@ -1,15 +1,20 @@
 import { Group } from '../group'
 import { Legend } from '../legend'
+import { useStyle, type Style } from '../../lib/use-style'
 import type { Section } from '@luna-form/core'
 
 export function FieldSet(
   props: Readonly<{
     children?: React.ReactNode
     section: Section
+    style?: Style
   }>
 ) {
+  const localStyle = { compact: props.section.compact }
+  const { compact } = useStyle(props.style, localStyle)
+
   if (!props.section.title && !props.section.description) {
-    return <Group compact={props.section.compact}>{props.children}</Group>
+    return <Group compact={compact}>{props.children}</Group>
   }
 
   const fields = props.section.fields || []
@@ -24,7 +29,7 @@ export function FieldSet(
         description={props.section.description}
         title={props.section.title}
       />
-      <Group compact={props.section.compact}>{props.children}</Group>
+      <Group compact={compact}>{props.children}</Group>
     </fieldset>
   )
 }

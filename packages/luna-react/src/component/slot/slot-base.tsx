@@ -3,6 +3,7 @@ import { Fragment } from 'react'
 import type { Children } from '../../type'
 import type { ColumnProps } from '../column'
 import type { FieldProps } from '../field/field'
+import type { Style } from '../../lib/use-style'
 
 export function SlotBase<
   T extends {
@@ -15,6 +16,7 @@ export function SlotBase<
     disabled?: boolean
     fields?: Fields
     components: T
+    style?: Style
   }>
 ) {
   const fields = prepare(props.fields)
@@ -24,7 +26,7 @@ export function SlotBase<
   return fields.map((field, index) => (
     <Fragment key={index}>
       {isColumn(field) && (
-        <Column column={field}>
+        <Column column={field} style={props.style}>
           <SlotBase {...props} fields={field.fields} />
         </Column>
       )}

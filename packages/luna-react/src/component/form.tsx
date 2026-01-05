@@ -3,6 +3,7 @@ import { FieldSet } from './field/field-set'
 import { Fragment } from 'react'
 import { Group } from './group'
 import { Separator } from './separator'
+import { useStyle } from '../lib/use-style'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Slot } from '../type'
 
@@ -24,17 +25,22 @@ export function Form(
     <div className="h-full w-full">
       <form noValidate={props.noValidate} action={props.action}>
         <Group>
-          {sections.map((section, index) => (
-            <Fragment key={index}>
-              <FieldSet section={section}>
-                {props.children({
-                  disabled: props.readOnly,
-                  fields: section.fields,
-                })}
-              </FieldSet>
-              {section.separator && <Separator />}
-            </Fragment>
-          ))}
+          {sections.map((section, index) => {
+            const localStyle = { compact: section.compact }
+            const mergedStyle = useStyle(props.config.style, localStyle)
+            return (
+              <Fragment key={index}>
+                <FieldSet section={section} style={mergedStyle}>
+                  {props.children({
+                    disabled: props.readOnly,
+                    fields: section.fields,
+                    style: mergedStyle,
+                  })}
+                </FieldSet>
+                {section.separator && <Separator />}
+              </Fragment>
+            )
+          })}
           {props.control && <Control>{props.control}</Control>}
         </Group>
       </form>

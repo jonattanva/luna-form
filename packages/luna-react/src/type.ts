@@ -5,11 +5,16 @@ import type {
   Field,
   Fields,
   BaseConfig,
+  Orientation,
 } from '@luna-form/core'
 
 export type Slot = (props: {
   disabled?: boolean
   fields?: Fields
+  style?: {
+    compact?: boolean
+    orientation?: Orientation
+  }
 }) => React.ReactNode
 
 export type Children = (props: {

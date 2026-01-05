@@ -1,18 +1,28 @@
-import { getColumn, type Column } from '@luna-form/core'
+import { Group } from './group'
+import { getColumn, type Column as ColumnType } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
+import { useStyle, type Style } from '../lib/use-style'
 
 export type ColumnProps = Readonly<{
   children?: React.ReactNode
-  column?: Column
+  column?: ColumnType
+  style?: Style
 }>
 
 export function Column(props: ColumnProps) {
   const cols = getColumn(props.column?.advanced?.cols)
 
+  const localStyle = {
+    orientation: props.column?.advanced?.orientation,
+  }
+  const { compact, orientation } = useStyle(props.style, localStyle)
+
   return (
     <div className="flex w-full flex-col gap-4">
       <div className={twMerge('grid grid-cols-1 gap-8 sm:gap-4', cols)}>
-        {props.children}
+        <Group compact={compact} orientation={orientation}>
+          {props.children}
+        </Group>
       </div>
     </div>
   )
