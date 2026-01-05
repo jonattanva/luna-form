@@ -26,7 +26,7 @@ export function SlotBase<
   return fields.map((field, index) => (
     <Fragment key={index}>
       {isColumn(field) && (
-        <Column column={field} style={props.style}>
+        <Column column={field}>
           <SlotBase {...props} fields={field.fields} />
         </Column>
       )}
