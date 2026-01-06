@@ -57,6 +57,7 @@ export type Section = {
   compact?: boolean
   description?: string
   fields?: Fields
+  orientation?: Orientation
   separator?: boolean
   title?: string
 } & Base
