@@ -71,7 +71,10 @@ export function getRadio(input: Input) {
   let schema = z.coerce.string()
   if (input.required) {
     schema = schema.min(1, input.validation?.required)
-    return z.preprocess((value) => (value === null ? '' : value), schema)
+    return z.preprocess(
+      (value) => (value === null || value === undefined ? '' : value),
+      schema
+    )
   }
   return schema.or(z.literal('')).nullable()
 }
@@ -82,7 +85,10 @@ export function getText(input: Input) {
 
   if (input.required) {
     schema = applyRequired(schema, input)
-    return z.preprocess((value) => (value === null ? '' : value), schema)
+    return z.preprocess(
+      (value) => (value === null || value === undefined ? '' : value),
+      schema
+    )
   }
   return schema.nullable()
 }

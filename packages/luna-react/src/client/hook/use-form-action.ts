@@ -59,10 +59,6 @@ export function useFormState<T>(
         const errors = flatten(validated.error)
         startTransition(() => {
           setError(errors)
-          onError?.({
-            title: 'There were validation errors submitting the form.',
-            detail: errors,
-          })
         })
 
         return {

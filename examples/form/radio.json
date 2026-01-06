@@ -2,6 +2,33 @@
     "sections": [
         {
             "title": "Subscription Plan",
+            "description": "See pricing and features for each plan.",
+            "fields": [
+                {
+                    "label": "Plan",
+                    "name": "plan",
+                    "type": "radio",
+                    "source": [
+                        {
+                            "label": "Starter (100K tokens/month)",
+                            "value": "starter"
+                        },
+                        {
+                            "label": "Pro (1M tokens/month)",
+                            "value": "prop"
+                        },
+                        {
+                            "label": "Enterprise (Unlimited tokens)",
+                            "value": "enterprise"
+                        }
+                    ],
+                    "required": true,
+                    "description": "You can upgrade or downgrade your plan at any time."
+                }
+            ]
+        },
+        {
+            "title": "Subscription Plan",
             "description": "Yearly and lifetime plans offer significant savings.",
             "compact": true,
             "fields": [

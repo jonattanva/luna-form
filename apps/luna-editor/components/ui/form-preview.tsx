@@ -13,10 +13,20 @@ export function FormPreview() {
   const code = useAtomValue(codeAtom)
   const form = convertCodeToForm(code)
 
-  function handleSuccess(response: { message: string }) {
+  function handleSuccess(response: {
+    message: string
+    form: Record<string, unknown>
+  }) {
     toast.success(response.message, {
-      description: 'Your form has been processed.',
-      duration: 4000,
+      icon: null,
+      description: (
+        <pre className="mt-1.5 w-full overflow-auto rounded-md p-4 text-xs">
+          <code className="text-gray-900">
+            {JSON.stringify(response.form, null, 2)}
+          </code>
+        </pre>
+      ),
+      duration: 5000,
     })
   }
 
@@ -28,14 +38,17 @@ export function FormPreview() {
 
     if (Array.isArray(error.detail)) {
       description = error.detail.join(', ')
-    } else {
+    } else if (error.detail) {
       description = Object.entries(error.detail)
         .map(([key, value]) => `${key}: ${value.join(', ')}`)
         .join('; ')
     }
 
     toast.error(error.message, {
-      description,
+      icon: null,
+      description: (
+        <div className="mt-1.5 text-xs text-gray-900">{description}</div>
+      ),
       duration: 8000,
     })
   }
