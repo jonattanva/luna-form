@@ -1,6 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
+  webServer: {
+    command: 'pnpm serve',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

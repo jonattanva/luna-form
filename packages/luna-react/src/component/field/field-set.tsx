@@ -8,13 +8,20 @@ export function FieldSet(
     children?: React.ReactNode
     section: Section
     style?: Style
-  }>
+  }>,
 ) {
-  const localStyle = { compact: props.section.compact }
-  const { compact } = useStyle(props.style, localStyle)
+  const localStyle = {
+    compact: props.section.compact,
+    orientation: props.section.orientation,
+  }
+  const { compact, orientation } = useStyle(props.style, localStyle)
 
   if (!props.section.title && !props.section.description) {
-    return <Group compact={compact}>{props.children}</Group>
+    return (
+      <Group compact={compact} orientation={orientation}>
+        {props.children}
+      </Group>
+    )
   }
 
   const fields = props.section.fields || []
@@ -29,7 +36,9 @@ export function FieldSet(
         description={props.section.description}
         title={props.section.title}
       />
-      <Group compact={compact}>{props.children}</Group>
+      <Group compact={compact} orientation={orientation}>
+        {props.children}
+      </Group>
     </fieldset>
   )
 }

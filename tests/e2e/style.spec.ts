@@ -24,12 +24,15 @@ test.describe('Style override', { tag: ['@e2e'] }, () => {
       }`,
     )
 
-    await page.goto('')
+    await page.goto('/')
+    await page.reload()
+    await page.waitForSelector('[data-slot="field-set"]')
 
     const fieldSet = page.locator('[data-slot="field-set"]').first()
     const group = fieldSet.locator('[data-slot="field-group"]').first()
 
     await expect(group).toHaveAttribute('data-compact', 'true')
+    await expect(group).toHaveAttribute('data-orientation', 'horizontal')
   })
 
   test('should override global style with section-level style', async ({
@@ -45,6 +48,7 @@ test.describe('Style override', { tag: ['@e2e'] }, () => {
         "sections": [
           {
             "compact": true,
+            "orientation": "horizontal",
             "fields": [
               {
                 "label": "Test Field",
@@ -57,11 +61,14 @@ test.describe('Style override', { tag: ['@e2e'] }, () => {
       }`,
     )
 
-    await page.goto('')
+    await page.goto('/')
+    await page.reload()
+    await page.waitForSelector('[data-slot="field-set"]')
 
     const fieldSet = page.locator('[data-slot="field-set"]').first()
     const group = fieldSet.locator('[data-slot="field-group"]').first()
 
     await expect(group).toHaveAttribute('data-compact', 'true')
+    await expect(group).toHaveAttribute('data-orientation', 'horizontal')
   })
 })
