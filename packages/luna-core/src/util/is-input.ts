@@ -39,6 +39,10 @@ export const isText = createTypeChecker<Input>(
 export const isEmail = createTypeChecker<Input>(INPUT_EMAIL, TYPE_EMAIL)
 export const isNumber = createTypeChecker<Input>(INPUT_NUMBER, TYPE_NUMBER)
 
+export function isSelector(slot: Field): boolean {
+  return isSelect(slot) || isRadio(slot) || isCheckbox(slot)
+}
+
 export function isColumn(slot: Field | Column): slot is Column {
   return slot.type === COLUMN
 }

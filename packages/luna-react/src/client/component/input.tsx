@@ -10,6 +10,7 @@ import {
   getEntity,
   handleSourceEvent,
   isSelect,
+  isSelector,
   prepareInputProps,
   type AriaAttributes,
   type CommonProps,
@@ -80,6 +81,10 @@ export function Input(
   }
 
   function onBlur(event: React.FocusEvent<HTMLInputElement>) {
+    if (isSelector(props.field)) {
+      return
+    }
+
     const value = event.target.value
     if (props.config.validation.blur) {
       validated(value)

@@ -19,3 +19,4 @@
 ## Code style
 
 - TypeScript strict mode
+- Avoid using any or unknown

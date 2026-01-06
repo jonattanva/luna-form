@@ -1,6 +1,30 @@
 {
     "sections": [
         {
+            "title": "Responses",
+            "description": "Get notified when ChatGPT responds to requests that take time, likere search or image generation.",
+            "separator": true,
+            "fields": [
+                {
+                    "label": "Push notifications",
+                    "name": "push_notifications",
+                    "type": "radio",
+                    "source": [
+                        {
+                            "label": "Push notifications",
+                            "value": "push_notifications"
+                        },
+                        {
+                            "label": "Email notifications",
+                            "value": "email_notifications"
+                        }
+                    ],
+                    "readonly": true
+                }
+            ],
+            "order": 1
+        },
+        {
             "title": "Subscription Plan",
             "description": "See pricing and features for each plan.",
             "fields": [
