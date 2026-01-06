@@ -4,7 +4,10 @@ import { getCurrentValue, toOptions } from '../util/extract'
 import { isOptions, isSelect, isValidValue } from '../util/is-input'
 import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
 
-export function resolveSource(field: Field, value?: Record<string, unknown>) {
+export function resolveSource(
+  field: Field,
+  value?: Nullable<Record<string, unknown>>
+) {
   const current = buildSource(field)
   if (current) {
     return current
@@ -12,7 +15,10 @@ export function resolveSource(field: Field, value?: Record<string, unknown>) {
   return buildOptions(field, value)
 }
 
-export function getInputValue(field: Field, value?: Record<string, unknown>) {
+export function getInputValue(
+  field: Field,
+  value?: Nullable<Record<string, unknown>>
+) {
   return getCurrentValue(
     field.name ? value?.[field.name] : undefined,
     field.advanced?.entity
@@ -58,7 +64,7 @@ export function prepareInputProps<T>(
   field: Field,
   commonProps: CommonProps,
   data?: Nullable<DataSource | T[]>,
-  value?: Record<string, unknown>
+  value?: Nullable<Record<string, unknown>>
 ) {
   const currentValue = getInputValue(field, value)
   const options = Array.isArray(data) ? getOptions(field, data) : data

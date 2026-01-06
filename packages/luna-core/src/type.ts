@@ -1,7 +1,8 @@
-import type { z } from 'zod'
+import type { core, z, ZodObject } from 'zod'
 
 export type Schema = z.ZodTypeAny
 export type Schemas = Record<string, Schema>
+export type ZodSchema = ZodObject<{ [x: string]: Schema }, core.$strip>
 
 export type Nullable<T> = T | null
 
@@ -138,6 +139,11 @@ export type RemotePattern = {
   hostname?: string
   port?: number
   protocol?: Protocol
+}
+
+export type FormStateError = {
+  title: string
+  detail?: Nullable<Record<string, string[]> | string[]>
 }
 
 export type BaseConfig<T> = {

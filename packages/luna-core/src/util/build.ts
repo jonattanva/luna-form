@@ -1,14 +1,14 @@
 import { $REF, HORIZONTAL, VERTICAL } from './constant'
 import { isObject } from './is-type'
 import { isCheckbox, isRadio, isSelect } from './is-input'
-import type { Field } from '../type'
+import type { Field, Nullable } from '../type'
 
 export function buildOptions(
   field: Field,
-  values: Record<string, unknown> = {}
+  values: Nullable<Record<string, unknown>> = {}
 ) {
   if (isSelect(field) && field.disabled) {
-    const current = field.name ? values[field.name] : undefined
+    const current = field.name ? values?.[field.name] : undefined
     if (current && isObject(current)) {
       return [current]
     }
@@ -34,14 +34,4 @@ export function buildSource(field: Field) {
       return source
     }
   }
-}
-
-export function buildFormData(form: Record<string, unknown>) {
-  const formData = new FormData()
-  for (const [key, value] of Object.entries(form)) {
-    if (value !== null) {
-      formData.append(key, String(value))
-    }
-  }
-  return formData
 }

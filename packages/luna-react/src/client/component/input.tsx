@@ -15,6 +15,7 @@ import {
   type CommonProps,
   type DataAttributes,
   type Field,
+  type Nullable,
   type Schema,
 } from '@luna-form/core'
 import type { Config } from '../../type'
@@ -28,7 +29,7 @@ export function Input(
     field: Field
     onMount: (name: string, schema: Schema) => void
     onUnmount: (name: string) => void
-    value?: Record<string, unknown>
+    value?: Nullable<Record<string, unknown>>
   }>
 ) {
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))

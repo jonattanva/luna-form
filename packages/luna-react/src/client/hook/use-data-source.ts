@@ -1,5 +1,5 @@
 import { reportSourceAtom } from '../lib/source-store'
-import { resolveSource, type Field } from '@luna-form/core'
+import { resolveSource, type Field, type Nullable } from '@luna-form/core'
 import { useAtom } from 'jotai'
 import { useFetch } from './use-fetch'
 import type { Config } from '../../type'
@@ -7,7 +7,7 @@ import type { Config } from '../../type'
 export function useDataSource(
   field: Field,
   config: Config,
-  value?: Record<string, unknown>
+  value?: Nullable<Record<string, unknown>>
 ) {
   const dataSource = resolveSource(field, value)
   const [source, setSource] = useAtom(reportSourceAtom(field.name))

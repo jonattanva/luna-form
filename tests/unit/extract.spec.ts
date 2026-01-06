@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 import {
   extract,
-  getType,
   getArray,
   getCurrentValue,
-  getValue,
   getEntity,
+  getFormData,
+  getType,
+  getValue,
   toOptions,
 } from '@/packages/luna-core/src/util/extract'
 
@@ -179,5 +180,59 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
       { value: 'Only Value' },
       'Not an object',
     ])
+  })
+
+  test('should return an empty object for empty FormData', async () => {
+    const formData = new FormData()
+    const result = getFormData(formData)
+    expect(result).toEqual({})
+  })
+
+  test('should return single values for single keys', async () => {
+    const formData = new FormData()
+    formData.append('name', 'John')
+    formData.append('age', '30')
+
+    const result = getFormData(formData)
+    expect(result).toEqual({
+      name: 'John',
+      age: '30',
+    })
+  })
+
+  test('should return an array for keys with multiple values', async () => {
+    const formData = new FormData()
+    formData.append('tags', 'typescript')
+    formData.append('tags', 'react')
+    formData.append('tags', 'playwright')
+
+    const result = getFormData(formData)
+    expect(result).toEqual({
+      tags: ['typescript', 'react', 'playwright'],
+    })
+  })
+
+  test('should handle mixed single and multiple values', async () => {
+    const formData = new FormData()
+    formData.append('id', '123')
+    formData.append('roles', 'admin')
+    formData.append('roles', 'editor')
+
+    const result = getFormData(formData)
+    expect(result).toEqual({
+      id: '123',
+      roles: ['admin', 'editor'],
+    })
+  })
+
+  test('should handle File objects', async () => {
+    const formData = new FormData()
+    const file = new File(['content'], 'test.txt', { type: 'text/plain' })
+    formData.append('file', file)
+
+    const result = getFormData(formData)
+    expect(result).toEqual({
+      file: file,
+    })
   })
 })

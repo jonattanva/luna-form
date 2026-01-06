@@ -1,26 +1,39 @@
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
-import { useFormAction } from '../hook/use-form-action'
+import { useFormState, type FormState } from '../hook/use-form-action'
 import { useSchema } from '../hook/use-schema'
-import type { Definition, Sections } from '@luna-form/core'
+import type {
+  Definition,
+  FormStateError,
+  Nullable,
+  Sections,
+  ZodSchema,
+} from '@luna-form/core'
 import type { Config } from '../../type'
 
-export function Form(
+export function Form<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(
   props: Readonly<{
-    action?: (formData: FormData) => Promise<void> | void
+    action?: (formData: unknown, schema?: ZodSchema) => Promise<FormState<T>>
     children?: React.ReactNode
     config: Config
     definition?: Definition
+    onError?: (error: Nullable<FormStateError>) => void
+    onSuccess?: (data: T) => void
     readOnly?: boolean
     sections: Sections
-    value?: Record<string, unknown>
+    value?: Nullable<T>
   }>
 ) {
   const [schema, onMount, onUnmount] = useSchema()
 
-  const [action] = useFormAction(schema, props.action, {
-    enabled: props.config.validation.submit,
+  const [action, state] = useFormState<T>(schema, props.action, {
+    onError: props.onError,
+    onSuccess: props.onSuccess,
+    validation: props.config.validation.submit,
+    value: props.value,
   })
 
   return (
@@ -41,7 +54,7 @@ export function Form(
               config={props.config}
               onMount={onMount}
               onUnmount={onUnmount}
-              value={props.value}
+              value={state.data}
             />
           )}
         </Slot>

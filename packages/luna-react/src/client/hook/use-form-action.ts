@@ -1,47 +1,114 @@
-import { buildFormData, buildSchema, flatten } from '@luna-form/core'
-import { reportErrorAtom } from '../lib/error-store'
-import { startTransition } from 'react'
 import { useSetAtom } from 'jotai'
-import type { Schemas } from '@luna-form/core'
+import { reportErrorAtom } from '../lib/error-store'
+import { startTransition, useActionState } from 'react'
+import {
+  buildSchema,
+  flatten,
+  getFormData,
+  type FormStateError,
+  type Nullable,
+  type Schemas,
+  type ZodSchema,
+} from '@luna-form/core'
 
-export function useFormAction(
+export type FormState<T> = {
+  data: Nullable<T>
+  error: Nullable<FormStateError>
+  success: boolean
+}
+
+export type FormActionOptions<T> = {
+  onError?: (error: Nullable<FormStateError>) => void
+  onSuccess?: (data: T) => void
+  validation?: boolean
+  value?: Nullable<T>
+}
+
+export function useFormState<T>(
   getSchema: () => Schemas,
-  action?: (formData: FormData) => Promise<void> | void,
-  options?: {
-    enabled?: boolean
-  }
+  action?: <K>(formData: K, schema?: ZodSchema) => Promise<FormState<T>>,
+  options?: FormActionOptions<T>
 ) {
-  const { enabled = true } = options ?? {}
+  const { validation = true, onSuccess, onError, value = null } = options ?? {}
 
   const setError = useSetAtom(reportErrorAtom)
 
-  async function formAction(formData: FormData) {
-    if (enabled === false) {
-      if (action) {
-        await action(formData)
-      }
-      return
-    }
-
-    const schemas = getSchema()
-    const schema = buildSchema(schemas)
-
-    const form = Object.fromEntries(formData)
-    const validated = schema.safeParse(form)
-
-    if (!validated.success) {
-      const pretty = flatten(validated.error)
-      startTransition(() => {
-        setError(pretty)
-      })
-      return
-    }
-
-    if (action) {
-      const formData = buildFormData(validated.data)
-      await action(formData)
-    }
+  const initialState: FormState<T> = {
+    data: value,
+    error: null,
+    success: false,
   }
 
-  return [formAction] as const
+  const [state, formAction, isPending] = useActionState(
+    async (
+      prevState: FormState<T>,
+      formData: FormData
+    ): Promise<FormState<T>> => {
+      const schema = buildSchema(getSchema())
+      if (validation === false) {
+        if (action) {
+          return await action(formData, schema)
+        }
+        return prevState
+      }
+
+      const form = getFormData(formData)
+      const validated = schema.safeParse(form)
+
+      if (!validated.success) {
+        const errors = flatten(validated.error)
+        startTransition(() => {
+          setError(errors)
+          onError?.({
+            title: 'There were validation errors submitting the form.',
+            detail: errors,
+          })
+        })
+
+        return {
+          data: form as T,
+          error: {
+            title: 'There were validation errors submitting the form.',
+            detail: errors,
+          },
+          success: false,
+        }
+      }
+
+      if (action) {
+        try {
+          const result = await action(form, schema)
+          if (result.success) {
+            onSuccess?.(result.data as T)
+          } else if (result.error) {
+            startTransition(() => {
+              onError?.(result.error)
+            })
+          }
+          return result
+        } catch (error) {
+          const detail =
+            error instanceof Error ? [error.message] : ['Unknown error']
+
+          return {
+            data: form as T,
+            error: {
+              title: 'An unexpected error occurred submitting the form.',
+              detail,
+            },
+            success: false,
+          }
+        }
+      }
+
+      return {
+        data: validated.data as T,
+        error: null,
+        success: true,
+      }
+    },
+    initialState
+  )
+
+  return [formAction, state, isPending] as const
 }
