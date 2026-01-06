@@ -12,7 +12,7 @@ export function Group(
       data-slot="field-group"
       data-compact={props.compact}
       data-orientation={props.orientation}
-      className="flex w-full flex-col gap-8 data-[compact=true]:gap-3 data-[orientation=horizontal]:flex-row"
+      className="flex w-full flex-col gap-8 data-[compact=true]:gap-3"
     >
       {props.children}
     </div>
