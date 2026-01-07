@@ -16,7 +16,7 @@ import {
   TYPE_TEXT,
 } from './constant'
 import { isString } from './is-type'
-import type { Column, Field, Input, Select, Value } from '../type'
+import type { Column, Field, Input, Nullable, Select } from '../type'
 
 export const isSelectMonth = (field: Field): boolean =>
   createTypeChecker(SELECT_MONTH)(field)
@@ -39,8 +39,8 @@ export const isText = createTypeChecker<Input>(
 export const isEmail = createTypeChecker<Input>(INPUT_EMAIL, TYPE_EMAIL)
 export const isNumber = createTypeChecker<Input>(INPUT_NUMBER, TYPE_NUMBER)
 
-export function isSelector(slot: Field): boolean {
-  return isSelect(slot) || isRadio(slot) || isCheckbox(slot)
+export function isClickable(field: Field): boolean {
+  return isRadio(field) || isCheckbox(field)
 }
 
 export function isColumn(slot: Field | Column): slot is Column {
@@ -55,7 +55,11 @@ export function isOptions(field: Field): field is Input {
   return isSelect(field) || isRadio(field)
 }
 
-export function isValidValue(value?: Value): boolean {
+export function isTextable(field: Field): boolean {
+  return isInput(field) || isTextArea(field)
+}
+
+export function isValidValue<T>(value?: Nullable<T>): boolean {
   return value !== undefined && value !== null && value !== ''
 }
 

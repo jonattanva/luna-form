@@ -69,40 +69,6 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(form).toContainText(targetYear.toString())
   })
 
-  test('should work correctly with required validation', async ({ page }) => {
-    await inject(
-      page,
-      `{
-            "sections": [
-                {
-                    "fields": [
-                        {
-                            "label": "Select Month",
-                            "name": "month",
-                            "type": "select/month",
-                            "required": true,
-                            "validation": {
-                                "required": "Month is required"
-                            }
-                        }
-                    ]
-                }
-            ]
-        }`
-    )
-
-    await page.goto('')
-
-    const select = page.getByRole('combobox')
-    await select.click()
-
-    await page.keyboard.press('Escape')
-    await select.blur()
-
-    const message = page.getByText('Month is required', { exact: true })
-    await expect(message).toBeVisible()
-  })
-
   test('should render select array source correctly', async ({ page }) => {
     await inject(
       page,

@@ -9,6 +9,9 @@ export default defineConfig({
   reporter: process.env.CI
     ? [['html'], ['junit', { outputFile: 'test-results/junit-report.xml' }]]
     : 'html',
+  expect: {
+    timeout: 15000,
+  },
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

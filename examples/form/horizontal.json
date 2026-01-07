@@ -16,7 +16,10 @@
                     "name": "name",
                     "type": "input/text",
                     "required": true,
-                    "description": "Provide your full name for identification"
+                    "description": "Provide your full name for identification",
+                    "validation": {
+                        "required": "Name is required"
+                    }
                 }
             ]
         },
@@ -30,7 +33,10 @@
                     "name": "message",
                     "type": "textarea",
                     "required": true,
-                    "description": "You can write your message here. Keep it short, preferably under 100 characters."
+                    "description": "You can write your message here. Keep it short, preferably under 100 characters.",
+                    "validation": {
+                        "required": "Message is required"
+                    }
                 }
             ]
         }

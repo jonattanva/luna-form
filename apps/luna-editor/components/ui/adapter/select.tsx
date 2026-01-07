@@ -15,9 +15,9 @@ export function Select({
   placeholder?: string
 }) {
   const {
+    onChange,
     options = [],
     placeholder = 'Select an option',
-    onChange,
     ...selectProps
   } = props
 
@@ -31,8 +31,8 @@ export function Select({
   }
 
   return (
-    <Adapter onValueChange={handleValueChange}>
-      <SelectTrigger className="w-45" {...selectProps}>
+    <Adapter onValueChange={handleValueChange} {...selectProps}>
+      <SelectTrigger className="w-45">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

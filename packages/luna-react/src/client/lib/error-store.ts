@@ -7,6 +7,6 @@ import {
 
 export const inputErrorAtom = atom<Record<string, string[]>>({})
 
-export const reportInputErrorAtom = createRecordAtomFamily(inputErrorAtom)
 export const clearInputErrorAtom = createClearAtom(inputErrorAtom)
 export const reportErrorAtom = createBulkReportAtom(inputErrorAtom)
+export const reportInputErrorAtom = createRecordAtomFamily(inputErrorAtom)

@@ -2,6 +2,7 @@
 
 import config from '@/luna.config'
 import { Button } from './button'
+import { Code } from './code'
 import { Form } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
@@ -17,15 +18,8 @@ export function FormPreview() {
     message: string
     form: Record<string, unknown>
   }) {
-    toast.success(response.message, {
-      icon: null,
-      description: (
-        <pre className="mt-1.5 w-full overflow-auto rounded-md p-4 text-xs">
-          <code className="text-gray-900">
-            {JSON.stringify(response.form, null, 2)}
-          </code>
-        </pre>
-      ),
+    toast(response.message, {
+      description: <Code response={response.form} />,
       duration: 5000,
     })
   }

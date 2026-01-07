@@ -2,6 +2,7 @@ import { FormattedDescription } from '../../component/formatted-description'
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import {
+  prepareDefaultValue,
   prepareInputProps,
   resolveSource,
   type AriaAttributes,
@@ -32,13 +33,15 @@ export function Input(
     props.value
   )
 
+  const defaultProps = prepareDefaultValue(props.field, defaultValue)
+
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
     <InputGroup field={props.field}>
       <Component
         {...props.ariaAttributes}
         {...commonPropsWithOptions}
         {...props.dataAttributes}
-        defaultValue={defaultValue}
+        {...defaultProps}
       />
       <FormattedDescription text={props.field.description} />
     </InputGroup>

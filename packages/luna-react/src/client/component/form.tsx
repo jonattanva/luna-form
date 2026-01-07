@@ -2,7 +2,9 @@ import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
 import { useFormState, type FormState } from '../hook/use-form-action'
+import { useHydrateAtoms } from 'jotai/utils'
 import { useSchema } from '../hook/use-schema'
+import { valueAtom } from '../lib/value-store'
 import type {
   Definition,
   FormStateError,
@@ -35,6 +37,12 @@ export function Form<
     validation: props.config.validation.submit,
     value: props.value,
   })
+
+  console.log('Form state:', state)
+
+  useHydrateAtoms([[valueAtom, props.value ?? {}]])
+
+  // TODO: Show global error message
 
   return (
     <Body

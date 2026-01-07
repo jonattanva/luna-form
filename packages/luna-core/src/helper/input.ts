@@ -1,7 +1,7 @@
 import { OPTIONS } from '../util/constant'
 import { buildOptions, buildSource } from '../util/build'
 import { getCurrentValue, toOptions } from '../util/extract'
-import { isOptions, isSelect, isValidValue } from '../util/is-input'
+import { isCheckbox, isOptions, isSelect, isValidValue } from '../util/is-input'
 import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
 
 export function resolveSource(
@@ -15,14 +15,8 @@ export function resolveSource(
   return buildOptions(field, value)
 }
 
-export function getInputValue(
-  field: Field,
-  value?: Nullable<Record<string, unknown>>
-) {
-  return getCurrentValue(
-    field.name ? value?.[field.name] : undefined,
-    field.advanced?.entity
-  )
+export function getInputValue<K>(field: Field, value?: Nullable<K>) {
+  return getCurrentValue(value, field.advanced?.entity)
 }
 
 export function mergeOptionsProps(
@@ -60,11 +54,11 @@ export function getOptions<T>(field: Field, data?: Nullable<T[]>) {
   return data
 }
 
-export function prepareInputProps<T>(
+export function prepareInputProps<T, K>(
   field: Field,
   commonProps: CommonProps,
   data?: Nullable<DataSource | T[]>,
-  value?: Nullable<Record<string, unknown>>
+  value?: Nullable<K>
 ) {
   const currentValue = getInputValue(field, value)
   const options = Array.isArray(data) ? getOptions(field, data) : data
@@ -81,4 +75,22 @@ export function prepareInputProps<T>(
     commonPropsWithOptions,
     defaultValue,
   }
+}
+
+export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
+  if (isCheckbox(field)) {
+    return {
+      checked: isValidValue(value),
+    }
+  }
+  return { value: value ?? '' }
+}
+
+export function prepareDefaultValue<T>(field: Field, value?: Nullable<T>) {
+  if (isCheckbox(field)) {
+    return {
+      defaultChecked: isValidValue(value),
+    }
+  }
+  return { defaultValue: value }
 }

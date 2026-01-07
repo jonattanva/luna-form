@@ -36,6 +36,17 @@ export function createRecordAtomFamily<
   )
 }
 
+export function createClearAllAtom<T>(
+  baseAtom: PrimitiveAtom<Record<string, T>>
+) {
+  return atom(null, (get, set) => {
+    const current = get(baseAtom)
+    if (current && Object.keys(current).length > 0) {
+      set(baseAtom, {})
+    }
+  })
+}
+
 export function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, names: string[]) => {
     const current = get(baseAtom)
