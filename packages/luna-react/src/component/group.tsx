@@ -2,7 +2,7 @@ export function Group(
   props: Readonly<{
     children?: React.ReactNode
     compact?: boolean
-  }>
+  }>,
 ) {
   return (
     <div

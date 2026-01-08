@@ -26,10 +26,11 @@ export function Form(
         <Group>
           {sections.map((section, index) => (
             <Fragment key={index}>
-              <FieldSet section={section}>
+              <FieldSet section={section} style={props.config.style}>
                 {props.children({
                   disabled: props.readOnly,
                   fields: section.fields,
+                  style: props.config.style,
                 })}
               </FieldSet>
               {section.separator && <Separator />}
