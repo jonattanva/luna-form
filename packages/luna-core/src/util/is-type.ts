@@ -7,6 +7,10 @@ export function isObject<T>(value: unknown): value is Record<string, T> {
   )
 }
 
+export function isEmpty(value: unknown): boolean {
+  return value === null || value === undefined || value === ''
+}
+
 export function isValue(value: unknown): value is Value {
   return (
     typeof value === 'string' ||

@@ -3,6 +3,7 @@ import { buildOptions, buildSource } from '../util/build'
 import { getCurrentValue, toOptions } from '../util/extract'
 import { isCheckbox, isOptions, isSelect, isValidValue } from '../util/is-input'
 import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
+import { isObject } from '../util/is-type'
 
 export function resolveSource(
   field: Field,
@@ -16,7 +17,9 @@ export function resolveSource(
 }
 
 export function getInputValue<K>(field: Field, value?: Nullable<K>) {
-  return getCurrentValue(value, field.advanced?.entity)
+  const newValue =
+    isObject(value) && field.name in value ? value[field.name] : value
+  return getCurrentValue(newValue, field.advanced?.entity)
 }
 
 export function mergeOptionsProps(

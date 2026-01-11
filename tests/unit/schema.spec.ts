@@ -26,6 +26,29 @@ test.describe('Schema Utility', { tag: ['@unit'] }, () => {
     expect(schema.safeParse('test@example.com').success).toBe(true)
   })
 
+  test('should create an email schema with custom validation message', () => {
+    const input = {
+      name: 'email',
+      required: true,
+      type: 'input/email',
+      validation: {
+        required: 'Email is required',
+        email: 'Invalid email format',
+      },
+    }
+
+    const schema = getEmail(input)
+    const emptyResult = schema.safeParse('')
+    expect(emptyResult.success).toBe(false)
+    expect(emptyResult.error?.issues[0].message).toBe('Email is required')
+
+    const invalidResult = schema.safeParse('invalid-email')
+    expect(invalidResult.success).toBe(false)
+    expect(invalidResult.error?.issues[0].message).toBe('Invalid email format')
+
+    expect(schema.safeParse('test@example.com').success).toBe(true)
+  })
+
   test('should create an email schema without required validation', () => {
     const input = {
       name: 'email',

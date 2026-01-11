@@ -1,3 +1,5 @@
+# Agent Instructions
+
 ## Package Management
 
 - This project uses **pnpm** as its package manager
@@ -15,6 +17,8 @@
 
 - Ensure the local server is running (`pnpm run serve`) before executing the e2e tests.
 - You must build the project using `pnpm run build` before starting the server with `pnpm run serve`.
+- Never commit code with type errors or linting issues
+- All checks must pass before work is considered complete
 
 ## Code style
 

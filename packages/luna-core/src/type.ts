@@ -105,6 +105,7 @@ export type Field = CommonProps & {
   type: string
   validation?: {
     required?: string
+    email?: string
     length?: Length<string>
   }
 } & Base

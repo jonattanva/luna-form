@@ -38,8 +38,6 @@ export function Form<
     value: props.value,
   })
 
-  console.log('Form state:', state)
-
   useHydrateAtoms([[valueAtom, props.value ?? {}]])
 
   // TODO: Show global error message

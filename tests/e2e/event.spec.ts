@@ -1,7 +1,15 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Event form', { tag: ['@e2e'] }, () => {
+  const getField = (page: Page, label: string) => {
+    return page
+      .locator('[data-slot="field"]')
+      .filter({ hasText: label })
+      .getByRole('combobox')
+      .first()
+  }
+
   test('should set new source on event trigger', async ({ page }) => {
     await inject(
       page,
@@ -72,23 +80,19 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const pokemon = page.getByRole('combobox', { name: 'Pokemon (Optional)' })
+    const pokemon = getField(page, 'Pokemon')
     await pokemon.click()
 
     const option = page.getByRole('option', { name: 'pikachu' })
     await option.click()
 
-    const indexes = page.getByRole('combobox', {
-      name: 'Game Indexes (Optional)',
-    })
+    const indexes = getField(page, 'Game Indexes')
     await indexes.click()
 
     const yellow = page.getByRole('option', { name: 'yellow' })
     await yellow.click()
 
-    const abilities = page.getByRole('combobox', {
-      name: 'Abilities (Optional)',
-    })
+    const abilities = getField(page, 'Abilities')
     await abilities.click()
 
     const lightningRod = page.getByRole('option', { name: 'lightning-rod' })
@@ -154,15 +158,13 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const pokemon = page.getByRole('combobox', { name: 'Pokemon (Optional)' })
+    const pokemon = getField(page, 'Pokemon')
     await pokemon.click()
 
     const option = page.getByRole('option', { name: 'bulbasaur' })
     await option.click()
 
-    const abilities = page.getByRole('combobox', {
-      name: 'Abilities (Optional)',
-    })
+    const abilities = getField(page, 'Abilities')
     await abilities.click()
 
     const overgrow = page.getByRole('option', { name: 'overgrow' })
@@ -239,7 +241,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const country = page.getByRole('combobox', { name: 'Country (Optional)' })
+    const country = getField(page, 'Country')
     await country.click()
 
     const usa = page.getByRole('option', { name: 'USA' })
@@ -252,9 +254,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
           req.url().includes('category=tech')
       ),
       (async () => {
-        const category = page.getByRole('combobox', {
-          name: 'Category (Optional)',
-        })
+        const category = getField(page, 'Category')
         await category.click()
 
         const option = page.getByRole('option', { name: 'Tech' })
@@ -262,7 +262,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
       })(),
     ])
 
-    const item = page.getByRole('combobox', { name: 'Item (Optional)' })
+    const item = getField(page, 'Item')
     await item.click()
 
     const option = page.getByRole('option', { name: 'Merged Item' })
@@ -314,9 +314,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await input.fill('charmander')
     await input.blur()
 
-    const abilities = page.getByRole('combobox', {
-      name: 'Abilities (Optional)',
-    })
+    const abilities = getField(page, 'Abilities')
     await abilities.click()
 
     const blaze = page.getByRole('option', { name: 'blaze' })

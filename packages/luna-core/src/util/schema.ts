@@ -9,6 +9,7 @@ import {
 } from './is-input'
 import { z } from 'zod'
 import type { Input, Schemas } from '../type'
+import { isEmpty } from './is-type'
 
 type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
 
@@ -49,11 +50,20 @@ export function getSchema(input: Input) {
 }
 
 export function getEmail(input: Input) {
-  const schema = z.email().trim()
+  const baseSchema = z.string().trim()
+
   if (input.required) {
-    return schema.min(1, input.validation?.required)
+    const schema = baseSchema
+      .min(1, input.validation?.required)
+      .pipe(z.email(input.validation?.email))
+
+    return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
-  return schema.or(z.literal('')).nullable()
+
+  return baseSchema
+    .pipe(z.email(input.validation?.email))
+    .or(z.literal(''))
+    .nullable()
 }
 
 export function getBoolean(input: Input) {
@@ -71,10 +81,7 @@ export function getRadio(input: Input) {
   let schema = z.coerce.string()
   if (input.required) {
     schema = schema.min(1, input.validation?.required)
-    return z.preprocess(
-      (value) => (value === null || value === undefined ? '' : value),
-      schema
-    )
+    return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
   return schema.or(z.literal('')).nullable()
 }
@@ -85,10 +92,7 @@ export function getText(input: Input) {
 
   if (input.required) {
     schema = applyRequired(schema, input)
-    return z.preprocess(
-      (value) => (value === null || value === undefined ? '' : value),
-      schema
-    )
+    return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
   return schema.nullable()
 }
@@ -126,9 +130,7 @@ export function getMonthSchema(input: Input) {
 }
 
 function normalize(value: unknown) {
-  return value === null || value === undefined || value === ''
-    ? undefined
-    : value
+  return value === null || value === '' ? undefined : value
 }
 
 function applyMinAndMax<T extends Coerced>(schema: T, input: Input): T {
