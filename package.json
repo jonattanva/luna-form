@@ -42,7 +42,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jonattanva/luna.git"
+    "url": "https://github.com/jonattanva/luna-form.git"
   },
   "packageManager": "pnpm@10.20.0",
   "engines": {

@@ -11,7 +11,7 @@ export function InputLabel(
   return (
     <div
       data-slot="field-content"
-      className="flex flex-1 flex-col gap-1.5 leading-snug"
+      className="flex w-full flex-1 flex-col gap-1.5 leading-snug"
     >
       <Label field={props.field}>{props.field.label}</Label>
       {props.orientation === HORIZONTAL && (

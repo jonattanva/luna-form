@@ -1,6 +1,6 @@
 {
   "name": "react-luna-form",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
