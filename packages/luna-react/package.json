@@ -24,9 +24,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@luna-form/core": "workspace:*"
-  },
   "peerDependencies": {
     "fast-equals": "^6.0.0",
     "jotai": "^2.0.0",
@@ -38,6 +35,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@luna-form/core": "workspace:*",
     "@types/react": "19.2.8",
     "@types/react-dom": "19.2.3",
     "eslint-plugin-react": "7.37.5",
