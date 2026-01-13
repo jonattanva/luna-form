@@ -26,9 +26,9 @@ export type FormActionOptions<T> = {
   value?: Nullable<T>
 }
 
-export function useFormState<T>(
+export function useFormState<T, F = Record<string, unknown>>(
   getSchema: () => Schemas,
-  action?: <K>(formData: K, schema?: ZodSchema) => Promise<FormState<T>>,
+  action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
   const {
@@ -56,7 +56,7 @@ export function useFormState<T>(
       const schema = buildSchema(getSchema())
       if (validation === false) {
         if (action) {
-          return await action(formData, schema)
+          return await action(formData as F, schema)
         }
         return prevState
       }
@@ -78,7 +78,7 @@ export function useFormState<T>(
 
       if (action) {
         try {
-          const result = await action(form, schema)
+          const result = await action(form as F, schema)
           if (result.success) {
             onSuccess?.(result.data as T)
             if (!preserveValues) {

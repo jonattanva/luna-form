@@ -16,9 +16,10 @@ import type { Config } from '../../type'
 
 export function Form<
   T extends Record<string, unknown> = Record<string, unknown>,
+  F = Record<string, unknown>,
 >(
   props: Readonly<{
-    action?: <K>(formData: K, schema?: ZodSchema) => Promise<FormState<T>>
+    action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>
     children?: React.ReactNode
     config: Config
     definition?: Definition
@@ -31,7 +32,7 @@ export function Form<
 ) {
   const [schema, onMount, onUnmount] = useSchema()
 
-  const [action, state] = useFormState<T>(schema, props.action, {
+  const [action, state] = useFormState(schema, props.action, {
     onError: props.onError,
     onSuccess: props.onSuccess,
     validation: props.config.validation.submit,
