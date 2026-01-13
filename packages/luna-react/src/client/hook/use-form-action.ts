@@ -19,7 +19,6 @@ export type FormState<T> = {
 }
 
 export type FormActionOptions<T> = {
-  onError?: (error: Nullable<FormStateError>) => void
   onSuccess?: (data: T) => void
   preserveValues?: boolean
   validation?: boolean
@@ -32,7 +31,6 @@ export function useFormState<T, F = Record<string, unknown>>(
   options?: FormActionOptions<T>
 ) {
   const {
-    onError,
     onSuccess,
     preserveValues = false,
     validation = true,
@@ -79,18 +77,17 @@ export function useFormState<T, F = Record<string, unknown>>(
       if (action) {
         try {
           const result = await action(form as F, schema)
-          if (result.success) {
-            onSuccess?.(result.data as T)
-            if (!preserveValues) {
-              startTransition(() => {
-                clearValues()
-              })
-            }
-          } else if (result.error) {
+          if (!result.success) {
+            return failure(form as T, result.error)
+          }
+
+          onSuccess?.(result.data as T)
+          if (!preserveValues) {
             startTransition(() => {
-              onError?.(result.error)
+              clearValues()
             })
           }
+
           return success(form as T, preserveValues)
         } catch (error) {
           return failure(form as T, {
@@ -122,7 +119,10 @@ function success<T>(value: Nullable<T>, preserveValues = false): FormState<T> {
   }
 }
 
-function failure<T>(value: Nullable<T>, error: FormStateError): FormState<T> {
+function failure<T>(
+  value: Nullable<T>,
+  error: Nullable<FormStateError>
+): FormState<T> {
   return {
     data: value,
     error,

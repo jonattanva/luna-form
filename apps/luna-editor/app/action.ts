@@ -11,4 +11,19 @@ export async function action<T>(formData: T) {
     },
     errors: null,
   }
+
+  /*
+  return {
+    success: false,
+    data: null,
+    error: {
+      title: 'Submission Failed',
+      description: 'There was an error submitting the form.',
+      details: {
+        field1: ['Field1 is required.'],
+        field2: ['Field2 must be a valid email address.'],
+      },
+    },
+  }
+    */
 }

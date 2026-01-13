@@ -1,17 +1,12 @@
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
+import { renderIfExists } from '../../lib/render-If-exists'
 import { useFormState, type FormState } from '../hook/use-form-action'
 import { useHydrateAtoms } from 'jotai/utils'
 import { useSchema } from '../hook/use-schema'
 import { valueAtom } from '../lib/value-store'
-import type {
-  Definition,
-  FormStateError,
-  Nullable,
-  Sections,
-  ZodSchema,
-} from '@luna-form/core'
+import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 import type { Config } from '../../type'
 
 export function Form<
@@ -23,7 +18,6 @@ export function Form<
     children?: React.ReactNode
     config: Config
     definition?: Definition
-    onError?: (error: Nullable<FormStateError>) => void
     onSuccess?: (data: T) => void
     readOnly?: boolean
     sections: Sections
@@ -33,7 +27,6 @@ export function Form<
   const [schema, onMount, onUnmount] = useSchema()
 
   const [action, state] = useFormState(schema, props.action, {
-    onError: props.onError,
     onSuccess: props.onSuccess,
     validation: props.config.validation.submit,
     value: props.value,
@@ -41,7 +34,6 @@ export function Form<
 
   useHydrateAtoms([[valueAtom, props.value ?? {}]])
 
-  const Alert = props.config.alert ?? (() => null)
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
 
@@ -57,13 +49,14 @@ export function Form<
     >
       {({ disabled, fields }) => (
         <>
-          {isShowingError && (
-            <Alert
-              title={state.error!.title}
-              description={state.error?.description}
-              details={state.error?.details}
-            />
-          )}
+          {isShowingError &&
+            renderIfExists(props.config.alert, (Alert) => (
+              <Alert
+                title={state.error!.title}
+                description={state.error?.description}
+                details={state.error?.details}
+              />
+            ))}
           <Slot disabled={disabled} fields={fields} style={props.config.style}>
             {(internal) => (
               <Input

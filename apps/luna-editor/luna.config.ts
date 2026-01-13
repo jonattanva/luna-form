@@ -1,3 +1,4 @@
+import { AlertForm } from './components/ui/alert-form'
 import { Checkbox } from './components/ui/checkbox'
 import { Input } from './components/ui/input'
 import { Radio } from './components/ui/adapter/radio'
@@ -14,6 +15,7 @@ import {
 } from 'react-luna-form/config'
 
 export default defineConfig({
+  alert: AlertForm,
   inputs: [
     defineCheckbox(Checkbox),
     defineInput(Input),
