@@ -1,10 +1,11 @@
 import type {
   AriaAttributes,
+  BaseConfig,
   CommonProps,
   DataAttributes,
   Field,
   Fields,
-  BaseConfig,
+  FormStateError,
 } from '@luna-form/core'
 
 export type Slot = (props: {
@@ -24,4 +25,8 @@ export type InputConfig<T extends React.ElementType> = {
   input: React.ComponentProps<T>
 }
 
-export type Config = BaseConfig<React.ComponentProps<React.ElementType>>
+export type AlertProps = Readonly<FormStateError>
+
+export type Config = BaseConfig<React.ComponentProps<React.ElementType>> & {
+  alert?: React.ComponentType<AlertProps>
+}

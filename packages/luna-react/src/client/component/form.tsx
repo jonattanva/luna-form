@@ -1,4 +1,3 @@
-import { Alert } from '../../component/alert'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
@@ -41,6 +40,10 @@ export function Form<
 
   useHydrateAtoms([[valueAtom, props.value ?? {}]])
 
+  const Alert = props.config.alert ?? (() => null)
+  const isShowingError =
+    props.config.validation.showError && !state.success && state.error
+
   return (
     <Body
       action={action}
@@ -53,15 +56,13 @@ export function Form<
     >
       {({ disabled, fields }) => (
         <>
-          {props.config.validation.showError &&
-            !state.success &&
-            state.error && (
-              <Alert
-                title={state.error.title}
-                description={state.error.description}
-                details={state.error.details}
-              />
-            )}
+          {isShowingError && (
+            <Alert
+              title={state.error!.title}
+              description={state.error?.description}
+              details={state.error?.details}
+            />
+          )}
           <Slot disabled={disabled} fields={fields} style={props.config.style}>
             {(internal) => (
               <Input

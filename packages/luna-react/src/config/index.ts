@@ -9,10 +9,11 @@ import {
   type Orientation,
   type Protocol,
 } from '@luna-form/core'
-import type { Config, InputConfig } from '../type'
+import type { AlertProps, Config, InputConfig } from '../type'
 
 export function defineConfig<T extends React.ElementType>(
   options: Readonly<{
+    alert?: React.ComponentType<AlertProps>
     env?: Environment
     fetcher?: {
       remotePatterns?: Array<{
@@ -35,6 +36,7 @@ export function defineConfig<T extends React.ElementType>(
   }>
 ): Config {
   const config = {
+    alert: options.alert,
     env: options.env,
     fetcher: {
       provider: fetcher,
