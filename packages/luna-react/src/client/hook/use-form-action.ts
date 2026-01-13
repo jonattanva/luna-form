@@ -90,6 +90,7 @@ export function useFormState<T, F = Record<string, unknown>>(
 
           return success(form as T, preserveValues)
         } catch (error) {
+          console.log('Error submitting form action:', error)
           return failure(form as T, {
             title: 'An unexpected error occurred submitting the form.',
             details: buildError(error),
