@@ -24,7 +24,7 @@ export function Form(
       sections={props.sections}
     >
       {({ disabled, fields }) => (
-        <Slot disabled={disabled} fields={fields}>
+        <Slot disabled={disabled} fields={fields} style={props.config.style}>
           {(internal) => (
             <Input
               {...internal}

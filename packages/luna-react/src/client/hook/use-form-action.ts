@@ -71,7 +71,7 @@ export function useFormState<T>(
         })
 
         return failure(form as T, {
-          detail: errors,
+          details: errors,
           title: 'There were validation errors submitting the form.',
         })
       }
@@ -95,7 +95,7 @@ export function useFormState<T>(
         } catch (error) {
           return failure(form as T, {
             title: 'An unexpected error occurred submitting the form.',
-            detail: buildError(error),
+            details: buildError(error),
           })
         }
       }

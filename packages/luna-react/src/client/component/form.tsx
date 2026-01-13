@@ -1,3 +1,4 @@
+import { Alert } from '../../component/alert'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot'
@@ -18,7 +19,7 @@ export function Form<
   T extends Record<string, unknown> = Record<string, unknown>,
 >(
   props: Readonly<{
-    action?: (formData: unknown, schema?: ZodSchema) => Promise<FormState<T>>
+    action?: <K>(formData: K, schema?: ZodSchema) => Promise<FormState<T>>
     children?: React.ReactNode
     config: Config
     definition?: Definition
@@ -40,8 +41,6 @@ export function Form<
 
   useHydrateAtoms([[valueAtom, props.value ?? {}]])
 
-  // TODO: Show global error message
-
   return (
     <Body
       action={action}
@@ -53,17 +52,28 @@ export function Form<
       sections={props.sections}
     >
       {({ disabled, fields }) => (
-        <Slot disabled={disabled} fields={fields}>
-          {(internal) => (
-            <Input
-              {...internal}
-              config={props.config}
-              onMount={onMount}
-              onUnmount={onUnmount}
-              value={state.data}
-            />
-          )}
-        </Slot>
+        <>
+          {props.config.validation.showError &&
+            !state.success &&
+            state.error && (
+              <Alert
+                title={state.error.title}
+                description={state.error.description}
+                details={state.error.details}
+              />
+            )}
+          <Slot disabled={disabled} fields={fields} style={props.config.style}>
+            {(internal) => (
+              <Input
+                {...internal}
+                config={props.config}
+                onMount={onMount}
+                onUnmount={onUnmount}
+                value={state.data}
+              />
+            )}
+          </Slot>
+        </>
       )}
     </Body>
   )

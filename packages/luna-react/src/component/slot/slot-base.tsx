@@ -1,4 +1,10 @@
-import { isColumn, isField, prepare, type Fields } from '@luna-form/core'
+import {
+  isColumn,
+  isField,
+  prepare,
+  type Fields,
+  type Style,
+} from '@luna-form/core'
 import { Fragment } from 'react'
 import type { Children } from '../../type'
 import type { ColumnProps } from '../column'
@@ -12,9 +18,10 @@ export function SlotBase<
 >(
   props: Readonly<{
     children: Children
+    components: T
     disabled?: boolean
     fields?: Fields
-    components: T
+    style?: Style
   }>
 ) {
   const fields = prepare(props.fields)
@@ -29,7 +36,7 @@ export function SlotBase<
         </Column>
       )}
       {isField(field) && (
-        <Field disabled={props.disabled} field={field}>
+        <Field disabled={props.disabled} field={field} style={props.style}>
           {props.children}
         </Field>
       )}

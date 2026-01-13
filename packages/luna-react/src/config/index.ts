@@ -29,6 +29,7 @@ export function defineConfig<T extends React.ElementType>(
     validation?: {
       blur?: boolean
       change?: boolean
+      showError?: boolean
       submit?: boolean
     }
   }>
@@ -46,6 +47,7 @@ export function defineConfig<T extends React.ElementType>(
   config.validation = options.validation ?? {
     blur: true,
     change: true,
+    showError: true,
     submit: true,
   }
 

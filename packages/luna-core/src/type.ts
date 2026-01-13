@@ -144,7 +144,8 @@ export type RemotePattern = {
 
 export type FormStateError = {
   title: string
-  detail?: Nullable<Record<string, string[]> | string[]>
+  description?: string
+  details?: Nullable<Record<string, string[]> | string[]>
 }
 
 export type BaseConfig<T> = {
@@ -156,13 +157,16 @@ export type BaseConfig<T> = {
   inputs: {
     [key: string]: T
   }
-  style?: {
-    compact?: boolean
-    orientation?: Orientation
-  }
+  style?: Style
   validation: {
     blur?: boolean
     change?: boolean
+    showError?: boolean
     submit?: boolean
   }
+}
+
+export type Style = {
+  compact?: boolean
+  orientation?: Orientation
 }
