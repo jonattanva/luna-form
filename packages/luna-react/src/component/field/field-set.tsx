@@ -1,7 +1,6 @@
 import { Group } from '../group'
 import { Legend } from '../legend'
-import { mergeStyle } from '../../lib/util/style'
-import type { Section, Style } from '@luna-form/core'
+import { mergeStyle, type Section, type Style } from '@luna-form/core'
 
 export function FieldSet(
   props: Readonly<{

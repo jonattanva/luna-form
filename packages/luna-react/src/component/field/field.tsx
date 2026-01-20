@@ -1,10 +1,10 @@
 import { FieldError } from './field-error'
 import { FieldGroup } from './field-group'
 import { InputBase } from '../input/input-base'
-import { mergeStyle } from '../../lib/util/style'
 import {
   buildDisabled,
   buildOrientation,
+  mergeStyle,
   type Field,
   type Style,
 } from '@luna-form/core'
