@@ -37,6 +37,9 @@ export function Input(
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
+  const [setTimeoutRef] = useTimeout()
+  const [, startTransition] = useTransition()
+
   const [value, setValue] = useAtom(reportValueAtom(props.field.name))
 
   const setValues = useSetAtom(valueAtom)
@@ -52,8 +55,6 @@ export function Input(
     value
   )
 
-  const [setTimeoutRef] = useTimeout()
-  const [, startTransition] = useTransition()
   const inputProps = prepareInputValue(props.field, defaultValue)
 
   const validated = useCallback(

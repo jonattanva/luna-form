@@ -1,8 +1,8 @@
 import { AlertForm } from './components/ui/alert-form'
-import { Checkbox } from './components/ui/checkbox'
+import { Checkbox } from './components/ui/wrapper/checkbox'
 import { Input } from './components/ui/input'
-import { Radio } from './components/ui/adapter/radio'
-import { Select } from './components/ui/adapter/select'
+import { Radio } from './components/ui/wrapper/radio'
+import { Select } from './components/ui/wrapper/select'
 import { Textarea } from './components/ui/textarea'
 
 import {

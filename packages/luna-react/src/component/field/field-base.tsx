@@ -12,6 +12,8 @@ export type FieldBaseProps = Readonly<{
   cols?: number
   disabled?: boolean
   errors?: string[]
+  isCheckbox?: boolean
+  isClickable?: boolean
   orientation: Orientation
 }>
 
@@ -21,14 +23,15 @@ export function FieldBase(props: FieldBaseProps) {
   return (
     <div
       data-slot="field"
+      data-clickable={props.isClickable ? 'true' : 'false'}
       {...(errors && { [DATA_INVALID]: 'true' })}
       {...(props.disabled && { [DATA_READONLY]: 'true' })}
       data-orientation={props.orientation}
       className={twMerge(
         'group flex w-full flex-col items-center data-[invalid=true]:text-red-600 data-[invalid=true]:dark:text-red-500',
-        'has-[>[role=checkbox],[role=radiogroup]]:items-start',
-        'has-[>[role=checkbox]]:flex-row-reverse',
-        'has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radiogroup]]:mt-px',
+        'data-[clickable=true]:items-start',
+        props.isCheckbox && 'flex-row-reverse!',
+        'data-[clickable=true]:has-[>[data-slot=field-content]]:[&>:first-child]:mt-px',
         getSpan(props.cols),
         props.className
       )}

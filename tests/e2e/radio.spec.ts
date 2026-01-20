@@ -96,7 +96,9 @@ test.describe('Radio form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    await expect(page.getByRole('radio', { name: 'Male' })).toBeDisabled()
+    await expect(
+      page.getByRole('radio', { name: 'Male', exact: true })
+    ).toBeDisabled()
     await expect(page.getByRole('radio', { name: 'Female' })).toBeDisabled()
   })
 

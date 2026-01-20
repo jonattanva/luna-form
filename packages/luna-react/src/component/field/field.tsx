@@ -34,6 +34,7 @@ export function Field(props: FieldProps) {
         cols={cols}
         disabled={disabled}
         errors={errors}
+        field={props.field}
         orientation={orientation}
       >
         <InputBase disabled={disabled} errors={errors} field={props.field}>

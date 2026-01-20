@@ -83,7 +83,7 @@ export function prepareInputProps<T, K>(
 export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
   if (isCheckbox(field)) {
     return {
-      checked: isValidValue(value),
+      checked: isValidValue(value) ? value : false,
     }
   }
   return { value: value ?? '' }
