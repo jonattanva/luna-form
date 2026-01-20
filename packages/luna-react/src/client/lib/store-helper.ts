@@ -16,7 +16,8 @@ export function createRecordAtomFamily<
   return atomFamily((name: string) =>
     atom(
       (get) => {
-        return (get(baseAtom)[name] as TValue | undefined) ?? undefined
+        const result = (get(baseAtom)[name] as TValue | undefined) ?? undefined
+        return result
       },
       (get, set, newValue: TValue | undefined) => {
         const current = get(baseAtom)

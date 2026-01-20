@@ -1,12 +1,13 @@
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
-import { reportValueAtom, valueAtom } from '../lib/value-store'
 import { useCallback, useTransition } from 'react'
-import { useAtom, useSetAtom } from 'jotai'
 import { useDataSource } from '../hook/use-data-source'
 import { useInput } from '../hook/use-input'
+import { useSetAtom } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
+import { useValue } from '../hook/use-value'
+import { valueAtom } from '../lib/value-store'
 import {
   getEntity,
   handleProxyEvent,
@@ -40,7 +41,10 @@ export function Input(
   const [setTimeoutRef] = useTimeout()
   const [, startTransition] = useTransition()
 
-  const [value, setValue] = useAtom(reportValueAtom(props.field.name))
+  const { skipNextOnChangeRef, value, setValue } = useValue(
+    props.field,
+    props.value
+  )
 
   const setValues = useSetAtom(valueAtom)
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
@@ -83,6 +87,11 @@ export function Input(
 
   const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (skipNextOnChangeRef.current) {
+        skipNextOnChangeRef.current = false
+        return
+      }
+
       const value = event.target.value
       setValue(value)
 
@@ -111,12 +120,13 @@ export function Input(
       }
     },
     [
-      props.field,
-      props.config.validation.change,
       handleTriggerEvent,
+      props.config.validation.change,
+      props.field,
       setSource,
-      setValues,
       setValue,
+      setValues,
+      skipNextOnChangeRef,
       validated,
     ]
   )

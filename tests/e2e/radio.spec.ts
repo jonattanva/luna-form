@@ -57,16 +57,16 @@ test.describe('Radio form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const proRadio = page.getByText('Pro')
+    const proRadio = page.getByLabel('Pro')
     await proRadio.click()
-    await expect(page.getByLabel('Pro')).toBeChecked()
+    await expect(proRadio).toBeChecked()
 
-    const freeRadio = page.getByText('Free')
-    await expect(page.getByLabel('Free')).not.toBeChecked()
+    const freeRadio = page.getByLabel('Free')
+    await expect(freeRadio).not.toBeChecked()
 
     await freeRadio.click()
-    await expect(page.getByLabel('Free')).toBeChecked()
-    await expect(page.getByLabel('Pro')).not.toBeChecked()
+    await expect(freeRadio).toBeChecked()
+    await expect(proRadio).not.toBeChecked()
   })
 
   test('should disable radio options when field is readonly', async ({
@@ -106,6 +106,9 @@ test.describe('Radio form', { tag: ['@e2e'] }, () => {
     await inject(
       page,
       `{
+            "value": {
+                "color": "blue"
+            },
             "sections": [
                 {
                     "fields": [
@@ -113,7 +116,6 @@ test.describe('Radio form', { tag: ['@e2e'] }, () => {
                             "label": "Color",
                             "name": "color",
                             "type": "radio",
-                            "value": "blue",
                             "source": [
                                 { "label": "Red", "value": "red" },
                                 { "label": "Blue", "value": "blue" },

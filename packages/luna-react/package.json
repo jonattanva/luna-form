@@ -7,6 +7,7 @@
   "types": "./dist/types/client/index.d.ts",
   "scripts": {
     "build": "node esbuild.mjs && pnpm run types",
+    "dev": "node esbuild.mjs --watch",
     "lint": "eslint . --cache",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",

@@ -310,7 +310,9 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
 
     await page.getByRole('button', { name: 'Submit' }).click()
 
-    await expect(page.getByText('Email is required')).toBeVisible()
+    await expect(
+      page.getByText('Email is required', { exact: true })
+    ).toBeVisible()
   })
 
   test('should render form with initial value for radio group', async ({

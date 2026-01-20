@@ -2,21 +2,30 @@ import * as esbuild from 'esbuild'
 import pkg from './package.json' with { type: 'json' }
 
 const dependencies = Object.keys(pkg.peerDependencies)
+const isWatch = process.argv.includes('--watch')
 
 function entry(entryPoints, callback) {
   entryPoints = Array.isArray(entryPoints) ? entryPoints : [entryPoints]
 
   callback(async (format, outdir) => {
-    await esbuild.build({
+    const options = {
       bundle: true,
       entryPoints: entryPoints,
       external: dependencies,
       format: format,
       logLevel: 'info',
-      minify: true,
+      minify: !isWatch,
       outdir: outdir,
       splitting: format === 'esm',
-    })
+    }
+
+    if (isWatch) {
+      const ctx = await esbuild.context(options)
+      await ctx.watch()
+      console.log(`Watching ${entryPoints.join(', ')} (${format})...`)
+    } else {
+      await esbuild.build(options)
+    }
   })
 }
 

@@ -1,11 +1,9 @@
 import { Form as Body } from '../../component/form'
-import { Hydrate } from './hydrate'
 import { Input } from './input'
 import { Slot } from './slot'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { useFormState, type FormState } from '../hook/use-form-action'
 import { useSchema } from '../hook/use-schema'
-import { valueAtom } from '../lib/value-store'
 import type { Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 
@@ -29,16 +27,14 @@ export function FormContent<
   const [action, state, isPending] = useFormState(schema, props.action, {
     onSuccess: props.onSuccess,
     validation: props.config.validation.submit,
-    value: props.value,
   })
 
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
-
-  const hasInitialValue = props.value && Object.keys(props.value).length > 0
+  const value = state.data ?? props.value
 
   return (
-    <Hydrate value={hasInitialValue ? [[valueAtom, props.value]] : []}>
+    <>
       {isShowingError &&
         renderIfExists(props.config.alert, (Alert) => (
           <div className="mb-4 w-full">
@@ -67,12 +63,12 @@ export function FormContent<
                 config={props.config}
                 onMount={onMount}
                 onUnmount={onUnmount}
-                value={state.data}
+                value={value}
               />
             )}
           </Slot>
         )}
       </Body>
-    </Hydrate>
+    </>
   )
 }

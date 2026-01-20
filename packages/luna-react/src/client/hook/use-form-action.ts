@@ -22,7 +22,6 @@ export type FormActionOptions<T> = {
   onSuccess?: (data: T) => void
   preserveValues?: boolean
   validation?: boolean
-  value?: Nullable<T>
 }
 
 export function useFormState<T, F = Record<string, unknown>>(
@@ -30,18 +29,13 @@ export function useFormState<T, F = Record<string, unknown>>(
   action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
-  const {
-    onSuccess,
-    preserveValues = false,
-    validation = true,
-    value = null,
-  } = options ?? {}
+  const { onSuccess, preserveValues = false, validation = true } = options ?? {}
 
   const setError = useSetAtom(reportErrorAtom)
   const clearValues = useSetAtom(clearAllValueAtom)
 
   const initialState: FormState<T> = {
-    data: value,
+    data: null,
     error: null,
     success: false,
   }
