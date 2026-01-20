@@ -1,6 +1,7 @@
 import { FieldError } from './field-error'
 import { FieldGroup } from './field-group'
 import { InputBase } from '../input/input-base'
+import { mergeStyle } from '../../lib/util/style'
 import {
   buildDisabled,
   buildOrientation,
@@ -8,7 +9,6 @@ import {
   type Style,
 } from '@luna-form/core'
 import type { Children } from '../../type'
-import { useStyle } from '../../lib/use-style'
 
 export type FieldProps = Readonly<{
   children: Children
@@ -22,7 +22,7 @@ export function Field(props: FieldProps) {
   const cols = props.field.advanced?.cols
   const errors = props.field.name ? props.errors?.[props.field.name] : undefined
 
-  const { orientation } = useStyle(props.style, {
+  const { orientation } = mergeStyle(props.style, {
     orientation: buildOrientation(props.field),
   })
 

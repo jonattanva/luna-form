@@ -176,3 +176,15 @@ export function createNestedClearAtom<TInner>(
     }
   })
 }
+
+export function createAtomStore<T>(initialValue: Record<string, T> = {}) {
+  const baseAtom = atom<Record<string, T>>(initialValue)
+
+  return {
+    atom: baseAtom,
+    clearAll: createClearAllAtom(baseAtom),
+    clear: createClearAtom(baseAtom),
+    bulkReport: createBulkReportAtom(baseAtom),
+    report: createRecordAtomFamily(baseAtom),
+  }
+}

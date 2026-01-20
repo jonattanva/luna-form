@@ -1,14 +1,9 @@
-import { atom } from 'jotai'
-import {
-  createBulkReportAtom,
-  createClearAllAtom,
-  createClearAtom,
-  createRecordAtomFamily,
-} from './store-helper'
+import { createAtomStore } from './store-helper'
 
-export const valueAtom = atom<Record<string, unknown>>({})
+const store = createAtomStore<unknown>()
 
-export const clearAllValueAtom = createClearAllAtom(valueAtom)
-export const clearInputValueAtom = createClearAtom(valueAtom)
-export const reportBulkValueAtom = createBulkReportAtom(valueAtom)
-export const reportValueAtom = createRecordAtomFamily(valueAtom)
+export const valueAtom = store.atom
+export const clearAllValueAtom = store.clearAll
+export const clearInputValueAtom = store.clear
+export const reportBulkValueAtom = store.bulkReport
+export const reportValueAtom = store.report

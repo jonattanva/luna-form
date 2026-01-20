@@ -2,7 +2,7 @@ import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { reportValueAtom, valueAtom } from '../lib/value-store'
-import { startTransition } from 'react'
+import { useCallback, useTransition } from 'react'
 import { useAtom, useSetAtom } from 'jotai'
 import { useDataSource } from '../hook/use-data-source'
 import { useInput } from '../hook/use-input'
@@ -37,10 +37,10 @@ export function Input(
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
-  const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
-
   const [value, setValue] = useAtom(reportValueAtom(props.field.name))
+
   const setValues = useSetAtom(valueAtom)
+  const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
 
   const [schema] = useInput(props.field, props.onMount, props.onUnmount)
   const [data, setSource] = useDataSource(props.field, props.config, value)
@@ -52,67 +52,87 @@ export function Input(
     value
   )
 
+  const [setTimeoutRef] = useTimeout()
+  const [, startTransition] = useTransition()
   const inputProps = prepareInputValue(props.field, defaultValue)
 
-  const [setTimeoutRef] = useTimeout()
+  const validated = useCallback(
+    (value: string) => {
+      const results = schema.safeParse(value)
+      const errors = results.error?.issues.map((issue) => issue.message) ?? []
+      setErrors(errors)
+    },
+    [setErrors, schema]
+  )
 
-  function handleTriggerEvent(value: string, callback: <T>(value?: T) => void) {
-    if (isTextable(props.field)) {
-      setTimeoutRef(() => {
-        callback({ value })
-      }, 500)
-      return
-    }
+  const handleTriggerEvent = useCallback(
+    (value: string, callback: <T>(value?: T) => void) => {
+      if (isTextable(props.field)) {
+        setTimeoutRef(() => {
+          callback({ value })
+        }, 500)
+        return
+      }
 
-    const currentValue = getEntity(value, data, props.field.advanced?.entity)
-    callback(currentValue)
-  }
+      const currentValue = getEntity(value, data, props.field.advanced?.entity)
+      callback(currentValue)
+    },
+    [setTimeoutRef, props.field, data]
+  )
 
-  function onChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value
-    setValue(value)
+  const onChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value
+      setValue(value)
 
-    if (props.config.validation.change) {
-      validated(value)
-    }
+      if (props.config.validation.change) {
+        validated(value)
+      }
 
-    const changeEvents = props.field.event?.change
-    if (changeEvents) {
-      handleTriggerEvent(value, (selected) => {
-        handleProxyEvent(changeEvents, ({ sources, values }) => {
-          startTransition(() => {
-            handleSourceEvent(selected, sources, (target, source) =>
-              setSource(target, source)
-            )
+      const changeEvents = props.field.event?.change
+      if (changeEvents) {
+        handleTriggerEvent(value, (selected) => {
+          handleProxyEvent(changeEvents, ({ sources, values }) => {
+            startTransition(() => {
+              handleSourceEvent(selected, sources, (target, source) =>
+                setSource(target, source)
+              )
 
-            handleValueEvent(selected, values, (target, value) => {
-              setValues((prev) => ({
-                ...prev,
-                [target]: value,
-              }))
+              handleValueEvent(selected, values, (target, value) => {
+                setValues((prev) => ({
+                  ...prev,
+                  [target]: value,
+                }))
+              })
             })
           })
         })
-      })
-    }
-  }
+      }
+    },
+    [
+      props.field,
+      props.config.validation.change,
+      handleTriggerEvent,
+      setSource,
+      setValues,
+      setValue,
+      validated,
+    ]
+  )
 
-  function onBlur(event: React.FocusEvent<HTMLInputElement>) {
-    if (isClickable(props.field)) {
-      return
-    }
+  const onBlur = useCallback(
+    (event: React.FocusEvent<HTMLInputElement>) => {
+      if (isClickable(props.field)) {
+        return
+      }
 
-    const value = event.target.value
-    if (props.config.validation.blur) {
-      validated(value)
-    }
-  }
-
-  function validated(value: string) {
-    const results = schema.safeParse(value)
-    const errors = results.error?.issues.map((issue) => issue.message) ?? []
-    setErrors(errors)
-  }
+      const value = event.target.value
+      if (props.config.validation.blur) {
+        validated(value)
+      }
+    },
+    [props.field, props.config.validation.blur, validated]
+  )
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
     <InputGroup field={props.field}>

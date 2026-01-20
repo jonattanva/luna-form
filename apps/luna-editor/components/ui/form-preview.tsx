@@ -58,9 +58,13 @@ export function FormPreview() {
             onError={handleError}
             onSuccess={handleSuccess}
           >
-            <div className="flex w-full justify-end">
-              <Button type="submit">Submit</Button>
-            </div>
+            {({ isPending }) => (
+              <div className="flex w-full justify-end">
+                <Button type="submit" disabled={isPending}>
+                  Submit
+                </Button>
+              </div>
+            )}
           </Form>
         </div>
       </div>

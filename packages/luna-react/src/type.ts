@@ -13,6 +13,10 @@ export type Slot = (props: {
   fields?: Fields
 }) => React.ReactNode
 
+export type Control =
+  | ((props: { isPending?: boolean }) => React.ReactNode)
+  | React.ReactNode
+
 export type Children = (props: {
   ariaAttributes?: AriaAttributes
   commonProps: CommonProps

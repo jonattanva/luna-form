@@ -1,6 +1,6 @@
 import { Group } from '../group'
 import { Legend } from '../legend'
-import { useStyle } from '../../lib/use-style'
+import { mergeStyle } from '../../lib/util/style'
 import type { Section, Style } from '@luna-form/core'
 
 export function FieldSet(
@@ -12,7 +12,7 @@ export function FieldSet(
 ) {
   const fields = props.section.fields || []
 
-  const { compact } = useStyle(props.style, {
+  const { compact } = mergeStyle(props.style, {
     compact: props.section.compact,
   })
 

@@ -1,18 +1,19 @@
-import { Control } from './control'
+import { Control as Action } from './control'
 import { FieldSet } from './field/field-set'
 import { Fragment } from 'react'
 import { Group } from './group'
 import { Separator } from './separator'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
-import type { Config, Slot } from '../type'
+import type { Config, Control, Slot } from '../type'
 
 export function Form(
   props: Readonly<{
     action?: (formData: FormData) => void
     children: Slot
     config: Config
-    control?: React.ReactNode
+    control?: Control
     definition?: Definition
+    isPending?: boolean
     noValidate?: boolean
     readOnly?: boolean
     sections: Sections
@@ -35,7 +36,9 @@ export function Form(
               {section.separator && <Separator />}
             </Fragment>
           ))}
-          {props.control && <Control>{props.control}</Control>}
+          {props.control && (
+            <Action isPending={props.isPending}>{props.control}</Action>
+          )}
         </Group>
       </form>
     </div>
