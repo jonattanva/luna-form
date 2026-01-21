@@ -87,21 +87,27 @@ export function Input(
 
   const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
+      const inputValue = event.target.value
+
       if (skipNextOnChangeRef.current) {
         skipNextOnChangeRef.current = false
-        return
+        // For text inputs, only skip if the value hasn't changed (synthetic event)
+        // This allows the user to modify/clear the initial value on first interaction
+        // For non-text inputs (select, radio), always skip as they don't have this issue
+        if (!isTextable(props.field) || inputValue === value) {
+          return
+        }
       }
 
-      const value = event.target.value
-      setValue(value)
+      setValue(inputValue)
 
       if (props.config.validation.change) {
-        validated(value)
+        validated(inputValue)
       }
 
       const changeEvents = props.field.event?.change
       if (changeEvents) {
-        handleTriggerEvent(value, (selected) => {
+        handleTriggerEvent(inputValue, (selected) => {
           handleProxyEvent(changeEvents, ({ sources, values }) => {
             startTransition(() => {
               handleSourceEvent(selected, sources, (target, source) =>
@@ -128,6 +134,7 @@ export function Input(
       setValues,
       skipNextOnChangeRef,
       validated,
+      value,
     ]
   )
 

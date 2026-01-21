@@ -431,4 +431,51 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
 
     await expect(page.getByText('Form submitted successfully')).toBeVisible()
   })
+
+  test('should allow clearing initial value in text input on first interaction', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "username": "initial_value"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "advanced": {
+                  "data": {
+                    "testid": "username"
+                  }
+                },
+                "label": "Username",
+                "name": "username",
+                "type": "input/text",
+                "required": false
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const usernameInput = page.getByTestId('username')
+
+    // Verify initial value is set
+    await expect(usernameInput).toHaveValue('initial_value')
+
+    // Clear the input (simulating user pressing backspace/delete)
+    await usernameInput.clear()
+
+    // Verify the input is now empty
+    await expect(usernameInput).toHaveValue('')
+
+    // Type a new value to ensure input is fully functional
+    await usernameInput.fill('new_value')
+    await expect(usernameInput).toHaveValue('new_value')
+  })
 })
