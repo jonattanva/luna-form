@@ -141,8 +141,12 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
 
     await page.getByRole('button', { name: 'Submit' }).click()
 
-    await expect(page.getByText('Name is required')).toBeVisible()
-    await expect(page.getByText('Message is required')).toBeVisible()
+    await expect(
+      page.getByText('Name is required', { exact: true })
+    ).toBeVisible()
+    await expect(
+      page.getByText('Message is required', { exact: true })
+    ).toBeVisible()
   })
 
   test('should submit form with select fields', async ({ page }) => {
