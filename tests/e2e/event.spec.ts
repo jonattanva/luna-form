@@ -320,4 +320,140 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const blaze = page.getByRole('option', { name: 'blaze' })
     await expect(blaze).toBeVisible()
   })
+
+  test('should set new value on event trigger', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "First Name",
+                            "name": "first_name",
+                            "type": "input/text",
+                            "event": {
+                                "change": [{
+                                    "action": "value",
+                                    "value": {
+                                        "full_name": "{value} Doe"
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "label": "Full Name",
+                            "name": "full_name",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const firstName = page.locator('input[name="first_name"]')
+    await firstName.fill('John')
+    await firstName.blur()
+
+    const fullName = page.locator('input[name="full_name"]')
+    await expect(fullName).toHaveValue('John Doe')
+  })
+
+  test('should set new value with selected placeholder', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "advanced": {
+                                "entity": "name",
+                                "options": {
+                                    "label": "name",
+                                    "value": "name"
+                                }
+                            },
+                            "label": "Pokemon",
+                            "name": "pokemon",
+                            "type": "select",
+                            "source": {
+                                "url": "https://pokeapi.co/api/v2/pokemon?limit=150",
+                                "namespace": "results"
+                            },
+                            "event": {
+                                "change": [{
+                                    "action": "value",
+                                    "value": {
+                                        "selected_pokemon": "{name} is selected"
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "label": "Selected Pokemon",
+                            "name": "selected_pokemon",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const pokemon = getField(page, 'Pokemon')
+    await pokemon.click()
+
+    const option = page.getByRole('option', { name: 'charizard' })
+    await option.click()
+
+    const selectedPokemon = page.locator('input[name="selected_pokemon"]')
+    await expect(selectedPokemon).toHaveValue('charizard is selected')
+  })
+
+  test('should set new value from input text', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "First Name",
+                            "name": "first_name",
+                            "type": "input/text",
+                            "event": {
+                                "change": [{
+                                    "action": "value",
+                                    "value": {
+                                        "greeting": "Hello, {value}!"
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "label": "Greeting",
+                            "name": "greeting",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const firstName = page.locator('input[name="first_name"]')
+    await firstName.fill('Jane')
+    await firstName.blur()
+
+    const greeting = page.locator('input[name="greeting"]')
+    await expect(greeting).toHaveValue('Hello, Jane!')
+  })
 })

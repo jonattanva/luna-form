@@ -24,3 +24,9 @@
 
 - TypeScript strict mode
 - Avoid using any or unknown
+- **Remove Unused Code**: Delete any unused variables, imports, or functions immediately.
+- **Underscore Prefixing**: Only use the \_ prefix for variables that are technically required but intentionally unused (e.g., required function parameters or destructuring). Otherwise, remove them.
+
+## Documentation guidelines
+
+- **No Emojis**: Do not use emojis under any circumstances. This applies to source code, inline comments, documentation, README files, and commit messages. Maintain a strictly professional, text-only format.
