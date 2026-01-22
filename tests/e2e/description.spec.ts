@@ -121,7 +121,9 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const description = page.getByText('Use symbols like @, #, $ and & freely.')
+    const description = page.locator('p', {
+      hasText: 'Use symbols like @, #, $ and & freely.',
+    })
     await expect(description).toBeVisible()
   })
 
@@ -188,9 +190,9 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const firstDesc = page.getByText('Your given name.')
-    const lastDesc = page.getByText('Your family name.')
-    const nickDesc = page.getByText('Optional display name.')
+    const firstDesc = page.locator('p', { hasText: 'Your given name.' })
+    const lastDesc = page.locator('p', { hasText: 'Your family name.' })
+    const nickDesc = page.locator('p', { hasText: 'Optional display name.' })
 
     await expect(firstDesc).toBeVisible()
     await expect(lastDesc).toBeVisible()
@@ -218,7 +220,9 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const description = page.getByText('Format: +1 (555) 123-4567')
+    const description = page.locator('p', {
+      hasText: 'Format: +1 (555) 123-4567',
+    })
     await expect(description).toBeVisible()
   })
 
@@ -243,7 +247,9 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const description = page.getByText('Enter the code exactly as shown.')
+    const description = page.locator('p', {
+      hasText: 'Enter the code exactly as shown.',
+    })
     await expect(description).toBeVisible()
   })
 })

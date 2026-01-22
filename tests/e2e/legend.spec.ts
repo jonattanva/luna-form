@@ -56,7 +56,9 @@ test.describe('Legend component', { tag: ['@e2e'] }, () => {
     const legend = page.locator('legend')
     await expect(legend).toHaveCount(0)
 
-    const description = page.getByText('This is a standalone description.')
+    const description = page.getByText('This is a standalone description.', {
+      exact: true,
+    })
     await expect(description).toBeVisible()
   })
 
@@ -87,7 +89,8 @@ test.describe('Legend component', { tag: ['@e2e'] }, () => {
     await expect(legend).toHaveText('Complete Section')
 
     const description = page.getByText(
-      'This section has both title and description.'
+      'This section has both title and description.',
+      { exact: true }
     )
     await expect(description).toBeVisible()
   })
@@ -226,7 +229,9 @@ test.describe('Legend component', { tag: ['@e2e'] }, () => {
     await expect(legends.nth(0)).toHaveText('First Section')
     await expect(legends.nth(1)).toHaveText('Second Section')
 
-    const firstDescription = page.getByText('First description.')
+    const firstDescription = page.getByText('First description.', {
+      exact: true,
+    })
     await expect(firstDescription).toBeVisible()
 
     const allFields = page.locator('input[type="text"]')
