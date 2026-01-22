@@ -24,6 +24,7 @@ export function FieldSet(
       data-slot="field-set"
       data-empty={fields.length === 0}
       className="flex flex-col data-[empty=false]:gap-6"
+      id={props.section.id?.toString()}
     >
       <Legend
         description={props.section.description}

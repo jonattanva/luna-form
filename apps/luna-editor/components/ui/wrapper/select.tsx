@@ -8,11 +8,13 @@ import {
 } from '@/components/ui/select'
 
 export function Select({
+  id,
   onChange,
   options = [],
   placeholder = 'Select an option',
   ...selectProps
 }: {
+  id: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   options?: Array<{ value: string; label: string }>
   placeholder?: string
@@ -28,7 +30,7 @@ export function Select({
 
   return (
     <Component onValueChange={handleValueChange} {...selectProps}>
-      <SelectTrigger className="w-45">
+      <SelectTrigger className="w-45" id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
