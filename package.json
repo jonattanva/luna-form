@@ -9,14 +9,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "eslint . --cache",
+    "lint": "turbo run lint",
     "prepare": "husky",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "serve": "pnpm --filter luna-editor dev",
-    "test:e2e": "npx playwright test --grep '@e2e'",
-    "test:e2e:ui": "playwright test --grep '@e2e' --ui",
-    "test:unit": "npx playwright test --grep '@unit' --project=chromium",
+    "test:e2e": "pnpm playwright test --grep '@e2e'",
+    "test:e2e:ui": "pnpm playwright test --grep '@e2e' --ui",
+    "test:unit": "pnpm playwright test --grep '@unit' --project=chromium",
     "typescript": "turbo run typescript"
   },
   "devDependencies": {
