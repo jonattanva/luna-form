@@ -19,6 +19,7 @@
 - You must build the project using `pnpm run build` before starting the server with `pnpm run serve`.
 - Never commit code with type errors or linting issues
 - All checks must pass before work is considered complete
+- Ask before generating new files
 
 ## Code style
 

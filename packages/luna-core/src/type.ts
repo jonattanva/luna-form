@@ -71,18 +71,39 @@ export type Column = {
   type: 'column' | (string & {})
 } & Base
 
-export type SourceEvent = {
-  action: 'source'
+export type Operator = 'eq' | 'neq' | 'in' | 'nin'
+
+export type Condition = {
+  field?: string
+  operator?: Operator
+  value: string | number | string[]
+}
+
+export type FieldState = {
+  disabled?: boolean
+  hidden?: boolean
+}
+
+export type ActionEvent<T> = {
+  action: T
+}
+
+export type SourceEvent = ActionEvent<'source'> & {
   source: DataSource
   target: string
 }
 
-export type ValueEvent = {
-  action: 'value'
+export type ValueEvent = ActionEvent<'value'> & {
   value: Record<string, Value | Array<Record<string, unknown>>>
 }
 
-export type ChangeEvent = Array<SourceEvent | ValueEvent>
+export type StateEvent = ActionEvent<'state'> & {
+  state: FieldState
+  target: string
+  when?: string | string[] | Condition
+}
+
+export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 
 export type Orientation = 'horizontal' | 'vertical'
 

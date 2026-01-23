@@ -1,4 +1,5 @@
 import { InputGroup } from '../../component/input-group'
+import { fieldStateAtom } from '../lib/state-store'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { useCallback, useTransition } from 'react'
@@ -12,6 +13,7 @@ import {
   getEntity,
   handleProxyEvent,
   handleSourceEvent,
+  handleStateEvent,
   handleValueEvent,
   isClickable,
   isTextable,
@@ -41,12 +43,14 @@ export function Input(
   const [setTimeoutRef] = useTimeout()
   const [, startTransition] = useTransition()
 
-  const { skipNextOnChangeRef, value, setValue } = useValue(
+  const { setValue, shouldSkipOnChange, value } = useValue(
     props.field,
     props.value
   )
 
   const setValues = useSetAtom(valueAtom)
+  const setFieldStates = useSetAtom(fieldStateAtom)
+
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
 
   const [schema] = useInput(props.field, props.onMount, props.onUnmount)
@@ -82,15 +86,14 @@ export function Input(
       const currentValue = getEntity(value, data, props.field.advanced?.entity)
       callback(currentValue)
     },
-    [setTimeoutRef, props.field, data]
+    [data, props.field, setTimeoutRef]
   )
 
   const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = event.target.value
 
-      if (skipNextOnChangeRef.current) {
-        skipNextOnChangeRef.current = false
+      if (shouldSkipOnChange()) {
         // For text inputs, only skip if the value hasn't changed (synthetic event)
         // This allows the user to modify/clear the initial value on first interaction
         // For non-text inputs (select, radio), always skip as they don't have this issue
@@ -108,11 +111,22 @@ export function Input(
       const changeEvents = props.field.event?.change
       if (changeEvents) {
         handleTriggerEvent(inputValue, (selected) => {
-          handleProxyEvent(changeEvents, ({ sources, values }) => {
+          handleProxyEvent(changeEvents, ({ sources, states, values }) => {
             startTransition(() => {
               handleSourceEvent(selected, sources, (target, source) =>
                 setSource(target, source)
               )
+
+              handleStateEvent(selected, states, (target, state) => {
+                setFieldStates((prev) => {
+                  if (state) {
+                    return { ...prev, [target]: state }
+                  }
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const { [target]: _removed, ...rest } = prev
+                  return rest
+                })
+              })
 
               handleValueEvent(selected, values, (target, value) => {
                 setValues((prev) => ({
@@ -129,10 +143,11 @@ export function Input(
       handleTriggerEvent,
       props.config.validation.change,
       props.field,
+      setFieldStates,
       setSource,
       setValue,
       setValues,
-      skipNextOnChangeRef,
+      shouldSkipOnChange,
       validated,
       value,
     ]
@@ -149,7 +164,7 @@ export function Input(
         validated(value)
       }
     },
-    [props.field, props.config.validation.blur, validated]
+    [props.config.validation.blur, props.field, validated]
   )
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (

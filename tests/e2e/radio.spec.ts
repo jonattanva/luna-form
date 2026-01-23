@@ -27,7 +27,9 @@ test.describe('Radio form', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    await expect(page.getByText('Preferred Contact Method')).toBeVisible()
+    await expect(
+      page.locator('label', { hasText: 'Preferred Contact Method' })
+    ).toBeVisible()
     await expect(page.getByLabel('Email')).toBeVisible()
     await expect(page.getByLabel('Phone')).toBeVisible()
     await expect(page.getByLabel('SMS')).toBeVisible()

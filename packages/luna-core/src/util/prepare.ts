@@ -10,11 +10,8 @@ export function prepare<T extends Base>(
   definition?: Definition
 ) {
   const resolved = resolveRefs(base, definition)
-
   return Array.isArray(resolved)
-    ? resolved
-        .filter((field) => field.hidden !== true)
-        .sort((a, b) => getOrder(a) - getOrder(b))
+    ? resolved.sort((a, b) => getOrder(a) - getOrder(b))
     : []
 }
 

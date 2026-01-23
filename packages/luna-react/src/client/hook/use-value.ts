@@ -1,7 +1,7 @@
 import { isValidValue, type Field, type Nullable } from '@luna-form/core'
 import { reportValueAtom } from '../lib/value-store'
 import { useAtom } from 'jotai'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 export function useValue(
   field: Field,
@@ -22,5 +22,17 @@ export function useValue(
     }
   }, [field.name, currentValue, setValue])
 
-  return { value, setValue, skipNextOnChangeRef } as const
+  const shouldSkipOnChange = useCallback(() => {
+    if (skipNextOnChangeRef.current) {
+      skipNextOnChangeRef.current = false
+      return true
+    }
+    return false
+  }, [])
+
+  return {
+    setValue,
+    shouldSkipOnChange,
+    value,
+  } as const
 }

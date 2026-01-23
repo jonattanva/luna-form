@@ -63,17 +63,6 @@ export function defineConfig<T extends React.ElementType>(
   return config
 }
 
-function createDefineFunction<T extends React.ElementType>(
-  types: string | string[]
-) {
-  return (input: React.ComponentProps<T>): InputConfig<T> => {
-    return {
-      types,
-      input,
-    }
-  }
-}
-
 export const defineCheckbox = createDefineFunction([CHECKBOX])
 export const defineInput = createDefineFunction(INPUTS)
 export const defineRadio = createDefineFunction([RADIO])
@@ -84,8 +73,16 @@ export function defineCustomInput<T extends React.ElementType>(
   types: string | string[],
   input: React.ComponentProps<T>
 ): InputConfig<T> {
-  return {
-    types,
-    input,
+  return createDefineFunction<T>(types)(input)
+}
+
+function createDefineFunction<T extends React.ElementType>(
+  types: string | string[]
+) {
+  return (input: React.ComponentProps<T>): InputConfig<T> => {
+    return {
+      types,
+      input,
+    }
   }
 }
