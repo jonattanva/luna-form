@@ -7,6 +7,7 @@ export function useInput(
   onMount: (name: string, schema: Schema) => void,
   onUnmount: (name: string) => void
 ) {
+  const { name } = field
   const schema = useMemo(() => getSchema(field), [field])
 
   const onMountHandler = useEffectEvent((name: string) => {
@@ -22,11 +23,11 @@ export function useInput(
   })
 
   useEffect(() => {
-    onMountHandler(field.name)
+    onMountHandler(name)
     return () => {
-      onUnmountHandler(field.name)
+      onUnmountHandler(name)
     }
-  }, [field.name])
+  }, [name])
 
   return [schema] as const
 }

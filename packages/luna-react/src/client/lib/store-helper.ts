@@ -9,7 +9,7 @@ interface NestedAtomFamilyOptions<TInner> {
   validateTarget?: (target: string) => boolean
 }
 
-export function createRecordAtomFamily<
+function createRecordAtomFamily<
   TRecord extends Record<string, unknown>,
   TValue = RecordValue<TRecord>,
 >(baseAtom: PrimitiveAtom<TRecord>) {
@@ -36,9 +36,7 @@ export function createRecordAtomFamily<
   )
 }
 
-export function createClearAllAtom<T>(
-  baseAtom: PrimitiveAtom<Record<string, T>>
-) {
+function createClearAllAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set) => {
     const current = get(baseAtom)
     if (current && Object.keys(current).length > 0) {
@@ -47,7 +45,7 @@ export function createClearAllAtom<T>(
   })
 }
 
-export function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
+function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, names: string[]) => {
     const current = get(baseAtom)
     const next = { ...current }
@@ -66,9 +64,7 @@ export function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   })
 }
 
-export function createBulkReportAtom<T>(
-  baseAtom: PrimitiveAtom<Record<string, T>>
-) {
+function createBulkReportAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, newValue: Record<string, T>) => {
     const current = get(baseAtom)
 

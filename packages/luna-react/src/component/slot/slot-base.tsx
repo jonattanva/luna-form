@@ -24,11 +24,9 @@ export function SlotBase<
     style?: Style
   }>
 ) {
-  const fields = prepare(props.fields)
-
   const { column: Column, field: Field } = props.components
 
-  return fields.map((field, index) => (
+  return prepare(props.fields).map((field, index) => (
     <Fragment key={index}>
       {isColumn(field) && (
         <Column column={field}>

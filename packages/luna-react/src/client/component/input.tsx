@@ -40,6 +40,8 @@ export function Input(
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
+  const entity = props.field.advanced?.entity
+
   const [setTimeoutRef] = useTimeout()
   const [, startTransition] = useTransition()
 
@@ -47,6 +49,9 @@ export function Input(
     props.field,
     props.value
   )
+
+  const hasTextable = isTextable(props.field)
+  const hasClickable = isClickable(props.field)
 
   const setValues = useSetAtom(valueAtom)
   const setFieldStates = useSetAtom(fieldStateAtom)
@@ -76,17 +81,17 @@ export function Input(
 
   const handleTriggerEvent = useCallback(
     (value: string, callback: <T>(value?: T) => void) => {
-      if (isTextable(props.field)) {
+      if (hasTextable) {
         setTimeoutRef(() => {
           callback({ value })
         }, 500)
         return
       }
 
-      const currentValue = getEntity(value, data, props.field.advanced?.entity)
+      const currentValue = getEntity(value, data, entity)
       callback(currentValue)
     },
-    [data, props.field, setTimeoutRef]
+    [data, entity, hasTextable, setTimeoutRef]
   )
 
   const onChange = useCallback(
@@ -97,7 +102,7 @@ export function Input(
         // For text inputs, only skip if the value hasn't changed (synthetic event)
         // This allows the user to modify/clear the initial value on first interaction
         // For non-text inputs (select, radio), always skip as they don't have this issue
-        if (!isTextable(props.field) || inputValue === value) {
+        if (!hasTextable || inputValue === value) {
           return
         }
       }
@@ -108,10 +113,10 @@ export function Input(
         validated(inputValue)
       }
 
-      const changeEvents = props.field.event?.change
-      if (changeEvents) {
+      const events = props.field.event?.change
+      if (events) {
         handleTriggerEvent(inputValue, (selected) => {
-          handleProxyEvent(changeEvents, ({ sources, states, values }) => {
+          handleProxyEvent(events, ({ sources, states, values }) => {
             startTransition(() => {
               handleSourceEvent(selected, sources, (target, source) =>
                 setSource(target, source)
@@ -141,8 +146,9 @@ export function Input(
     },
     [
       handleTriggerEvent,
+      hasTextable,
       props.config.validation.change,
-      props.field,
+      props.field.event?.change,
       setFieldStates,
       setSource,
       setValue,
@@ -155,16 +161,14 @@ export function Input(
 
   const onBlur = useCallback(
     (event: React.FocusEvent<HTMLInputElement>) => {
-      if (isClickable(props.field)) {
-        return
-      }
-
-      const value = event.target.value
-      if (props.config.validation.blur) {
-        validated(value)
+      if (!hasClickable) {
+        const value = event.target.value
+        if (props.config.validation.blur) {
+          validated(value)
+        }
       }
     },
-    [props.config.validation.blur, props.field, validated]
+    [hasClickable, props.config.validation.blur, validated]
   )
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (

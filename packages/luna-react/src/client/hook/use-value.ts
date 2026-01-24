@@ -7,20 +7,22 @@ export function useValue(
   field: Field,
   currentValue?: Nullable<Record<string, unknown>>
 ) {
+  const { name } = field
+
   const skipNextOnChangeRef = useRef(false)
-  const [value, setValue] = useAtom(reportValueAtom(field.name))
+  const [value, setValue] = useAtom(reportValueAtom(name))
 
   useEffect(() => {
-    if (!currentValue || !(field.name in currentValue)) {
+    if (!currentValue || !(name in currentValue)) {
       return
     }
 
-    const newValue = currentValue[field.name]
+    const newValue = currentValue[name]
     if (isValidValue(newValue)) {
       skipNextOnChangeRef.current = true
       setValue(newValue)
     }
-  }, [field.name, currentValue, setValue])
+  }, [name, currentValue, setValue])
 
   const shouldSkipOnChange = useCallback(() => {
     if (skipNextOnChangeRef.current) {

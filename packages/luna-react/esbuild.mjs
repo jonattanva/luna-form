@@ -10,6 +10,7 @@ function entry(entryPoints, callback) {
   callback(async (format, outdir) => {
     const options = {
       bundle: true,
+      drop: ['console', 'debugger'],
       entryPoints: entryPoints,
       external: dependencies,
       format: format,

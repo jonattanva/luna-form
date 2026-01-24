@@ -2,6 +2,7 @@ import useSWR from 'swr'
 import {
   getArray,
   isInterpolated,
+  logger,
   matchRemotePattern,
   type DataSource,
   type Nullable,
@@ -19,7 +20,7 @@ export function useFetch<T>(
   )
 
   if (error) {
-    console.error('Error fetching data source:', error)
+    logger.error('Error fetching data source:', error)
   }
 
   if (dataSource) {
@@ -53,7 +54,7 @@ function buildSource<T>(
           return dataSource
         }
 
-        console.warn(
+        logger.warn(
           `URL blocked by remotePatterns: ${dataSource.url}. Check your luna.config.ts`
         )
       }
