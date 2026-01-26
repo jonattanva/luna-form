@@ -79,6 +79,12 @@ export type Condition = {
   value: string | number | string[]
 }
 
+export type Compare = {
+  field: string
+  message?: string
+  operator?: Operator
+}
+
 export type FieldState = {
   disabled?: boolean
   hidden?: boolean
@@ -108,6 +114,7 @@ export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 export type Orientation = 'horizontal' | 'vertical'
 
 export type Validation = {
+  compare?: Compare | Array<Compare>
   email?: string
   length?: Length<string>
   required?: string

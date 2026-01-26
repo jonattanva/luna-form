@@ -1,8 +1,7 @@
 import { extract } from '../util/extract'
 import { isObject, isString } from '../util/is-type'
+import { operators } from '../util/operator'
 import type { Condition, FieldState, Nullable, StateEvent } from '../type'
-
-type Value = string | number | string[]
 
 export function handleStateEvent<T>(
   selected: Nullable<T> = null,
@@ -55,29 +54,6 @@ function evaluateOperator<T>(
   }
 
   return false
-}
-
-const operators: Record<string, (current: unknown, value: Value) => boolean> = {
-  eq,
-  neq,
-  in: includes,
-  nin,
-}
-
-function eq(current: unknown, value: Value): boolean {
-  return current === value
-}
-
-function neq(current: unknown, value: Value): boolean {
-  return current !== value
-}
-
-function includes(current: unknown, value: Value): boolean {
-  return Array.isArray(value) && value.includes(String(current))
-}
-
-function nin(current: unknown, value: Value): boolean {
-  return Array.isArray(value) && !value.includes(String(current))
 }
 
 function getValue<T>(selected: T, field: string): unknown {
