@@ -6,18 +6,18 @@ import {
 } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
-export type FieldBaseProps = Readonly<{
-  children: React.ReactNode
-  className?: string
-  cols?: number
-  disabled?: boolean
-  errors?: string[]
-  isCheckbox?: boolean
-  isClickable?: boolean
-  orientation: Orientation
-}>
-
-export function FieldBase(props: FieldBaseProps) {
+export function FieldBase(
+  props: Readonly<{
+    children: React.ReactNode
+    className?: string
+    cols?: number
+    disabled?: boolean
+    errors?: string[]
+    isCheckbox?: boolean
+    isClickable?: boolean
+    orientation: Orientation
+  }>
+) {
   const errors = props.errors && props.errors.length > 0
 
   return (

@@ -2,8 +2,8 @@ import { OPTIONS } from '../util/constant'
 import { buildOptions, buildSource } from '../util/build'
 import { getCurrentValue, toOptions } from '../util/extract'
 import { isCheckbox, isOptions, isSelect, isValidValue } from '../util/is-input'
-import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
 import { isObject } from '../util/is-type'
+import type { CommonProps, DataSource, Field, Nullable, Value } from '../type'
 
 export function resolveSource(
   field: Field,

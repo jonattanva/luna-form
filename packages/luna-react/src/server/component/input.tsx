@@ -1,4 +1,3 @@
-import { FormattedDescription } from '../../component/formatted-description'
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import {
@@ -9,7 +8,7 @@ import {
   type CommonProps,
   type DataAttributes,
   type Field,
-  type Source,
+  type Orientation,
 } from '@luna-form/core'
 import type { Config } from '../../type'
 
@@ -18,9 +17,10 @@ export function Input(
     ariaAttributes?: AriaAttributes
     commonProps: CommonProps
     config: Config
+    context?: Record<string, unknown>
     dataAttributes?: DataAttributes
     field: Field
-    source?: Source
+    orientation?: Orientation
     value?: Record<string, unknown>
   }>
 ) {
@@ -36,14 +36,18 @@ export function Input(
   const defaultProps = prepareDefaultValue(props.field, defaultValue)
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
-    <InputGroup field={props.field}>
+    <InputGroup
+      config={props.config}
+      context={props.context}
+      field={props.field}
+      orientation={props.orientation}
+    >
       <Component
         {...props.ariaAttributes}
         {...commonPropsWithOptions}
         {...props.dataAttributes}
         {...defaultProps}
       />
-      <FormattedDescription text={props.field.description} />
     </InputGroup>
   ))
 }

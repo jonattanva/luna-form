@@ -12,6 +12,7 @@ export function Form<
     action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>
     children?: Control
     config: Config
+    context?: Record<string, unknown>
     definition?: Definition
     onSuccess?: (data: T) => void
     readOnly?: boolean

@@ -1,4 +1,5 @@
 import { isString } from './is-type'
+import { logger } from './logger'
 
 export function stringify<T>(body: T) {
   try {
@@ -12,6 +13,7 @@ export function stringify<T>(body: T) {
 
     return JSON.stringify(body)
   } catch {
+    logger.error('Failed to stringify body:', body)
     return null
   }
 }

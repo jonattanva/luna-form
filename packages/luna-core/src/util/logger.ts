@@ -1,25 +1,23 @@
 export const logger = {
   error: (...args: unknown[]) => {
     if (isConsoleAvailable() && !isProduction()) {
-      console.error('[Luna Form]', ...args)
+      getConsole().error('[Luna Form]', ...args)
     }
   },
   warn: (...args: unknown[]) => {
     if (isConsoleAvailable() && !isProduction()) {
-      console.warn('[Luna Form]', ...args)
+      getConsole().warn('[Luna Form]', ...args)
     }
   },
   info: (...args: unknown[]) => {
     if (isConsoleAvailable() && !isProduction()) {
-      console.info('[Luna Form]', ...args)
+      getConsole().info('[Luna Form]', ...args)
     }
   },
 }
 
-function isConsoleAvailable(): boolean {
-  return typeof console !== 'undefined'
-}
+const isConsoleAvailable = () => typeof getConsole() !== 'undefined'
 
-function isProduction(): boolean {
-  return process.env.NODE_ENV === 'production'
-}
+const isProduction = () => process.env.NODE_ENV === 'production'
+
+const getConsole = () => globalThis.console

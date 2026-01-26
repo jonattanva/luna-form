@@ -2,16 +2,16 @@ import { Form as Component } from '../../component/form'
 import { Input } from './input'
 import { Slot } from '../../component/slot/slot'
 import type { Config } from '../../type'
-import type { Definition, Sections, Source } from '@luna-form/core'
+import type { Definition, Sections } from '@luna-form/core'
 
 export function Form(
   props: Readonly<{
     children?: React.ReactNode
     config: Config
+    context?: Record<string, unknown>
     definition?: Definition
     readOnly?: boolean
     sections: Sections
-    source?: Source
     value?: Record<string, unknown>
   }>
 ) {
@@ -29,7 +29,7 @@ export function Form(
             <Input
               {...internal}
               config={props.config}
-              source={props.source}
+              context={props.context}
               value={props.value}
             />
           )}

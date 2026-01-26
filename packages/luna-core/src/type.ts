@@ -107,6 +107,12 @@ export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 
 export type Orientation = 'horizontal' | 'vertical'
 
+export type Validation = {
+  email?: string
+  length?: Length<string>
+  required?: string
+}
+
 export type Field = CommonProps & {
   advanced?: {
     aria?: AriaAttributes
@@ -125,11 +131,7 @@ export type Field = CommonProps & {
   name: string
   readonly?: boolean
   type: string
-  validation?: {
-    required?: string
-    email?: string
-    length?: Length<string>
-  }
+  validation?: Validation
 } & Base
 
 export type Length<T> = {

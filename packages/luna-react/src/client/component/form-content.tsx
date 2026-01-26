@@ -1,11 +1,14 @@
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
-import { Slot } from './slot'
+import { Field } from './wrapper'
+import { createSlot } from '../../component/slot/slot-create'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { useFormState, type FormState } from '../hook/use-form-action'
 import { useSchema } from '../hook/use-schema'
 import type { Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
+
+const Slot = createSlot(Field)
 
 export function FormContent<
   T extends Record<string, unknown> = Record<string, unknown>,
@@ -15,6 +18,7 @@ export function FormContent<
     action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>
     children?: Control
     config: Config
+    context?: Record<string, unknown>
     definition?: Definition
     onSuccess?: (data: T) => void
     readOnly?: boolean
@@ -61,6 +65,7 @@ export function FormContent<
               <Input
                 {...internal}
                 config={props.config}
+                context={props.context}
                 onMount={onMount}
                 onUnmount={onUnmount}
                 value={value}

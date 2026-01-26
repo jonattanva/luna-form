@@ -13,7 +13,7 @@ export function useFetch<T>(
   dataSource: Nullable<DataSource | T[]> = null,
   config: Config,
   disabled = false
-): [Nullable<T[]>] {
+): Nullable<T[]> {
   const { data, error } = useSWR<Record<string, T> | T[]>(
     buildSource(dataSource, config, disabled),
     config.fetcher.provider
@@ -25,15 +25,15 @@ export function useFetch<T>(
 
   if (dataSource) {
     if (Array.isArray(dataSource)) {
-      return [dataSource]
+      return dataSource
     }
 
     if (data) {
-      return [getArray(data, dataSource.namespace)]
+      return getArray(data, dataSource.namespace)
     }
   }
 
-  return [null]
+  return null
 }
 
 function buildSource<T>(

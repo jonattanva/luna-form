@@ -29,5 +29,5 @@ export function useInput(
     }
   }, [name])
 
-  return [schema] as const
+  return schema
 }

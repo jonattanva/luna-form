@@ -5,18 +5,23 @@ import {
   createNestedRecordAtomFamily,
 } from './store-helper'
 
-export const sourceAtom = atom<Record<string, Record<string, DataSource>>>({})
+const merge = (values: DataSource[]) => {
+  const merged = mergeSource(values)
+  if (merged) {
+    return merged
+  }
+  return undefined
+}
+
+const validate = (target: string) => target.trim() !== ''
+
+const sourceAtom = atom<Record<string, Record<string, DataSource>>>({})
 
 export const reportSourceAtom = createNestedRecordAtomFamily<DataSource>(
   sourceAtom,
   {
-    merge: (values) => {
-      const merged = mergeSource(values)
-      if (merged) {
-        return merged
-      }
-    },
-    validateTarget: (target) => target.trim() !== '',
+    merge,
+    validateTarget: validate,
   }
 )
 

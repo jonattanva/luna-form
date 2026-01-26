@@ -13,7 +13,7 @@ export function useDataSource(
   const [source, setSource] = useAtom(reportSourceAtom(field.name))
 
   const currentSource = source ?? dataSource
-  const [data] = useFetch(currentSource, config, field.disabled)
+  const data = useFetch(currentSource, config, field.disabled)
 
   return [data, setSource] as const
 }

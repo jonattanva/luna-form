@@ -1,7 +1,7 @@
 import { buildCommon } from './input-common'
 import { buildAriaAttributes, buildDataAttributes } from './input-attributes'
 import type { Children } from '../../type'
-import type { Field } from '@luna-form/core'
+import type { Field, Orientation } from '@luna-form/core'
 
 export function InputBase(
   props: Readonly<{
@@ -9,6 +9,7 @@ export function InputBase(
     disabled?: boolean
     errors?: string[]
     field: Field
+    orientation?: Orientation
   }>
 ) {
   if (!props.field.type) {
@@ -30,5 +31,6 @@ export function InputBase(
     commonProps,
     dataAttributes,
     field,
+    orientation: props.orientation,
   })
 }

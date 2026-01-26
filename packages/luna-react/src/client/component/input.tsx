@@ -2,7 +2,7 @@ import { InputGroup } from '../../component/input-group'
 import { fieldStateAtom } from '../lib/state-store'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
-import { useCallback, useTransition } from 'react'
+import { useCallback, useRef, useTransition } from 'react'
 import { useDataSource } from '../hook/use-data-source'
 import { useInput } from '../hook/use-input'
 import { useSetAtom } from 'jotai'
@@ -24,6 +24,7 @@ import {
   type DataAttributes,
   type Field,
   type Nullable,
+  type Orientation,
   type Schema,
 } from '@luna-form/core'
 import type { Config } from '../../type'
@@ -33,16 +34,18 @@ export function Input(
     ariaAttributes?: AriaAttributes
     commonProps: CommonProps
     config: Config
+    context?: Record<string, unknown>
     dataAttributes?: DataAttributes
     field: Field
     onMount: (name: string, schema: Schema) => void
     onUnmount: (name: string) => void
+    orientation?: Orientation
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
   const entity = props.field.advanced?.entity
 
-  const [setTimeoutRef] = useTimeout()
+  const setTimeoutRef = useTimeout()
   const [, startTransition] = useTransition()
 
   const { setValue, shouldSkipOnChange, value } = useValue(
@@ -58,7 +61,7 @@ export function Input(
 
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
 
-  const [schema] = useInput(props.field, props.onMount, props.onUnmount)
+  const schema = useInput(props.field, props.onMount, props.onUnmount)
   const [data, setSource] = useDataSource(props.field, props.config, value)
 
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
@@ -67,6 +70,10 @@ export function Input(
     data,
     value
   )
+
+  // Keep a ref of the current value to access inside event handlers
+  const valueRef = useRef(value)
+  valueRef.current = value
 
   const inputProps = prepareInputValue(props.field, defaultValue)
 
@@ -102,13 +109,12 @@ export function Input(
         // For text inputs, only skip if the value hasn't changed (synthetic event)
         // This allows the user to modify/clear the initial value on first interaction
         // For non-text inputs (select, radio), always skip as they don't have this issue
-        if (!hasTextable || inputValue === value) {
+        if (!hasTextable || inputValue === valueRef.current) {
           return
         }
       }
 
       setValue(inputValue)
-
       if (props.config.validation.change) {
         validated(inputValue)
       }
@@ -155,7 +161,6 @@ export function Input(
       setValues,
       shouldSkipOnChange,
       validated,
-      value,
     ]
   )
 
@@ -172,7 +177,12 @@ export function Input(
   )
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
-    <InputGroup field={props.field}>
+    <InputGroup
+      config={props.config}
+      context={props.context}
+      field={props.field}
+      orientation={props.orientation}
+    >
       <Component
         {...commonPropsWithOptions}
         {...props.ariaAttributes}

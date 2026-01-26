@@ -53,8 +53,8 @@ export function FormPreview() {
         <div className="w-full max-w-md p-6">
           <Form
             {...form}
-            action={action}
             config={config}
+            action={action}
             onError={handleError}
             onSuccess={handleSuccess}
           >

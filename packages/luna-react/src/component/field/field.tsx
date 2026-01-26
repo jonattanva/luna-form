@@ -37,7 +37,12 @@ export function Field(props: FieldProps) {
         field={props.field}
         orientation={orientation}
       >
-        <InputBase disabled={disabled} errors={errors} field={props.field}>
+        <InputBase
+          disabled={disabled}
+          errors={errors}
+          field={props.field}
+          orientation={orientation}
+        >
           {props.children}
         </InputBase>
       </FieldGroup>
