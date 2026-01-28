@@ -1,4 +1,5 @@
 import { FormattedDescription } from './formatted-description'
+import { Label } from './label'
 import {
   HORIZONTAL,
   interpolate,
@@ -6,7 +7,6 @@ import {
   type Field,
   type Orientation,
 } from '@luna-form/core'
-import { Label } from './label'
 import type { Config } from '../type'
 
 export function InputLabel(
@@ -24,6 +24,13 @@ export function InputLabel(
       })
     : props.field.label
 
+  const description = isInterpolated(props.field.description)
+    ? interpolate(props.field.description, {
+        context: props.context,
+        env: props.config?.env,
+      })
+    : props.field.description
+
   return (
     <div
       data-slot="field-content"
@@ -31,7 +38,7 @@ export function InputLabel(
     >
       <Label field={props.field}>{label}</Label>
       {props.orientation === HORIZONTAL && (
-        <FormattedDescription text={props.field.description} />
+        <FormattedDescription text={description} />
       )}
     </div>
   )
