@@ -4,7 +4,7 @@ import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
   field: Field,
-  onMount: (name: string, schema: Schema) => void,
+  onMount: (name: string, schema: Schema, field: Field) => void,
   onUnmount: (name: string) => void
 ) {
   const { name } = field
@@ -12,7 +12,7 @@ export function useInput(
 
   const onMountHandler = useEffectEvent((name: string) => {
     if (name) {
-      onMount(name, schema)
+      onMount(name, schema, field)
     }
   })
 

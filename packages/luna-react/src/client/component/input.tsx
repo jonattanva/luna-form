@@ -5,10 +5,10 @@ import { reportInputErrorAtom } from '../lib/error-store'
 import { useCallback, useRef, useTransition } from 'react'
 import { useDataSource } from '../hook/use-data-source'
 import { useInput } from '../hook/use-input'
-import { useSetAtom } from 'jotai'
+import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
 import { useValue } from '../hook/use-value'
-import { valueAtom } from '../lib/value-store'
+import { reportValueAtom, valueAtom } from '../lib/value-store'
 import {
   getEntity,
   handleProxyEvent,
@@ -19,6 +19,7 @@ import {
   isTextable,
   prepareInputProps,
   prepareInputValue,
+  validateCustom,
   type AriaAttributes,
   type CommonProps,
   type DataAttributes,
@@ -37,7 +38,7 @@ export function Input(
     context?: Record<string, unknown>
     dataAttributes?: DataAttributes
     field: Field
-    onMount: (name: string, schema: Schema) => void
+    onMount: (name: string, schema: Schema, field: Field) => void
     onUnmount: (name: string) => void
     orientation?: Orientation
     value?: Nullable<Record<string, unknown>>
@@ -45,6 +46,7 @@ export function Input(
 ) {
   const entity = props.field.advanced?.entity
 
+  const store = useStore()
   const setTimeoutRef = useTimeout()
   const [, startTransition] = useTransition()
 
@@ -81,9 +83,17 @@ export function Input(
     (value: string) => {
       const results = schema.safeParse(value)
       const errors = results.error?.issues.map((issue) => issue.message) ?? []
-      setErrors(errors)
+
+      const custom = props.field.validation?.custom
+      const customErrors = custom
+        ? validateCustom(value, custom, (name) =>
+            store.get(reportValueAtom(name))
+          )
+        : []
+
+      setErrors([...errors, ...customErrors])
     },
-    [setErrors, schema]
+    [setErrors, schema, store, props.field.validation?.custom]
   )
 
   const handleTriggerEvent = useCallback(

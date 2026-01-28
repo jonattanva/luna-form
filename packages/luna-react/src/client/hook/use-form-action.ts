@@ -7,6 +7,7 @@ import {
   flatten,
   getFormData,
   logger,
+  type Field,
   type FormStateError,
   type Nullable,
   type Schemas,
@@ -26,7 +27,7 @@ export type FormActionOptions<T> = {
 }
 
 export function useFormState<T, F = Record<string, unknown>>(
-  getSchema: () => Schemas,
+  getSchema: () => readonly [Schemas, Field[]],
   action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
@@ -46,7 +47,9 @@ export function useFormState<T, F = Record<string, unknown>>(
       prevState: FormState<T>,
       formData: FormData
     ): Promise<FormState<T>> => {
-      const schema = buildSchema(getSchema())
+      const [schemas, fields] = getSchema()
+
+      const schema = buildSchema(schemas, fields)
       if (validation === false) {
         if (action) {
           return await action(formData as F, schema)

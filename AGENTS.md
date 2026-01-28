@@ -5,12 +5,17 @@
 - This project uses **pnpm** as its package manager
 - Never use npm or yarn for this project.
 
+## Project architecture
+
+- **package/luna-core**: Core utilities and types
+- **package/luna-react**: React bindings (depends on luna-core)
+- **packages/luna-svelte**: Svelte bindings (depends on luna-core)
+- **luna-core** must build before **luna-react** and **luna-svelte**
+
 ## Setup commands
 
 - Install deps: `pnpm install`
 - Start dev server: `pnpm run serve`
-- Run unit tests: `pnpm run test:unit`
-- Run e2e tests: `pnpm run test:e2e`
 - Build project: `pnpm run build`
 
 ## Important notes
@@ -28,6 +33,20 @@
 - **Remove Unused Code**: Delete any unused variables, imports, or functions immediately.
 - **Underscore Prefixing**: Only use the \_ prefix for variables that are technically required but intentionally unused (e.g., required function parameters or destructuring). Otherwise, remove them.
 
+## Testing
+
+- Framework: Playwright (not Jest or Vitest)
+- Unit tests: **tests/unit/** -- tagged with `@unit`
+- E2E tests: **tests/e2e/** -- tagged with `@e2e`
+- Test files follow the pattern **\*.spec.ts**
+- E2E tests run against Chromium, Firefox, and WebKit
+
 ## Documentation guidelines
 
 - **No Emojis**: Do not use emojis under any circumstances. This applies to source code, inline comments, documentation, README files, and commit messages. Maintain a strictly professional, text-only format.
+
+## Build outputs
+
+- **luna-core**: Type declarations only (no bundled JS)
+- **luna-react**: ESM and CJS bundles via esbuild (multiple entry points: client, server, config)
+- Build outputs go to **dist/** directories

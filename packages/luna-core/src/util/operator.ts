@@ -3,8 +3,12 @@ export const operators: Record<
   (current: unknown, value: unknown) => boolean
 > = {
   eq,
-  neq,
+  gt,
+  gte,
   in: includes,
+  lt,
+  lte,
+  neq,
   nin,
 }
 
@@ -22,4 +26,20 @@ function includes(current: unknown, value: unknown): boolean {
 
 function nin(current: unknown, value: unknown): boolean {
   return Array.isArray(value) && !value.includes(String(current))
+}
+
+function gt(current: unknown, value: unknown): boolean {
+  return Number(current) > Number(value)
+}
+
+function gte(current: unknown, value: unknown): boolean {
+  return Number(current) >= Number(value)
+}
+
+function lt(current: unknown, value: unknown): boolean {
+  return Number(current) < Number(value)
+}
+
+function lte(current: unknown, value: unknown): boolean {
+  return Number(current) <= Number(value)
 }

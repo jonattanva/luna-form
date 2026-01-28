@@ -71,7 +71,7 @@ export type Column = {
   type: 'column' | (string & {})
 } & Base
 
-export type Operator = 'eq' | 'neq' | 'in' | 'nin'
+export type Operator = 'eq' | 'neq' | 'in' | 'nin' | 'gt' | 'gte' | 'lt' | 'lte'
 
 export type Condition = {
   field?: string
@@ -79,7 +79,7 @@ export type Condition = {
   value: string | number | string[]
 }
 
-export type Compare = {
+export type CustomValidation = {
   field: string
   message?: string
   operator?: Operator
@@ -114,7 +114,7 @@ export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 export type Orientation = 'horizontal' | 'vertical'
 
 export type Validation = {
-  compare?: Compare | Array<Compare>
+  custom?: CustomValidation | Array<CustomValidation>
   email?: string
   length?: Length<string>
   required?: string

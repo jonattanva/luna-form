@@ -7,9 +7,16 @@ import {
   isSelectMonth,
   isSelectYear,
 } from './is-input'
-import { z } from 'zod'
-import type { Input, Schemas } from '../type'
 import { isEmpty } from './is-type'
+import { operators } from './operator'
+import { z } from 'zod'
+import type {
+  CustomValidation,
+  Field,
+  Input,
+  Schemas,
+  ZodSchema,
+} from '../type'
 
 type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
 
@@ -25,8 +32,12 @@ const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isRadio, getRadio],
 ]
 
-export function buildSchema(schemas: Schemas) {
-  return z.object(schemas)
+export function buildSchema(schemas: Schemas, fields: Field[] = []) {
+  const schema = z.object(schemas)
+  if (fields.length === 0) {
+    return schema
+  }
+  return applyCustomValidation(schema, fields)
 }
 
 export function flatten(error: z.ZodError<Record<string, unknown>>) {
@@ -163,4 +174,73 @@ function applyConstraint<T extends Coerced>(
     return schema[method](value, input.validation?.length?.[method]) as T
   }
   return schema
+}
+
+export function applyCustomValidation(schema: ZodSchema, fields: Field[] = []) {
+  const rules = getRules(fields)
+  if (rules.length === 0) {
+    return schema
+  }
+
+  return schema.superRefine((data, context) => {
+    for (const { name, rule } of rules) {
+      if (!evaluate(data, name, rule)) {
+        context.addIssue({
+          code: 'custom',
+          message: rule.message,
+          path: [name],
+        })
+      }
+    }
+  })
+}
+
+function evaluate(
+  data: Record<string, unknown>,
+  name: string,
+  rule: CustomValidation
+): boolean {
+  const operator = rule.operator ?? 'eq'
+  const operation = operators[operator]
+  if (operation) {
+    return operation(data[name], data[rule.field])
+  }
+  return false
+}
+
+function getRules(fields: Field[]) {
+  const results: Array<{ name: string; rule: CustomValidation }> = []
+  for (const field of fields) {
+    const custom = field.validation?.custom
+    if (!custom) {
+      continue
+    }
+
+    const rules = Array.isArray(custom) ? custom : [custom]
+    for (const rule of rules) {
+      results.push({ name: field.name, rule })
+    }
+  }
+  return results
+}
+
+export function validateCustom(
+  value: unknown,
+  rules: CustomValidation | Array<CustomValidation>,
+  getValue: (name: string) => unknown
+) {
+  const errors: string[] = []
+  const collections = Array.isArray(rules) ? rules : [rules]
+
+  for (const rule of collections) {
+    const operator = rule.operator ?? 'eq'
+    const operation = operators[operator]
+    if (operation && !operation(value, getValue(rule.field))) {
+      if (rule.message) {
+        errors.push(rule.message)
+      }
+    }
+  }
+
+  return errors
 }
