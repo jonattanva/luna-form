@@ -2,26 +2,30 @@
   "name": "svelte-luna-form",
   "version": "0.0.1",
   "description": "A Svelte library for building forms based on JSON",
+  "scripts": {
+    "lint": "eslint . --cache",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
   "type": "module",
   "sideEffects": false,
   "keywords": [
+    "event",
     "forms",
-    "json-schema",
+    "json",
     "svelte",
     "validation"
   ],
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@luna-form/core": "workspace:*"
-  },
   "peerDependencies": {
     "svelte": "^5.0.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@luna-form/core": "workspace:*",
     "eslint-plugin-svelte": "3.14.0"
   },
   "license": "Apache-2.0",
@@ -29,5 +33,8 @@
     "type": "git",
     "url": "https://github.com/jonattanva/luna-form.git",
     "directory": "packages/luna-svelte"
+  },
+  "exports": {
+    "./package.json": "./package.json"
   }
 }
