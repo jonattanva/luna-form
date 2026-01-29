@@ -3,6 +3,7 @@ examples
 apps/**/.next
 apps/**/.turbo
 
+packages/**/.svelte-kit
 packages/**/.turbo
 packages/**/dist
 

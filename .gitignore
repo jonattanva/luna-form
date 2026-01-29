@@ -9,6 +9,7 @@ package-lock.json
 test-results
 
 # build output
+packages/**/.svelte-kit
 packages/**/dist
 
 # Playwright
