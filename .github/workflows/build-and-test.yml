@@ -124,9 +124,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        matrix:
-          shardIndex: [1, 2, 3]
-          shardTotal: [3]
+        shardIndex: [1, 2, 3]
+        shardTotal: [3]
     steps:
       - name: Check out code
         uses: actions/checkout@v5
