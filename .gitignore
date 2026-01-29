@@ -13,7 +13,6 @@ packages/**/.svelte-kit
 packages/**/dist
 
 # Playwright
-.playwright-mcp
 /blob-report/
 /playwright-report/
 /playwright/.auth/

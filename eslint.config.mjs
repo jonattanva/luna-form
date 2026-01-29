@@ -1,29 +1,10 @@
 import eslintPlaywright from 'eslint-plugin-playwright'
-import eslintPluginJsxA11y from 'eslint-plugin-jsx-a11y'
-import eslintTypeScript from 'typescript-eslint'
-
-import eslintignore from './.config/eslintignore.mjs'
-import globals from 'globals'
+import { baseConfig, tsWithJsxA11yConfig } from './.config/eslint-base.mjs'
 import { defineConfig } from 'eslint/config'
 
 export default defineConfig([
-  eslintignore,
-  ...eslintTypeScript.configs.recommended,
-  {
-    files: ['**/*.{ts,tsx}'],
-    ...eslintPluginJsxA11y.flatConfigs.recommended,
-    languageOptions: {
-      ...eslintPluginJsxA11y.flatConfigs.recommended.languageOptions,
-      parser: eslintTypeScript.parser,
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-      globals: {
-        ...globals.browser,
-      },
-    },
-  },
+  ...baseConfig,
+  tsWithJsxA11yConfig(import.meta.dirname),
   {
     ...eslintPlaywright.configs['flat/recommended'],
     files: ['tests/**'],

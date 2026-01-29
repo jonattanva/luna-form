@@ -1,28 +1,19 @@
 import eslintReact from 'eslint-plugin-react'
 import eslintReactHooks from 'eslint-plugin-react-hooks'
 import eslintReactRefresh from 'eslint-plugin-react-refresh'
-import eslintTypeScript from 'typescript-eslint'
-import eslintignore from '../../.config/eslintignore.mjs'
-import globals from 'globals'
+import {
+  baseConfig,
+  tsWithJsxA11yConfig,
+  eslintTypeScript,
+  globals,
+} from '../../.config/eslint-base.mjs'
 import { defineConfig } from 'eslint/config'
-import { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
 
 export default defineConfig([
-  eslintignore,
+  ...baseConfig,
+  tsWithJsxA11yConfig(import.meta.dirname),
   {
-    languageOptions: {
-      parserOptions: {
-        tsconfigRootDir: __dirname,
-      },
-    },
-  },
-  ...eslintTypeScript.configs.recommended,
-  {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: eslintTypeScript.parser,
       parserOptions: {
@@ -35,7 +26,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
     ...eslintReact.configs.flat.recommended,
     languageOptions: {
       ...eslintReact.configs.flat.recommended.languageOptions,
@@ -63,7 +54,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': eslintReactHooks,
       'react-refresh': eslintReactRefresh,
