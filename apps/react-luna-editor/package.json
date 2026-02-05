@@ -1,5 +1,5 @@
 {
-  "name": "luna-editor",
+  "name": "react-luna-editor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -17,7 +17,7 @@
     "@radix-ui/react-slot": "1.2.4",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "jotai": "2.17.0",
+    "jotai": "2.17.1",
     "lucide-react": "0.563.0",
     "next": "16.1.6",
     "next-themes": "0.4.6",
@@ -29,8 +29,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.18",
-    "@types/node": "25.1.0",
-    "@types/react": "19.2.10",
+    "@types/node": "25.2.1",
+    "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.2",
     "eslint-config-next": "16.1.6",

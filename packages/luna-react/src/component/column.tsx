@@ -11,7 +11,7 @@ export function Column(props: ColumnProps) {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className={twMerge('grid grid-cols-1 gap-8 sm:gap-4', cols)}>
+      <div className={twMerge('grid grid-cols-1 gap-3 sm:gap-4', cols)}>
         {props.children}
       </div>
     </div>
