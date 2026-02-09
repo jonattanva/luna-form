@@ -19,6 +19,7 @@ import {
   isTextable,
   prepareInputProps,
   prepareInputValue,
+  translate,
   validateCustom,
   type AriaAttributes,
   type CommonProps,
@@ -41,6 +42,7 @@ export function Input(
     onMount: (name: string, schema: Schema, field: Field) => void
     onUnmount: (name: string) => void
     orientation?: Orientation
+    translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
@@ -63,19 +65,31 @@ export function Input(
 
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
 
-  const schema = useInput(props.field, props.onMount, props.onUnmount)
   const [data, setSource] = useDataSource(props.field, props.config, value)
+  const schema = useInput(
+    props.field,
+    props.onMount,
+    props.onUnmount,
+    props.translations
+  )
 
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
-    props.commonProps,
+    {
+      ...props.commonProps,
+      placeholder: translate(props.commonProps.placeholder, props.translations),
+    },
     data,
     value
   )
 
-  // Keep a ref of the current value to access inside event handlers
+  // Keep refs to access current values inside event handlers without invalidating useCallback
   const valueRef = useRef(value)
   valueRef.current = value
+
+  // Keep translations in ref to access current translations inside event handlers without invalidating useCallback
+  const translationsRef = useRef(props.translations)
+  translationsRef.current = props.translations
 
   const inputProps = prepareInputValue(props.field, defaultValue)
 
@@ -86,14 +100,17 @@ export function Input(
 
       const custom = props.field.validation?.custom
       const customErrors = custom
-        ? validateCustom(value, custom, (name) =>
-            store.get(reportValueAtom(name))
+        ? validateCustom(
+            value,
+            custom,
+            (name) => store.get(reportValueAtom(name)),
+            translationsRef.current
           )
         : []
 
       setErrors([...errors, ...customErrors])
     },
-    [setErrors, schema, store, props.field.validation?.custom]
+    [props.field.validation?.custom, schema, setErrors, store]
   )
 
   const handleTriggerEvent = useCallback(
@@ -192,6 +209,7 @@ export function Input(
       context={props.context}
       field={props.field}
       orientation={props.orientation}
+      translations={props.translations}
     >
       <Component
         {...commonPropsWithOptions}

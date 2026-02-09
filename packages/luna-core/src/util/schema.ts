@@ -17,11 +17,15 @@ import type {
   Schemas,
   ZodSchema,
 } from '../type'
+import { translate } from './translate'
 
 type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
 
 type SchemaChecker = (input: Input) => boolean
-type SchemaGetter = (input: Input) => z.ZodType
+type SchemaGetter = (
+  input: Input,
+  translations?: Record<string, string>
+) => z.ZodType
 
 const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isNumber, getNumber],
@@ -32,12 +36,16 @@ const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isRadio, getRadio],
 ]
 
-export function buildSchema(schemas: Schemas, fields: Field[] = []) {
+export function buildSchema(
+  schemas: Schemas,
+  fields: Field[] = [],
+  translations?: Record<string, string>
+) {
   const schema = z.object(schemas)
   if (fields.length === 0) {
     return schema
   }
-  return applyCustomValidation(schema, fields)
+  return applyCustomValidation(schema, fields, translations)
 }
 
 export function flatten(error: z.ZodError<Record<string, unknown>>) {
@@ -51,92 +59,108 @@ export function flatten(error: z.ZodError<Record<string, unknown>>) {
   return results
 }
 
-export function getSchema(input: Input) {
+export function getSchema(input: Input, translations?: Record<string, string>) {
   for (const [check, getSchema] of approach) {
     if (check(input)) {
-      return getSchema(input)
+      return getSchema(input, translations)
     }
   }
-  return getText(input)
+  return getText(input, translations)
 }
 
-export function getEmail(input: Input) {
+export function getEmail(input: Input, translations?: Record<string, string>) {
   const baseSchema = z.string().trim()
 
   if (input.required) {
     const schema = baseSchema
       .min(1, input.validation?.required)
-      .pipe(z.email(input.validation?.email))
+      .pipe(applyEmail(input, translations))
 
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
 
   return baseSchema
-    .pipe(z.email(input.validation?.email))
+    .pipe(applyEmail(input, translations))
     .or(z.literal(''))
     .nullable()
 }
 
-export function getBoolean(input: Input) {
+export function getBoolean(
+  input: Input,
+  translations?: Record<string, string>
+) {
   let schema = z.coerce.boolean()
   if (input.required) {
+    const message = input.validation?.required
+      ? translate(input.validation?.required, translations)
+      : undefined
+
     schema = schema.refine((value) => value === true, {
-      message: input.validation?.required,
+      message,
     })
     return z.preprocess((value) => (value === null ? false : value), schema)
   }
   return schema.nullable()
 }
 
-export function getRadio(input: Input) {
+export function getRadio(input: Input, translations?: Record<string, string>) {
   let schema = z.coerce.string()
   if (input.required) {
-    schema = schema.min(1, input.validation?.required)
+    const message = input.validation?.required
+      ? translate(input.validation?.required, translations)
+      : undefined
+
+    schema = schema.min(1, message)
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
   return schema.or(z.literal('')).nullable()
 }
 
-export function getText(input: Input) {
+export function getText(input: Input, translations?: Record<string, string>) {
   let schema = z.coerce.string().trim()
-  schema = applyMinAndMax(schema, input)
+  schema = applyMinAndMax(schema, input, translations)
 
   if (input.required) {
-    schema = applyRequired(schema, input)
+    schema = applyRequired(schema, input, translations)
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
   return schema.nullable()
 }
 
-export function getNumber(input: Input) {
+export function getNumber(input: Input, translations?: Record<string, string>) {
   let schema = z.coerce.number().int()
-  schema = applyMinAndMax(schema, input)
+  schema = applyMinAndMax(schema, input, translations)
 
   if (input.required) {
-    schema = applyRequired(schema, input)
+    schema = applyRequired(schema, input, translations)
     return z.preprocess((value) => (value === null ? undefined : value), schema)
   }
   return schema.nullable()
 }
 
-export function getYearSchema(input: Input) {
+export function getYearSchema(
+  input: Input,
+  translations?: Record<string, string>
+) {
   if (input.required) {
-    const schema = z.coerce
-      .number({ message: input.validation?.required })
-      .int()
+    const message = input.validation?.required
+      ? translate(input.validation?.required, translations)
+      : undefined
 
-    return z.preprocess(normalize, schema)
+    return z.preprocess(normalize, z.coerce.number({ message }).int())
   }
   return z.coerce.number().int().nullable()
 }
 
-export function getMonthSchema(input: Input) {
-  const schema = z.coerce
-    .number()
-    .int()
-    .min(1, input.validation?.required)
-    .max(12, input.validation?.required)
+export function getMonthSchema(
+  input: Input,
+  translations?: Record<string, string>
+) {
+  const message = input.validation?.required
+    ? translate(input.validation?.required, translations)
+    : undefined
 
+  const schema = z.coerce.number().int().min(1, message).max(12, message)
   return !input.required ? schema.nullable() : schema
 }
 
@@ -144,39 +168,74 @@ function normalize(value: unknown) {
   return value === null || value === '' ? undefined : value
 }
 
-function applyMinAndMax<T extends Coerced>(schema: T, input: Input): T {
-  schema = min(schema, input)
-  schema = max(schema, input)
+function applyEmail(input: Input, translations?: Record<string, string>) {
+  const message = input.validation?.email
+    ? translate(input.validation?.email, translations)
+    : undefined
+
+  return z.email(message)
+}
+
+function applyMinAndMax<T extends Coerced>(
+  schema: T,
+  input: Input,
+  translations?: Record<string, string>
+): T {
+  schema = min(schema, input, translations)
+  schema = max(schema, input, translations)
   return schema
 }
 
-function applyRequired<T extends Coerced>(schema: T, input: Input): T {
+function applyRequired<T extends Coerced>(
+  schema: T,
+  input: Input,
+  translations?: Record<string, string>
+): T {
   const min = input.advanced?.length?.min
   if (min === undefined || min < 1) {
-    return schema.min(1, input.validation?.required) as T
+    const message = input.validation?.required
+      ? translate(input.validation?.required, translations)
+      : undefined
+
+    return schema.min(1, message) as T
   }
   return schema
 }
 
-const min = <T extends Coerced>(schema: T, input: Input) =>
-  applyConstraint(schema, input, MIN)
+const min = <T extends Coerced>(
+  schema: T,
+  input: Input,
+  translations?: Record<string, string>
+) => applyConstraint(schema, input, MIN, translations)
 
-const max = <T extends Coerced>(schema: T, input: Input) =>
-  applyConstraint(schema, input, MAX)
+const max = <T extends Coerced>(
+  schema: T,
+  input: Input,
+  translations?: Record<string, string>
+) => applyConstraint(schema, input, MAX, translations)
 
 function applyConstraint<T extends Coerced>(
   schema: T,
   input: Input,
-  method: typeof MIN | typeof MAX
+  method: typeof MIN | typeof MAX,
+  translations?: Record<string, string>
 ) {
   const value = input.advanced?.length?.[method]
   if (value !== undefined) {
-    return schema[method](value, input.validation?.length?.[method]) as T
+    const message = input.validation?.length?.[method]
+      ? translate(input.validation?.length?.[method], translations)
+      : undefined
+
+    return schema[method](value, message) as T
   }
   return schema
 }
 
-export function applyCustomValidation(schema: ZodSchema, fields: Field[] = []) {
+export function applyCustomValidation(
+  schema: ZodSchema,
+  fields: Field[] = [],
+  translations?: Record<string, string>
+) {
   const rules = getRules(fields)
   if (rules.length === 0) {
     return schema
@@ -187,7 +246,7 @@ export function applyCustomValidation(schema: ZodSchema, fields: Field[] = []) {
       if (!evaluate(data, name, rule)) {
         context.addIssue({
           code: 'custom',
-          message: rule.message,
+          message: translate(rule.message, translations),
           path: [name],
         })
       }
@@ -227,7 +286,8 @@ function getRules(fields: Field[]) {
 export function validateCustom(
   value: unknown,
   rules: CustomValidation | Array<CustomValidation>,
-  getValue: (name: string) => unknown
+  getValue: (name: string) => unknown,
+  translations?: Record<string, string>
 ) {
   const errors: string[] = []
   const collections = Array.isArray(rules) ? rules : [rules]
@@ -237,7 +297,7 @@ export function validateCustom(
     const operation = operators[operator]
     if (operation && !operation(value, getValue(rule.field))) {
       if (rule.message) {
-        errors.push(rule.message)
+        errors.push(translate(rule.message, translations))
       }
     }
   }

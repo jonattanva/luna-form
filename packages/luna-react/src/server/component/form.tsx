@@ -10,11 +10,15 @@ export function Form(
     config: Config
     context?: Record<string, unknown>
     definition?: Definition
+    lang?: string
     readOnly?: boolean
     sections: Sections
+    translations?: Record<string, Record<string, string>>
     value?: Record<string, unknown>
   }>
 ) {
+  const translations = props.translations?.[props.lang ?? '']
+
   return (
     <Component
       config={props.config}
@@ -30,6 +34,7 @@ export function Form(
               {...internal}
               config={props.config}
               context={props.context}
+              translations={translations}
               value={props.value}
             />
           )}

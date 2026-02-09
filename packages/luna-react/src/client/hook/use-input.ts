@@ -5,10 +5,14 @@ import type { Field, Schema } from '@luna-form/core'
 export function useInput(
   field: Field,
   onMount: (name: string, schema: Schema, field: Field) => void,
-  onUnmount: (name: string) => void
+  onUnmount: (name: string) => void,
+  translations?: Record<string, string>
 ) {
   const { name } = field
-  const schema = useMemo(() => getSchema(field), [field])
+  const schema = useMemo(
+    () => getSchema(field, translations),
+    [field, translations]
+  )
 
   const onMountHandler = useEffectEvent((name: string) => {
     if (name) {

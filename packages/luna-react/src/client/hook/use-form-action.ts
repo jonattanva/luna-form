@@ -23,6 +23,7 @@ export type FormState<T> = {
 export type FormActionOptions<T> = {
   onSuccess?: (data: T) => void
   preserveValues?: boolean
+  translations?: Record<string, string>
   validation?: boolean
 }
 
@@ -49,7 +50,7 @@ export function useFormState<T, F = Record<string, unknown>>(
     ): Promise<FormState<T>> => {
       const [schemas, fields] = getSchema()
 
-      const schema = buildSchema(schemas, fields)
+      const schema = buildSchema(schemas, fields, options?.translations)
       if (validation === false) {
         if (action) {
           return await action(formData as F, schema)

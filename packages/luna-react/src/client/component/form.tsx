@@ -14,9 +14,11 @@ export function Form<
     config: Config
     context?: Record<string, unknown>
     definition?: Definition
+    lang?: string
     onSuccess?: (data: T) => void
     readOnly?: boolean
     sections: Sections
+    translations?: Record<string, Record<string, string>>
     value?: Nullable<T>
   }>
 ) {

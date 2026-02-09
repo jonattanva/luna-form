@@ -4,6 +4,7 @@ import {
   HORIZONTAL,
   interpolate,
   isInterpolated,
+  translate,
   type Field,
   type Orientation,
 } from '@luna-form/core'
@@ -15,6 +16,7 @@ export function InputLabel(
     context?: Record<string, unknown>
     field: Field
     orientation?: Orientation
+    translations?: Record<string, string>
   }>
 ) {
   const label = isInterpolated(props.field.label)
@@ -36,9 +38,11 @@ export function InputLabel(
       data-slot="field-content"
       className="flex w-full flex-1 flex-col gap-1.5 leading-snug"
     >
-      <Label field={props.field}>{label}</Label>
+      <Label field={props.field}>{translate(label, props.translations)}</Label>
       {props.orientation === HORIZONTAL && (
-        <FormattedDescription text={description} />
+        <FormattedDescription
+          text={translate(description, props.translations)}
+        />
       )}
     </div>
   )

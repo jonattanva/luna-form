@@ -21,6 +21,7 @@ export function Input(
     dataAttributes?: DataAttributes
     field: Field
     orientation?: Orientation
+    translations?: Record<string, string>
     value?: Record<string, unknown>
   }>
 ) {
@@ -41,6 +42,7 @@ export function Input(
       context={props.context}
       field={props.field}
       orientation={props.orientation}
+      translations={props.translations}
     >
       <Component
         {...props.ariaAttributes}

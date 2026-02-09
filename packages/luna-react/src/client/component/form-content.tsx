@@ -1,6 +1,6 @@
+import { Field } from './wrapper'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
-import { Field } from './wrapper'
 import { createSlot } from '../../component/slot/slot-create'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { useFormState, type FormState } from '../hook/use-form-action'
@@ -20,17 +20,21 @@ export function FormContent<
     config: Config
     context?: Record<string, unknown>
     definition?: Definition
+    lang?: string
     onSuccess?: (data: T) => void
     readOnly?: boolean
     sections: Sections
+    translations?: Record<string, Record<string, string>>
     value?: Nullable<T>
   }>
 ) {
-  const [schema, onMount, onUnmount] = useSchema()
+  const translations = props.translations?.[props.lang ?? '']
 
+  const [schema, onMount, onUnmount] = useSchema()
   const [action, state, isPending] = useFormState(schema, props.action, {
     onSuccess: props.onSuccess,
     validation: props.config.validation.submit,
+    translations,
   })
 
   const isShowingError =
@@ -68,6 +72,7 @@ export function FormContent<
                 context={props.context}
                 onMount={onMount}
                 onUnmount={onUnmount}
+                translations={translations}
                 value={value}
               />
             )}
