@@ -56,7 +56,7 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
     const description = page.locator('p', {
       hasText: 'We will never share your email.',
     })
-    await expect(description).toHaveClass(/text-sm/)
+    await expect(description).toHaveClass(/text-xs/)
     await expect(description).toHaveClass(/text-slate-600/)
   })
 
