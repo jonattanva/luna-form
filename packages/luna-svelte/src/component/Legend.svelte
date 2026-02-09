@@ -1,11 +1,17 @@
 <script lang="ts">
-  import { formatMarkdown } from '../lib/string'
+  import { formatMarkdown } from '../lib/string.js'
 
-  let { description, title }: { description?: string; title?: string } = $props()
+  let {
+    description,
+    title,
+  }: {
+    description?: string
+    title?: string
+  } = $props()
 </script>
 
 {#snippet renderMarkdown(text: string)}
-  {#each formatMarkdown(text) as part}
+  {#each formatMarkdown(text) as part, index (index)}
     {#if typeof part === 'string'}
       {part}
     {:else}

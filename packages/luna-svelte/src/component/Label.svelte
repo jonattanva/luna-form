@@ -1,10 +1,6 @@
 <script lang="ts">
-  import {
-    isCheckbox,
-    isRadio,
-    translate,
-    type Field,
-  } from '@luna-form/core'
+  import { isCheckbox, isRadio, translate } from '@luna-form/core'
+  import type { Field } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
 
   let {
