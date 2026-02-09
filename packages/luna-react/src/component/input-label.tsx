@@ -38,7 +38,9 @@ export function InputLabel(
       data-slot="field-content"
       className="flex w-full flex-1 flex-col gap-1.5 leading-snug"
     >
-      <Label field={props.field}>{translate(label, props.translations)}</Label>
+      <Label field={props.field} translations={props.translations}>
+        {translate(label, props.translations)}
+      </Label>
       {props.orientation === HORIZONTAL && (
         <FormattedDescription
           text={translate(description, props.translations)}
