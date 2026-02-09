@@ -40,7 +40,9 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     // Check translated label
-    await expect(page.getByText('Correo electrónico')).toBeVisible()
+    await expect(
+      page.getByLabel('Correo electrónico', { exact: false })
+    ).toBeVisible()
 
     // Check translated description
     await expect(page.getByText('Ingresa tu correo personal')).toBeVisible()
@@ -84,7 +86,7 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     // Should show the key because "fr" is not defined or key is not in "fr"
-    await expect(page.getByText('email_label')).toBeVisible()
+    await expect(page.getByLabel('email_label', { exact: false })).toBeVisible()
   })
 
   test('should translate custom validation messages', async ({ page }) => {

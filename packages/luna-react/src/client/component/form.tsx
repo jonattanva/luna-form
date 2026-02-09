@@ -16,6 +16,7 @@ export function Form<
     definition?: Definition
     lang?: string
     onSuccess?: (data: T) => void
+    onValueChange?: (input: { name: string; value: unknown }) => void
     readOnly?: boolean
     sections: Sections
     translations?: Record<string, Record<string, string>>

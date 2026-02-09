@@ -10,7 +10,7 @@ import {
   getYearSchema,
 } from '@/packages/luna-core/src/util/schema'
 import { z } from 'zod'
-import type { Field } from '@/packages/luna-core/src/type'
+import type { Field, Input } from '@/packages/luna-core/src/type'
 
 test.describe('Schema Utility', { tag: ['@unit'] }, () => {
   test('should create an email schema with required validation', () => {
@@ -958,5 +958,75 @@ test.describe('Schema Utility', { tag: ['@unit'] }, () => {
     expect(result.safeParse({ budgetLimit: 1000, expense: 1500 }).success).toBe(
       false
     )
+  })
+
+  test('should translate validation messages in getSchema', () => {
+    const input: Input = {
+      name: 'email',
+      required: true,
+      type: 'input/email',
+      validation: {
+        required: 'email.required',
+      },
+    }
+    const translations = {
+      'email.required': 'El correo electrónico es obligatorio',
+    }
+
+    const schema = getSchema(input, translations)
+    const result = schema.safeParse('')
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].message).toBe(
+      'El correo electrónico es obligatorio'
+    )
+  })
+
+  test('should translate custom validation messages', () => {
+    const schema = z.object({
+      password: z.string(),
+      confirm: z.string(),
+    })
+    const fields: Field[] = [
+      {
+        name: 'confirm',
+        type: 'password',
+        validation: {
+          custom: {
+            field: 'password',
+            operator: 'eq',
+            message: 'password.match',
+          },
+        },
+      },
+    ]
+    const translations = {
+      'password.match': 'Las contraseñas no coinciden',
+    }
+
+    const result = applyCustomValidation(schema, fields, translations)
+    const validation = result.safeParse({ password: '123', confirm: '456' })
+    expect(validation.success).toBe(false)
+    expect(validation.error?.issues[0].message).toBe(
+      'Las contraseñas no coinciden'
+    )
+  })
+
+  test('should translate email format validation message in getSchema', () => {
+    const input: Input = {
+      name: 'email',
+      required: false,
+      type: 'input/email',
+      validation: {
+        email: 'email.invalid',
+      },
+    }
+    const translations = {
+      'email.invalid': 'Formato de correo inválido',
+    }
+
+    const schema = getSchema(input, translations)
+    const result = schema.safeParse('not-an-email')
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].message).toBe('Formato de correo inválido')
   })
 })

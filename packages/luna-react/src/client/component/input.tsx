@@ -41,6 +41,7 @@ export function Input(
     field: Field
     onMount: (name: string, schema: Schema, field: Field) => void
     onUnmount: (name: string) => void
+    onValueChange?: (input: { name: string; value: unknown }) => void
     orientation?: Orientation
     translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
@@ -56,6 +57,12 @@ export function Input(
     props.field,
     props.value
   )
+
+  const valueRef = useRef(value)
+  valueRef.current = value
+
+  const translationsRef = useRef(props.translations)
+  translationsRef.current = props.translations
 
   const hasTextable = isTextable(props.field)
   const hasClickable = isClickable(props.field)
@@ -73,23 +80,30 @@ export function Input(
     props.translations
   )
 
+  const placeholder = translate(
+    props.commonProps.placeholder,
+    props.translations
+  )
+
+  const commonProps = {
+    ...props.commonProps,
+    placeholder,
+  }
+
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
-    {
-      ...props.commonProps,
-      placeholder: translate(props.commonProps.placeholder, props.translations),
-    },
+    commonProps,
     data,
     value
   )
 
-  // Keep refs to access current values inside event handlers without invalidating useCallback
-  const valueRef = useRef(value)
-  valueRef.current = value
-
-  // Keep translations in ref to access current translations inside event handlers without invalidating useCallback
-  const translationsRef = useRef(props.translations)
-  translationsRef.current = props.translations
+  const onValueChangeRef = useRef<((value: unknown) => void) | null>(null)
+  onValueChangeRef.current = (value: unknown) => {
+    setValue(value)
+    if (props.onValueChange) {
+      props.onValueChange({ name: props.field.name, value })
+    }
+  }
 
   const inputProps = prepareInputValue(props.field, defaultValue)
 
@@ -141,7 +155,7 @@ export function Input(
         }
       }
 
-      setValue(inputValue)
+      onValueChangeRef.current?.(inputValue)
       if (props.config.validation.change) {
         validated(inputValue)
       }
@@ -184,7 +198,6 @@ export function Input(
       props.field.event?.change,
       setFieldStates,
       setSource,
-      setValue,
       setValues,
       shouldSkipOnChange,
       validated,

@@ -22,6 +22,7 @@ export function FormContent<
     definition?: Definition
     lang?: string
     onSuccess?: (data: T) => void
+    onValueChange?: (input: { name: string; value: unknown }) => void
     readOnly?: boolean
     sections: Sections
     translations?: Record<string, Record<string, string>>
@@ -72,6 +73,7 @@ export function FormContent<
                 context={props.context}
                 onMount={onMount}
                 onUnmount={onUnmount}
+                onValueChange={props.onValueChange}
                 translations={translations}
                 value={value}
               />

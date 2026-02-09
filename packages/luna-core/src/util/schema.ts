@@ -72,8 +72,9 @@ export function getEmail(input: Input, translations?: Record<string, string>) {
   const baseSchema = z.string().trim()
 
   if (input.required) {
+    const message = getRequiredMessage(input, translations)
     const schema = baseSchema
-      .min(1, input.validation?.required)
+      .min(1, message)
       .pipe(applyEmail(input, translations))
 
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
@@ -91,12 +92,8 @@ export function getBoolean(
 ) {
   let schema = z.coerce.boolean()
   if (input.required) {
-    const message = input.validation?.required
-      ? translate(input.validation?.required, translations)
-      : undefined
-
     schema = schema.refine((value) => value === true, {
-      message,
+      message: getRequiredMessage(input, translations),
     })
     return z.preprocess((value) => (value === null ? false : value), schema)
   }
@@ -106,11 +103,7 @@ export function getBoolean(
 export function getRadio(input: Input, translations?: Record<string, string>) {
   let schema = z.coerce.string()
   if (input.required) {
-    const message = input.validation?.required
-      ? translate(input.validation?.required, translations)
-      : undefined
-
-    schema = schema.min(1, message)
+    schema = schema.min(1, getRequiredMessage(input, translations))
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
   return schema.or(z.literal('')).nullable()
@@ -143,11 +136,12 @@ export function getYearSchema(
   translations?: Record<string, string>
 ) {
   if (input.required) {
-    const message = input.validation?.required
-      ? translate(input.validation?.required, translations)
-      : undefined
-
-    return z.preprocess(normalize, z.coerce.number({ message }).int())
+    return z.preprocess(
+      normalize,
+      z.coerce
+        .number({ message: getRequiredMessage(input, translations) })
+        .int()
+    )
   }
   return z.coerce.number().int().nullable()
 }
@@ -156,11 +150,9 @@ export function getMonthSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
-  const message = input.validation?.required
-    ? translate(input.validation?.required, translations)
-    : undefined
-
+  const message = getRequiredMessage(input, translations)
   const schema = z.coerce.number().int().min(1, message).max(12, message)
+
   return !input.required ? schema.nullable() : schema
 }
 
@@ -172,7 +164,7 @@ function applyEmail(input: Input, translations?: Record<string, string>) {
   const message = input.validation?.email
     ? translate(input.validation?.email, translations)
     : undefined
-
+    
   return z.email(message)
 }
 
@@ -193,11 +185,7 @@ function applyRequired<T extends Coerced>(
 ): T {
   const min = input.advanced?.length?.min
   if (min === undefined || min < 1) {
-    const message = input.validation?.required
-      ? translate(input.validation?.required, translations)
-      : undefined
-
-    return schema.min(1, message) as T
+    return schema.min(1, getRequiredMessage(input, translations)) as T
   }
   return schema
 }
@@ -244,9 +232,10 @@ export function applyCustomValidation(
   return schema.superRefine((data, context) => {
     for (const { name, rule } of rules) {
       if (!evaluate(data, name, rule)) {
+        const message = translate(rule.message, translations)
         context.addIssue({
           code: 'custom',
-          message: translate(rule.message, translations),
+          message,
           path: [name],
         })
       }
@@ -297,10 +286,20 @@ export function validateCustom(
     const operation = operators[operator]
     if (operation && !operation(value, getValue(rule.field))) {
       if (rule.message) {
-        errors.push(translate(rule.message, translations))
+        const message = translate(rule.message, translations)
+        errors.push(message)
       }
     }
   }
 
   return errors
+}
+
+function getRequiredMessage(
+  input: Input,
+  translations?: Record<string, string>
+) {
+  return input.validation?.required
+    ? translate(input.validation?.required, translations)
+    : undefined
 }
