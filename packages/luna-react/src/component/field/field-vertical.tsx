@@ -9,6 +9,7 @@ export function FieldVertical(
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean
+    isReversed?: boolean
     isClickable?: boolean
   }>
 ) {

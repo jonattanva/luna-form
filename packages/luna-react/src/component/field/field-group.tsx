@@ -1,5 +1,6 @@
 import {
   VERTICAL,
+  buildReverse,
   isCheckbox,
   isClickable,
   type Field,
@@ -20,6 +21,7 @@ export function FieldGroup(
 ) {
   const clickable = isClickable(props.field)
   const checkbox = isCheckbox(props.field)
+  const reversed = buildReverse(props.field)
 
   if (props.orientation === VERTICAL) {
     return (
@@ -28,6 +30,7 @@ export function FieldGroup(
         disabled={props.disabled}
         errors={props.errors}
         isCheckbox={checkbox}
+        isReversed={reversed}
         isClickable={clickable}
       >
         {props.children}
@@ -41,6 +44,7 @@ export function FieldGroup(
       disabled={props.disabled}
       errors={props.errors}
       isCheckbox={checkbox}
+      isReversed={reversed}
       isClickable={clickable}
     >
       {props.children}

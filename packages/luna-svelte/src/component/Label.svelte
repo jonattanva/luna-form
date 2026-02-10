@@ -1,19 +1,22 @@
 <script lang="ts">
   import { isCheckbox, isRadio, translate } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
-  import type { Field } from '@luna-form/core'
+  import type { Field, Style } from '@luna-form/core'
   import type { Snippet } from 'svelte'
 
   let {
     children,
     field,
+    style,
     translations,
   }: {
     children?: Snippet
     field: Field
+    style?: Style
     translations?: Record<string, string>
   } = $props()
 
+  const showOptionalLabel = $derived(style?.showOptionalLabel ?? true)
   const normal = $derived(isRadio(field) || isCheckbox(field))
 </script>
 
@@ -30,7 +33,7 @@
   {#if children}
     {@render children()}
   {/if}
-  {#if !field.required}
+  {#if showOptionalLabel && !field.required}
     <span class="text-sm text-slate-600 dark:text-slate-400">
       {translate('(Optional)', translations)}
     </span>

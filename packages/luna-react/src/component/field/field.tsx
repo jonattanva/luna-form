@@ -4,10 +4,12 @@ import { InputBase } from '../input/input-base'
 import {
   buildDisabled,
   buildOrientation,
+  getSpan,
   mergeStyle,
   type Field,
   type Style,
 } from '@luna-form/core'
+import { twMerge } from 'tailwind-merge'
 import type { Children } from '../../type'
 
 export type FieldProps = Readonly<{
@@ -29,7 +31,7 @@ export function Field(props: FieldProps) {
   const disabled = buildDisabled(props.field, props.disabled)
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className={twMerge('flex flex-col gap-3', getSpan(cols))}>
       <FieldGroup
         cols={cols}
         disabled={disabled}

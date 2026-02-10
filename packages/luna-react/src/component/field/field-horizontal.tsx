@@ -9,6 +9,7 @@ export function FieldHorizontal(
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean
+    isReversed?: boolean
     isClickable?: boolean
   }>
 ) {

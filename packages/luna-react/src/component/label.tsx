@@ -3,6 +3,7 @@ import {
   isRadio,
   translate,
   type Field,
+  type Style,
 } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
@@ -10,9 +11,11 @@ export function Label(
   props: Readonly<{
     children?: React.ReactNode
     field: Field
+    style?: Style
     translations?: Record<string, string>
   }>
 ) {
+  const showOptionalLabel = props.style?.showOptionalLabel ?? true
   const normal = isRadio(props.field) || isCheckbox(props.field)
 
   return (
@@ -27,7 +30,7 @@ export function Label(
       htmlFor={props.field.name}
     >
       {props.children}
-      {!props.field.required && (
+      {showOptionalLabel && !props.field.required && (
         <span className="text-sm text-slate-600 dark:text-slate-400">
           {translate('(Optional)', props.translations)}
         </span>

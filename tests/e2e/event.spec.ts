@@ -86,8 +86,8 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const option = page.getByRole('option', { name: 'pikachu' })
     await option.click()
 
-    // unfocus to close the listbox
-    await page.locator('form').click({ position: { x: 10, y: 10 } })
+    // close the listbox
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     const indexes = getField(page, 'Game Indexes')
@@ -97,8 +97,8 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const yellow = page.getByRole('option', { name: 'yellow' })
     await yellow.click()
 
-    // unfocus to close the listbox
-    await page.locator('form').click({ position: { x: 10, y: 10 } })
+    // close the listbox
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     const abilities = getField(page, 'Abilities')

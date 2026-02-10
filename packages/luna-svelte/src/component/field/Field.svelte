@@ -2,10 +2,12 @@
   import {
     buildDisabled,
     buildOrientation,
+    getSpan,
     mergeStyle,
     type Field as FieldType,
     type Style,
   } from '@luna-form/core'
+  import { twMerge } from 'tailwind-merge'
   import FieldError from './FieldError.svelte'
   import FieldGroup from './FieldGroup.svelte'
   import InputBase from '../input/InputBase.svelte'
@@ -56,9 +58,8 @@
   const derivedDisabled = $derived(buildDisabled(field, disabled))
 </script>
 
-<div class="flex flex-col gap-3">
+<div class={twMerge('flex flex-col gap-3', getSpan(cols))}>
   <FieldGroup
-    {cols}
     disabled={derivedDisabled}
     errors={fieldErrors}
     {field}

@@ -26,6 +26,7 @@ export function defineConfig<T extends React.ElementType>(
     style?: {
       compact?: boolean
       orientation?: Orientation
+      showOptionalLabel?: boolean
     }
     validation?: {
       blur?: boolean

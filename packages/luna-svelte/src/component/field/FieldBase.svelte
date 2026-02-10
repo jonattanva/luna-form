@@ -2,7 +2,6 @@
   import {
     DATA_INVALID,
     DATA_READONLY,
-    getSpan,
     type Orientation,
   } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
@@ -11,19 +10,19 @@
   let {
     children,
     class: className,
-    cols,
     disabled,
     errors: errorList,
     isCheckbox,
+    isReversed,
     isClickable,
     orientation,
   }: {
     children?: Snippet
     class?: string
-    cols?: number
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean
+    isReversed?: boolean
     isClickable?: boolean
     orientation: Orientation
   } = $props()
@@ -40,9 +39,8 @@
   class={twMerge(
     'group flex w-full flex-col items-center data-[invalid=true]:text-red-600 data-[invalid=true]:dark:text-red-500',
     'data-[clickable=true]:items-start',
-    isCheckbox && 'flex-row-reverse!',
+    isCheckbox && (isReversed ? 'flex-row-reverse!' : 'flex-row!'),
     'data-[clickable=true]:has-[>[data-slot=field-content]]:[&>:first-child]:mt-px',
-    getSpan(cols),
     className
   )}
 >

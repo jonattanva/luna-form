@@ -6,26 +6,26 @@
 
   let {
     children,
-    cols,
     disabled,
     errors,
     isCheckbox,
+    isReversed,
     isClickable,
   }: {
     children?: Snippet
-    cols?: number
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean
+    isReversed?: boolean
     isClickable?: boolean
   } = $props()
 </script>
 
 <FieldBase
-  {cols}
   {disabled}
   {errors}
   {isCheckbox}
+  {isReversed}
   {isClickable}
   orientation={HORIZONTAL}
   class={twMerge(

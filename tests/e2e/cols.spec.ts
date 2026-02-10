@@ -82,14 +82,14 @@ test.describe('Columns form', { tag: ['@e2e'] }, () => {
     const grid = fields.first().locator('..').locator('..')
     await expect(grid).toHaveClass(/md:grid-cols-3/)
 
-    const usernameField = page.locator(
-      '[data-slot="field"]:has-text("Username")'
-    )
+    const usernameField = page
+      .locator('[data-slot="field"]:has-text("Username")')
+      .locator('..')
     await expect(usernameField).toHaveClass(/col-span-2/)
 
-    const passwordField = page.locator(
-      '[data-slot="field"]:has-text("Password")'
-    )
+    const passwordField = page
+      .locator('[data-slot="field"]:has-text("Password")')
+      .locator('..')
     await expect(passwordField).toHaveClass(/col-span-1/)
   })
 })

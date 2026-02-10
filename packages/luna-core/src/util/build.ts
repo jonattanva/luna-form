@@ -22,6 +22,13 @@ export function buildOrientation(field: Field) {
   return field.advanced?.orientation ?? VERTICAL
 }
 
+export function buildReverse(field: Field): boolean {
+  if (!isCheckbox(field)) {
+    return false
+  }
+  return field.advanced?.reverse !== false
+}
+
 export function buildDisabled(field: Field, disabled?: boolean) {
   const readonly = field.readonly ?? false
   return disabled ? disabled : readonly

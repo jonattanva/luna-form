@@ -128,6 +128,7 @@ export type Field = CommonProps & {
     data?: DataAttributes
     entity?: string
     orientation?: Orientation
+    reverse?: boolean
   }
   event?: {
     change?: ChangeEvent
@@ -200,4 +201,5 @@ export type BaseConfig<T> = {
 export type Style = {
   compact?: boolean
   orientation?: Orientation
+  showOptionalLabel?: boolean
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     VERTICAL,
+    buildReverse,
     isCheckbox as checkIsCheckbox,
     isClickable as checkIsClickable,
     type Field,
@@ -12,14 +13,12 @@
 
   let {
     children,
-    cols,
     disabled,
     errors,
     field,
     orientation,
   }: {
     children?: Snippet
-    cols?: number
     disabled?: boolean
     errors?: string[]
     field: Field
@@ -28,16 +27,17 @@
 
   const isClickable = $derived(checkIsClickable(field))
   const isCheckbox = $derived(checkIsCheckbox(field))
+  const isReversed = $derived(buildReverse(field))
 </script>
 
 {#if orientation === VERTICAL}
-  <FieldVertical {cols} {disabled} {errors} {isCheckbox} {isClickable}>
+  <FieldVertical {disabled} {errors} {isCheckbox} {isReversed} {isClickable}>
     {#if children}
       {@render children()}
     {/if}
   </FieldVertical>
 {:else}
-  <FieldHorizontal {cols} {disabled} {errors} {isCheckbox} {isClickable}>
+  <FieldHorizontal {disabled} {errors} {isCheckbox} {isReversed} {isClickable}>
     {#if children}
       {@render children()}
     {/if}
