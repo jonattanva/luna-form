@@ -29,10 +29,21 @@
   } = $props()
 
   const sections = $derived(prepare(sectionsProp, definition))
+
+  function handleAction(event: SubmitEvent) {
+    if (typeof action === 'function') {
+      event.preventDefault()
+      action(new FormData(event.currentTarget as HTMLFormElement))
+    }
+  }
 </script>
 
 <div class="h-full w-full">
-  <form novalidate={noValidate} action={action as any}>
+  <form
+    novalidate={noValidate}
+    action={typeof action === 'string' ? action : undefined}
+    onsubmit={handleAction}
+  >
     <Group>
       {#each sections as section}
         <FieldSet {section} style={config.style}>
