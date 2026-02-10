@@ -1,8 +1,8 @@
 <script lang="ts">
   import { isCheckbox, isRadio, translate } from '@luna-form/core'
+  import { twMerge } from 'tailwind-merge'
   import type { Field } from '@luna-form/core'
   import type { Snippet } from 'svelte'
-  import { twMerge } from 'tailwind-merge'
 
   let {
     children,
