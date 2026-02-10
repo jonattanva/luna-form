@@ -5,10 +5,10 @@
     isInterpolated,
     translate,
   } from '@luna-form/core'
-  import type { Field, Orientation } from '@luna-form/core'
-  import type { Config } from '../type.js'
-  import Label from './Label.svelte'
   import FormattedDescription from './FormattedDescription.svelte'
+  import Label from './Label.svelte'
+  import type { Config } from '../type.js'
+  import type { Field, Orientation } from '@luna-form/core'
 
   let {
     config,

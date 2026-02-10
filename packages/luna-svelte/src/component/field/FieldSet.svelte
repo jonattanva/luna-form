@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { mergeStyle, type Section, type Style } from '@luna-form/core'
-  import type { Snippet } from 'svelte'
   import Group from '../Group.svelte'
   import Legend from '../Legend.svelte'
+  import { mergeStyle, type Section, type Style } from '@luna-form/core'
+  import type { Snippet } from 'svelte'
 
   let {
     children,

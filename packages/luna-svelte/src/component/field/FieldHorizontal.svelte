@@ -1,8 +1,8 @@
 <script lang="ts">
+  import FieldBase from './FieldBase.svelte'
   import { HORIZONTAL } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
   import type { Snippet } from 'svelte'
-  import FieldBase from './FieldBase.svelte'
 
   let {
     children,

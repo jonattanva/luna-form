@@ -6,9 +6,9 @@
     type Field,
     type Orientation,
   } from '@luna-form/core'
-  import type { Snippet } from 'svelte'
-  import FieldVertical from './FieldVertical.svelte'
   import FieldHorizontal from './FieldHorizontal.svelte'
+  import FieldVertical from './FieldVertical.svelte'
+  import type { Snippet } from 'svelte'
 
   let {
     children,

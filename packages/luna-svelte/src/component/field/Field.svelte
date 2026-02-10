@@ -6,11 +6,10 @@
     type Field as FieldType,
     type Style,
   } from '@luna-form/core'
-  import type { Snippet } from 'svelte'
   import FieldError from './FieldError.svelte'
   import FieldGroup from './FieldGroup.svelte'
   import InputBase from '../input/InputBase.svelte'
-
+  import type { Snippet } from 'svelte'
   import type {
     AriaAttributes,
     CommonProps,

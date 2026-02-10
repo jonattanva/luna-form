@@ -1,14 +1,14 @@
 <script lang="ts">
   import {
-    translate,
     VERTICAL,
+    translate,
     type Field,
     type Orientation,
   } from '@luna-form/core'
-  import type { Snippet } from 'svelte'
-  import type { Config } from '../type.js'
   import FormattedDescription from './FormattedDescription.svelte'
   import InputLabel from './InputLabel.svelte'
+  import type { Config } from '../type.js'
+  import type { Snippet } from 'svelte'
 
   let {
     children,
