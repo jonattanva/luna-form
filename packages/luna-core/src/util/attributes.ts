@@ -44,5 +44,5 @@ export function buildAriaAttributes(field: Field, errors?: string[]) {
 }
 
 export function buildDataAttributes(field: Field) {
-  return getDataAttributes(field.advanced?.data) as DataAttributes
+  return getDataAttributes(field.advanced?.data)
 }
