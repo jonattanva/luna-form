@@ -45,7 +45,7 @@
     onsubmit={handleAction}
   >
     <Group>
-      {#each sections as section}
+      {#each sections as section, index (section.id ?? index)}
         <FieldSet {section} style={config.style}>
           {@render children({
             disabled: readOnly,

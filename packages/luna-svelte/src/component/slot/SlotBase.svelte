@@ -41,7 +41,7 @@
   const preparedFields = $derived(prepare(fields))
 </script>
 
-{#each preparedFields as field}
+{#each preparedFields as field, index (index)}
   {#if isColumn(field)}
     <components.column column={field}>
       <SlotBase
