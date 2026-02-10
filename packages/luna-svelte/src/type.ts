@@ -8,6 +8,8 @@ import type {
   FormStateError,
   Orientation,
 } from '@luna-form/core'
+
+export type { FormStateError }
 import type { Component, Snippet } from 'svelte'
 
 export type Slot = Snippet<
