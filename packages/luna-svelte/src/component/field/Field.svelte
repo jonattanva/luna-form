@@ -70,11 +70,8 @@
       errors={fieldErrors}
       {field}
       {orientation}
-    >
-      {#snippet children(props)}
-        {@render children(props)}
-      {/snippet}
-    </InputBase>
+      {children}
+    />
   </FieldGroup>
   <FieldError errors={fieldErrors} name={field.name} />
 </div>
