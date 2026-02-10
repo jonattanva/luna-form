@@ -5,7 +5,7 @@ import {
   PREFIX_DATA,
 } from './constant'
 import { entries } from './prepare'
-import type { AriaAttributes, DataAttributes, Field } from '../type'
+import type { Field } from '../type'
 
 export function getPrefixedAttributes(
   prefix: string,
