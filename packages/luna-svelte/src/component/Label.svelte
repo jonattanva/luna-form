@@ -1,12 +1,15 @@
 <script lang="ts">
   import { isCheckbox, isRadio, translate } from '@luna-form/core'
   import type { Field } from '@luna-form/core'
+  import type { Snippet } from 'svelte'
   import { twMerge } from 'tailwind-merge'
 
   let {
+    children,
     field,
     translations,
   }: {
+    children?: Snippet
     field: Field
     translations?: Record<string, string>
   } = $props()
@@ -24,7 +27,9 @@
   )}
   for={field.name}
 >
-  <slot />
+  {#if children}
+    {@render children()}
+  {/if}
   {#if !field.required}
     <span class="text-sm text-slate-600 dark:text-slate-400">
       {translate('(Optional)', translations)}
