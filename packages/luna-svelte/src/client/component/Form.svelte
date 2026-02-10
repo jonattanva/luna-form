@@ -11,20 +11,7 @@
     success: boolean
   }
 
-  let {
-    action: _actionProp,
-    children: controlProp,
-    config,
-    context,
-    definition,
-    lang,
-    onSuccess: _onSuccess,
-    onValueChange: _onValueChange,
-    readOnly,
-    sections,
-    translations: translationsProp,
-    value: valueProp,
-  }: {
+  interface Props {
     action?: (
       formData: Record<string, unknown>,
       schema?: ZodSchema
@@ -40,19 +27,23 @@
     sections: Sections
     translations?: Record<string, Record<string, string>>
     value?: Nullable<Record<string, unknown>>
-  } = $props()
+  }
+
+  let {
+    children: controlProp,
+    config,
+    context,
+    definition,
+    lang,
+    readOnly,
+    sections,
+    translations: translationsProp,
+    value: valueProp,
+  }: Props = $props()
 
   const Slot = createSlot(Field)
 
   const translations = $derived(translationsProp?.[lang ?? ''])
-
-  // Placeholders for logic not migrated yet (useSchema and useFormState)
-  const _onMount = (
-    _name: string,
-    _schema: Record<string, unknown>,
-    _field: Record<string, unknown>
-  ) => {}
-  const _onUnmount = (_name: string) => {}
 
   // useFormState placeholders
   const action = undefined
