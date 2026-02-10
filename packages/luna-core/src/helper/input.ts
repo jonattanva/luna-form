@@ -149,11 +149,11 @@ function defineConstraints(
   const length = input.advanced?.length
   if (length) {
     if (length.min !== undefined) {
-      result[keys.min] = Number(length.min)
+      result[keys.min] = length.min
     }
 
     if (length.max !== undefined) {
-      result[keys.max] = Number(length.max)
+      result[keys.max] = length.max
     }
   }
   return result
@@ -194,7 +194,7 @@ export function getPreselectedValue(
   if (field.required && !isValidValue(value)) {
     if (isSelect(field)) {
       if (field.advanced?.preselected !== false && OPTIONS in commonProps) {
-        const options = (commonProps as Record<string, unknown>)[OPTIONS]
+        const options = commonProps[OPTIONS]
         if (Array.isArray(options) && options.length === 1) {
           return options[0]
         }
