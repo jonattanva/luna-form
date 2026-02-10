@@ -33,7 +33,6 @@ export function Field(props: FieldProps) {
   return (
     <div className={twMerge('flex flex-col gap-3', getSpan(cols))}>
       <FieldGroup
-        cols={cols}
         disabled={disabled}
         errors={errors}
         field={props.field}

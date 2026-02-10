@@ -5,7 +5,6 @@ import { twMerge } from 'tailwind-merge'
 export function FieldHorizontal(
   props: Readonly<{
     children: React.ReactNode
-    cols?: number
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean

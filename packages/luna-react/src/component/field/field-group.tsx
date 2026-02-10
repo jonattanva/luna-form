@@ -12,7 +12,6 @@ import { FieldHorizontal } from './field-horizontal'
 export function FieldGroup(
   props: Readonly<{
     children: React.ReactNode
-    cols?: number
     disabled?: boolean
     errors?: string[]
     field: Field
@@ -26,7 +25,6 @@ export function FieldGroup(
   if (props.orientation === VERTICAL) {
     return (
       <FieldVertical
-        cols={props.cols}
         disabled={props.disabled}
         errors={props.errors}
         isCheckbox={checkbox}
@@ -40,7 +38,6 @@ export function FieldGroup(
 
   return (
     <FieldHorizontal
-      cols={props.cols}
       disabled={props.disabled}
       errors={props.errors}
       isCheckbox={checkbox}

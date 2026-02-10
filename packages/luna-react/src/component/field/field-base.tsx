@@ -5,7 +5,6 @@ export function FieldBase(
   props: Readonly<{
     children: React.ReactNode
     className?: string
-    cols?: number
     disabled?: boolean
     errors?: string[]
     isCheckbox?: boolean
