@@ -31,9 +31,7 @@ export function getDataAttributes(
 }
 
 export function buildAriaAttributes(field: Field, errors?: string[]) {
-  const ariaAttributes = getAriaAttributes(
-    field.advanced?.aria
-  ) as AriaAttributes
+  const ariaAttributes = getAriaAttributes(field.advanced?.aria)
 
   if (errors && errors.length > 0) {
     ariaAttributes[ARIA_INVALID] = 'true'
