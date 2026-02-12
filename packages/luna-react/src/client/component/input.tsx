@@ -156,7 +156,7 @@ export function Input(
         hasClickable,
       })
 
-      if (shouldSkipOnChange()) {
+      if (!hasClickable && shouldSkipOnChange()) {
         logger.info('shouldSkipOnChange returned true', {
           fieldName: props.field.name,
           willSkip: !hasTextable || inputValue === valueRef.current,
@@ -166,7 +166,6 @@ export function Input(
         })
         // For text inputs, only skip if the value hasn't changed (synthetic event)
         // This allows the user to modify/clear the initial value on first interaction
-        // For non-text inputs (select, radio), always skip as they don't have this issue
         if (!hasTextable || inputValue === valueRef.current) {
           logger.info('SKIPPING onChange', { fieldName: props.field.name })
           return
