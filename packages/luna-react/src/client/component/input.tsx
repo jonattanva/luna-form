@@ -17,7 +17,6 @@ import {
   handleValueEvent,
   isClickable,
   isTextable,
-  logger,
   prepareInputProps,
   prepareInputValue,
   translate,
@@ -147,35 +146,14 @@ export function Input(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = event.target.value
 
-      logger.info('onChange fired', {
-        fieldName: props.field.name,
-        fieldType: props.field.type,
-        inputValue,
-        currentValue: valueRef.current,
-        hasTextable,
-        hasClickable,
-      })
-
       if (!hasClickable && shouldSkipOnChange()) {
-        logger.info('shouldSkipOnChange returned true', {
-          fieldName: props.field.name,
-          willSkip: !hasTextable || inputValue === valueRef.current,
-          reason: !hasTextable
-            ? 'not textable (checkbox/radio/select)'
-            : 'value unchanged',
-        })
         // For text inputs, only skip if the value hasn't changed (synthetic event)
         // This allows the user to modify/clear the initial value on first interaction
         if (!hasTextable || inputValue === valueRef.current) {
-          logger.info('SKIPPING onChange', { fieldName: props.field.name })
           return
         }
       }
 
-      logger.info('onChange processing', {
-        fieldName: props.field.name,
-        inputValue,
-      })
       onValueChangeRef.current?.(inputValue)
       if (props.config.validation.change) {
         validated(inputValue)
@@ -218,8 +196,6 @@ export function Input(
       hasTextable,
       props.config.validation.change,
       props.field.event?.change,
-      props.field.name,
-      props.field.type,
       setFieldStates,
       setSource,
       setValues,
