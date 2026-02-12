@@ -1,6 +1,6 @@
 {
   "name": "react-luna-form",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@luna-form/core": "workspace:*",
-    "@types/react": "19.2.13",
+    "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",

@@ -1,4 +1,9 @@
-import { isValidValue, type Field, type Nullable } from '@luna-form/core'
+import {
+  isValidValue,
+  logger,
+  type Field,
+  type Nullable,
+} from '@luna-form/core'
 import { reportValueAtom } from '../lib/value-store'
 import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef } from 'react'
@@ -19,6 +24,10 @@ export function useValue(
 
     const newValue = currentValue[name]
     if (isValidValue(newValue)) {
+      logger.info('useValue: setting skipNextOnChange to true', {
+        fieldName: name,
+        newValue,
+      })
       skipNextOnChangeRef.current = true
       setValue(newValue)
     }
