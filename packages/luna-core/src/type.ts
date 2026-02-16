@@ -55,6 +55,7 @@ export type CommonProps = {
 }
 
 export type Section = {
+  advanced?: boolean
   compact?: boolean
   description?: string
   fields?: Fields
