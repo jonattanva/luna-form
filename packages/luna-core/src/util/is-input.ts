@@ -1,9 +1,11 @@
+import { isString } from './is-type'
 import {
   CHECKBOX,
   COLUMN,
   INPUT,
   INPUT_EMAIL,
   INPUT_NUMBER,
+  LIST,
   RADIO,
   SELECT,
   SELECT_MONTH,
@@ -15,8 +17,7 @@ import {
   TYPE_TEL,
   TYPE_TEXT,
 } from './constant'
-import { isString } from './is-type'
-import type { Column, Field, Input, Nullable, Select } from '../type'
+import type { Column, Field, Input, List, Nullable, Select } from '../type'
 
 export const isSelectMonth = (field: Field): boolean =>
   createTypeChecker(SELECT_MONTH)(field)
@@ -43,12 +44,16 @@ export function isClickable(field: Field): boolean {
   return isRadio(field) || isCheckbox(field)
 }
 
-export function isColumn(slot: Field | Column): slot is Column {
+export function isList(slot: Field | Column | List): slot is List {
+  return slot.type === LIST
+}
+
+export function isColumn(slot: Field | Column | List): slot is Column {
   return slot.type === COLUMN
 }
 
-export function isField(slot: Field | Column): slot is Field {
-  return slot.type !== COLUMN
+export function isField(slot: Field | Column | List): slot is Field {
+  return slot.type !== COLUMN && slot.type !== LIST
 }
 
 export function isOptions(field: Field): field is Input {

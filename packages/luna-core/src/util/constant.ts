@@ -19,6 +19,9 @@ export const TEXTAREA = 'textarea'
 export const RADIO = 'radio'
 export const CHECKBOX = 'checkbox'
 
+export const LIST = 'list'
+export const DATA_TABLE = 'data-table'
+
 export const SELECT = 'select'
 export const SELECT_MONTH = 'select/month'
 export const SELECT_YEAR = 'select/year'

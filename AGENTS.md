@@ -29,7 +29,7 @@
 ## Code style
 
 - TypeScript strict mode
-- Avoid using any or unknown
+- Avoid using **any** or **unknown**
 - **Remove Unused Code**: Delete any unused variables, imports, or functions immediately.
 - **Underscore Prefixing**: Only use the \_ prefix for variables that are technically required but intentionally unused (e.g., required function parameters or destructuring). Otherwise, remove them.
 

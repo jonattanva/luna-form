@@ -3,6 +3,7 @@ import { INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
 import type { Nullable, Option, Value } from '../type'
 
 const REGEX_TYPE = /[^/]+$/
+const REGEX_NUMERIC = /^\d+$/
 
 export function getEntity<T>(
   selected: string,
@@ -132,4 +133,36 @@ export function getFormData(formData: FormData) {
     data[key] = values.length > 1 ? values : values[0]
   }
   return data
+}
+
+export function unflatten(
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const key in data) {
+    const parts = key.split('.')
+    if (parts.length === 1) {
+      result[key] = data[key]
+      continue
+    }
+
+    let current: Record<string, unknown> = result
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i]
+      const next = parts[i + 1]
+
+      const isNextIndex = REGEX_NUMERIC.test(next)
+      if (!(part in current)) {
+        current[part] = isNextIndex ? [] : {}
+      }
+
+      current = current[part] as Record<string, unknown>
+    }
+
+    const last = parts[parts.length - 1]
+    current[last] = data[key]
+  }
+
+  return result
 }

@@ -43,7 +43,20 @@ export type Option = {
   label: string
   value: string
 }
-export type Fields = Array<Field | Column>
+
+export type List = {
+  advanced?: {
+    action?: string
+    length?: Length<number>
+  }
+  description?: string
+  fields: Array<Field>
+  label?: string
+  name: string
+  type: 'list' | (string & {})
+} & Base
+
+export type Fields = Array<Field | Column | List>
 export type Base = Orderable & Hideable
 
 export type CommonProps = {

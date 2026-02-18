@@ -1,4 +1,4 @@
-import { Field } from './wrapper'
+import { Field } from './field/field'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { createSlot } from '../../component/slot/slot-create'

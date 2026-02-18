@@ -8,6 +8,7 @@ import {
   getType,
   getValue,
   toOptions,
+  unflatten,
 } from '@/packages/luna-core/src/util/extract'
 
 test.describe('Extract', { tag: ['@unit'] }, () => {
@@ -234,5 +235,91 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
     expect(result).toEqual({
       file: file,
     })
+  })
+
+  test('should pass through keys without dots', () => {
+    const data = { username: 'john', age: '30' }
+    expect(unflatten(data)).toEqual({ username: 'john', age: '30' })
+  })
+
+  test('should unflatten single-field array items', () => {
+    const data = {
+      'emails.0.email': 'a@b.com',
+      'emails.1.email': 'c@d.com',
+      username: 'john',
+    }
+
+    expect(unflatten(data)).toEqual({
+      emails: [{ email: 'a@b.com' }, { email: 'c@d.com' }],
+      username: 'john',
+    })
+  })
+
+  test('should unflatten multi-field array items', () => {
+    const data = {
+      'addresses.0.street': '123 Main',
+      'addresses.0.city': 'NYC',
+      'addresses.1.street': '456 Oak',
+      'addresses.1.city': 'LA',
+    }
+
+    expect(unflatten(data)).toEqual({
+      addresses: [
+        { street: '123 Main', city: 'NYC' },
+        { street: '456 Oak', city: 'LA' },
+      ],
+    })
+  })
+
+  test('should handle empty data', () => {
+    expect(unflatten({})).toEqual({})
+  })
+
+  test('should handle mixed flat and nested keys', () => {
+    const data = {
+      name: 'John',
+      'phones.0.number': '555-1234',
+      'phones.0.type': 'mobile',
+      email: 'john@example.com',
+    }
+
+    expect(unflatten(data)).toEqual({
+      name: 'John',
+      phones: [{ number: '555-1234', type: 'mobile' }],
+      email: 'john@example.com',
+    })
+  })
+
+  test('should handle single item array', () => {
+    const data = {
+      'items.0.value': 'test',
+    }
+
+    expect(unflatten(data)).toEqual({
+      items: [{ value: 'test' }],
+    })
+  })
+
+  test('should handle deep nesting', () => {
+    const data = {
+      'a.b.c.d': 'value',
+    }
+
+    expect(unflatten(data)).toEqual({
+      a: { b: { c: { d: 'value' } } },
+    })
+  })
+
+  test('should handle objects with numeric keys that are not arrays', () => {
+    const data = {
+      'user.123.id': 'abc',
+    }
+
+    // Since it matches REGEX_NUMERIC, it will be treated as an array index
+    // Note: The current implementation initializes an array if the next part is numeric
+    const result = unflatten(data)
+    expect(Array.isArray(result.user)).toBe(true)
+    // @ts-expect-error - testing dynamic structure
+    expect(result.user[123]).toEqual({ id: 'abc' })
   })
 })

@@ -1,6 +1,6 @@
 {
   "name": "@luna-form/core",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "Core utilities and types for Luna Form",
   "private": true,
   "main": "./src/index.ts",

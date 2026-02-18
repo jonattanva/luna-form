@@ -1,7 +1,7 @@
 import { reportFieldStateAtom } from '../../lib/state-store'
 import { useAtomValue } from 'jotai'
 
-export function withFieldState<
+export function withState<
   P extends { disabled?: boolean; field: { name: string; hidden?: boolean } },
 >(Component: React.ComponentType<P>) {
   const WithFieldState = (props: Readonly<P>) => {

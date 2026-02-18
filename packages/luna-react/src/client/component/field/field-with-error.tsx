@@ -1,10 +1,10 @@
 import { reportInputErrorAtom } from '../../lib/error-store'
 import { useAtomValue } from 'jotai'
 
-export function withErrors<
+export function withError<
   P extends { errors?: Record<string, string[]>; field: { name: string } },
 >(Component: React.ComponentType<P>) {
-  const WithErrors = (props: Readonly<P>) => {
+  const WithError = (props: Readonly<P>) => {
     const errors = useAtomValue(reportInputErrorAtom(props.field.name))
     return (
       <Component
@@ -13,5 +13,5 @@ export function withErrors<
       />
     )
   }
-  return WithErrors
+  return WithError
 }
