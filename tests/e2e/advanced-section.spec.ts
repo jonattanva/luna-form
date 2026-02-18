@@ -67,9 +67,9 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     const fieldset = page.locator('[data-advanced="true"]')
-    const legend = fieldset.locator('legend')
+    const toggle = fieldset.getByRole('button', { name: 'Advanced Options' })
 
-    await legend.click()
+    await toggle.click()
 
     await expect(fieldset).toHaveAttribute('data-expanded', 'true')
 
@@ -105,12 +105,12 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     const fieldset = page.locator('[data-advanced="true"]')
-    const legend = fieldset.locator('legend')
+    const toggle = fieldset.getByRole('button', { name: 'Advanced Options' })
 
-    await legend.click()
+    await toggle.click()
     await expect(fieldset).toHaveAttribute('data-expanded', 'true')
 
-    await legend.click()
+    await toggle.click()
     await expect(fieldset).toHaveAttribute('data-expanded', 'false')
 
     const field = page.getByLabel('Debug Mode')
@@ -140,7 +140,7 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     const fieldset = page.locator('[data-advanced="true"]')
-    await fieldset.locator('legend').click()
+    await fieldset.getByRole('button', { name: 'Advanced Options' }).click()
 
     const content = fieldset.locator('[data-slot="field-set-content"]')
     await expect(content).toBeVisible()
@@ -174,7 +174,7 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
 
     await expect(chevron).not.toHaveClass(/rotate-90/)
 
-    await fieldset.locator('legend').click()
+    await fieldset.getByRole('button', { name: 'Advanced Options' }).click()
 
     await expect(chevron).toHaveClass(/rotate-90/)
   })
@@ -253,7 +253,9 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     const advancedField = page.getByLabel('Debug Mode')
     await expect(advancedField).toBeHidden()
 
-    await advancedFieldset.locator('legend').click()
+    await advancedFieldset
+      .getByRole('button', { name: 'Advanced Options' })
+      .click()
     await expect(advancedField).toBeVisible()
   })
 
@@ -292,7 +294,7 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     const fieldset = page.locator('[data-advanced="true"]')
-    await fieldset.locator('legend').click()
+    await fieldset.getByRole('button', { name: 'Advanced Options' }).click()
 
     await expect(page.getByLabel('Option A')).toBeVisible()
     await expect(page.getByLabel('Option B')).toBeVisible()

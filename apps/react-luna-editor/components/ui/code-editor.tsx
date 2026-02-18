@@ -4,12 +4,14 @@ import MonacoEditor from '@monaco-editor/react'
 import { codeAtom } from '@/lib/store'
 import { useAtom } from 'jotai'
 import { useEffect, useRef } from 'react'
+import { useTheme } from 'next-themes'
 
 export function CodeEditor(
   props: Readonly<{
     timeout?: number
   }>
 ) {
+  const { resolvedTheme } = useTheme()
   const [value, setValue] = useAtom(codeAtom)
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -60,6 +62,7 @@ export function CodeEditor(
             showWords: false,
           },
         }}
+        theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
         value={value}
       />
     </div>

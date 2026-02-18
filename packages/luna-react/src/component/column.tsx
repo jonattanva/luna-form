@@ -1,12 +1,12 @@
 import { getColumn, type Column } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
-export type ColumnProps = Readonly<{
-  children?: React.ReactNode
-  column?: Column
-}>
-
-export function Column(props: ColumnProps) {
+export function Column(
+  props: Readonly<{
+    children?: React.ReactNode
+    column?: Column
+  }>
+) {
   const cols = getColumn(props.column?.advanced?.cols)
 
   return (
