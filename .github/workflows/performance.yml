@@ -43,7 +43,7 @@ jobs:
         run: pnpm build
 
       - name: Run core benchmarks
-        run: pnpm benchmark > benchmark-output.json
+        run: pnpm --silent benchmark > benchmark-output.json
 
       - name: Store core benchmark result
         uses: benchmark-action/github-action-benchmark@v1
