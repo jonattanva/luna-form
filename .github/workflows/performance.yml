@@ -87,7 +87,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Start application server
-        run: pnpm serve &
+        run: pnpm run start &
 
       - name: Run browser performance test
         run: pnpm test:perf
