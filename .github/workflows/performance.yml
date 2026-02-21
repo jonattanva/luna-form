@@ -45,6 +45,15 @@ jobs:
       - name: Run core benchmarks
         run: pnpm --silent benchmark > benchmark-output.json
 
+      - name: Create gh-pages branch if needed
+        run: |
+          if ! git ls-remote --exit-code --heads origin gh-pages; then
+            git switch --orphan gh-pages
+            git commit --allow-empty -m "Initialize gh-pages"
+            git push origin gh-pages
+            git switch -
+          fi
+
       - name: Store core benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
