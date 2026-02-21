@@ -45,7 +45,9 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     ).toBeVisible()
 
     // Check translated description
-    await expect(page.getByText('Ingresa tu correo personal')).toBeVisible()
+    await expect(
+      page.getByText('Ingresa tu correo personal', { exact: true })
+    ).toBeVisible()
 
     // Check translated placeholder
     const input = page.locator('input[name="email"]')
@@ -56,7 +58,9 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     await input.blur()
 
     // Check translated validation message
-    await expect(page.getByText('El correo es obligatorio')).toBeVisible()
+    await expect(
+      page.getByText('El correo es obligatorio', { exact: true })
+    ).toBeVisible()
   })
 
   test('should fallback to key if translation is missing', async ({ page }) => {
