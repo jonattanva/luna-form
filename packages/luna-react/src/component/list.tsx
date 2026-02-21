@@ -7,10 +7,13 @@ export function List(
     field: List
   }>
 ) {
+  const empty =
+    Array.isArray(props.field.fields) && props.field.fields.length === 0
+
   return (
     <FieldSetBase
       description={props.field.description}
-      empty={props.field.fields.length === 0}
+      empty={empty}
       id={props.field.name}
       title={props.field.label}
     >

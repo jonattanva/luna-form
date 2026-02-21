@@ -1,39 +1,38 @@
+import { getLabel, isMultiFieldList } from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
 import { twMerge } from 'tailwind-merge'
 import { useFieldList } from '../../hook/use-field-list'
 import type { ListProps } from '../../../component/field/field-list'
 
 export function FieldList(props: ListProps) {
-  const [items, addItem, removeItem, canAdd, canRemove, max] = useFieldList(
+  const [items, addItem, handleRemove, canAdd, canRemove, max] = useFieldList(
     props.field,
     props.value
   )
 
-  const label = props.field.label ?? props.field.name
-  const actionLabel = props.field.advanced?.action ?? 'Add item'
+  const label = getLabel(props.field)
+  const action = props.field.advanced?.action ?? 'Add item'
 
   const hasLimit = max !== Infinity
-  const isMultiField = props.field.fields.length > 1
+  const isMultiField = isMultiFieldList(props.field)
 
   return (
     <>
       {items.map((key, index) => (
         <FieldListItem
-          key={key}
           canRemove={canRemove}
           index={index}
           isMultiField={isMultiField}
+          key={key}
           label={label}
-          onRemove={removeItem}
+          onRemove={handleRemove}
         >
-          {props.children(index)}
+          {props.children(key)}
         </FieldListItem>
       ))}
       <button
         aria-disabled={!canAdd}
-        aria-label={
-          hasLimit ? `${actionLabel}, ${items.length} of ${max}` : actionLabel
-        }
+        aria-label={hasLimit ? `${action}, ${items.length} of ${max}` : action}
         className={twMerge(
           'flex w-full items-center gap-1.5 rounded py-1',
           'text-sm font-medium text-slate-500',
@@ -49,7 +48,7 @@ export function FieldList(props: ListProps) {
         type="button"
       >
         <span aria-hidden="true">+</span>
-        {actionLabel}
+        {action}
         {hasLimit && (
           <span
             aria-hidden="true"

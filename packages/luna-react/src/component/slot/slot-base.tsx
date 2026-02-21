@@ -10,19 +10,20 @@ import {
 import { Column } from '../column'
 import { Fragment } from 'react'
 import { List } from '../list'
+import { SlotList } from './slot-list'
 import type { Children } from '../../type'
 import type { FieldProps } from '../field/field'
 import type { ListProps } from '../field/field-list'
 
-export function SlotBase<
-  T extends {
-    field: React.ComponentType<FieldProps>
-    fieldList: React.ComponentType<ListProps>
-  },
->(
+export type SlotComponents = {
+  field: React.ComponentType<FieldProps>
+  fieldList: React.ComponentType<ListProps>
+}
+
+export function SlotBase(
   props: Readonly<{
     children: Children
-    components: T
+    components: SlotComponents
     disabled?: boolean
     fields?: Fields
     style?: Style
@@ -46,10 +47,16 @@ export function SlotBase<
       {isList(field) && (
         <List field={field}>
           <FieldList field={field} value={props.value}>
-            {() => (
-              <SlotBase {...props} fields={field.fields}>
-                {props.children}
-              </SlotBase>
+            {(index) => (
+              <SlotList
+                children={props.children}
+                components={props.components}
+                disabled={props.disabled}
+                field={field}
+                index={index}
+                style={props.style}
+                value={props.value}
+              />
             )}
           </FieldList>
         </List>

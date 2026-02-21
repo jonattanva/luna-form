@@ -20,3 +20,9 @@ packages/**/dist
 
 # logs
 *.log
+
+# Claude/Anthropic
+.claude/worktrees
+
+# Benchmark results
+benchmark-e2e-output.json

@@ -50,7 +50,7 @@ export type List = {
     length?: Length<number>
   }
   description?: string
-  fields: Array<Field>
+  fields: Array<Field | Column>
   label?: string
   name: string
   type: 'list' | (string & {})
@@ -119,7 +119,7 @@ export type ValueEvent = ActionEvent<'value'> & {
 
 export type StateEvent = ActionEvent<'state'> & {
   state: FieldState
-  target: string
+  target: string | string[]
   when?: string | string[] | Condition
 }
 
@@ -217,3 +217,5 @@ export type Style = {
   orientation?: Orientation
   showOptionalLabel?: boolean
 }
+
+export type Filterable = Base & { fields?: Filterable[] }

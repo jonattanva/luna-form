@@ -1,17 +1,8 @@
-import { FieldBase } from './field-base'
+import { FieldBase, type FieldLayoutProps } from './field-base'
 import { HORIZONTAL } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
-export function FieldHorizontal(
-  props: Readonly<{
-    children: React.ReactNode
-    disabled?: boolean
-    errors?: string[]
-    isCheckbox?: boolean
-    isReversed?: boolean
-    isClickable?: boolean
-  }>
-) {
+export function FieldHorizontal(props: Readonly<FieldLayoutProps>) {
   return (
     <FieldBase
       {...props}

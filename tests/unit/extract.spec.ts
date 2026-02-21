@@ -315,11 +315,34 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
       'user.123.id': 'abc',
     }
 
-    // Since it matches REGEX_NUMERIC, it will be treated as an array index
-    // Note: The current implementation initializes an array if the next part is numeric
+    // Since it matches REGEX_NUMERIC, it will be treated as an array index.
+    // The sparse array is compacted so the item appears at index 0.
     const result = unflatten(data)
     expect(Array.isArray(result.user)).toBe(true)
     // @ts-expect-error - testing dynamic structure
-    expect(result.user[123]).toEqual({ id: 'abc' })
+    expect(result.user[0]).toEqual({ id: 'abc' })
+    // @ts-expect-error - testing dynamic structure
+    expect((result.user as unknown[]).length).toBe(1)
+  })
+
+  test('should compact sparse array when first index is missing', () => {
+    const data = {
+      'contacts.1.first': 'Bob',
+    }
+
+    expect(unflatten(data)).toEqual({
+      contacts: [{ first: 'Bob' }],
+    })
+  })
+
+  test('should compact sparse array with gap in the middle', () => {
+    const data = {
+      'contacts.0.first': 'Alice',
+      'contacts.2.first': 'Carol',
+    }
+
+    expect(unflatten(data)).toEqual({
+      contacts: [{ first: 'Alice' }, { first: 'Carol' }],
+    })
   })
 })

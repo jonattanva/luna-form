@@ -11,15 +11,11 @@ export function useTimeout() {
     }
   }, [])
 
-  function clearTimeoutRef() {
+  const setTimeoutRef = useCallback((callback: () => void, delay: number) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
       timeoutRef.current = null
     }
-  }
-
-  const setTimeoutRef = useCallback((callback: () => void, delay: number) => {
-    clearTimeoutRef()
     timeoutRef.current = setTimeout(callback, delay)
   }, [])
 

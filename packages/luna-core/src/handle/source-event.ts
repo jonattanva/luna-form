@@ -7,12 +7,12 @@ export function handleSourceEvent<T>(
   events: SourceEvent[] = [],
   setSource: (name: string, source?: DataSource) => void
 ) {
-  events.forEach((event) => {
+  for (const event of events) {
     const { target, source } = event
 
     if (!selected) {
       setSource(target, undefined)
-      return
+      continue
     }
 
     if (isDataSource(source)) {
@@ -27,5 +27,5 @@ export function handleSourceEvent<T>(
         body: newBody,
       })
     }
-  })
+  }
 }

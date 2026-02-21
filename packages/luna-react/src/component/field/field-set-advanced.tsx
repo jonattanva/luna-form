@@ -1,4 +1,4 @@
-import { Activity, useState } from 'react'
+import { Activity, useCallback, useState } from 'react'
 import { ChevronIcon } from '../chevron-icon'
 import { formatMarkdown } from '../../lib/string'
 import type { Section } from '@luna-form/core'
@@ -13,9 +13,7 @@ export function FieldSetAdvanced(
 
   const [isOpen, setIsOpen] = useState(false)
 
-  function handleOpen() {
-    setIsOpen((previous) => !previous)
-  }
+  const handleOpen = useCallback(() => setIsOpen((previous) => !previous), [])
 
   return (
     <fieldset

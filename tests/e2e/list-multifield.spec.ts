@@ -22,7 +22,7 @@ const MULTIFIELD_LIST = `{
             {
               "name": "comments",
               "label": "Comments",
-              "type": "input/textarea",
+              "type": "textarea",
               "placeholder": "Add any additional comments"
             }
           ]
@@ -56,7 +56,7 @@ const MULTIFIELD_LIST_WITH_MAX = `{
             {
               "name": "comments",
               "label": "Comments",
-              "type": "input/textarea",
+              "type": "textarea",
               "placeholder": "Add any additional comments"
             }
           ]
@@ -71,7 +71,7 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
     await inject(page, MULTIFIELD_LIST)
     await page.goto('')
 
-    const card = page.locator('[data-slot="field-group"]').first().locator('..')
+    const card = page.getByText('Email Addresses 1').locator('..').locator('..')
     await expect(card).toHaveClass(/rounded-lg/)
     await expect(card).toHaveClass(/border/)
   })
@@ -88,8 +88,8 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
     await inject(page, MULTIFIELD_LIST)
     await page.goto('')
 
-    const nameInput = page.locator('input[name="name"]')
-    const commentsTextarea = page.locator('textarea[name="comments"]')
+    const nameInput = page.locator('input[name$="name"]')
+    const commentsTextarea = page.locator('textarea[name$="comments"]')
 
     await expect(nameInput).toHaveCount(1)
     await expect(commentsTextarea).toHaveCount(1)
@@ -115,8 +115,8 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
     await expect(page.getByText('Email Addresses 1')).toBeVisible()
     await expect(page.getByText('Email Addresses 2')).toBeVisible()
 
-    await expect(page.locator('input[name="name"]')).toHaveCount(2)
-    await expect(page.locator('textarea[name="comments"]')).toHaveCount(2)
+    await expect(page.locator('input[name$="name"]')).toHaveCount(2)
+    await expect(page.locator('textarea[name$="comments"]')).toHaveCount(2)
   })
 
   test('should show remove button in card header after adding an item', async ({
@@ -148,7 +148,7 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
     const addButton = page.getByRole('button', { name: /Add email address/ })
     await addButton.click()
 
-    const nameInputs = page.locator('input[name="name"]')
+    const nameInputs = page.locator('input[name$="name"]')
     await nameInputs.nth(0).fill('First')
     await nameInputs.nth(1).fill('Second')
 

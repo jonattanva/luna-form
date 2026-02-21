@@ -97,6 +97,10 @@ export function Input(
     value
   )
 
+  // Ref pattern is intentional here. useEffectEvent cannot be used because
+  // this callback is invoked from onChange (an event handler), not from a
+  // useEffect. The ref allows onChange to always read the latest props without
+  // adding them as useCallback dependencies, avoiding unnecessary re-renders.
   const onValueChangeRef = useRef<((value: unknown) => void) | null>(null)
   onValueChangeRef.current = (value: unknown) => {
     setValue(value)
@@ -136,8 +140,7 @@ export function Input(
         return
       }
 
-      const currentValue = getEntity(value, data, entity)
-      callback(currentValue)
+      callback(getEntity(value, data, entity))
     },
     [data, entity, hasTextable, setTimeoutRef]
   )
@@ -168,14 +171,23 @@ export function Input(
                 setSource(target, source)
               )
 
-              handleStateEvent(selected, states, (target, state) => {
+              handleStateEvent(selected, states, (targets, state) => {
                 setFieldStates((prev) => {
                   if (state) {
-                    return { ...prev, [target]: state }
+                    return targets.reduce(
+                      (acc, target) => ({
+                        ...acc,
+                        [target]: state,
+                      }),
+                      prev
+                    )
                   }
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { [target]: _removed, ...rest } = prev
-                  return rest
+
+                  return targets.reduce((acc, target) => {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const { [target]: _removed, ...rest } = acc
+                    return rest
+                  }, prev)
                 })
               })
 

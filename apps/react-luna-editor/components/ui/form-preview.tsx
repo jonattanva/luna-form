@@ -24,29 +24,6 @@ export function FormPreview() {
     })
   }
 
-  function handleError(error: {
-    message: string
-    detail: Record<string, string[]> | string[]
-  }) {
-    let description = ''
-
-    if (Array.isArray(error.detail)) {
-      description = error.detail.join(', ')
-    } else if (error.detail) {
-      description = Object.entries(error.detail)
-        .map(([key, value]) => `${key}: ${value.join(', ')}`)
-        .join('; ')
-    }
-
-    toast.error(error.message, {
-      icon: null,
-      description: (
-        <div className="mt-1.5 text-xs text-gray-900">{description}</div>
-      ),
-      duration: 8000,
-    })
-  }
-
   return (
     <div className="flex h-full flex-1 flex-col items-stretch overflow-y-auto">
       <div className="flex w-full justify-center">
@@ -55,7 +32,6 @@ export function FormPreview() {
             {...form}
             config={config}
             action={action}
-            onError={handleError}
             onSuccess={handleSuccess}
           >
             {({ isPending }) => (

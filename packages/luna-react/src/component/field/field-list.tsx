@@ -1,4 +1,10 @@
-import { getInitialList, type List, type Nullable } from '@luna-form/core'
+import {
+  getInitialList,
+  getLabel,
+  isMultiFieldList,
+  type List,
+  type Nullable,
+} from '@luna-form/core'
 import { FieldListItem } from './field-list-item'
 
 export type ListProps = Readonly<{
@@ -8,8 +14,8 @@ export type ListProps = Readonly<{
 }>
 
 export function FieldList(props: ListProps) {
-  const label = props.field.label ?? props.field.name
-  const isMultiField = props.field.fields.length > 1
+  const label = getLabel(props.field)
+  const isMultiField = isMultiFieldList(props.field)
 
   return getInitialList(props.field, props.value).map((index) => (
     <FieldListItem

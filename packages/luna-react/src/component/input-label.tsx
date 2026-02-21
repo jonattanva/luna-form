@@ -2,8 +2,7 @@ import { FormattedDescription } from './formatted-description'
 import { Label } from './label'
 import {
   HORIZONTAL,
-  interpolate,
-  isInterpolated,
+  interpolateIfNeeded,
   translate,
   type Field,
   type Orientation,
@@ -19,19 +18,16 @@ export function InputLabel(
     translations?: Record<string, string>
   }>
 ) {
-  const label = isInterpolated(props.field.label)
-    ? interpolate(props.field.label, {
-        context: props.context,
-        env: props.config?.env,
-      })
-    : props.field.label
+  const interpolateOpts = {
+    context: props.context,
+    env: props.config?.env,
+  }
 
-  const description = isInterpolated(props.field.description)
-    ? interpolate(props.field.description, {
-        context: props.context,
-        env: props.config?.env,
-      })
-    : props.field.description
+  const label = interpolateIfNeeded(props.field.label, interpolateOpts)
+  const description = interpolateIfNeeded(
+    props.field.description,
+    interpolateOpts
+  )
 
   return (
     <div

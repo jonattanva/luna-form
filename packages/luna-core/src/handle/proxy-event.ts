@@ -13,7 +13,7 @@ export function handleProxyEvent(
   const sources: SourceEvent[] = []
   const states: StateEvent[] = []
 
-  events.forEach((event) => {
+  for (const event of events) {
     if (event.action === VALUE) {
       values.push(event)
     }
@@ -25,7 +25,7 @@ export function handleProxyEvent(
     if (event.action === STATE) {
       states.push(event)
     }
-  })
+  }
 
   callback({ sources, states, values })
 }

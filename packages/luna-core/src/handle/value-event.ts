@@ -6,9 +6,9 @@ export function handleValueEvent<T>(
   events: ValueEvent[] = [],
   setValue: (name: string, value: unknown) => void
 ) {
-  events.forEach((event) => {
-    Object.entries(event.value).forEach(([target, value]) => {
+  for (const event of events) {
+    for (const [target, value] of Object.entries(event.value)) {
       setValue(target, selected ? interpolate(value, selected) : undefined)
-    })
-  })
+    }
+  }
 }

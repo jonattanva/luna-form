@@ -6,8 +6,8 @@ import { useSetAtom } from 'jotai'
 
 export function useStore() {
   const clearErrors = useSetAtom(clearInputErrorAtom)
-  const clearSources = useSetAtom(clearInputSourceAtom)
   const clearValues = useSetAtom(clearInputValueAtom)
+  const clearSources = useSetAtom(clearInputSourceAtom)
 
   return useCallback(
     (names: string | string[]) => {

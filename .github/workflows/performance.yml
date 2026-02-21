@@ -1,0 +1,97 @@
+name: Performance benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: benchmark
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Cache turbo build setup
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Run core benchmarks
+        run: pnpm benchmark > benchmark-output.json
+
+      - name: Store core benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Luna Form core benchmarks
+          tool: customSmallerIsBetter
+          output-file-path: benchmark-output.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
+          comment-on-alert: true
+          alert-threshold: '150%'
+          fail-on-alert: true
+          comment-always: false
+          max-items-in-chart: 100
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start application server
+        run: pnpm serve &
+
+      - name: Run browser performance test
+        run: pnpm test:perf
+
+      - name: Store browser benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Luna Form browser benchmarks
+          tool: customSmallerIsBetter
+          output-file-path: benchmark-e2e-output.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
+          comment-on-alert: true
+          alert-threshold: '150%'
+          fail-on-alert: true
+          comment-always: false
+          max-items-in-chart: 100

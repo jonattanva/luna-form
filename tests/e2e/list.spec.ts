@@ -75,7 +75,7 @@ test.describe('List field component', { tag: ['@e2e'] }, () => {
     await inject(page, LIST_FIELD)
     await page.goto('')
 
-    const inputs = page.locator('input[name="email"]')
+    const inputs = page.locator('input[name$="email"]')
     await expect(inputs).toHaveCount(1)
   })
 
@@ -106,7 +106,7 @@ test.describe('List field component', { tag: ['@e2e'] }, () => {
     const addButton = page.getByRole('button', { name: /Add email address/ })
     await addButton.click()
 
-    const inputs = page.locator('input[name="email"]')
+    const inputs = page.locator('input[name$="email"]')
     await expect(inputs).toHaveCount(2)
   })
 
@@ -132,7 +132,7 @@ test.describe('List field component', { tag: ['@e2e'] }, () => {
     const addButton = page.getByRole('button', { name: /Add email address/ })
     await addButton.click()
 
-    const inputs = page.locator('input[name="email"]')
+    const inputs = page.locator('input[name$="email"]')
     await expect(inputs).toHaveCount(2)
 
     await page
@@ -206,7 +206,7 @@ test.describe('List field component', { tag: ['@e2e'] }, () => {
     }
 
     await expect(addButton).toBeDisabled()
-    await expect(page.locator('input[name="email"]')).toHaveCount(5)
+    await expect(page.locator('input[name$="email"]')).toHaveCount(5)
   })
 
   test('should show "5 / 5" counter at max capacity', async ({ page }) => {
@@ -288,7 +288,7 @@ test.describe('List field component', { tag: ['@e2e'] }, () => {
     )
     await page.goto('')
 
-    const inputs = page.locator('input[name="email"]')
+    const inputs = page.locator('input[name$="email"]')
     await expect(inputs).toHaveCount(3)
   })
 

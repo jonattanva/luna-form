@@ -32,6 +32,13 @@ export function interpolate<T>(
   return template
 }
 
+export function interpolateIfNeeded<T>(
+  template: T,
+  values: Record<string, unknown> = {}
+): T {
+  return isInterpolated(template) ? interpolate(template, values) : template
+}
+
 export function isInterpolated(template: unknown): boolean {
   if (isString(template)) {
     return /{([^}]+)}/.test(template)

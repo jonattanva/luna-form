@@ -7,6 +7,8 @@ import {
   flatten,
   getFormData,
   logger,
+  translate,
+  unflatten,
   type Field,
   type FormStateError,
   type Nullable,
@@ -32,7 +34,12 @@ export function useFormState<T, F = Record<string, unknown>>(
   action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
-  const { onSuccess, preserveValues = false, validation = true } = options ?? {}
+  const {
+    onSuccess,
+    preserveValues = false,
+    validation = true,
+    translations,
+  } = options ?? {}
 
   const setError = useSetAtom(reportErrorAtom)
   const clearValues = useSetAtom(clearAllValueAtom)
@@ -50,7 +57,7 @@ export function useFormState<T, F = Record<string, unknown>>(
     ): Promise<FormState<T>> => {
       const [schemas, fields] = getSchema()
 
-      const schema = buildSchema(schemas, fields, options?.translations)
+      const schema = buildSchema(schemas, fields, translations)
       if (validation === false) {
         if (action) {
           return await action(formData as F, schema)
@@ -68,17 +75,25 @@ export function useFormState<T, F = Record<string, unknown>>(
         })
 
         return failure(form as T, {
-          description: 'Please correct the errors and try again.',
+          description: translate(
+            'Please correct the errors and try again.',
+            translations
+          ),
           details: [],
-          title: 'There were validation errors submitting the form.',
+          title: translate(
+            'There were validation errors submitting the form.',
+            translations
+          ),
         })
       }
 
+      const unflattened = unflatten(form) as F & T
+
       if (action) {
         try {
-          const result = await action(form as F, schema)
+          const result = await action(unflattened as F, schema)
           if (!result.success) {
-            return failure(form as T, result.error)
+            return failure(unflattened as T, result.error)
           }
 
           onSuccess?.(result.data as T)
@@ -88,12 +103,15 @@ export function useFormState<T, F = Record<string, unknown>>(
             })
           }
 
-          return success(form as T, preserveValues)
+          return success(unflattened as T, preserveValues)
         } catch (error) {
           logger.error('Error executing form action:', error)
-          return failure(form as T, {
-            title: 'An unexpected error occurred submitting the form.',
-            details: buildError(error),
+          return failure(unflattened as T, {
+            title: translate(
+              'An unexpected error occurred submitting the form.',
+              translations
+            ),
+            details: buildError(error, translations),
           })
         }
       }
@@ -106,9 +124,11 @@ export function useFormState<T, F = Record<string, unknown>>(
   return [formAction, state, isPending] as const
 }
 
-function buildError(error: unknown) {
-  const detail = error instanceof Error ? error.message : ['Unknown error']
-  return Array.isArray(detail) ? detail : [detail]
+function buildError(error: unknown, translations?: Record<string, string>) {
+  if (error instanceof Error) {
+    return [error.message]
+  }
+  return [translate('Unknown error', translations)]
 }
 
 function success<T>(value: Nullable<T>, preserveValues = false): FormState<T> {

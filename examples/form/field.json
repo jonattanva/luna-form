@@ -1,0 +1,386 @@
+{
+    "sections": [
+        {
+            "compact": true,
+            "fields": [
+                {
+                    "type": "column",
+                    "advanced": {
+                        "cols": 3
+                    },
+                    "fields": [
+                        {
+                            "advanced": {
+                                "cols": 2
+                            },
+                            "label": "Label",
+                            "name": "label",
+                            "type": "input/text",
+                            "required": true,
+                            "validation": {
+                                "required": "Label is required"
+                            }
+                        },
+                        {
+                            "advanced": {
+                                "cols": 1
+                            },
+                            "label": "Type",
+                            "name": "type",
+                            "type": "select",
+                            "source": [
+                                {
+                                    "label": "Text",
+                                    "value": "input/text"
+                                },
+                                {
+                                    "label": "Email",
+                                    "value": "input/email"
+                                },
+                                {
+                                    "label": "Number",
+                                    "value": "input/number"
+                                },
+                                {
+                                    "label": "Password",
+                                    "value": "input/password"
+                                },
+                                {
+                                    "label": "Date",
+                                    "value": "input/date"
+                                },
+                                {
+                                    "label": "Textarea",
+                                    "value": "textarea"
+                                },
+                                {
+                                    "label": "Select",
+                                    "value": "select"
+                                },
+                                {
+                                    "label": "Radio",
+                                    "value": "radio"
+                                },
+                                {
+                                    "label": "Checkbox",
+                                    "value": "checkbox"
+                                },
+                                {
+                                    "label": "Switch",
+                                    "value": "checkbox/switch"
+                                }
+                            ],
+                            "required": true,
+                            "validation": {
+                                "required": "Type is required"
+                            },
+                            "event": {
+                                "change": [
+                                    {
+                                        "action": "state",
+                                        "target": "advanced.preselected",
+                                        "state": {
+                                            "hidden": false
+                                        },
+                                        "when": {
+                                            "value": "select",
+                                            "operator": "eq"
+                                        }
+                                    },
+                                    {
+                                        "action": "state",
+                                        "target": "advanced.reverse",
+                                        "state": {
+                                            "hidden": false
+                                        },
+                                        "when": [
+                                            "radio",
+                                            "checkbox",
+                                            "checkbox/switch"
+                                        ]
+                                    },
+                                    {
+                                        "action": "state",
+                                        "target": "validation.email",
+                                        "state": {
+                                            "hidden": false
+                                        },
+                                        "when": "input/email"
+                                    },
+                                    {
+                                        "action": "state",
+                                        "target": [
+                                            "validation.length.min",
+                                            "validation.length.max"
+                                        ],
+                                        "state": {
+                                            "hidden": false
+                                        },
+                                        "when": [
+                                            "input/text",
+                                            "input/password",
+                                            "textarea"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "label": "Placeholder",
+                    "name": "placeholder",
+                    "type": "input/text"
+                },
+                {
+                    "label": "Help text",
+                    "name": "description",
+                    "type": "textarea"
+                },
+                {
+                    "advanced": {
+                        "reverse": false
+                    },
+                    "label": "Mandatory field",
+                    "name": "required",
+                    "type": "checkbox/switch",
+                    "description": "Users must fill this to submit the form",
+                    "event": {
+                        "change": [
+                            {
+                                "action": "state",
+                                "target": "validation.required",
+                                "state": {
+                                    "hidden": false
+                                },
+                                "when": {
+                                    "value": true,
+                                    "operator": "eq"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "advanced": {
+                        "reverse": false
+                    },
+                    "label": "View only",
+                    "name": "readonly",
+                    "type": "checkbox/switch",
+                    "description": "Prevent users from editing this value"
+                }
+            ]
+        },
+        {
+            "title": "Advanced options",
+            "compact": true,
+            "advanced": true,
+            "fields": [
+                {
+                    "label": "Name",
+                    "name": "name",
+                    "type": "input/text",
+                    "description": "Unique identifier for form data",
+                    "required": true,
+                    "validation": {
+                        "required": "Name is required"
+                    }
+                },
+                {
+                    "label": "Default value",
+                    "name": "value",
+                    "type": "input/text",
+                    "description": "Initial value for the field"
+                },
+                {
+                    "label": "Autocomplete",
+                    "name": "advanced.autocomplete",
+                    "type": "select",
+                    "source": [
+                        {
+                            "label": "Off",
+                            "value": "off"
+                        },
+                        {
+                            "label": "On",
+                            "value": "on"
+                        },
+                        {
+                            "label": "Name",
+                            "value": "name"
+                        },
+                        {
+                            "label": "Email",
+                            "value": "email"
+                        },
+                        {
+                            "label": "Username",
+                            "value": "username"
+                        },
+                        {
+                            "label": "Current password",
+                            "value": "current-password"
+                        },
+                        {
+                            "label": "New password",
+                            "value": "new-password"
+                        }
+                    ],
+                    "description": "Browser autocomplete behavior"
+                },
+                {
+                    "label": "Orientation",
+                    "name": "orientation",
+                    "type": "select",
+                    "source": [
+                        {
+                            "label": "Horizontal",
+                            "value": "horizontal"
+                        },
+                        {
+                            "label": "Vertical",
+                            "value": "vertical"
+                        }
+                    ],
+                    "description": "Orientation of the field"
+                },
+                {
+                    "advanced": {
+                        "reverse": false
+                    },
+                    "label": "Hidden",
+                    "name": "hidden",
+                    "type": "checkbox/switch",
+                    "description": "Whether the field is hidden"
+                },
+                {
+                    "advanced": {
+                        "reverse": false
+                    },
+                    "label": "Reverse",
+                    "name": "advanced.reverse",
+                    "type": "checkbox/switch",
+                    "description": "Whether the field is reversed",
+                    "hidden": true
+                },
+                {
+                    "advanced": {
+                        "reverse": false
+                    },
+                    "label": "Preselected",
+                    "name": "advanced.preselected",
+                    "type": "checkbox/switch",
+                    "description": "Whether the field is preselected",
+                    "hidden": true
+                }
+            ]
+        },
+        {
+            "title": "Validation rules",
+            "compact": true,
+            "advanced": true,
+            "fields": [
+                {
+                    "label": "Required error",
+                    "name": "validation.required",
+                    "type": "input/text",
+                    "description": "Message shown when the field is empty.",
+                    "placeholder": "This field is required",
+                    "hidden": true
+                },
+                {
+                    "label": "Invalid email error",
+                    "name": "validation.email",
+                    "type": "input/text",
+                    "description": "Message shown for incorrect email formats.",
+                    "placeholder": "Please enter a valid email address",
+                    "hidden": true
+                },
+                {
+                    "label": "Min length",
+                    "name": "advanced.length.min",
+                    "type": "input/number",
+                    "description": "Minimum number of characters required",
+                    "hidden": true
+                },
+                {
+                    "label": "Min length error",
+                    "name": "validation.length.min",
+                    "type": "input/text",
+                    "description": "Shown if the input is too short.",
+                    "placeholder": "Must be at least {min} characters",
+                    "hidden": true
+                },
+                {
+                    "label": "Max length",
+                    "name": "advanced.length.max",
+                    "type": "input/number",
+                    "description": "Maximum number of characters allowed",
+                    "hidden": true
+                },
+                {
+                    "label": "Max length error",
+                    "name": "validation.length.max",
+                    "type": "input/text",
+                    "description": "Shown if the input is too long.",
+                    "placeholder": "Must be at most {max} characters",
+                    "hidden": true
+                }
+            ]
+        },
+        {
+            "title": "Developer",
+            "compact": true,
+            "advanced": true,
+            "fields": [
+                {
+                    "advanced": {
+                        "action": "Add attribute"
+                    },
+                    "label": "Data attributes",
+                    "description": "Add custom data-attributes for scripts or tracking (e.g., data-test-id)",
+                    "name": "advanced.data",
+                    "type": "list",
+                    "fields": [
+                        {
+                            "name": "key",
+                            "label": "Key",
+                            "type": "input/text",
+                            "placeholder": "data-tracking"
+                        },
+                        {
+                            "name": "value",
+                            "label": "Value",
+                            "type": "input/text",
+                            "placeholder": "custom_value"
+                        }
+                    ]
+                },
+                {
+                    "advanced": {
+                        "action": "Add attribute"
+                    },
+                    "label": "Aria attributes",
+                    "description": "Improve accessibility by defining ARIA roles and properties (e.g., aria-label)",
+                    "name": "advanced.aria",
+                    "type": "list",
+                    "fields": [
+                        {
+                            "name": "key",
+                            "label": "Key",
+                            "type": "input/text",
+                            "placeholder": "aria-label"
+                        },
+                        {
+                            "name": "value",
+                            "label": "Value",
+                            "type": "input/text",
+                            "placeholder": "Close modal"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,17 +1,22 @@
 import { DATA_INVALID, DATA_READONLY, type Orientation } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
+export type FieldLayoutProps = {
+  children: React.ReactNode
+  disabled?: boolean
+  errors?: string[]
+  isCheckbox?: boolean
+  isReversed?: boolean
+  isClickable?: boolean
+}
+
 export function FieldBase(
-  props: Readonly<{
-    children: React.ReactNode
-    className?: string
-    disabled?: boolean
-    errors?: string[]
-    isCheckbox?: boolean
-    isReversed?: boolean
-    isClickable?: boolean
-    orientation: Orientation
-  }>
+  props: Readonly<
+    FieldLayoutProps & {
+      className?: string
+      orientation: Orientation
+    }
+  >
 ) {
   const errors = props.errors && props.errors.length > 0
 

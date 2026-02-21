@@ -20,6 +20,9 @@ export function getEntity<T>(
       }) ?? { value: selected }
     )
   }
+
+  // Fallback to returning the selected value if no collection is provided or if it's not an array
+  return { value: selected }
 }
 
 export function getCurrentValue<T>(
@@ -164,5 +167,23 @@ export function unflatten(
     current[last] = data[key]
   }
 
+  compactArrays(result)
   return result
+}
+
+function compactArrays(obj: Record<string, unknown>): void {
+  for (const key in obj) {
+    const value = obj[key]
+    if (Array.isArray(value)) {
+      const compacted = value.filter((item) => item !== undefined)
+      compacted.forEach((item) => {
+        if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
+          compactArrays(item as Record<string, unknown>)
+        }
+      })
+      obj[key] = compacted
+    } else if (value !== null && typeof value === 'object') {
+      compactArrays(value as Record<string, unknown>)
+    }
+  }
 }

@@ -1,11 +1,11 @@
 import { $REF } from './constant'
 import { extract } from './extract'
 import { isObject, isString } from './is-type'
-import type { Base, Definition, Nullable } from '../type'
+import type { Base, Definition, Filterable, Nullable } from '../type'
 
 const REGEX_REF = /^#\/definition\//
 
-export function prepare<T extends Base>(
+export function prepare<T extends Filterable>(
   base: readonly T[] = [],
   definition?: Definition
 ) {

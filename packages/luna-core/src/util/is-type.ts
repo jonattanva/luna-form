@@ -12,11 +12,7 @@ export function isEmpty(value: unknown): boolean {
 }
 
 export function isValue(value: unknown): value is Value {
-  return (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
-  )
+  return isString(value) || typeof value === 'number' || isBoolean(value)
 }
 
 export function isString(value: unknown): value is string {
@@ -25,4 +21,8 @@ export function isString(value: unknown): value is string {
 
 export function isDataSource(value: unknown): value is DataSource {
   return isObject(value) && 'url' in value
+}
+
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean'
 }

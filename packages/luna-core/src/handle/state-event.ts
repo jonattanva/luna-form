@@ -1,24 +1,26 @@
+import { VALUE } from '../util/constant'
 import { extract } from '../util/extract'
-import { isObject, isString } from '../util/is-type'
+import { isBoolean, isObject, isString } from '../util/is-type'
 import { operators } from '../util/operator'
 import type { Condition, FieldState, Nullable, StateEvent } from '../type'
 
 export function handleStateEvent<T>(
   selected: Nullable<T> = null,
   events: StateEvent[] = [],
-  setState: (name: string, state?: FieldState) => void
+  setState: (name: string[], state?: FieldState) => void
 ) {
-  events.forEach((event) => {
+  for (const event of events) {
     const { target, state, when } = event
 
+    const targets = Array.isArray(target) ? target : [target]
     if (!selected) {
-      setState(target)
-      return
+      setState(targets)
+      continue
     }
 
     const matches = evaluateCondition(selected, when)
-    setState(target, matches ? state : undefined)
-  })
+    setState(targets, matches ? state : undefined)
+  }
 }
 
 function evaluateCondition<T>(
@@ -30,12 +32,15 @@ function evaluateCondition<T>(
   }
 
   if (isString(when)) {
-    return getValue(selected, 'value') === when
+    return getValue(selected, VALUE) === when
+  }
+
+  if (isBoolean(when)) {
+    return Boolean(getValue(selected, VALUE)) === when
   }
 
   if (Array.isArray(when)) {
-    const current = getValue(selected, 'value')
-    return when.includes(String(current))
+    return when.includes(String(getValue(selected, VALUE)))
   }
 
   return evaluateOperator(selected, when)
@@ -45,7 +50,7 @@ function evaluateOperator<T>(
   selected: Nullable<T> = null,
   condition: Condition
 ) {
-  const current = getValue(selected, condition.field ?? 'value')
+  const current = getValue(selected, condition.field ?? VALUE)
   const { operator = 'eq', value } = condition
 
   const operation = operators[operator]
@@ -58,7 +63,7 @@ function evaluateOperator<T>(
 
 function getValue<T>(selected: T, field: string): unknown {
   if (isObject(selected)) {
-    return field.includes('.') ? extract(selected, field) : selected[field]
+    return extract(selected, field)
   }
   return selected
 }
