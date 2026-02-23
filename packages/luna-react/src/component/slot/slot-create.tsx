@@ -1,13 +1,9 @@
 import { SlotBase } from './slot-base'
 import type { Children } from '../../type'
-import type { FieldProps } from '../field/field'
 import type { Fields, Nullable, Style } from '@luna-form/core'
-import type { ListProps } from '../field/field-list'
+import type { SlotComponents } from './slot-base'
 
-export function createSlot(
-  Field: React.ComponentType<FieldProps>,
-  FieldList: React.ComponentType<ListProps>
-) {
+export function createSlot(components: SlotComponents) {
   const CreateSlot = (
     props: Readonly<{
       children: Children
@@ -16,9 +12,7 @@ export function createSlot(
       style?: Style
       value?: Nullable<Record<string, unknown>>
     }>
-  ) => (
-    <SlotBase {...props} components={{ field: Field, fieldList: FieldList }} />
-  )
+  ) => <SlotBase {...props} components={components} />
 
   return CreateSlot
 }

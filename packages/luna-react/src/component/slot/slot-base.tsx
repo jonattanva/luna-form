@@ -9,7 +9,6 @@ import {
 } from '@luna-form/core'
 import { Column } from '../column'
 import { Fragment } from 'react'
-import { List } from '../list'
 import { SlotList } from './slot-list'
 import type { Children } from '../../type'
 import type { FieldProps } from '../field/field'
@@ -17,7 +16,7 @@ import type { ListProps } from '../field/field-list'
 
 export type SlotComponents = {
   field: React.ComponentType<FieldProps>
-  fieldList: React.ComponentType<ListProps>
+  list: React.ComponentType<ListProps>
 }
 
 export function SlotBase(
@@ -30,7 +29,7 @@ export function SlotBase(
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
-  const { field: Field, fieldList: FieldList } = props.components
+  const { field: Field, list: List } = props.components
 
   return prepare(props.fields).map((field, index) => (
     <Fragment key={index}>
@@ -45,20 +44,18 @@ export function SlotBase(
         </Field>
       )}
       {isList(field) && (
-        <List field={field}>
-          <FieldList field={field} value={props.value}>
-            {(index) => (
-              <SlotList
-                children={props.children}
-                components={props.components}
-                disabled={props.disabled}
-                field={field}
-                index={index}
-                style={props.style}
-                value={props.value}
-              />
-            )}
-          </FieldList>
+        <List field={field} value={props.value}>
+          {(index) => (
+            <SlotList
+              children={props.children}
+              components={props.components}
+              disabled={props.disabled}
+              field={field}
+              index={index}
+              style={props.style}
+              value={props.value}
+            />
+          )}
         </List>
       )}
     </Fragment>

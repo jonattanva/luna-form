@@ -17,6 +17,7 @@ import {
   handleValueEvent,
   isClickable,
   isTextable,
+  logger,
   prepareInputProps,
   prepareInputValue,
   translate,
@@ -172,6 +173,12 @@ export function Input(
               )
 
               handleStateEvent(selected, states, (targets, state) => {
+                logger.info(
+                  `Setting field states for targets: ${targets.join(
+                    ', '
+                  )} with state: ${JSON.stringify(state)}`
+                )
+
                 setFieldStates((prev) => {
                   if (state) {
                     return targets.reduce(

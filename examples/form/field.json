@@ -78,14 +78,15 @@
                                 "change": [
                                     {
                                         "action": "state",
-                                        "target": "advanced.preselected",
+                                        "target": [
+                                            "advanced.preselected",
+                                            "advanced.sourceType",
+                                            "source"
+                                        ],
                                         "state": {
                                             "hidden": false
                                         },
-                                        "when": {
-                                            "value": "select",
-                                            "operator": "eq"
-                                        }
+                                        "when": "select"
                                     },
                                     {
                                         "action": "state",
@@ -110,15 +111,34 @@
                                     {
                                         "action": "state",
                                         "target": [
-                                            "validation.length.min",
-                                            "validation.length.max"
+                                            "advanced.length.max",
+                                            "advanced.length.min",
+                                            "validation.length.max",
+                                            "validation.length.min"
                                         ],
                                         "state": {
                                             "hidden": false
                                         },
                                         "when": [
-                                            "input/text",
+                                            "input/email",
+                                            "input/number",
                                             "input/password",
+                                            "input/text",
+                                            "textarea"
+                                        ]
+                                    },
+                                    {
+                                        "action": "state",
+                                        "target": "advanced.autocomplete",
+                                        "state": {
+                                            "hidden": false
+                                        },
+                                        "when": [
+                                            "input/email",
+                                            "input/number",
+                                            "input/password",
+                                            "input/text",
+                                            "select",
                                             "textarea"
                                         ]
                                     }
@@ -153,10 +173,7 @@
                                 "state": {
                                     "hidden": false
                                 },
-                                "when": {
-                                    "value": true,
-                                    "operator": "eq"
-                                }
+                                "when": true
                             }
                         ]
                     }
@@ -169,6 +186,128 @@
                     "name": "readonly",
                     "type": "checkbox/switch",
                     "description": "Prevent users from editing this value"
+                }
+            ]
+        },
+        {
+            "title": "Source",
+            "compact": true,
+            "advanced": true,
+            "fields": [
+                {
+                    "label": "Type source",
+                    "name": "advanced.sourceType",
+                    "type": "select",
+                    "source": [
+                        {
+                            "label": "Static",
+                            "value": "static"
+                        },
+                        {
+                            "label": "Dynamic (API)",
+                            "value": "dynamic"
+                        }
+                    ],
+                    "description": "Where the field options come from",
+                    "event": {
+                        "change": [
+                            {
+                                "action": "state",
+                                "target": "source",
+                                "state": {
+                                    "hidden": false
+                                },
+                                "when": "static"
+                            },
+                            {
+                                "action": "state",
+                                "target": [
+                                    "advanced.sourceMethod",
+                                    "advanced.sourceUrl",
+                                    "advanced.sourceNamespace",
+                                    "advanced.sourceHeaders"
+                                ],
+                                "state": {
+                                    "hidden": false
+                                },
+                                "when": "dynamic"
+                            }
+                        ]
+                    },
+                    "hidden": true
+                },
+                {
+                    "label": "Options",
+                    "name": "source",
+                    "type": "list",
+                    "description": "Manage the available choices for this field",
+                    "fields": [
+                        {
+                            "name": "label",
+                            "label": "Label",
+                            "type": "input/text",
+                            "placeholder": "e.g., Option 1"
+                        },
+                        {
+                            "name": "value",
+                            "label": "Value",
+                            "type": "input/text",
+                            "placeholder": "e.g., option_1"
+                        }
+                    ],
+                    "hidden": true
+                },
+                {
+                    "label": "Method",
+                    "name": "advanced.sourceMethod",
+                    "type": "select",
+                    "source": [
+                        {
+                            "label": "GET",
+                            "value": "GET"
+                        },
+                        {
+                            "label": "POST",
+                            "value": "POST"
+                        }
+                    ],
+                    "description": "HTTP method for fetching options from an API",
+                    "hidden": true
+                },
+                {
+                    "label": "URL",
+                    "name": "advanced.sourceUrl",
+                    "type": "input/text",
+                    "description": "API endpoint to fetch options dynamically",
+                    "hidden": true
+                },
+                {
+                    "label": "Namespace",
+                    "name": "advanced.sourceNamespace",
+                    "type": "input/text",
+                    "description": "Key path to extract options from the API response (e.g., data.items)",
+                    "hidden": true
+                },
+                {
+                    "label": "Headers",
+                    "name": "advanced.sourceHeaders",
+                    "type": "list",
+                    "description": "Custom headers for the API request (e.g., Authorization)",
+                    "fields": [
+                        {
+                            "name": "key",
+                            "label": "Key",
+                            "type": "input/text",
+                            "placeholder": "Authorization"
+                        },
+                        {
+                            "name": "value",
+                            "label": "Value",
+                            "type": "input/text",
+                            "placeholder": "Bearer abc123"
+                        }
+                    ],
+                    "hidden": true
                 }
             ]
         },
@@ -211,6 +350,18 @@
                             "value": "name"
                         },
                         {
+                            "label": "First name",
+                            "value": "given-name"
+                        },
+                        {
+                            "label": "Last name",
+                            "value": "family-name"
+                        },
+                        {
+                            "label": "Nickname",
+                            "value": "nickname"
+                        },
+                        {
                             "label": "Email",
                             "value": "email"
                         },
@@ -225,9 +376,118 @@
                         {
                             "label": "New password",
                             "value": "new-password"
+                        },
+                        {
+                            "label": "One-time code",
+                            "value": "one-time-code"
+                        },
+                        {
+                            "label": "Organization",
+                            "value": "organization"
+                        },
+                        {
+                            "label": "Organization title",
+                            "value": "organization-title"
+                        },
+                        {
+                            "label": "Street address",
+                            "value": "street-address"
+                        },
+                        {
+                            "label": "Address line 1",
+                            "value": "address-line1"
+                        },
+                        {
+                            "label": "Address line 2",
+                            "value": "address-line2"
+                        },
+                        {
+                            "label": "Address line 3",
+                            "value": "address-line3"
+                        },
+                        {
+                            "label": "City",
+                            "value": "address-level2"
+                        },
+                        {
+                            "label": "State/Province",
+                            "value": "address-level1"
+                        },
+                        {
+                            "label": "Country code",
+                            "value": "country"
+                        },
+                        {
+                            "label": "Country name",
+                            "value": "country-name"
+                        },
+                        {
+                            "label": "Postal code",
+                            "value": "postal-code"
+                        },
+                        {
+                            "label": "Credit card name",
+                            "value": "cc-name"
+                        },
+                        {
+                            "label": "Credit card number",
+                            "value": "cc-number"
+                        },
+                        {
+                            "label": "Credit card expiry",
+                            "value": "cc-exp"
+                        },
+                        {
+                            "label": "Credit card month",
+                            "value": "cc-exp-month"
+                        },
+                        {
+                            "label": "Credit card year",
+                            "value": "cc-exp-year"
+                        },
+                        {
+                            "label": "Credit card security code",
+                            "value": "cc-csc"
+                        },
+                        {
+                            "label": "Credit card type",
+                            "value": "cc-type"
+                        },
+                        {
+                            "label": "Transaction currency",
+                            "value": "transaction-currency"
+                        },
+                        {
+                            "label": "Transaction amount",
+                            "value": "transaction-amount"
+                        },
+                        {
+                            "label": "Language",
+                            "value": "language"
+                        },
+                        {
+                            "label": "Birthday",
+                            "value": "bday"
+                        },
+                        {
+                            "label": "Gender",
+                            "value": "sex"
+                        },
+                        {
+                            "label": "URL",
+                            "value": "url"
+                        },
+                        {
+                            "label": "Photo",
+                            "value": "photo"
+                        },
+                        {
+                            "label": "Telephone",
+                            "value": "tel"
                         }
                     ],
-                    "description": "Browser autocomplete behavior"
+                    "description": "Browser autocomplete behavior",
+                    "hidden": true
                 },
                 {
                     "label": "Orientation",

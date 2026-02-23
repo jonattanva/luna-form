@@ -3,6 +3,7 @@ import { extract } from '../util/extract'
 import { isBoolean, isObject, isString } from '../util/is-type'
 import { operators } from '../util/operator'
 import type { Condition, FieldState, Nullable, StateEvent } from '../type'
+import { logger } from '../util/logger'
 
 export function handleStateEvent<T>(
   selected: Nullable<T> = null,
@@ -11,14 +12,16 @@ export function handleStateEvent<T>(
 ) {
   for (const event of events) {
     const { target, state, when } = event
-
     const targets = Array.isArray(target) ? target : [target]
+
     if (!selected) {
       setState(targets)
       continue
     }
 
+    logger.info(`Selected value for state event: ${JSON.stringify(selected)}, evaluating condition: ${JSON.stringify(when)}`)
     const matches = evaluateCondition(selected, when)
+    logger.info(`Condition evaluated to: ${matches}, setting state for targets: ${targets.join(', ')}`)
     setState(targets, matches ? state : undefined)
   }
 }
@@ -32,6 +35,9 @@ function evaluateCondition<T>(
   }
 
   if (isString(when)) {
+    logger.info(`Evaluating string condition: ${when} against selected value: ${JSON.stringify(selected)} using VALUE field`)
+    logger.info(`Extracted value for comparison: ${JSON.stringify(getValue(selected, VALUE))}`)
+    logger.info(`Comparison result: ${getValue(selected, VALUE) === when}`)
     return getValue(selected, VALUE) === when
   }
 

@@ -1,5 +1,5 @@
 import { Field } from '../field/field'
-import { FieldList } from '../field/field-list'
+import { ListGuard } from '../guard/list-guard'
 import { createSlot } from '../../../component/slot/slot-create'
 
-export const Slot = createSlot(Field, FieldList)
+export const Slot = createSlot({ field: Field, list: ListGuard })
