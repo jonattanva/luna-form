@@ -6,13 +6,15 @@ export function withState<
 >(Component: React.ComponentType<P>) {
   const WithFieldState = (props: Readonly<P>) => {
     const fieldState = useAtomValue(reportFieldStateAtom(props.field.name))
+
     const hidden = fieldState?.hidden ?? props.field.hidden ?? false
     if (hidden) {
       return null
     }
 
-    const disabled = fieldState?.disabled ?? props.disabled
-    return <Component {...props} disabled={disabled} />
+    return (
+      <Component {...props} disabled={fieldState?.disabled ?? props.disabled} />
+    )
   }
   return WithFieldState
 }

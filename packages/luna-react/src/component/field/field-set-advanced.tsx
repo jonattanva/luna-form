@@ -36,7 +36,7 @@ export function FieldSetAdvanced(
       </legend>
       <Activity mode={isOpen ? 'visible' : 'hidden'}>
         <div
-          className="mt-3 flex flex-col gap-4 border-l-2 border-slate-300 pl-4 dark:border-slate-600"
+          className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-slate-300 pl-4 dark:border-slate-600"
           data-slot="field-set-content"
         >
           {props.section.description && (
