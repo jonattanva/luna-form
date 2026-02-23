@@ -1,7 +1,7 @@
 import { Control as Action } from './control'
 import { FieldSet } from './field/field-set'
-import { Fragment } from 'react'
 import { Group } from './group'
+import { SectionGuard } from '../client/component/section/section-guard'
 import { Separator } from './separator'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Control, Slot } from '../type'
@@ -26,7 +26,7 @@ export function Form(
       <form noValidate={props.noValidate} action={props.action}>
         <Group>
           {sections.map((section, index) => (
-            <Fragment key={index}>
+            <SectionGuard key={index} fields={section.fields ?? []}>
               <FieldSet section={section} style={props.config.style}>
                 {props.children({
                   disabled: props.readOnly,
@@ -34,7 +34,7 @@ export function Form(
                 })}
               </FieldSet>
               {section.separator && <Separator />}
-            </Fragment>
+            </SectionGuard>
           ))}
           {props.control && (
             <Action isPending={props.isPending}>{props.control}</Action>

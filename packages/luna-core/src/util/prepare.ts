@@ -1,4 +1,4 @@
-import { $REF } from './constant'
+import { $REF, FIELDS, TYPE } from './constant'
 import { extract } from './extract'
 import { isObject, isString } from './is-type'
 import type { Base, Definition, Filterable, Nullable } from '../type'
@@ -11,7 +11,7 @@ export function prepare<T extends Filterable>(
 ) {
   const resolved = resolveRefs(base, definition)
   return Array.isArray(resolved)
-    ? resolved.sort((a, b) => getOrder(a) - getOrder(b))
+    ? resolved.filter(filter).sort((a, b) => getOrder(a) - getOrder(b))
     : []
 }
 
@@ -75,4 +75,16 @@ function isDefinition(
     isObject(definition) &&
     Object.keys(definition).length > 0
   )
+}
+
+function filter<T extends Filterable>(base: T) {
+  if (TYPE in base) {
+    return true
+  }
+
+  if (Array.isArray(base[FIELDS])) {
+    return base[FIELDS].length > 0
+  }
+
+  return true
 }
