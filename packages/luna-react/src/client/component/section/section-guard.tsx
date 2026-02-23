@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai'
-import { COLUMN } from '@luna-form/core'
+import { isColumn } from '@luna-form/core'
 import { fieldStateAtom } from '../../lib/state-store'
 import type { Column, Field, FieldState, Fields, List } from '@luna-form/core'
 
@@ -7,7 +7,7 @@ function isColumnHidden(
   column: Column,
   states: Record<string, FieldState>
 ): boolean {
-  return column.fields.every((field) => isFieldHidden(field as Field, states))
+  return column.fields.every((field) => isFieldHidden(field, states))
 }
 
 function isFieldHidden(
@@ -21,10 +21,9 @@ function isEntryHidden(
   entry: Fields[number],
   states: Record<string, FieldState>
 ): boolean {
-  if (entry.type === COLUMN) {
-    return isColumnHidden(entry as Column, states)
-  }
-  return isFieldHidden(entry as Field | List, states)
+  return isColumn(entry)
+    ? isColumnHidden(entry, states)
+    : isFieldHidden(entry, states)
 }
 
 export function SectionGuard(
