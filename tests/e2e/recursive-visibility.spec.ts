@@ -49,11 +49,11 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     // Hidden section should not be visible
-    const hiddenSection = page.getByText('Hidden Section')
+    const hiddenSection = page.getByText('Hidden Section', { exact: true })
     await expect(hiddenSection).toHaveCount(0)
 
     // Visible section should be visible
-    const visibleSection = page.getByText('Visible Section')
+    const visibleSection = page.getByText('Visible Section', { exact: true })
     await expect(visibleSection).toBeVisible()
 
     const visibleField = page.getByLabel('Visible 1')
@@ -85,10 +85,10 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const emptySection = page.getByText('Empty Section')
+    const emptySection = page.getByText('Empty Section', { exact: true })
     await expect(emptySection).toHaveCount(0)
 
-    const visibleSection = page.getByText('Visible Section')
+    const visibleSection = page.getByText('Visible Section', { exact: true })
     await expect(visibleSection).toBeVisible()
   })
 
@@ -131,10 +131,10 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    const columnSection = page.getByText('Column Section')
+    const columnSection = page.getByText('Column Section', { exact: true })
     await expect(columnSection).toHaveCount(0)
 
-    const visibleSection = page.getByText('Visible Section')
+    const visibleSection = page.getByText('Visible Section', { exact: true })
     await expect(visibleSection).toBeVisible()
   })
 
@@ -187,7 +187,7 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     // Dynamic section should be hidden initially (all fields hidden)
-    const dynamicSection = page.getByText('Dynamic Section')
+    const dynamicSection = page.getByText('Dynamic Section', { exact: true })
     await expect(dynamicSection).toHaveCount(0)
 
     // Select Passport to trigger state event
@@ -252,7 +252,7 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     // Admin section should be visible initially
-    const adminSection = page.getByText('Admin Section')
+    const adminSection = page.getByText('Admin Section', { exact: true })
     await expect(adminSection).toBeVisible()
 
     const adminField = page.getByLabel('Admin Field')
