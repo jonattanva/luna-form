@@ -2,13 +2,13 @@ import { InputGroup } from '../../component/input-group'
 import { fieldStateAtom } from '../lib/state-store'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
-import { useCallback, useRef, useTransition } from 'react'
+import { reportValueAtom, valueAtom } from '../lib/value-store'
+import { useCallback, useEffect, useRef, useTransition } from 'react'
 import { useDataSource } from '../hook/use-data-source'
 import { useInput } from '../hook/use-input'
 import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
 import { useValue } from '../hook/use-value'
-import { reportValueAtom, valueAtom } from '../lib/value-store'
 import {
   getEntity,
   handleProxyEvent,
@@ -16,8 +16,9 @@ import {
   handleStateEvent,
   handleValueEvent,
   isClickable,
+  isOptions,
   isTextable,
-  logger,
+  isValidValue,
   prepareInputProps,
   prepareInputValue,
   translate,
@@ -58,6 +59,8 @@ export function Input(
     props.field,
     props.value
   )
+
+  const initialEventsProcessedRef = useRef(false)
 
   const valueRef = useRef(value)
   valueRef.current = value
@@ -110,6 +113,53 @@ export function Input(
     }
   }
 
+  // Same ref pattern: shared event processing invoked from both onChange and
+  // the initialization useEffect below.
+  const applyChangeEventsRef = useRef<((selected: unknown) => void) | null>(
+    null
+  )
+  applyChangeEventsRef.current = (selected: unknown) => {
+    const events = props.field.event?.change
+    if (!events) {
+      return
+    }
+
+    handleProxyEvent(events, ({ sources, states, values }) => {
+      startTransition(() => {
+        handleSourceEvent(selected, sources, (target, source) =>
+          setSource(target, source)
+        )
+
+        handleStateEvent(selected, states, (targets, state) => {
+          setFieldStates((prev) => {
+            if (state) {
+              return targets.reduce(
+                (acc, target) => ({
+                  ...acc,
+                  [target]: state,
+                }),
+                prev
+              )
+            }
+
+            return targets.reduce((acc, target) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [target]: _removed, ...rest } = acc
+              return rest
+            }, prev)
+          })
+        })
+
+        handleValueEvent(selected, values, (target, value) => {
+          setValues((prev) => ({
+            ...prev,
+            [target]: value,
+          }))
+        })
+      })
+    })
+  }
+
   const inputProps = prepareInputValue(props.field, defaultValue)
 
   const validated = useCallback(
@@ -146,6 +196,34 @@ export function Input(
     [data, entity, hasTextable, setTimeoutRef]
   )
 
+  useEffect(() => {
+    if (initialEventsProcessedRef.current || !props.value) {
+      return
+    }
+
+    if (!props.field.event?.change) {
+      initialEventsProcessedRef.current = true
+      return
+    }
+
+    const isReady =
+      (!isOptions(props.field) || (!!data && data.length > 0)) &&
+      isValidValue(defaultValue)
+
+    if (!isReady) {
+      return
+    }
+
+    initialEventsProcessedRef.current = true
+
+    const stringValue = String(defaultValue)
+    const selected = hasTextable
+      ? { value: stringValue }
+      : getEntity(stringValue, data, entity)
+
+    applyChangeEventsRef.current?.(selected)
+  }, [data, defaultValue, entity, hasTextable, props.field, props.value])
+
   const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = event.target.value
@@ -163,49 +241,9 @@ export function Input(
         validated(inputValue)
       }
 
-      const events = props.field.event?.change
-      if (events) {
+      if (props.field.event?.change) {
         handleTriggerEvent(inputValue, (selected) => {
-          handleProxyEvent(events, ({ sources, states, values }) => {
-            startTransition(() => {
-              handleSourceEvent(selected, sources, (target, source) =>
-                setSource(target, source)
-              )
-
-              handleStateEvent(selected, states, (targets, state) => {
-                logger.info(
-                  `Setting field states for targets: ${targets.join(
-                    ', '
-                  )} with state: ${JSON.stringify(state)}`
-                )
-
-                setFieldStates((prev) => {
-                  if (state) {
-                    return targets.reduce(
-                      (acc, target) => ({
-                        ...acc,
-                        [target]: state,
-                      }),
-                      prev
-                    )
-                  }
-
-                  return targets.reduce((acc, target) => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { [target]: _removed, ...rest } = acc
-                    return rest
-                  }, prev)
-                })
-              })
-
-              handleValueEvent(selected, values, (target, value) => {
-                setValues((prev) => ({
-                  ...prev,
-                  [target]: value,
-                }))
-              })
-            })
-          })
+          applyChangeEventsRef.current?.(selected)
         })
       }
     },
@@ -215,9 +253,6 @@ export function Input(
       hasTextable,
       props.config.validation.change,
       props.field.event?.change,
-      setFieldStates,
-      setSource,
-      setValues,
       shouldSkipOnChange,
       validated,
     ]
