@@ -9,6 +9,15 @@ interface NestedAtomFamilyOptions<TInner> {
   validateTarget?: (target: string) => boolean
 }
 
+export function omitKey<T extends Record<string, unknown>>(
+  obj: T,
+  key: string
+): T {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [key]: _removed, ...rest } = obj
+  return rest as T
+}
+
 function createRecordAtomFamily<
   TRecord extends Record<string, unknown>,
   TValue = RecordValue<TRecord>,
@@ -27,9 +36,7 @@ function createRecordAtomFamily<
             set(baseAtom, { ...current, [name]: newValue })
           }
         } else if (current[name]) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { [name]: _unused, ...rest } = current
-          set(baseAtom, rest as TRecord)
+          set(baseAtom, omitKey(current, name))
         }
       }
     )
@@ -116,9 +123,7 @@ export function createNestedRecordAtomFamily<
           delete targetContributions[contributorName]
 
           if (Object.keys(targetContributions).length === 0) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [target]: _unused, ...rest } = current
-            set(baseAtom, rest as TRecord)
+            set(baseAtom, omitKey(current, target))
           } else {
             set(baseAtom, {
               ...current,

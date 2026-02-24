@@ -5,7 +5,7 @@ import {
   type Nullable,
 } from '@luna-form/core'
 import { useSetAtom } from 'jotai'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { valueAtom } from '../lib/value-store'
 
 export function useFieldList(
@@ -21,7 +21,9 @@ export function useFieldList(
 
   const nextId = useRef(items.length)
   const itemsRef = useRef(items)
-  itemsRef.current = items
+  useLayoutEffect(() => {
+    itemsRef.current = items
+  })
 
   const setValues = useSetAtom(valueAtom)
 
@@ -38,11 +40,11 @@ export function useFieldList(
 
   const handleRemove = useCallback(
     (index: number) => {
-      if (items.length <= min) {
+      if (itemsRef.current.length <= min) {
         return
       }
 
-      const stableId = items[index]
+      const stableId = itemsRef.current[index]
 
       setItems((previous) => {
         if (previous.length <= min) {
@@ -73,7 +75,7 @@ export function useFieldList(
         return next
       })
     },
-    [field.name, field.fields, items, min, setValues]
+    [field.name, field.fields, min, setValues]
   )
 
   const canAdd = items.length < max

@@ -1,5 +1,6 @@
 import { InputGroup } from '../../component/input-group'
 import { fieldStateAtom } from '../lib/state-store'
+import { omitKey } from '../lib/store-helper'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { reportValueAtom, valueAtom } from '../lib/value-store'
@@ -142,11 +143,7 @@ export function Input(
               )
             }
 
-            return targets.reduce((acc, target) => {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [target]: _removed, ...rest } = acc
-              return rest
-            }, prev)
+            return targets.reduce((acc, target) => omitKey(acc, target), prev)
           })
         })
 

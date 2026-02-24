@@ -681,5 +681,9 @@
                 }
             ]
         }
-    ]
+    ],
+    "value": {
+        "label": "Demo",
+        "type": "input/text"
+    }
 }
