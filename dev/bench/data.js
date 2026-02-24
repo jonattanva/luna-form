@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771967076950,
+  "lastUpdate": 1771970609918,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -485,6 +485,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.05421152200000006,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "140c08b71aefa1090d1880fd4b8efb5380c3d0ce",
+          "message": "refactor(input): simplify useEffect guards and remove unused dep\n\n- Combine options-not-ready and invalid-default guards into a single isReady variable\n- Remove hasClickable from useEffect dependency array (not referenced in the effect)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-24T17:02:45-05:00",
+          "tree_id": "362c29acbbbdd78416ca4b6763affe4acfa505db",
+          "url": "https://github.com/jonattanva/luna-form/commit/140c08b71aefa1090d1880fd4b8efb5380c3d0ce"
+        },
+        "date": 1771970609492,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0021102300000000016,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0033856960000000526,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.04753189599999996,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0017890879999999925,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0019136600000000498,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.04229184999999996,
             "unit": "ms"
           }
         ]
