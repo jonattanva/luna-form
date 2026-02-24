@@ -80,13 +80,15 @@
                                         "action": "state",
                                         "target": [
                                             "advanced.preselected",
-                                            "advanced.sourceType",
-                                            "source"
+                                            "advanced.sourceType"
                                         ],
                                         "state": {
                                             "hidden": false
                                         },
-                                        "when": "select"
+                                        "when": [
+                                            "radio",
+                                            "select"
+                                        ]
                                     },
                                     {
                                         "action": "state",
@@ -195,7 +197,7 @@
             "advanced": true,
             "fields": [
                 {
-                    "label": "Type source",
+                    "label": "Get options from",
                     "name": "advanced.sourceType",
                     "type": "select",
                     "source": [
@@ -208,7 +210,7 @@
                             "value": "dynamic"
                         }
                     ],
-                    "description": "Where the field options come from",
+                    "description": "Choose how you want to provide the choices for this field",
                     "event": {
                         "change": [
                             {
@@ -222,10 +224,12 @@
                             {
                                 "action": "state",
                                 "target": [
+                                    "advanced.options.label",
+                                    "advanced.options.value",
+                                    "advanced.sourceHeaders",
                                     "advanced.sourceMethod",
-                                    "advanced.sourceUrl",
                                     "advanced.sourceNamespace",
-                                    "advanced.sourceHeaders"
+                                    "advanced.sourceUrl"
                                 ],
                                 "state": {
                                     "hidden": false
@@ -234,31 +238,42 @@
                             }
                         ]
                     },
+                    "required": true,
                     "hidden": true
                 },
                 {
                     "label": "Options",
                     "name": "source",
                     "type": "list",
-                    "description": "Manage the available choices for this field",
+                    "description": "Create the list of choices that will appear in the selector",
                     "fields": [
                         {
-                            "name": "label",
-                            "label": "Label",
-                            "type": "input/text",
-                            "placeholder": "e.g., Option 1"
-                        },
-                        {
-                            "name": "value",
-                            "label": "Value",
-                            "type": "input/text",
-                            "placeholder": "e.g., option_1"
+                            "advanced": {
+                                "cols": 2
+                            },
+                            "type": "column",
+                            "fields": [
+                                {
+                                    "label": "Option name (Label)",
+                                    "name": "label",
+                                    "type": "input/text",
+                                    "placeholder": "e.g., Option 1",
+                                    "required": true
+                                },
+                                {
+                                    "label": "Option code (Value)",
+                                    "name": "value",
+                                    "type": "input/text",
+                                    "placeholder": "e.g., option_1",
+                                    "required": true
+                                }
+                            ]
                         }
                     ],
                     "hidden": true
                 },
                 {
-                    "label": "Method",
+                    "label": "Connection method",
                     "name": "advanced.sourceMethod",
                     "type": "select",
                     "source": [
@@ -271,40 +286,64 @@
                             "value": "POST"
                         }
                     ],
-                    "description": "HTTP method for fetching options from an API",
+                    "description": "How should we ask for the information?",
                     "hidden": true
                 },
                 {
-                    "label": "URL",
+                    "label": "Link or Address (URL)",
                     "name": "advanced.sourceUrl",
                     "type": "input/text",
-                    "description": "API endpoint to fetch options dynamically",
+                    "description": "Paste the web address to your list of options",
                     "hidden": true
                 },
                 {
-                    "label": "Namespace",
+                    "label": "List location (Path)",
                     "name": "advanced.sourceNamespace",
                     "type": "input/text",
-                    "description": "Key path to extract options from the API response (e.g., data.items)",
+                    "description": "Where is the list inside the data? (e.g., 'results')",
                     "hidden": true
                 },
                 {
-                    "label": "Headers",
-                    "name": "advanced.sourceHeaders",
-                    "type": "list",
-                    "description": "Custom headers for the API request (e.g., Authorization)",
+                    "advanced": {
+                        "cols": 2
+                    },
+                    "type": "column",
                     "fields": [
                         {
+                            "label": "Display text (Label)",
+                            "name": "advanced.options.label",
+                            "type": "input/text",
+                            "placeholder": "e.g., name",
+                            "description": "Which field has the name users will see?",
+                            "hidden": true
+                        },
+                        {
+                            "label": "Unique ID (Primary Key)",
+                            "name": "advanced.options.value",
+                            "type": "input/text",
+                            "placeholder": "e.g., id",
+                            "description": "Which field identifies each item? (e.g., 'id' or 'code').",
+                            "hidden": true
+                        }
+                    ]
+                },
+                {
+                    "label": "Access keys (Headers)",
+                    "name": "advanced.sourceHeaders",
+                    "type": "list",
+                    "description": "Special keys or passwords needed to reach your data",
+                    "fields": [
+                        {
+                            "label": "Setting name",
                             "name": "key",
-                            "label": "Key",
                             "type": "input/text",
                             "placeholder": "Authorization"
                         },
                         {
+                            "label": "Setting value",
                             "name": "value",
-                            "label": "Value",
                             "type": "input/text",
-                            "placeholder": "Bearer abc123"
+                            "placeholder": "Your secret key or password"
                         }
                     ],
                     "hidden": true
