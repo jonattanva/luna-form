@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771987713588,
+  "lastUpdate": 1771987753554,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -887,6 +887,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 162,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "abcc4800e96e382bcbbdf037f18684b42e1de451",
+          "message": "fix(string): bound markdown link regex quantifiers to prevent ReDoS\n\nAdds length limits to the REGEX_MARKDOWN_LINK quantifiers ({1,500} for\nlink text, {1,2000} for URL) to cap backtracking and eliminate O(n^2)\ncomplexity on adversarial inputs.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-24T21:47:34-05:00",
+          "tree_id": "553cfe688964b8824f181daa81daf061f3882bc4",
+          "url": "https://github.com/jonattanva/luna-form/commit/abcc4800e96e382bcbbdf037f18684b42e1de451"
+        },
+        "date": 1771987752904,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 253,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 172,
             "unit": "ms"
           }
         ]
