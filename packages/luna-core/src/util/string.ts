@@ -41,7 +41,7 @@ export function interpolateIfNeeded<T>(
 
 export function isInterpolated(template: unknown): boolean {
   if (isString(template)) {
-    return /{([^}]+)}/.test(template)
+    return /{([^}]{1,200})}/.test(template)
   }
 
   if (Array.isArray(template)) {
@@ -59,7 +59,7 @@ function replacePlaceholders(
   template: string,
   values: Record<string, unknown> = {}
 ): string {
-  return template.replace(/{([^}]+)}/g, (match, key) => {
+  return template.replace(/{([^}]{1,200})}/g, (match, key) => {
     const value = key.includes('.') ? extract(values, key) : values[key]
     if (isValue(value)) {
       return String(value)

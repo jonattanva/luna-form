@@ -2,7 +2,6 @@ import { isObject, isValue } from './is-type'
 import { INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
 import type { Nullable, Option, Value } from '../type'
 
-const REGEX_TYPE = /[^/]+$/
 const REGEX_NUMERIC = /^\d+$/
 
 export function getEntity<T>(
@@ -118,12 +117,10 @@ export function toOptions<T>(
 
 export function getType(value: string = TYPE_TEXT): string {
   if (value) {
-    const result = value.match(REGEX_TYPE)
-    if (result) {
-      const [type] = result
-      if (type !== INPUT) {
-        return type.trim().toLowerCase()
-      }
+    const lastSlash = value.lastIndexOf('/')
+    const type = lastSlash === -1 ? value : value.slice(lastSlash + 1)
+    if (type && type !== INPUT) {
+      return type.trim().toLowerCase()
     }
   }
   return TYPE_TEXT
