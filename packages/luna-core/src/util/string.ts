@@ -1,7 +1,7 @@
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
 
-const REGEX_MARKDOWN_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
+const REGEX_MARKDOWN_LINK = /\[([^\]]{1,500})\]\(([^)]{1,2000})\)/g
 
 /**
  * Replaces placeholders in the format {key} with values from the provided object.
