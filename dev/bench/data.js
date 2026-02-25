@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771987753554,
+  "lastUpdate": 1771988138466,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -647,6 +647,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.04457237800000007,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "bf15cf9ea53eb5d7320cbe551aa4ac9e279fdd18",
+          "message": "fix(util): prevent ReDoS in interpolation and type extraction regexes\n\nBounds placeholder regex quantifiers to {1,200} in isInterpolated and\nreplacePlaceholders to cap backtracking. Replaces REGEX_TYPE with\nlastIndexOf to eliminate the regex entirely from getType.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-24T21:54:54-05:00",
+          "tree_id": "ef5fe3efcd5b163c3ec7519723e4babbeebcfd77",
+          "url": "https://github.com/jonattanva/luna-form/commit/bf15cf9ea53eb5d7320cbe551aa4ac9e279fdd18"
+        },
+        "date": 1771988138152,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0023121280000000296,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0034579459999999926,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.039205512,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0010737719999999627,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.002699167999999986,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.04059367199999997,
             "unit": "ms"
           }
         ]
