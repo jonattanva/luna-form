@@ -72,6 +72,10 @@ export function formatMarkdown<K>(
   text?: string,
   callback?: (index: number, url: string, text?: string) => K
 ): (string | K)[] | string | null {
+  if (!isString(text)) {
+    return null
+  }
+
   if (!text || text.trim().length === 0) {
     return null
   }

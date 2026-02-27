@@ -1,6 +1,6 @@
 {
   "name": "react-luna-form",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
@@ -33,7 +33,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "swr": "^2.0.0",
-    "tailwind-merge": "^3.4.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
