@@ -1,3 +1,4 @@
+import { deepEqual } from 'fast-equals'
 import { isValidValue, type Field, type Nullable } from '@luna-form/core'
 import { reportValueAtom } from '../lib/value-store'
 import { useAtom } from 'jotai'
@@ -16,7 +17,9 @@ export function useValue(
     (currentValue: Record<string, unknown>) => {
       const newValue = resolveValue(name, currentValue)
       if (isValidValue(newValue)) {
-        skipNextOnChangeRef.current = true
+        if (!deepEqual(value, newValue)) {
+          skipNextOnChangeRef.current = true
+        }
         setValue(newValue)
       }
     }

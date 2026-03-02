@@ -432,6 +432,51 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
     await expect(page.getByText('Form submitted successfully')).toBeVisible()
   })
 
+  test('should allow changing select value on first interaction when form has initial values', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "country": "us"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Country",
+                "name": "country",
+                "type": "select",
+                "required": true,
+                "source": [
+                  { "label": "United States", "value": "us" },
+                  { "label": "Canada", "value": "ca" },
+                  { "label": "Mexico", "value": "mx" }
+                ]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(page.getByRole('combobox')).toContainText('United States')
+
+    await page.getByRole('combobox').click()
+    await page.getByRole('option', { name: 'Canada' }).click()
+
+    await expect(page.getByRole('combobox')).toContainText('Canada')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+    await expect(page.locator('pre code')).toContainText('"country": "ca"')
+  })
+
   test('should allow clearing initial value in text input on first interaction', async ({
     page,
   }) => {

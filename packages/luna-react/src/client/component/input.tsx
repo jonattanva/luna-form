@@ -32,7 +32,7 @@ import {
   type Orientation,
   type Schema,
 } from '@luna-form/core'
-import type { Config } from '../../type'
+import type { Config, InputChange } from '../../type'
 
 export function Input(
   props: Readonly<{
@@ -44,7 +44,7 @@ export function Input(
     field: Field
     onMount: (name: string, schema: Schema, field: Field) => void
     onUnmount: (name: string) => void
-    onValueChange?: (input: { name: string; value: unknown }) => void
+    onValueChange?: (input: InputChange) => void
     orientation?: Orientation
     translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
@@ -110,7 +110,13 @@ export function Input(
   onValueChangeRef.current = (value: unknown) => {
     setValue(value)
     if (props.onValueChange) {
-      props.onValueChange({ name: props.field.name, value })
+      const attributes = props.dataAttributes ?? {}
+      props.onValueChange({
+        data: Object.keys(attributes).length > 0 ? attributes : undefined,
+        name: props.field.name,
+        type: props.field.type,
+        value,
+      })
     }
   }
 
@@ -184,7 +190,7 @@ export function Input(
       if (hasTextable) {
         setTimeoutRef(() => {
           callback({ value })
-        }, 500)
+        }, 300)
         return
       }
 
@@ -247,7 +253,6 @@ export function Input(
     [
       handleTriggerEvent,
       hasClickable,
-      hasTextable,
       props.config.validation.change,
       props.field.event?.change,
       shouldSkipOnChange,

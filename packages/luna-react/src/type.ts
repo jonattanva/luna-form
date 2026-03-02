@@ -36,3 +36,10 @@ export type AlertProps = Readonly<FormStateError>
 export type Config = BaseConfig<React.ComponentProps<React.ElementType>> & {
   alert?: React.ComponentType<AlertProps>
 }
+
+export type InputChange = {
+  data?: DataAttributes
+  name: string
+  type: string
+  value: unknown
+}
