@@ -7,7 +7,6 @@
     type CommonProps,
     type DataAttributes,
     type Field,
-    type Orientation,
   } from '@luna-form/core'
   import type { Snippet } from 'svelte'
 
@@ -16,7 +15,7 @@
     disabled,
     errors,
     field,
-    orientation,
+    horizontal,
   }: {
     children: Snippet<
       [
@@ -25,14 +24,14 @@
           commonProps: CommonProps
           dataAttributes: DataAttributes
           field: Field
-          orientation?: Orientation
+          horizontal?: boolean
         },
       ]
     >
     disabled?: boolean
     errors?: string[]
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
   } = $props()
 
   const commonProps = $derived(buildCommon(field, disabled))
@@ -51,6 +50,6 @@
     commonProps,
     dataAttributes,
     field: derivedField,
-    orientation,
+    horizontal,
   })}
 {/if}

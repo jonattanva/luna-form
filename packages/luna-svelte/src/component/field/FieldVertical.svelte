@@ -1,6 +1,5 @@
 <script lang="ts">
   import FieldBase from './FieldBase.svelte'
-  import { VERTICAL } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
   import type { Snippet } from 'svelte'
 
@@ -27,7 +26,7 @@
   {isCheckbox}
   {isReversed}
   {isClickable}
-  orientation={VERTICAL}
+  orientation="vertical"
   class={twMerge(
     'gap-3 has-[>[data-slot=field-content]]:items-start',
     !isClickable && '[&>*]:w-full'
