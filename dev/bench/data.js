@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773104826495,
+  "lastUpdate": 1773104860569,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1469,6 +1469,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 549,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "e28335eeaf8471672400de379507f787d48024ff",
+          "message": "refactor: simplify orientation logic to use boolean horizontal property",
+          "timestamp": "2026-03-09T20:06:17-05:00",
+          "tree_id": "071df2f9ec55d195e3b95d32a1d9d068b731f3ab",
+          "url": "https://github.com/jonattanva/luna-form/commit/e28335eeaf8471672400de379507f787d48024ff"
+        },
+        "date": 1773104860351,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 256,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 198,
             "unit": "ms"
           }
         ]
