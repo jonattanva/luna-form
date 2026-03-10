@@ -29,7 +29,6 @@ import {
   type DataAttributes,
   type Field,
   type Nullable,
-  type Orientation,
   type Schema,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
@@ -42,10 +41,10 @@ export function Input(
     context?: Record<string, unknown>
     dataAttributes?: DataAttributes
     field: Field
+    horizontal?: boolean
     onMount: (name: string, schema: Schema, field: Field) => void
     onUnmount: (name: string) => void
     onValueChange?: (input: InputChange) => void
-    orientation?: Orientation
     translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
   }>
@@ -253,6 +252,7 @@ export function Input(
     [
       handleTriggerEvent,
       hasClickable,
+      hasTextable,
       props.config.validation.change,
       props.field.event?.change,
       shouldSkipOnChange,
@@ -277,7 +277,7 @@ export function Input(
       config={props.config}
       context={props.context}
       field={props.field}
-      orientation={props.orientation}
+      horizontal={props.horizontal}
       translations={props.translations}
     >
       <Component

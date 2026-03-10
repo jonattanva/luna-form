@@ -8,7 +8,6 @@ import {
   type CommonProps,
   type DataAttributes,
   type Field,
-  type Orientation,
 } from '@luna-form/core'
 import type { Config } from '../../type'
 
@@ -20,7 +19,7 @@ export function Input(
     context?: Record<string, unknown>
     dataAttributes?: DataAttributes
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
     translations?: Record<string, string>
     value?: Record<string, unknown>
   }>
@@ -41,7 +40,7 @@ export function Input(
       config={props.config}
       context={props.context}
       field={props.field}
-      orientation={props.orientation}
+      horizontal={props.horizontal}
       translations={props.translations}
     >
       <Component

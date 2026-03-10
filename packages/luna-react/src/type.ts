@@ -6,7 +6,6 @@ import type {
   Field,
   Fields,
   FormStateError,
-  Orientation,
 } from '@luna-form/core'
 
 export type Slot = (props: {
@@ -23,7 +22,7 @@ export type Children = (props: {
   commonProps: CommonProps
   dataAttributes?: DataAttributes
   field: Field
-  orientation?: Orientation
+  horizontal?: boolean
 }) => React.ReactNode
 
 export type InputConfig<T extends React.ElementType> = {

@@ -1,12 +1,7 @@
 import { FormattedDescription } from './formatted-description'
 import { InputLabel } from './input-label'
-import {
-  translate,
-  VERTICAL,
-  type Field,
-  type Orientation,
-} from '@luna-form/core'
 import type { Config } from '../type'
+import type { Field } from '@luna-form/core'
 
 export function InputGroup(
   props: Readonly<{
@@ -14,8 +9,8 @@ export function InputGroup(
     config?: Config
     context?: Record<string, unknown>
     field: Field
+    horizontal?: boolean
     translations?: Record<string, string>
-    orientation?: Orientation
   }>
 ) {
   return (
@@ -25,14 +20,17 @@ export function InputGroup(
           config={props.config}
           context={props.context}
           field={props.field}
-          orientation={props.orientation}
+          horizontal={props.horizontal}
           translations={props.translations}
         />
       )}
       {props.children}
-      {props.orientation === VERTICAL && props.field.description && (
+      {props.horizontal === false && (
         <FormattedDescription
-          text={translate(props.field.description, props.translations)}
+          config={props.config}
+          context={props.context}
+          text={props.field.description}
+          translations={props.translations}
         />
       )}
     </>

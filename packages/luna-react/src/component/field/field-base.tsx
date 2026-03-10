@@ -1,4 +1,4 @@
-import { DATA_INVALID, DATA_READONLY, type Orientation } from '@luna-form/core'
+import { DATA_INVALID, DATA_READONLY } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
 export type FieldLayoutProps = {
@@ -14,7 +14,7 @@ export function FieldBase(
   props: Readonly<
     FieldLayoutProps & {
       className?: string
-      orientation: Orientation
+      orientation: 'horizontal' | 'vertical'
     }
   >
 ) {

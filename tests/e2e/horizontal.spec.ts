@@ -16,7 +16,7 @@ test.describe('Horizontal orientation', { tag: ['@e2e'] }, () => {
                 "name": "horizontalInput",
                 "type": "input/text",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -104,7 +104,7 @@ test.describe('Horizontal orientation', { tag: ['@e2e'] }, () => {
                 "name": "horizontalTextarea",
                 "type": "textarea",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -135,7 +135,7 @@ test.describe('Horizontal orientation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "required": true,
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 },
                 "validation": {
                   "required": "Field is required"

@@ -107,6 +107,7 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     const fieldset = page.locator('[data-advanced="true"]')
     const toggle = fieldset.getByRole('button', { name: 'Advanced Options' })
 
+    await expect(page.getByText('Loading...')).toBeHidden()
     await toggle.click()
     await expect(fieldset).toHaveAttribute('data-expanded', 'true')
 

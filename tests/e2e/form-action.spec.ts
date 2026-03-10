@@ -20,7 +20,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
                               "data": {
                                 "testid": "name"
                               },
-                              "orientation": "horizontal"
+                              "horizontal": true
                           },
                           "label": "Name",
                           "name": "name",
@@ -40,7 +40,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
                               "data": {
                                 "testid": "message"
                               },
-                              "orientation": "horizontal"
+                              "horizontal": true
                           },
                           "label": "Message",
                           "name": "message",
@@ -101,7 +101,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
                               "data": {
                                 "testid": "name"
                               },
-                              "orientation": "horizontal"
+                              "horizontal": true
                           },
                           "label": "Name",
                           "name": "name",
@@ -121,7 +121,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
                               "data": {
                                 "testid": "message"
                               },
-                              "orientation": "horizontal"
+                              "horizontal": true
                           },
                           "label": "Message",
                           "name": "message",

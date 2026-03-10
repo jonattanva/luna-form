@@ -24,8 +24,8 @@ export function Field(props: FieldProps) {
   const cols = props.field.advanced?.cols
   const errors = props.field.name ? props.errors?.[props.field.name] : undefined
 
-  const { orientation } = mergeStyle(props.style, {
-    orientation: buildOrientation(props.field),
+  const { horizontal } = mergeStyle(props.style, {
+    horizontal: buildOrientation(props.field),
   })
 
   const disabled = buildDisabled(props.field, props.disabled)
@@ -36,13 +36,13 @@ export function Field(props: FieldProps) {
         disabled={disabled}
         errors={errors}
         field={props.field}
-        orientation={orientation}
+        horizontal={horizontal}
       >
         <InputBase
           disabled={disabled}
           errors={errors}
           field={props.field}
-          orientation={orientation}
+          horizontal={horizontal}
         >
           {props.children}
         </InputBase>

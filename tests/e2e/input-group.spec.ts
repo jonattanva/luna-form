@@ -266,7 +266,7 @@ test.describe('InputGroup component', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "This description appears in a specific location",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]

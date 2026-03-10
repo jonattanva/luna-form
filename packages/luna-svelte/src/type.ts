@@ -6,7 +6,6 @@ import type {
   Field,
   Fields,
   FormStateError,
-  Orientation,
 } from '@luna-form/core'
 
 export type { FormStateError }
@@ -30,7 +29,7 @@ export type Children = Snippet<
       commonProps: CommonProps
       dataAttributes?: DataAttributes
       field: Field
-      orientation?: Orientation
+      horizontal?: boolean
     },
   ]
 >

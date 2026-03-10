@@ -1,12 +1,6 @@
 import { FormattedDescription } from './formatted-description'
 import { Label } from './label'
-import {
-  HORIZONTAL,
-  interpolateIfNeeded,
-  translate,
-  type Field,
-  type Orientation,
-} from '@luna-form/core'
+import { interpolateIfNeeded, translate, type Field } from '@luna-form/core'
 import type { Config } from '../type'
 
 export function InputLabel(
@@ -14,7 +8,7 @@ export function InputLabel(
     config?: Config
     context?: Record<string, unknown>
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
     translations?: Record<string, string>
   }>
 ) {
@@ -24,10 +18,6 @@ export function InputLabel(
   }
 
   const label = interpolateIfNeeded(props.field.label, interpolateOpts)
-  const description = interpolateIfNeeded(
-    props.field.description,
-    interpolateOpts
-  )
 
   return (
     <div
@@ -41,9 +31,12 @@ export function InputLabel(
       >
         {translate(label, props.translations)}
       </Label>
-      {props.orientation === HORIZONTAL && (
+      {props.horizontal === true && (
         <FormattedDescription
-          text={translate(description, props.translations)}
+          config={props.config}
+          context={props.context}
+          text={props.field.description}
+          translations={props.translations}
         />
       )}
     </div>

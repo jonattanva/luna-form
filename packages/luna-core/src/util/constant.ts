@@ -61,8 +61,5 @@ export const STATE = 'state'
 
 export const COMMON_URL = 'http://luna.internal'
 
-export const VERTICAL = 'vertical'
-export const HORIZONTAL = 'horizontal'
-
 export const HIDDEN = 'hidden'
 export const TYPE = 'type'

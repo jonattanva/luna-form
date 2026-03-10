@@ -8,24 +8,27 @@ import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { useAtomValue } from 'jotai'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export function ReactiveFormPreview() {
   const code = useAtomValue(codeAtom)
 
-  const [values, setValues] = useState<Record<string, unknown>>({})
   const [result, setResult] = useState<{
     message: string
     form: Record<string, unknown>
   } | null>(null)
 
-  // Sync initial values from the form definition whenever the stored JSON changes.
-  useEffect(() => {
-    const parsed = convertCodeToForm(code)
-    setValues((parsed.value as Record<string, unknown>) ?? {})
-  }, [code])
-
   const form = convertCodeToForm(code)
+
+  const [values, setValues] = useState<Record<string, unknown>>(
+    () => (form.value as Record<string, unknown>) ?? {}
+  )
+
+  const [prevCode, setPrevCode] = useState(code)
+  if (code !== prevCode) {
+    setPrevCode(code)
+    setValues((form.value as Record<string, unknown>) ?? {})
+  }
 
   function handleValueChange({
     name,

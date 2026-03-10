@@ -18,19 +18,19 @@ test.describe('Style Helper', { tag: ['@unit'] }, () => {
 
   test('should merge global and local styles', () => {
     const globalStyle = { compact: true }
-    const localStyle = { orientation: 'horizontal' as const }
+    const localStyle = { horizontal: true }
     expect(mergeStyle(globalStyle, localStyle)).toEqual({
       compact: true,
-      orientation: 'horizontal',
+      horizontal: true,
     })
   })
 
   test('should prioritize local style over global style', () => {
-    const globalStyle = { compact: true, orientation: 'vertical' as const }
+    const globalStyle = { compact: true, horizontal: false }
     const localStyle = { compact: false }
     expect(mergeStyle(globalStyle, localStyle)).toEqual({
       compact: false,
-      orientation: 'vertical',
+      horizontal: false,
     })
   })
 })

@@ -6,7 +6,6 @@ import {
   TEXTAREA,
   fetcher,
   type Environment,
-  type Orientation,
   type Protocol,
 } from '@luna-form/core'
 import type { AlertProps, Config, InputConfig } from '../type'
@@ -25,7 +24,7 @@ export function defineConfig<T extends React.ElementType>(
     inputs: Array<InputConfig<T>>
     style?: {
       compact?: boolean
-      orientation?: Orientation
+      horizontal?: boolean
       showOptionalLabel?: boolean
     }
     validation?: {

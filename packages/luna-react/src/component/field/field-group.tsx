@@ -1,10 +1,8 @@
 import {
-  VERTICAL,
   buildReverse,
   isCheckbox,
   isClickable,
   type Field,
-  type Orientation,
 } from '@luna-form/core'
 import { FieldVertical } from './field-vertical'
 import { FieldHorizontal } from './field-horizontal'
@@ -15,14 +13,14 @@ export function FieldGroup(
     disabled?: boolean
     errors?: string[]
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
   }>
 ) {
   const clickable = isClickable(props.field)
   const checkbox = isCheckbox(props.field)
   const reversed = buildReverse(props.field)
 
-  if (props.orientation === VERTICAL) {
+  if (!props.horizontal) {
     return (
       <FieldVertical
         disabled={props.disabled}

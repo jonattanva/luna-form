@@ -347,7 +347,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "Maximum {context.maxChars} characters allowed.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -385,7 +385,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/password",
                 "description": "Must be between {context.validation.minLength} and {context.validation.maxLength} characters.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -422,7 +422,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/number",
                 "description": "Enter amount in {context.currency}.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               },
               {
@@ -431,7 +431,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/number",
                 "description": "Minimum value is {context.minAmount}.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               },
               {
@@ -440,7 +440,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/number",
                 "description": "Maximum value is {context.maxAmount}.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -479,7 +479,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "textarea",
                 "description": "You have {context.remaining} of {context.limit} characters remaining.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -515,7 +515,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "Use format {context.format}. Example: {context.example}",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -556,7 +556,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "Only {context.settings.validation.rules.format} characters allowed.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -591,7 +591,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "This is a static description.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -626,7 +626,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "Available: {context.available}. Premium: {context.premium}",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -730,7 +730,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/text",
                 "description": "Enter your {context.section1Hint}.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]
@@ -743,7 +743,7 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
                 "type": "input/tel",
                 "description": "Provide your {context.section2Hint}.",
                 "advanced": {
-                  "orientation": "horizontal"
+                  "horizontal": true
                 }
               }
             ]

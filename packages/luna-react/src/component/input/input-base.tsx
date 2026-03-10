@@ -3,7 +3,6 @@ import {
   buildCommon,
   buildDataAttributes,
   type Field,
-  type Orientation,
 } from '@luna-form/core'
 import type { Children } from '../../type'
 
@@ -13,7 +12,7 @@ export function InputBase(
     disabled?: boolean
     errors?: string[]
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
   }>
 ) {
   if (!props.field.type) {
@@ -35,6 +34,6 @@ export function InputBase(
     commonProps,
     dataAttributes,
     field,
-    orientation: props.orientation,
+    horizontal: props.horizontal,
   })
 }

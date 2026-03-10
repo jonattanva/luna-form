@@ -1,12 +1,11 @@
 import { FieldBase, type FieldLayoutProps } from './field-base'
-import { HORIZONTAL } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
 export function FieldHorizontal(props: Readonly<FieldLayoutProps>) {
   return (
     <FieldBase
       {...props}
-      orientation={HORIZONTAL}
+      orientation="horizontal"
       className={twMerge(
         'gap-2 md:flex-row md:gap-4',
         '[&>[data-slot=field-content]]:min-w-0 [&>[data-slot=field-content]]:flex-grow [&>[data-slot=field-content]]:self-start',

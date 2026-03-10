@@ -5,7 +5,6 @@ import {
   buildOrientation,
   buildDisabled,
 } from '@/packages/luna-core/src/util/build'
-import { HORIZONTAL, VERTICAL } from '@/packages/luna-core/src/util/constant'
 import type { Field } from '@/packages/luna-core/src/type'
 
 test.describe('Build', { tag: ['@unit'] }, () => {
@@ -108,28 +107,28 @@ test.describe('Build', { tag: ['@unit'] }, () => {
   })
 
   test.describe('buildOrientation', () => {
-    test('should return HORIZONTAL for radio fields', () => {
+    test('should return true for radio fields', () => {
       const field = { type: 'radio', name: 'test' } as Field
-      expect(buildOrientation(field)).toBe(HORIZONTAL)
+      expect(buildOrientation(field)).toBe(true)
     })
 
-    test('should return HORIZONTAL for checkbox fields', () => {
+    test('should return true for checkbox fields', () => {
       const field = { type: 'checkbox', name: 'test' } as Field
-      expect(buildOrientation(field)).toBe(HORIZONTAL)
+      expect(buildOrientation(field)).toBe(true)
     })
 
-    test('should return VERTICAL for other fields by default', () => {
+    test('should return false for other fields by default', () => {
       const field = { type: 'text', name: 'test' } as Field
-      expect(buildOrientation(field)).toBe(VERTICAL)
+      expect(buildOrientation(field)).toBe(false)
     })
 
     test('should return custom orientation from advanced config', () => {
       const field = {
         type: 'text',
         name: 'test',
-        advanced: { orientation: HORIZONTAL },
+        advanced: { horizontal: true },
       } as Field
-      expect(buildOrientation(field)).toBe(HORIZONTAL)
+      expect(buildOrientation(field)).toBe(true)
     })
   })
 

@@ -10,7 +10,7 @@
             "fields": [
                 {
                     "advanced": {
-                        "orientation": "horizontal"
+                        "horizontal": true
                     },
                     "label": "Name",
                     "name": "name",
@@ -27,7 +27,7 @@
             "fields": [
                 {
                     "advanced": {
-                        "orientation": "horizontal"
+                        "horizontal": true
                     },
                     "label": "Message",
                     "name": "message",

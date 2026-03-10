@@ -1,4 +1,4 @@
-import { $REF, HORIZONTAL, VERTICAL } from './constant'
+import { $REF } from './constant'
 import { isObject } from './is-type'
 import { isCheckbox, isRadio, isSelect } from './is-input'
 import type { Field, Nullable } from '../type'
@@ -17,9 +17,9 @@ export function buildOptions(
 
 export function buildOrientation(field: Field) {
   if (isRadio(field) || isCheckbox(field)) {
-    return HORIZONTAL
+    return true
   }
-  return field.advanced?.orientation ?? VERTICAL
+  return field.advanced?.horizontal ?? false
 }
 
 export function buildReverse(field: Field): boolean {

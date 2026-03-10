@@ -125,8 +125,6 @@ export type StateEvent = ActionEvent<'state'> & {
 
 export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 
-export type Orientation = 'horizontal' | 'vertical'
-
 export type Validation = {
   custom?: CustomValidation | Array<CustomValidation>
   email?: string
@@ -141,7 +139,7 @@ export type Field = CommonProps & {
     cols?: number
     data?: DataAttributes
     entity?: string
-    orientation?: Orientation
+    horizontal?: boolean
     reverse?: boolean
   }
   event?: {
@@ -214,7 +212,7 @@ export type BaseConfig<T> = {
 
 export type Style = {
   compact?: boolean
-  orientation?: Orientation
+  horizontal?: boolean
   showOptionalLabel?: boolean
 }
 
