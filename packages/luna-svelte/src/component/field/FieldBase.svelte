@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    DATA_INVALID,
-    DATA_READONLY,
-    type Orientation,
-  } from '@luna-form/core'
+  import { DATA_INVALID, DATA_READONLY } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
   import type { Snippet } from 'svelte'
 
@@ -24,7 +20,7 @@
     isCheckbox?: boolean
     isReversed?: boolean
     isClickable?: boolean
-    orientation: Orientation
+    orientation: 'horizontal' | 'vertical'
   } = $props()
 
   const hasErrors = $derived(errorList && errorList.length > 0)

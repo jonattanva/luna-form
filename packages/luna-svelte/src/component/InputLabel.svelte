@@ -1,26 +1,21 @@
 <script lang="ts">
-  import {
-    HORIZONTAL,
-    interpolate,
-    isInterpolated,
-    translate,
-  } from '@luna-form/core'
+  import { interpolate, isInterpolated, translate } from '@luna-form/core'
   import FormattedDescription from './FormattedDescription.svelte'
   import Label from './Label.svelte'
   import type { Config } from '../type.js'
-  import type { Field, Orientation } from '@luna-form/core'
+  import type { Field } from '@luna-form/core'
 
   let {
     config,
     context,
     field,
-    orientation,
+    horizontal,
     translations,
   }: {
     config?: Config
     context?: Record<string, unknown>
     field: Field
-    orientation?: Orientation
+    horizontal?: boolean
     translations?: Record<string, string>
   } = $props()
 
@@ -50,7 +45,7 @@
   <Label {field} {translations}>
     {translate(label, translations)}
   </Label>
-  {#if orientation === HORIZONTAL}
+  {#if horizontal}
     <FormattedDescription text={translate(description, translations)} />
   {/if}
 </div>
