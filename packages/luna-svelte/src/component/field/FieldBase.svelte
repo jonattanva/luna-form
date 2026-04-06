@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    DATA_INVALID,
-    DATA_READONLY,
-    type Orientation,
-  } from '@luna-form/core'
+  import { DATA_INVALID, DATA_READONLY } from '@luna-form/core'
   import { twMerge } from 'tailwind-merge'
   import type { Snippet } from 'svelte'
 
@@ -15,7 +11,7 @@
     isCheckbox,
     isReversed,
     isClickable,
-    orientation,
+    horizontal,
   }: {
     children?: Snippet
     class?: string
@@ -24,7 +20,7 @@
     isCheckbox?: boolean
     isReversed?: boolean
     isClickable?: boolean
-    orientation: Orientation
+    horizontal: boolean
   } = $props()
 
   const hasErrors = $derived(errorList && errorList.length > 0)
@@ -35,7 +31,7 @@
   data-clickable={isClickable ? 'true' : 'false'}
   {...{ [DATA_INVALID]: hasErrors ? 'true' : undefined }}
   {...{ [DATA_READONLY]: disabled ? 'true' : undefined }}
-  data-orientation={orientation}
+  data-orientation={horizontal ? 'horizontal' : 'vertical'}
   class={twMerge(
     'group flex w-full flex-col items-center data-[invalid=true]:text-red-600 data-[invalid=true]:dark:text-red-500',
     'data-[clickable=true]:items-start',

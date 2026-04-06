@@ -16,7 +16,6 @@
     AriaAttributes,
     CommonProps,
     DataAttributes,
-    Orientation,
   } from '@luna-form/core'
 
   type ChildrenSnippet = Snippet<
@@ -26,7 +25,7 @@
         commonProps: CommonProps
         dataAttributes: DataAttributes
         field: FieldType
-        orientation?: Orientation
+        horizontal?: boolean
       },
     ]
   >
@@ -50,11 +49,11 @@
 
   const mergedStyle = $derived(
     mergeStyle(style, {
-      orientation: buildOrientation(field),
+      horizontal: buildOrientation(field),
     })
   )
 
-  const orientation = $derived(mergedStyle.orientation)
+  const horizontal = $derived(mergedStyle.horizontal)
   const derivedDisabled = $derived(buildDisabled(field, disabled))
 </script>
 
@@ -63,13 +62,13 @@
     disabled={derivedDisabled}
     errors={fieldErrors}
     {field}
-    {orientation}
+    {horizontal}
   >
     <InputBase
       disabled={derivedDisabled}
       errors={fieldErrors}
       {field}
-      {orientation}
+      {horizontal}
       {children}
     />
   </FieldGroup>
