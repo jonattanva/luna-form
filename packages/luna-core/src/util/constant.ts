@@ -29,6 +29,7 @@ export const SELECT_YEAR = 'select/year'
 export const SELECTS = [SELECT, SELECT_MONTH, SELECT_YEAR]
 
 export const COLUMN = 'column'
+export const DESCRIPTION = 'description'
 export const FIELDS = 'fields'
 export const LABEL = 'label'
 export const VALUE = 'value'

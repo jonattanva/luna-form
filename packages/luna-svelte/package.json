@@ -32,10 +32,10 @@
   "devDependencies": {
     "@luna-form/core": "workspace:*",
     "@sveltejs/package": "2.5.7",
-    "@sveltejs/vite-plugin-svelte": "6.2.4",
-    "eslint-plugin-svelte": "3.15.0",
-    "svelte": "5.53.6",
-    "svelte-check": "4.4.4",
+    "@sveltejs/vite-plugin-svelte": "7.0.0",
+    "eslint-plugin-svelte": "3.17.0",
+    "svelte": "5.55.1",
+    "svelte-check": "4.4.6",
     "typescript": "5.9.3"
   },
   "license": "Apache-2.0",

@@ -40,6 +40,7 @@ export type Hideable = {
 export type Sections = Array<Section>
 export type Value = string | number | readonly string[]
 export type Option = {
+  description?: string
   label: string
   value: string
 }

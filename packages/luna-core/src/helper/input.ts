@@ -205,7 +205,7 @@ export function getPreselectedValue(
 }
 
 export function getOptions<T>(field: Field, data?: Nullable<T[]>) {
-  if (isSelect(field) && Array.isArray(data)) {
+  if (isOptions(field) && Array.isArray(data)) {
     return toOptions(data, field.advanced?.options)
   }
   return data

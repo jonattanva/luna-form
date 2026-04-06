@@ -1,13 +1,13 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
-import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '../radio-group'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '../field'
 
 export function Radio({
   onChange,
   options = [],
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> & {
-  options?: Array<{ value: string; label: string }>
+  options?: Array<{ value: string; label: string; description?: string }>
 }) {
   function handleValueChange(value: string) {
     if (onChange) {
@@ -21,12 +21,13 @@ export function Radio({
   return (
     <RadioGroup {...props} onValueChange={handleValueChange}>
       {options?.map((option, index) => (
-        <div className="flex items-center space-x-2" key={index}>
+        <Field orientation="horizontal" key={index}>
           <RadioGroupItem value={option.value} id={option.value} />
-          <Label htmlFor={option.value} className="font-normal">
-            {option.label}
-          </Label>
-        </div>
+          <FieldContent>
+            <FieldLabel htmlFor={option.value}>{option.label}</FieldLabel>
+            <FieldDescription>{option.description}</FieldDescription>
+          </FieldContent>
+        </Field>
       ))}
     </RadioGroup>
   )

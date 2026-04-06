@@ -1,5 +1,6 @@
 packages:
   - apps/*
   - packages/*
-
-updateNotifier: false
+blockExoticSubdeps: true
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade

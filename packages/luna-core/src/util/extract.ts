@@ -1,5 +1,5 @@
 import { isObject, isValue } from './is-type'
-import { INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
+import { DESCRIPTION, INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
 import type { Nullable, Option, Value } from '../type'
 
 const REGEX_NUMERIC = /^\d+$/
@@ -96,7 +96,11 @@ export function extract<T>(
 
 export function toOptions<T>(
   data: T[],
-  options: Option = { label: LABEL, value: VALUE }
+  options: Option = {
+    description: DESCRIPTION,
+    label: LABEL,
+    value: VALUE,
+  }
 ) {
   return data.map((item) => {
     if (isObject(item)) {
@@ -104,9 +108,11 @@ export function toOptions<T>(
       const value = extract(item, options.value)
 
       if (isValue(label) && isValue(value)) {
+        const description = extract(item, options.description)
         return {
           label: `${label}`,
           value: `${value}`,
+          ...(isValue(description) && { description: `${description}` }),
         }
       }
     }

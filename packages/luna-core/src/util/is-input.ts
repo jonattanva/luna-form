@@ -56,7 +56,7 @@ export function isField(slot: Field | Column | List): slot is Field {
   return slot.type !== COLUMN && slot.type !== LIST
 }
 
-export function isOptions(field: Field): field is Input {
+export function isOptions(field: Field): field is Select {
   return isSelect(field) || isRadio(field)
 }
 
