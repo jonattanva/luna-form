@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775743368574,
+  "lastUpdate": 1775743405110,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1821,6 +1821,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 668,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "498e8f2084db2c56eb8012bafa7161160775dc52",
+          "message": "feat: add timezone select component and unit/e2e tests",
+          "timestamp": "2026-04-09T09:01:53-05:00",
+          "tree_id": "ffad86786a48c87ae549ea9975e2a7e8acf9cb74",
+          "url": "https://github.com/jonattanva/luna-form/commit/498e8f2084db2c56eb8012bafa7161160775dc52"
+        },
+        "date": 1775743404707,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 259,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 573,
             "unit": "ms"
           }
         ]
