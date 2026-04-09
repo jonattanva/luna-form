@@ -1,9 +1,12 @@
 import { expect, test } from '@playwright/test'
 import {
   getMonth,
+  getWeekDays,
   getYear,
   getConvert,
   getTimezones,
+  toNativeTime,
+  fromNativeTime,
 } from '@/packages/luna-core/src/util/date'
 
 test.describe('Date', { tag: ['@unit'] }, () => {
@@ -22,6 +25,37 @@ test.describe('Date', { tag: ['@unit'] }, () => {
       { value: '11', label: 'November' },
       { value: '12', label: 'December' },
     ])
+  })
+
+  test.describe('getWeekDays', () => {
+    test('should return exactly 7 days', () => {
+      expect(getWeekDays()).toHaveLength(7)
+    })
+
+    test('should return the correct week days', () => {
+      expect(getWeekDays()).toEqual([
+        { value: '0', label: 'Sunday' },
+        { value: '1', label: 'Monday' },
+        { value: '2', label: 'Tuesday' },
+        { value: '3', label: 'Wednesday' },
+        { value: '4', label: 'Thursday' },
+        { value: '5', label: 'Friday' },
+        { value: '6', label: 'Saturday' },
+      ])
+    })
+
+    test('each item should have value and label as strings', () => {
+      for (const day of getWeekDays()) {
+        expect(typeof day.value).toBe('string')
+        expect(typeof day.label).toBe('string')
+        expect(day.label.length).toBeGreaterThan(0)
+      }
+    })
+
+    test('values should be sequential from 0 to 6', () => {
+      const values = getWeekDays().map((d) => d.value)
+      expect(values).toEqual(['0', '1', '2', '3', '4', '5', '6'])
+    })
   })
 
   test('should return the correct years', () => {
@@ -108,6 +142,102 @@ test.describe('Date', { tag: ['@unit'] }, () => {
         g.items.map((i) => i.value)
       )
       expect(new Set(allValues).size).toBe(allValues.length)
+    })
+  })
+
+  test.describe('toNativeTime', () => {
+    test('should return empty string for empty input', () => {
+      expect(toNativeTime('', 'HH:mm')).toBe('')
+    })
+
+    test('should convert HH:mm to HH:mm:ss', () => {
+      expect(toNativeTime('14:30', 'HH:mm')).toBe('14:30:00')
+    })
+
+    test('should convert HH:mm:ss to HH:mm:ss', () => {
+      expect(toNativeTime('14:30:45', 'HH:mm:ss')).toBe('14:30:45')
+    })
+
+    test('should convert hh:mm a to HH:mm:ss', () => {
+      expect(toNativeTime('02:30 PM', 'hh:mm a')).toBe('14:30:00')
+    })
+
+    test('should convert hh:mm:ss a to HH:mm:ss', () => {
+      expect(toNativeTime('02:30:45 PM', 'hh:mm:ss a')).toBe('14:30:45')
+    })
+
+    test('should convert 12:00 AM to 00:00:00', () => {
+      expect(toNativeTime('12:00 AM', 'hh:mm a')).toBe('00:00:00')
+    })
+
+    test('should convert 12:00 PM to 12:00:00', () => {
+      expect(toNativeTime('12:00 PM', 'hh:mm a')).toBe('12:00:00')
+    })
+
+    test('should convert midnight 00:00 HH:mm to 00:00:00', () => {
+      expect(toNativeTime('00:00', 'HH:mm')).toBe('00:00:00')
+    })
+
+    test('should convert end-of-day 23:59:59 correctly', () => {
+      expect(toNativeTime('23:59:59', 'HH:mm:ss')).toBe('23:59:59')
+    })
+
+    test('should return empty string for invalid value', () => {
+      expect(toNativeTime('not-a-time', 'HH:mm')).toBe('')
+    })
+
+    test('should return empty string for out-of-range hour', () => {
+      expect(toNativeTime('25:00', 'HH:mm')).toBe('')
+    })
+
+    test('should return empty string when value does not match format', () => {
+      expect(toNativeTime('14:30:00', 'hh:mm a')).toBe('')
+    })
+  })
+
+  test.describe('fromNativeTime', () => {
+    test('should return empty string for empty input', () => {
+      expect(fromNativeTime('', 'HH:mm')).toBe('')
+    })
+
+    test('should convert HH:mm:ss native to HH:mm', () => {
+      expect(fromNativeTime('14:30:00', 'HH:mm')).toBe('14:30')
+    })
+
+    test('should convert HH:mm:ss native to HH:mm:ss', () => {
+      expect(fromNativeTime('14:30:00', 'HH:mm:ss')).toBe('14:30:00')
+    })
+
+    test('should convert HH:mm:ss native to hh:mm a', () => {
+      expect(fromNativeTime('14:30:00', 'hh:mm a')).toBe('02:30 PM')
+    })
+
+    test('should convert HH:mm:ss native to hh:mm:ss a', () => {
+      expect(fromNativeTime('14:30:45', 'hh:mm:ss a')).toBe('02:30:45 PM')
+    })
+
+    test('should convert midnight 00:00:00 to 12:00 AM', () => {
+      expect(fromNativeTime('00:00:00', 'hh:mm a')).toBe('12:00 AM')
+    })
+
+    test('should convert noon 12:00:00 to 12:00 PM', () => {
+      expect(fromNativeTime('12:00:00', 'hh:mm a')).toBe('12:00 PM')
+    })
+
+    test('should handle HH:mm input without seconds', () => {
+      expect(fromNativeTime('14:30', 'HH:mm')).toBe('14:30')
+    })
+
+    test('should convert HH:mm input to hh:mm a', () => {
+      expect(fromNativeTime('09:05', 'hh:mm a')).toBe('09:05 AM')
+    })
+
+    test('should return empty string for invalid native value', () => {
+      expect(fromNativeTime('not-a-time', 'HH:mm')).toBe('')
+    })
+
+    test('should return empty string for out-of-range native hour', () => {
+      expect(fromNativeTime('25:00:00', 'HH:mm')).toBe('')
     })
   })
 

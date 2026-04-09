@@ -4,8 +4,10 @@ import {
   getConvert,
   getCurrentYear,
   getMonth,
+  getTimeFormat,
   getTimezones,
   getYear,
+  toNativeTime,
 } from '../util/date'
 import { getCurrentValue, getType, toOptions } from '../util/extract'
 import {
@@ -19,9 +21,10 @@ import {
   isSelectYear,
   isText,
   isTextArea,
+  isTime,
   isValidValue,
 } from '../util/is-input'
-import { isObject } from '../util/is-type'
+import { isObject, isString } from '../util/is-type'
 import type {
   CommonProps,
   DataSource,
@@ -29,6 +32,7 @@ import type {
   Input,
   Nullable,
   Select,
+  Time,
   Value,
 } from '../type'
 
@@ -98,6 +102,7 @@ function defineInput(input: Input) {
   const copy = { ...input, type }
 
   return {
+    ...defineTime(input),
     ...defineAutoComplete(input),
     ...defineNumberLimits(copy),
     ...(isText(copy) ? defineLength(copy) : {}),
@@ -131,6 +136,18 @@ function defineAutoComplete(input: Input) {
 function defineNumberLimits(input: Input): Partial<CommonProps> {
   if (isNumber(input)) {
     return defineMinMax(input)
+  }
+  return {}
+}
+
+function defineTime(field: Field) {
+  if (isTime(field)) {
+    const format = getTimeFormat(field)
+    const withSeconds = format === 'HH:mm:ss' || format === 'hh:mm:ss a'
+
+    return {
+      step: withSeconds ? '1' : '60',
+    }
   }
   return {}
 }
@@ -178,7 +195,20 @@ export function resolveSource(
 export function getInputValue<K>(field: Field, value?: Nullable<K>) {
   const newValue =
     isObject(value) && field.name in value ? value[field.name] : value
-  return getCurrentValue(newValue, field.advanced?.entity)
+
+  const currentValue = getCurrentValue(newValue, field.advanced?.entity)
+  if (isTime(field) && isValidValue(currentValue)) {
+    return getTimeValue(field, currentValue)
+  }
+
+  return currentValue
+}
+
+function getTimeValue(field: Time, currentValue?: Value) {
+  const format = getTimeFormat(field)
+  return isString(currentValue)
+    ? toNativeTime(currentValue, format)
+    : currentValue
 }
 
 export function mergeOptionsProps(

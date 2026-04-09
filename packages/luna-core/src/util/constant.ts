@@ -4,6 +4,7 @@ export const INPUT_NUMBER = 'input/number'
 export const INPUT_PASSWORD = 'input/password'
 export const INPUT_TEL = 'input/tel'
 export const INPUT_TEXT = 'input/text'
+export const INPUT_TIME = 'input/time'
 
 export const INPUTS = [
   INPUT,
@@ -12,6 +13,7 @@ export const INPUTS = [
   INPUT_PASSWORD,
   INPUT_TEL,
   INPUT_TEXT,
+  INPUT_TIME,
 ]
 
 export const TEXTAREA = 'textarea'

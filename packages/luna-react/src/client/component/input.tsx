@@ -11,7 +11,9 @@ import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
 import { useValue } from '../hook/use-value'
 import {
+  fromNativeTime,
   getEntity,
+  getTimeFormat,
   handleProxyEvent,
   handleSourceEvent,
   handleStateEvent,
@@ -19,6 +21,7 @@ import {
   isClickable,
   isOptions,
   isTextable,
+  isTime,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
@@ -100,6 +103,8 @@ export function Input(
     data,
     value
   )
+
+  const timeFormat = isTime(props.field) ? getTimeFormat(props.field) : null
 
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
@@ -226,9 +231,20 @@ export function Input(
     applyChangeEventsRef.current?.(selected)
   }, [data, defaultValue, entity, hasTextable, props.field, props.value])
 
+  const getValue = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const native = event.target.value
+      if (timeFormat === null) {
+        return native
+      }
+      return fromNativeTime(native, timeFormat)
+    },
+    [timeFormat]
+  )
+
   const onChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const inputValue = event.target.value
+      const inputValue = getValue(event)
 
       if (!hasClickable && shouldSkipOnChange()) {
         // For text inputs, only skip if the value hasn't changed (synthetic event)
@@ -250,6 +266,7 @@ export function Input(
       }
     },
     [
+      getValue,
       handleTriggerEvent,
       hasClickable,
       hasTextable,

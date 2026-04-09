@@ -14,6 +14,8 @@ export type AriaAttributes = {
   [key: `aria-${string}`]: string | number | boolean
 }
 
+export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
+
 export type DataSource = {
   url: string
   body?: BodyInit | Record<string, unknown>
@@ -87,6 +89,7 @@ export type Column = {
   advanced?: {
     cols?: number
   }
+  description?: string
   fields: Array<Field>
   type: 'column' | (string & {})
 } & Base
@@ -181,6 +184,12 @@ export type Select = Field & {
   source?: DataSource | Array<unknown>
 }
 
+export type Time = Field & {
+  advanced?: {
+    format?: TimeFormat
+  }
+}
+
 export type Environment = {
   [key: string]: Value
 }
@@ -223,3 +232,13 @@ export type Style = {
 }
 
 export type Filterable = Base & { fields?: Filterable[] }
+
+export type TimezoneItem = { 
+  label: string 
+  value: string; 
+}
+
+export type TimezoneGroup = { 
+  items: TimezoneItem[] 
+  label: string; 
+}

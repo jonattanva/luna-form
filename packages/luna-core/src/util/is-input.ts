@@ -5,6 +5,7 @@ import {
   INPUT,
   INPUT_EMAIL,
   INPUT_NUMBER,
+  INPUT_TIME,
   LIST,
   RADIO,
   SELECT,
@@ -18,7 +19,15 @@ import {
   TYPE_TEL,
   TYPE_TEXT,
 } from './constant'
-import type { Column, Field, Input, List, Nullable, Select } from '../type'
+import type {
+  Column,
+  Field,
+  Input,
+  List,
+  Nullable,
+  Select,
+  Time,
+} from '../type'
 
 export const isSelectMonth = (field: Field): boolean =>
   createTypeChecker(SELECT_MONTH)(field)
@@ -34,6 +43,7 @@ export const isInput = createTypeChecker<Input>(INPUT)
 export const isRadio = createTypeChecker<Select>(RADIO)
 export const isSelect = createTypeChecker<Select>(SELECT)
 export const isTextArea = createTypeChecker<Input>(TEXTAREA)
+export const isTime = createTypeChecker<Time>(INPUT_TIME)
 export const isText = createTypeChecker<Input>(
   TYPE_TEXT,
   TYPE_EMAIL,

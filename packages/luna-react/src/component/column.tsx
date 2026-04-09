@@ -1,5 +1,6 @@
 import { getColumn, type Column } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
+import { Description } from './description'
 
 export function Column(
   props: Readonly<{
@@ -14,6 +15,9 @@ export function Column(
       <div className={twMerge('grid grid-cols-1 gap-3 sm:gap-4', cols)}>
         {props.children}
       </div>
+      {props.column?.description && (
+        <Description>{props.column.description}</Description>
+      )}
     </div>
   )
 }

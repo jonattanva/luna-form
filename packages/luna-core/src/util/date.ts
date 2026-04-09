@@ -1,6 +1,15 @@
 import { TIMEZONE_REGIONS } from './constant'
+import { isValid, parse, format as fnsFormat } from 'date-fns'
+import type {
+  Nullable,
+  Time,
+  TimeFormat,
+  TimezoneGroup,
+  TimezoneItem,
+} from '../type'
 
 const REGEX_DIGITS = /^\d+$/
+const REF = new Date(2000, 0, 1)
 
 const getSupportedTimezones = (): string[] =>
   'supportedValuesOf' in Intl
@@ -14,6 +23,15 @@ export function getMonth() {
     value: (i + 1).toString(),
     label: new Date(0, i).toLocaleString('default', {
       month: 'long',
+    }),
+  }))
+}
+
+export function getWeekDays() {
+  return Array.from({ length: 7 }, (_, i) => ({
+    value: i.toString(),
+    label: new Date(2000, 0, 2 + i).toLocaleString('default', {
+      weekday: 'long',
     }),
   }))
 }
@@ -78,9 +96,11 @@ function getTimezoneInfo(
   }).formatToParts(date)
 
   const raw =
-    offsetParts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+00:00'
-  const offset = raw.replace('GMT', 'UTC')
+    offsetParts.find((part) => {
+      return part.type === 'timeZoneName'
+    })?.value ?? 'GMT+00:00'
 
+  const offset = raw.replace('GMT', 'UTC')
   const longName = getTimeZoneName(longNameParts, tz)
 
   return { offset, longName }
@@ -90,10 +110,7 @@ function getTimezoneCity(tz: string): string {
   return tz.slice(tz.lastIndexOf('/') + 1).replace(/_/g, ' ')
 }
 
-type TimezoneItem = { value: string; label: string }
-type TimezoneGroup = { label: string; items: TimezoneItem[] }
-
-let cachedResult: TimezoneGroup[] | null = null
+let cachedResult: Nullable<TimezoneGroup[]> = null
 
 export function getTimezones(): TimezoneGroup[] {
   if (cachedResult) {
@@ -101,12 +118,14 @@ export function getTimezones(): TimezoneGroup[] {
   }
 
   const date = new Date()
+
   const detectedTimezone = getUserTimezone()
   const groupMap = new Map<string, TimezoneItem[]>()
 
   const detectedCity = getTimezoneCity(detectedTimezone)
   const { offset: detectedOffset, longName: detectedLongName } =
     getTimezoneInfo(detectedTimezone, date)
+
   const detectedItem: TimezoneItem = {
     value: detectedTimezone,
     label: `${detectedCity} - ${detectedLongName} (${detectedOffset})`,
@@ -146,7 +165,10 @@ export function getTimezones(): TimezoneGroup[] {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([label, items]) => ({ label, items }))
 
-  cachedResult = [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
+  cachedResult = [
+    { label: 'Suggested', items: [detectedItem] },
+    ...sortedGroups,
+  ]
 
   return cachedResult
 }
@@ -178,4 +200,36 @@ export function getConvert(value: string | number, current?: number): number {
   }
 
   return now
+}
+
+export function toNativeTime(value: string, fromFormat: TimeFormat): string {
+  if (!value) {
+    return ''
+  }
+
+  try {
+    const date = parse(value, fromFormat, REF)
+    return isValid(date) ? fnsFormat(date, 'HH:mm:ss') : ''
+  } catch {
+    return ''
+  }
+}
+
+export function fromNativeTime(native: string, toFormat: TimeFormat = 'HH:mm'): string {
+  if (!native) {
+    return ''
+  }
+
+  try {
+    const format = native.split(':').length === 3 ? 'HH:mm:ss' : 'HH:mm'
+    const date = parse(native, format, REF)
+
+    return isValid(date) ? fnsFormat(date, toFormat) : ''
+  } catch {
+    return ''
+  }
+}
+
+export function getTimeFormat(field: Time): TimeFormat {
+  return field.advanced?.format ?? 'HH:mm'
 }
