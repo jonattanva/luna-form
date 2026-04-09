@@ -3,7 +3,12 @@
   import Field from '../../component/field/Field.svelte'
   import { createSlot } from '../../component/slot/slot-create'
   import type { Config, Control, FormStateError } from '../../type'
-  import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
+  import type {
+    Definition,
+    Nullable,
+    Sections,
+    ZodSchema,
+  } from '@luna-form/core'
 
   type FormState<T> = {
     data: Nullable<T>
@@ -78,7 +83,7 @@
   {definition}
   {isPending}
   noValidate
-  readOnly={readOnly}
+  {readOnly}
   {sections}
 >
   {#snippet children({ disabled, fields })}

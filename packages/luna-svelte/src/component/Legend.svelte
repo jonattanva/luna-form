@@ -34,7 +34,9 @@
 {/if}
 
 {#if description}
-  <p class="-mt-2 text-sm leading-normal font-normal text-slate-600 dark:text-slate-400">
+  <p
+    class="-mt-2 text-sm leading-normal font-normal text-slate-600 dark:text-slate-400"
+  >
     {@render renderMarkdown(description)}
   </p>
 {/if}

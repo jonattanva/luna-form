@@ -164,7 +164,7 @@ function applyEmail(input: Input, translations?: Record<string, string>) {
   const message = input.validation?.email
     ? translate(input.validation?.email, translations)
     : undefined
-    
+
   return z.email(message)
 }
 

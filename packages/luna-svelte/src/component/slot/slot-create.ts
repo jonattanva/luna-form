@@ -16,13 +16,12 @@ export function createSlot(
   // In Svelte 5, components are functions taking (internals, props).
   // We wrap SlotBase to inject the pre-configured components.
   const Slot = (internals: Internals, props: CreateSlotProps) => {
-    return (SlotBase as (internals: Internals, props: SlotBaseProps) => unknown)(
-      internals,
-      {
-        ...props,
-        components: { column: Column, field: Field },
-      } as SlotBaseProps
-    )
+    return (
+      SlotBase as (internals: Internals, props: SlotBaseProps) => unknown
+    )(internals, {
+      ...props,
+      components: { column: Column, field: Field },
+    } as SlotBaseProps)
   }
 
   return Slot as unknown as Component<CreateSlotProps>
