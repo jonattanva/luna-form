@@ -9,6 +9,7 @@ import {
   RADIO,
   SELECT,
   SELECT_MONTH,
+  SELECT_TIMEZONE,
   SELECT_YEAR,
   TEXTAREA,
   TYPE_EMAIL,
@@ -24,6 +25,9 @@ export const isSelectMonth = (field: Field): boolean =>
 
 export const isSelectYear = (field: Field): boolean =>
   createTypeChecker(SELECT_YEAR)(field)
+
+export const isSelectTimezone = (field: Field): boolean =>
+  createTypeChecker(SELECT_TIMEZONE)(field)
 
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isInput = createTypeChecker<Input>(INPUT)

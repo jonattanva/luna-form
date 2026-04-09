@@ -49,9 +49,9 @@ export function Input(
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
+  const store = useStore()
   const entity = props.field.advanced?.entity
 
-  const store = useStore()
   const setTimeoutRef = useTimeout()
   const [, startTransition] = useTransition()
 

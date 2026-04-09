@@ -1,12 +1,12 @@
-import {
-  MAX,
-  MAX_LENGTH,
-  MIN,
-  MIN_LENGTH,
-  OPTIONS,
-} from '../util/constant'
+import { MAX, MAX_LENGTH, MIN, MIN_LENGTH, OPTIONS } from '../util/constant'
 import { buildOptions, buildSource } from '../util/build'
-import { getConvert, getCurrentYear, getMonth, getYear } from '../util/date'
+import {
+  getConvert,
+  getCurrentYear,
+  getMonth,
+  getTimezones,
+  getYear,
+} from '../util/date'
 import { getCurrentValue, getType, toOptions } from '../util/extract'
 import {
   isCheckbox,
@@ -15,6 +15,7 @@ import {
   isOptions,
   isSelect,
   isSelectMonth,
+  isSelectTimezone,
   isSelectYear,
   isText,
   isTextArea,
@@ -49,6 +50,10 @@ function defineOption(select: Select) {
     const max = select.advanced?.length?.max ?? now + 5
 
     return getYear(getConvert(min, now), getConvert(max, now))
+  }
+
+  if (isSelectTimezone(select)) {
+    return getTimezones()
   }
 }
 

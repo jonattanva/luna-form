@@ -26,8 +26,8 @@
     "@playwright/test": "1.59.1",
     "@types/eslint-plugin-jsx-a11y": "6.10.1",
     "@types/node": "25.5.2",
-    "@typescript-eslint/eslint-plugin": "8.58.0",
-    "@typescript-eslint/parser": "8.58.0",
+    "@typescript-eslint/eslint-plugin": "8.58.1",
+    "@typescript-eslint/parser": "8.58.1",
     "esbuild": "0.28.0",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
@@ -41,9 +41,9 @@
     "prettier-plugin-svelte": "3.5.1",
     "prettier-plugin-tailwindcss": "0.7.2",
     "tsx": "4.21.0",
-    "turbo": "2.9.3",
+    "turbo": "2.9.5",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.58.0"
+    "typescript-eslint": "8.58.1"
   },
   "license": "Apache-2.0",
   "repository": {

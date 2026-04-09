@@ -25,8 +25,9 @@ export const DATA_TABLE = 'data-table'
 export const SELECT = 'select'
 export const SELECT_MONTH = 'select/month'
 export const SELECT_YEAR = 'select/year'
+export const SELECT_TIMEZONE = 'select/timezone'
 
-export const SELECTS = [SELECT, SELECT_MONTH, SELECT_YEAR]
+export const SELECTS = [SELECT, SELECT_MONTH, SELECT_YEAR, SELECT_TIMEZONE]
 
 export const COLUMN = 'column'
 export const DESCRIPTION = 'description'
@@ -64,3 +65,16 @@ export const COMMON_URL = 'http://luna.internal'
 
 export const HIDDEN = 'hidden'
 export const TYPE = 'type'
+
+export const TIMEZONE_REGIONS: Record<string, string> = {
+  Africa: 'Africa',
+  America: 'Americas',
+  Antarctica: 'Other',
+  Arctic: 'Other',
+  Asia: 'Asia / Pacific',
+  Atlantic: 'Atlantic',
+  Australia: 'Asia / Pacific',
+  Europe: 'Europe',
+  Indian: 'Asia / Pacific',
+  Pacific: 'Asia / Pacific',
+}

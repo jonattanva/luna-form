@@ -1,4 +1,13 @@
+import { TIMEZONE_REGIONS } from './constant'
+
 const REGEX_DIGITS = /^\d+$/
+
+const getSupportedTimezones = (): string[] =>
+  'supportedValuesOf' in Intl
+    ? (
+        Intl as unknown as { supportedValuesOf(k: string): string[] }
+      ).supportedValuesOf('timeZone')
+    : []
 
 export function getMonth() {
   return Array.from({ length: 12 }, (_, i) => ({
@@ -27,6 +36,115 @@ export function getYear(
 
 export function getCurrentYear() {
   return new Date().getFullYear()
+}
+
+export function getUserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+function getTimezoneRegion(tz: string): string {
+  const slash = tz.indexOf('/')
+  const prefix = slash === -1 ? tz : tz.slice(0, slash)
+  return TIMEZONE_REGIONS[prefix] ?? 'Other'
+}
+
+function getTimeZoneName(
+  longNameParts: Intl.DateTimeFormatPart[],
+  defaultTimeZone: string
+): string {
+  const fullName =
+    longNameParts.find((part) => {
+      return part.type === 'timeZoneName'
+    })?.value ?? defaultTimeZone
+
+  return fullName.replace(
+    /\s+(?:Standard|Daylight(?: Saving)?|Summer|Winter)\s+Time$/,
+    ''
+  )
+}
+
+function getTimezoneInfo(
+  tz: string,
+  date: Date
+): { offset: string; longName: string } {
+  const offsetParts = new Intl.DateTimeFormat('en', {
+    timeZone: tz,
+    timeZoneName: 'longOffset',
+  }).formatToParts(date)
+
+  const longNameParts = new Intl.DateTimeFormat('en', {
+    timeZone: tz,
+    timeZoneName: 'long',
+  }).formatToParts(date)
+
+  const raw =
+    offsetParts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+00:00'
+  const offset = raw.replace('GMT', 'UTC')
+
+  const longName = getTimeZoneName(longNameParts, tz)
+
+  return { offset, longName }
+}
+
+function getTimezoneCity(tz: string): string {
+  return tz.slice(tz.lastIndexOf('/') + 1).replace(/_/g, ' ')
+}
+
+type TimezoneItem = { value: string; label: string }
+type TimezoneGroup = { label: string; items: TimezoneItem[] }
+
+let cachedResult: TimezoneGroup[] | null = null
+
+export function getTimezones(): TimezoneGroup[] {
+  if (cachedResult) {
+    return cachedResult
+  }
+
+  const date = new Date()
+  const detectedTimezone = getUserTimezone()
+  const groupMap = new Map<string, TimezoneItem[]>()
+  let detectedItem: TimezoneItem | null = null
+
+  for (const tz of getSupportedTimezones()) {
+    const city = getTimezoneCity(tz)
+    const { offset, longName } = getTimezoneInfo(tz, date)
+
+    const item: TimezoneItem = {
+      value: tz,
+      label: `${city} - ${longName} (${offset})`,
+    }
+
+    if (tz === detectedTimezone) {
+      detectedItem = item
+      continue
+    }
+
+    const region = getTimezoneRegion(tz)
+    if (region === 'Other') {
+      continue
+    }
+
+    const existing = groupMap.get(region)
+    if (existing) {
+      existing.push(item)
+    } else {
+      groupMap.set(region, [item])
+    }
+  }
+
+  for (const items of groupMap.values()) {
+    items.sort((a, b) => a.label.localeCompare(b.label))
+  }
+
+  const sortedGroups = Array.from(groupMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([label, items]) => ({ label, items }))
+
+  cachedResult = detectedItem
+    ? [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
+    : sortedGroups
+
+  return cachedResult
 }
 
 // Cannot access current time from a Client Component without a fallback UI defined

@@ -1,8 +1,9 @@
 import { AlertForm } from './components/ui/alert-form'
 import { Checkbox } from './components/ui/wrapper/checkbox'
+import { ComboboxWithGroup } from './components/ui/wrapper/combobox'
+import { Select } from './components/ui/wrapper/select'
 import { Input } from './components/ui/input'
 import { Radio } from './components/ui/wrapper/radio'
-import { Select } from './components/ui/wrapper/select'
 import { Switch } from './components/ui/wrapper/switch'
 import { Textarea } from './components/ui/textarea'
 
@@ -24,6 +25,7 @@ export default defineConfig({
     defineInput(Input),
     defineRadio(Radio),
     defineSelect(Select),
+    defineCustomInput('select/timezone', ComboboxWithGroup),
     defineTextArea(Textarea),
   ],
 })

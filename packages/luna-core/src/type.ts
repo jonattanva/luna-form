@@ -45,6 +45,11 @@ export type Option = {
   value: string
 }
 
+export type OptionGroup = {
+  label: string
+  items: Array<Option>
+}
+
 export type List = {
   advanced?: {
     action?: string
