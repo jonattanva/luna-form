@@ -20,7 +20,7 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    const combobox = page.getByRole('combobox')
+    const combobox = page.getByRole('combobox', { name: /Timezone/ })
     await expect(combobox).toBeVisible()
   })
 
@@ -30,7 +30,7 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    await page.getByRole('combobox').click()
+    await page.getByRole('combobox', { name: /Timezone/ }).click()
 
     const americas = page.locator('[data-slot="combobox-label"]', {
       hasText: 'Americas',
@@ -49,7 +49,7 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    await page.getByRole('combobox').click()
+    await page.getByRole('combobox', { name: /Timezone/ }).click()
 
     await expect(
       page.getByRole('option', { name: /\(UTC/ }).first()
@@ -62,10 +62,11 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    await page.getByRole('combobox').click()
+    const combobox = page.getByRole('combobox', { name: /Timezone/ })
+    await combobox.click()
     await page.getByRole('option', { name: /New York/ }).click()
 
-    await expect(page.locator('form')).toContainText(/New York/)
+    await expect(combobox).toHaveValue(/New York/)
   })
 
   test('should select Africa/Abidjan and reflect it in the form', async ({
@@ -74,18 +75,20 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    await page.getByRole('combobox').click()
+    const combobox = page.getByRole('combobox', { name: /Timezone/ })
+    await combobox.click()
     await page.getByRole('option', { name: /Abidjan/ }).click()
 
-    await expect(page.locator('form')).toContainText(/Abidjan/)
+    await expect(combobox).toHaveValue(/Abidjan/)
   })
 
   test('should filter options when typing', async ({ page }) => {
     await inject(page, SCHEMA)
     await page.goto('')
 
-    await page.getByRole('combobox').click()
-    await page.getByRole('combobox').fill('Tokyo')
+    const combobox = page.getByRole('combobox', { name: /Timezone/ })
+    await combobox.click()
+    await combobox.fill('Tokyo')
 
     await expect(page.getByRole('option', { name: /Tokyo/ })).toBeVisible()
   })
