@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775745287652,
+  "lastUpdate": 1775748870445,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1349,6 +1349,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.04255225200000007,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "83d3e11c96191091e6df064b5025ba0695ae8ef7",
+          "message": "fix(tests): fix timezone e2e test failures across browsers\n\nUse getByRole('combobox', { name: /Timezone/ }) to avoid strict mode\nviolation in WebKit where both the input and the trigger button resolve\nto role=\"combobox\". Replace toContainText on the form with toHaveValue\non the combobox input, since input values are not part of textContent.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-09T10:33:54-05:00",
+          "tree_id": "5abf32d6bd96d95370dc8e400c082a6f2e7319a3",
+          "url": "https://github.com/jonattanva/luna-form/commit/83d3e11c96191091e6df064b5025ba0695ae8ef7"
+        },
+        "date": 1775748870127,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0025141380000000026,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.003448280000000068,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.042449123999999984,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0009817720000000918,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0018690840000000434,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.04312498200000005,
             "unit": "ms"
           }
         ]
