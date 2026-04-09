@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775745251710,
+  "lastUpdate": 1775745287652,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1997,6 +1997,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 627,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "60abfa64a4ecccd0cd73cdb50e7b8d798896d16d",
+          "message": "fix(luna-core): always include Suggested group in getTimezones\n\nCreate the detected timezone item before the loop so the Suggested group\nis always prepended, even when the detected timezone is not found in\nIntl.supportedValuesOf('timeZone') (e.g. UTC on GitHub Actions runners).\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-09T09:33:08-05:00",
+          "tree_id": "d9e7e243a582e609c5df8a23d45fc59ad1ea7221",
+          "url": "https://github.com/jonattanva/luna-form/commit/60abfa64a4ecccd0cd73cdb50e7b8d798896d16d"
+        },
+        "date": 1775745286986,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 264,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 606,
             "unit": "ms"
           }
         ]
