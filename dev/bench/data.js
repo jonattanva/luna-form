@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775743531944,
+  "lastUpdate": 1775743561612,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1909,6 +1909,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 573,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "5bb445faa4843d6236ea15ccbf93c2a1c3642e10",
+          "message": "chore: formatting and minor refactors in svelte-luna-editor and luna-svelte",
+          "timestamp": "2026-04-09T09:04:47-05:00",
+          "tree_id": "b7bd3a34c89bb81645b4067fe2feea4cc960582a",
+          "url": "https://github.com/jonattanva/luna-form/commit/5bb445faa4843d6236ea15ccbf93c2a1c3642e10"
+        },
+        "date": 1775743561339,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 258,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 627,
             "unit": "ms"
           }
         ]
