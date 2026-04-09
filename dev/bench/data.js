@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775775465904,
+  "lastUpdate": 1775775496423,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2173,6 +2173,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 681,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "07296fe78e440be2ddd9bb965f2c18c11685e189",
+          "message": "feat: add time input format support and column description\n\n- Add TimeFormat type, Time type, INPUT_TIME constant, and isTime type guard to luna-core\n- Implement toNativeTime and fromNativeTime utilities using date-fns for format conversion\n- Add getTimeFormat helper and wire fromNativeTime into input onChange via getValue callback\n- Add step attribute (60 or 1) to time inputs based on format precision\n- Support description field on Column type and render it below the grid in the React component\n- Add unit tests for toNativeTime, fromNativeTime, and getWeekDays\n- Add e2e tests for time field format rendering, initial values, and form submission\n- Add e2e tests for column description rendering and positioning\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-09T17:56:51-05:00",
+          "tree_id": "65129a74ee80e14db6999b00b6b22da56f1c4540",
+          "url": "https://github.com/jonattanva/luna-form/commit/07296fe78e440be2ddd9bb965f2c18c11685e189"
+        },
+        "date": 1775775496203,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 282,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 663,
             "unit": "ms"
           }
         ]
