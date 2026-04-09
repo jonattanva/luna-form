@@ -103,20 +103,26 @@ export function getTimezones(): TimezoneGroup[] {
   const date = new Date()
   const detectedTimezone = getUserTimezone()
   const groupMap = new Map<string, TimezoneItem[]>()
-  let detectedItem: TimezoneItem | null = null
+
+  const detectedCity = getTimezoneCity(detectedTimezone)
+  const { offset: detectedOffset, longName: detectedLongName } =
+    getTimezoneInfo(detectedTimezone, date)
+  const detectedItem: TimezoneItem = {
+    value: detectedTimezone,
+    label: `${detectedCity} - ${detectedLongName} (${detectedOffset})`,
+  }
 
   for (const tz of getSupportedTimezones()) {
+    if (tz === detectedTimezone) {
+      continue
+    }
+
     const city = getTimezoneCity(tz)
     const { offset, longName } = getTimezoneInfo(tz, date)
 
     const item: TimezoneItem = {
       value: tz,
       label: `${city} - ${longName} (${offset})`,
-    }
-
-    if (tz === detectedTimezone) {
-      detectedItem = item
-      continue
     }
 
     const region = getTimezoneRegion(tz)
@@ -140,9 +146,7 @@ export function getTimezones(): TimezoneGroup[] {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([label, items]) => ({ label, items }))
 
-  cachedResult = detectedItem
-    ? [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
-    : sortedGroups
+  cachedResult = [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
 
   return cachedResult
 }
