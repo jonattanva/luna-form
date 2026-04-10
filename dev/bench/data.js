@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775840823355,
+  "lastUpdate": 1775841572779,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2349,6 +2349,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 664,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "2743f272aa547eebf6e4cf1ce6108c82e360044a",
+          "message": "feat: add select/day field type support with e2e tests\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-10T12:06:16-05:00",
+          "tree_id": "125fe2f0dd5cbc780db7b360636fa44ccfef0a65",
+          "url": "https://github.com/jonattanva/luna-form/commit/2743f272aa547eebf6e4cf1ce6108c82e360044a"
+        },
+        "date": 1775841572549,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 275,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 633,
             "unit": "ms"
           }
         ]
