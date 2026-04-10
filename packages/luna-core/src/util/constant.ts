@@ -25,11 +25,18 @@ export const LIST = 'list'
 export const DATA_TABLE = 'data-table'
 
 export const SELECT = 'select'
+export const SELECT_DAY = 'select/day'
 export const SELECT_MONTH = 'select/month'
-export const SELECT_YEAR = 'select/year'
 export const SELECT_TIMEZONE = 'select/timezone'
+export const SELECT_YEAR = 'select/year'
 
-export const SELECTS = [SELECT, SELECT_MONTH, SELECT_YEAR, SELECT_TIMEZONE]
+export const SELECTS = [
+  SELECT,
+  SELECT_DAY,
+  SELECT_MONTH,
+  SELECT_TIMEZONE,
+  SELECT_YEAR,
+]
 
 export const COLUMN = 'column'
 export const DESCRIPTION = 'description'

@@ -106,6 +106,76 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(cherryOption).toBeVisible()
   })
 
+  test('should work correctly with select day input type', async ({ page }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Select Day",
+                            "name": "day",
+                            "type": "select/day"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    const option = page.getByRole('option', { name: 'Wednesday' })
+    await option.click()
+
+    const form = page.locator('form')
+    await expect(form).toContainText('Wednesday')
+  })
+
+  test('should render all 7 week days for select day input type', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Select Day",
+                            "name": "day",
+                            "type": "select/day"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ]
+
+    for (const day of days) {
+      await expect(page.getByRole('option', { name: day })).toBeVisible()
+    }
+  })
+
   test('should render select fetch source correctly', async ({ page }) => {
     await inject(
       page,

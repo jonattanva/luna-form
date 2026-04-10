@@ -6,6 +6,7 @@ import {
   getMonth,
   getTimeFormat,
   getTimezones,
+  getWeekDays,
   getYear,
   toNativeTime,
 } from '../util/date'
@@ -16,6 +17,7 @@ import {
   isNumber,
   isOptions,
   isSelect,
+  isSelectDay,
   isSelectMonth,
   isSelectTimezone,
   isSelectYear,
@@ -58,6 +60,10 @@ function defineOption(select: Select) {
 
   if (isSelectTimezone(select)) {
     return getTimezones()
+  }
+
+  if (isSelectDay(select)) {
+    return getWeekDays()
   }
 }
 
