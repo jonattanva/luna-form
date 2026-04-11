@@ -3,3 +3,7 @@ packages:
   - packages/*
 blockExoticSubdeps: true
 minimumReleaseAge: 1440
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver
