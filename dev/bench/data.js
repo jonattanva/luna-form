@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775886992932,
+  "lastUpdate": 1775887021942,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2437,6 +2437,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 633,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "fd396505587bab78f3203eee3b4151b74171c5b9",
+          "message": "feat(chips): add advanced.multiple prop to chips fields\n\nAdd `advanced.multiple` boolean to chips field types to control single vs multi-select behavior. Defaults to true (existing behavior). When false, selecting a chip replaces any previous selection.\n\nAlso migrates unit tests from Playwright to Vitest and splits operator tests into individual files per operator.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-11T00:55:24-05:00",
+          "tree_id": "f66e8c95844ce36f1707ad5fe7a6cfb8ae687812",
+          "url": "https://github.com/jonattanva/luna-form/commit/fd396505587bab78f3203eee3b4151b74171c5b9"
+        },
+        "date": 1775887021713,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 269,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 659,
             "unit": "ms"
           }
         ]
