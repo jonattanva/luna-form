@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775887321572,
+  "lastUpdate": 1775935239510,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -1673,6 +1673,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.04655678599999999,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "6575fc019b4158edd644c7ee9be4c7d088968e4b",
+          "message": "feat(chips): add chips/month type and fix isChipsMonths checker\n\n- Add CHIPS_MONTHS constant and fix isChipsMonths to use it instead of CHIPS\n- Register chips/month in defineChips config\n- Inline defineSelect into buildCommon, removing one-line wrapper\n- Add store-helper unit tests for nested atoms, omitKey, clearAll, bulkReport\n- Upgrade turbo to 2.9.6\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-11T14:19:53-05:00",
+          "tree_id": "0bc3d987c446b8c755e5b2b8b0a3cd38312cec12",
+          "url": "https://github.com/jonattanva/luna-form/commit/6575fc019b4158edd644c7ee9be4c7d088968e4b"
+        },
+        "date": 1775935239219,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0022689060000000154,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.003870679999999993,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03986375200000009,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.001077156000000059,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0019155020000000604,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.037983703999999986,
             "unit": "ms"
           }
         ]
