@@ -16,9 +16,9 @@
     "@eslint/compat": "2.0.5",
     "@eslint/js": "9.39.4",
     "@sveltejs/adapter-auto": "7.0.1",
-    "@sveltejs/kit": "2.57.0",
+    "@sveltejs/kit": "2.57.1",
     "@sveltejs/vite-plugin-svelte": "7.0.0",
-    "@types/node": "25.5.2",
+    "@types/node": "25.6.0",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-svelte": "3.17.0",
@@ -27,6 +27,6 @@
     "svelte-check": "4.4.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.58.1",
-    "vite": "7.3.1"
+    "vite": "8.0.8"
   }
 }
