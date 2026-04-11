@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775887282588,
+  "lastUpdate": 1775887321572,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2525,6 +2525,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 659,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "6449c3204c3b0997b7ee80dcdc0abb3f3bf41857",
+          "message": "chore: upgrade dependencies across examples and svelte editor\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-11T01:00:30-05:00",
+          "tree_id": "4372fc2728dcba9339aa8c38465811d344a89975",
+          "url": "https://github.com/jonattanva/luna-form/commit/6449c3204c3b0997b7ee80dcdc0abb3f3bf41857"
+        },
+        "date": 1775887320975,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 285,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 639,
             "unit": "ms"
           }
         ]
