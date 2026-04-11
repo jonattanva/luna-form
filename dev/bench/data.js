@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775943490540,
+  "lastUpdate": 1775943525816,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2789,6 +2789,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 591,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "4bf11ff48370d1ca210dd7bda6c88a7577343ede",
+          "message": "fix(ci): allow esbuild, sharp, unrs-resolver build scripts via pnpm onlyBuiltDependencies",
+          "timestamp": "2026-04-11T16:37:42-05:00",
+          "tree_id": "b1bf6fa83b2c2d7c9e3120fe7a3d271a6ba3fb07",
+          "url": "https://github.com/jonattanva/luna-form/commit/4bf11ff48370d1ca210dd7bda6c88a7577343ede"
+        },
+        "date": 1775943525580,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 272,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 623,
             "unit": "ms"
           }
         ]
