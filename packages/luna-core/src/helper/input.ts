@@ -15,6 +15,7 @@ import {
   isCheckbox,
   isChips,
   isChipsDays,
+  isChipsMonths,
   isInput,
   isNumber,
   isOptions,
@@ -45,19 +46,31 @@ const now = getCurrentYear()
 
 export function buildOptionChips(field: Field) {
   if (isChips(field)) {
-    if (isChipsDays(field)) {
-      return getWeekDays()
-    }
+    return defineOptionChips(field)
+  }
+}
+
+function defineOptionChips(field: Chips) {
+  if (isChipsDays(field)) {
+    return getWeekDays()
+  }
+
+  if (isChipsMonths(field)) {
+    return getMonth()
   }
 }
 
 export function buildOptionSelect(field: Field) {
   if (isSelect(field)) {
-    return defineOption(field)
+    return defineOptionSelect(field)
   }
 }
 
-function defineOption(select: Select) {
+function defineOptionSelect(select: Select) {
+  if (isSelectDay(select)) {
+    return getWeekDays()
+  }
+
   if (isSelectMonth(select)) {
     return getMonth()
   }
@@ -71,10 +84,6 @@ function defineOption(select: Select) {
 
   if (isSelectTimezone(select)) {
     return getTimezones()
-  }
-
-  if (isSelectDay(select)) {
-    return getWeekDays()
   }
 }
 
@@ -100,7 +109,7 @@ export function buildCommon(
   if (isSelect(field)) {
     return {
       ...commonProps,
-      ...defineSelect(field),
+      ...defineWithOptions(field, buildOptionSelect),
     }
   }
 
@@ -143,10 +152,6 @@ function defineWithOptions<T>(
     return { options }
   }
   return {}
-}
-
-function defineSelect(field: Field) {
-  return defineWithOptions(field, buildOptionSelect)
 }
 
 function defineChips(field: Chips) {

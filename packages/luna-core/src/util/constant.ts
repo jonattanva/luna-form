@@ -39,7 +39,8 @@ export const SELECTS = [
 ]
 
 export const CHIPS = 'chips'
-export const CHIPS_DAYS = 'chips/days'
+export const CHIPS_DAYS = 'chips/day'
+export const CHIPS_MONTHS = 'chips/month'
 
 export const COLUMN = 'column'
 export const DESCRIPTION = 'description'

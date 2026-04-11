@@ -3,6 +3,7 @@ import {
   CHECKBOX,
   CHIPS,
   CHIPS_DAYS,
+  CHIPS_MONTHS,
   COLUMN,
   INPUT,
   INPUT_EMAIL,
@@ -33,6 +34,9 @@ import type {
   Time,
 } from '../type'
 
+export const isSelectDay = (field: Field): boolean =>
+  createTypeChecker(SELECT_DAY)(field)
+
 export const isSelectMonth = (field: Field): boolean =>
   createTypeChecker(SELECT_MONTH)(field)
 
@@ -45,8 +49,8 @@ export const isSelectTimezone = (field: Field): boolean =>
 export const isChipsDays = (field: Field): boolean =>
   createTypeChecker(CHIPS_DAYS)(field)
 
-export const isSelectDay = (field: Field): boolean =>
-  createTypeChecker(SELECT_DAY)(field)
+export const isChipsMonths = (field: Field): boolean =>
+  createTypeChecker(CHIPS_MONTHS)(field)
 
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isChips = createTypeChecker<Chips>(CHIPS)

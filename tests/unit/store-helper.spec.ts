@@ -4,6 +4,7 @@ import {
   createAtomStore,
   createNestedClearAtom,
   createNestedRecordAtomFamily,
+  omitKey,
 } from '@/packages/luna-react/src/client/lib/store-helper'
 
 describe('store-helper', () => {
@@ -248,6 +249,135 @@ describe('store-helper', () => {
 
       store.set(family('fieldA'), '  ', 'hello')
       expect(store.get(base)).toEqual({})
+    })
+
+    test('merges multiple contributors for the same target', () => {
+      const store = createStore()
+      const base = atom<Record<string, Record<string, string>>>({})
+      const family = createNestedRecordAtomFamily<string>(base, {
+        merge: (values) => values.sort().join(','),
+      })
+
+      store.set(family('fieldA'), 'target', 'alpha')
+      store.set(family('fieldB'), 'target', 'beta')
+
+      expect(store.get(base)).toEqual({
+        target: { fieldA: 'alpha', fieldB: 'beta' },
+      })
+      expect(store.get(family('target'))).toBe('alpha,beta')
+    })
+
+    test('does not trigger a state update when writing the same value (deepEqual guard)', () => {
+      const store = createStore()
+      const base = atom<Record<string, Record<string, string>>>({})
+      const family = createNestedRecordAtomFamily<string>(base, {
+        merge: (values) => values.join(','),
+      })
+
+      store.set(family('fieldA'), 'target', 'hello')
+
+      let updates = 0
+      store.sub(base, () => {
+        updates++
+      })
+
+      store.set(family('fieldA'), 'target', 'hello')
+      expect(updates).toBe(0)
+    })
+
+    test('returns undefined when no merge function is provided', () => {
+      const store = createStore()
+      const base = atom<Record<string, Record<string, string>>>({})
+      const family = createNestedRecordAtomFamily<string>(base)
+
+      store.set(family('fieldA'), 'target', 'hello')
+      expect(store.get(family('target'))).toBeUndefined()
+    })
+  })
+
+  describe('omitKey', () => {
+    test('removes the specified key from the object', () => {
+      const result = omitKey({ a: 1, b: 2, c: 3 }, 'b')
+      expect(result).toEqual({ a: 1, c: 3 })
+    })
+
+    test('returns a new object without mutating the original', () => {
+      const original = { a: 1, b: 2 }
+      const result = omitKey(original, 'a')
+      expect(result).toEqual({ b: 2 })
+      expect(original).toEqual({ a: 1, b: 2 })
+    })
+
+    test('returns the same shape when the key does not exist', () => {
+      const result = omitKey({ a: 1 }, 'z')
+      expect(result).toEqual({ a: 1 })
+    })
+  })
+
+  describe('createAtomStore — clearAll', () => {
+    test('removes all keys from the store', () => {
+      const store = createStore()
+      const { atom: base, report, clearAll } = createAtomStore<string>()
+
+      store.set(report('a'), 'x')
+      store.set(report('b'), 'y')
+      expect(store.get(base)).toEqual({ a: 'x', b: 'y' })
+
+      store.set(clearAll, null)
+      expect(store.get(base)).toEqual({})
+    })
+
+    test('does not trigger a state update when store is already empty', () => {
+      const store = createStore()
+      const { atom: base, clearAll } = createAtomStore<string>()
+
+      let updates = 0
+      store.sub(base, () => {
+        updates++
+      })
+
+      store.set(clearAll, null)
+      expect(updates).toBe(0)
+    })
+  })
+
+  describe('createAtomStore — bulkReport', () => {
+    test('replaces the entire store with the provided value', () => {
+      const store = createStore()
+      const { atom: base, report, bulkReport } = createAtomStore<number>()
+
+      store.set(report('a'), 1)
+      store.set(report('b'), 2)
+
+      store.set(bulkReport, { c: 3, d: 4 })
+      expect(store.get(base)).toEqual({ c: 3, d: 4 })
+    })
+
+    test('does not trigger a state update when the new value is deepEqual to the current', () => {
+      const store = createStore()
+      const { atom: base, bulkReport } = createAtomStore<number>({ a: 1, b: 2 })
+
+      let updates = 0
+      store.sub(base, () => {
+        updates++
+      })
+
+      store.set(bulkReport, { a: 1, b: 2 })
+      expect(updates).toBe(0)
+    })
+
+    test('triggers a state update when the new value differs', () => {
+      const store = createStore()
+      const { atom: base, bulkReport } = createAtomStore<number>({ a: 1 })
+
+      let updates = 0
+      store.sub(base, () => {
+        updates++
+      })
+
+      store.set(bulkReport, { a: 2 })
+      expect(updates).toBe(1)
+      expect(store.get(base)).toEqual({ a: 2 })
     })
   })
 })
