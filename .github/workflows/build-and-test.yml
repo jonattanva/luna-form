@@ -117,7 +117,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v5
         with:
           version: 10
           cache: true
@@ -126,16 +126,6 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-      - name: Debug pnpm config
-        run: |
-          echo "=== pnpm version ==="
-          pnpm --version
-          echo "=== pnpm config ==="
-          pnpm config list
-          echo "=== package.json pnpm field ==="
-          node -e "const p = require('./package.json'); console.log(JSON.stringify(p.pnpm, null, 2))"
-          echo "=== lockfile settings ==="
-          head -10 pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install
       - name: Cache turbo build setup

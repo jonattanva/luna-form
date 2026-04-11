@@ -56,12 +56,5 @@
   "engines": {
     "node": ">=22.x",
     "pnpm": ">=10.x"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "unrs-resolver"
-    ]
   }
 }
