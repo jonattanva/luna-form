@@ -35,7 +35,6 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Build project
         run: pnpm build
-
   lint:
     name: lint
     timeout-minutes: 5
@@ -63,7 +62,6 @@ jobs:
         run: pnpm run lint
       - name: Run TypeScript checks
         run: pnpm run typescript
-
   unit-test:
     name: unit-test
     timeout-minutes: 5
@@ -81,25 +79,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-      - name: Cache Playwright browsers
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
       - name: Run unit tests
         run: pnpm test:unit
-      - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report-unit
-          path: playwright-report/
-          retention-days: 1
-
   e2e-test:
     name: e2e-test
     timeout-minutes: 20
