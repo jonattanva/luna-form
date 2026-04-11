@@ -30,7 +30,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Cache turbo build setup
         uses: actions/cache@v5
         with:
@@ -126,7 +126,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Cache turbo build setup
         uses: actions/cache@v5
         with:
@@ -153,7 +153,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Cache turbo build setup
         uses: actions/cache@v5
         with:
@@ -183,7 +183,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Run unit tests
         run: pnpm test:unit
   e2e-test:
@@ -204,7 +204,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
       - name: Cache turbo build setup
         uses: actions/cache@v5
         with:
