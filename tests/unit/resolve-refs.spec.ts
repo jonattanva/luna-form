@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { resolveRefs } from '../../packages/luna-core/src/util/prepare'
 
-test.describe('Resolve refs', { tag: ['@unit'] }, () => {
+describe('Resolve refs', () => {
   test('should return the original value if definition is invalid', () => {
     const obj = { $ref: '#/definition/nonexistent' }
     const result = resolveRefs(obj, undefined)

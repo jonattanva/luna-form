@@ -4,7 +4,7 @@ import { deepEqual } from 'fast-equals'
 
 type RecordValue<T> = T extends Record<string, infer V> ? V : never
 
-interface NestedAtomFamilyOptions<TInner> {
+type NestedAtomFamilyOptions<TInner> = {
   merge?: (values: TInner[]) => TInner | undefined
   validateTarget?: (target: string) => boolean
 }
@@ -32,10 +32,10 @@ function createRecordAtomFamily<
 
         if (newValue !== undefined && newValue !== null) {
           const currentValue = current[name]
-          if (!currentValue || !deepEqual(currentValue, newValue)) {
+          if (!deepEqual(currentValue, newValue)) {
             set(baseAtom, { ...current, [name]: newValue })
           }
-        } else if (current[name]) {
+        } else if (name in current) {
           set(baseAtom, omitKey(current, name))
         }
       }
@@ -59,7 +59,7 @@ function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
     let hasChanges = false
 
     for (const name of names) {
-      if (next[name]) {
+      if (name in next) {
         delete next[name]
         hasChanges = true
       }
@@ -119,7 +119,7 @@ export function createNestedRecordAtomFamily<
               [target]: targetContributions,
             } as TRecord)
           }
-        } else if (targetContributions[contributorName]) {
+        } else if (contributorName in targetContributions) {
           delete targetContributions[contributorName]
 
           if (Object.keys(targetContributions).length === 0) {
@@ -145,7 +145,7 @@ export function createNestedClearAtom<TInner>(
     let hasChanges = false
 
     for (const name of contributorNames) {
-      if (next[name]) {
+      if (name in next) {
         delete next[name]
         hasChanges = true
       }
@@ -156,7 +156,7 @@ export function createNestedClearAtom<TInner>(
       let targetChanged = false
 
       for (const contributorName of contributorNames) {
-        if (targetContributions[contributorName]) {
+        if (contributorName in targetContributions) {
           delete targetContributions[contributorName]
           targetChanged = true
           hasChanges = true

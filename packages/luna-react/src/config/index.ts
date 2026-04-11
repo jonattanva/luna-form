@@ -1,5 +1,7 @@
 import {
   CHECKBOX,
+  CHIPS,
+  CHIPS_DAYS,
   INPUTS,
   RADIO,
   SELECTS,
@@ -64,6 +66,7 @@ export function defineConfig<T extends React.ElementType>(
 }
 
 export const defineCheckbox = createDefineFunction([CHECKBOX])
+export const defineChips = createDefineFunction([CHIPS, CHIPS_DAYS])
 export const defineInput = createDefineFunction(INPUTS)
 export const defineRadio = createDefineFunction([RADIO])
 export const defineSelect = createDefineFunction(SELECTS)

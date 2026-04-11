@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { stringify } from '@/packages/luna-core/src/util/stringify'
 
-test.describe('Stringify Utility', { tag: ['@unit'] }, () => {
+describe('Stringify Utility', () => {
   test('should return the same string when input is a string', () => {
     expect(stringify('hello')).toBe('hello')
     expect(stringify('')).toBe('')

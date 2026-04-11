@@ -1,11 +1,11 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   isExternalUrl,
   matchRemotePattern,
   mergeUrl,
 } from '@/packages/luna-core/src/util/url'
 
-test.describe('URL Helper', { tag: ['@unit'] }, () => {
+describe('URL Helper', () => {
   test('should return true for absolute http URLs', () => {
     expect(isExternalUrl('http://example.com')).toBe(true)
   })

@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { entries, prepare } from '@/packages/luna-core/src/util/prepare'
 import type { Filterable, Section } from '@/packages/luna-core/src/type'
 
-test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
+describe('Prepare Utility', () => {
   test('should sort by order', () => {
     const input = [
       { id: '1', order: 2 },
@@ -55,7 +55,7 @@ test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
     ]
 
     const prepared = prepare(sections)
-    expect(prepared.length).toBe(1)
+    expect(prepared).toHaveLength(1)
     expect(prepared[0].id).toBe('section-1')
   })
 
@@ -71,7 +71,7 @@ test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
     ]
 
     const prepared = prepare(sections satisfies Filterable[])
-    expect(prepared.length).toBe(1)
+    expect(prepared).toHaveLength(1)
   })
 
   test('should keep section if all columns are hidden because their fields are hidden', () => {
@@ -88,7 +88,7 @@ test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
     ]
 
     const prepared = prepare(sections satisfies Filterable[])
-    expect(prepared.length).toBe(1)
+    expect(prepared).toHaveLength(1)
   })
 
   test('should hide section if fields is an empty array', () => {
@@ -100,7 +100,7 @@ test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
     ]
 
     const prepared = prepare(sections satisfies Filterable[])
-    expect(prepared.length).toBe(0)
+    expect(prepared).toHaveLength(0)
   })
 
   test('should keep section if fields are not defined', () => {
@@ -112,6 +112,6 @@ test.describe('Prepare Utility', { tag: ['@unit'] }, () => {
     ] as Section[]
 
     const prepared = prepare(sections)
-    expect(prepared.length).toBe(1)
+    expect(prepared).toHaveLength(1)
   })
 })

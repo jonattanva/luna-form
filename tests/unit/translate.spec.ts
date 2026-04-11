@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { translate } from '@/packages/luna-core/src/util/translate'
 
-test.describe('Translate Helper', { tag: ['@unit'] }, () => {
+describe('Translate Helper', () => {
   test('should return an empty string if no key is provided', () => {
     expect(translate()).toBe('')
   })

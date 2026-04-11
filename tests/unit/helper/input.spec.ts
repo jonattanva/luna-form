@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   prepareDefaultValue,
   getOptions,
@@ -10,7 +10,7 @@ import {
 } from '@/packages/luna-core/src/helper/input'
 import type { Field, Select, CommonProps } from '@/packages/luna-core/src/type'
 
-test.describe('Input Helper', { tag: ['@unit'] }, () => {
+describe('Input Helper', () => {
   test('should return defaultChecked for checkbox fields', () => {
     const field: Field = {
       name: 'subscribe',

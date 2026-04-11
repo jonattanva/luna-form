@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   extract,
   getArray,
@@ -11,7 +11,7 @@ import {
   unflatten,
 } from '@/packages/luna-core/src/util/extract'
 
-test.describe('Extract', { tag: ['@unit'] }, () => {
+describe('Extract', () => {
   test('should extract values correctly', () => {
     const data = {
       user: {
@@ -69,6 +69,16 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
     expect(getArray(data)).toBeNull()
   })
 
+  test('should return null for empty namespace string in extract', () => {
+    const data = { user: { name: 'John Doe' } }
+    expect(extract(data, '')).toBeNull()
+  })
+
+  test('should return null when input is not an object in extract', () => {
+    expect(extract('not an object' as never, 'key')).toBeNull()
+    expect(extract(42 as never, 'key')).toBeNull()
+  })
+
   test('should get value correctly', () => {
     const data = {
       user: {
@@ -95,12 +105,35 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
     expect(getCurrentValue('John Doe')).toBe('John Doe')
   })
 
+  test('should return undefined for null or undefined input in getCurrentValue', () => {
+    expect(getCurrentValue(null)).toBeUndefined()
+    expect(getCurrentValue(undefined)).toBeUndefined()
+  })
+
+  test('should return primitive number and boolean directly in getCurrentValue', () => {
+    expect(getCurrentValue(42)).toBe(42)
+    expect(getCurrentValue(true)).toBe(true)
+    expect(getCurrentValue(false)).toBe(false)
+  })
+
+  test('should return array of values directly in getCurrentValue', () => {
+    expect(getCurrentValue(['a', 'b', 'c'])).toEqual(['a', 'b', 'c'])
+    expect(getCurrentValue([1, 2, 3])).toEqual([1, 2, 3])
+  })
+
+  test('should return undefined for array with non-value items in getCurrentValue', () => {
+    expect(getCurrentValue([{ id: 1 }, { id: 2 }])).toBeUndefined()
+    expect(getCurrentValue(['a', { id: 1 }])).toBeUndefined()
+  })
+
   test('should get the correct type of input', () => {
     expect(getType('select/month')).toBe('month')
     expect(getType('select/year')).toBe('year')
     expect(getType('select/options')).toBe('options')
     expect(getType('text')).toBe('text')
     expect(getType()).toBe('text')
+    expect(getType('input')).toBe('text')
+    expect(getType('')).toBe('text')
   })
 
   test('should get entity correctly', () => {
@@ -131,6 +164,15 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
 
   test('should return default object when collection is empty', () => {
     expect(getEntity('1', [])).toEqual({ value: '1' })
+  })
+
+  test('should return default object when collection is null', () => {
+    expect(getEntity('1', null)).toEqual({ value: '1' })
+  })
+
+  test('should return default object when entity key is missing in collection items', () => {
+    const collection = [{ label: 'Option 1' }, { label: 'Option 2' }]
+    expect(getEntity('1', collection)).toEqual({ value: '1' })
   })
 
   test('should convert data to options correctly', () => {
@@ -181,6 +223,22 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
       { value: 'Only Value' },
       'Not an object',
     ])
+  })
+
+  test('should include description in toOptions when present', () => {
+    const data = [
+      { label: 'Option 1', value: '1', description: 'First option' },
+      { label: 'Option 2', value: '2' },
+    ]
+
+    expect(toOptions(data)).toEqual([
+      { label: 'Option 1', value: '1', description: 'First option' },
+      { label: 'Option 2', value: '2' },
+    ])
+  })
+
+  test('should return empty array for empty input in toOptions', () => {
+    expect(toOptions([])).toEqual([])
   })
 
   test('should return an empty object for empty FormData', async () => {
@@ -318,11 +376,10 @@ test.describe('Extract', { tag: ['@unit'] }, () => {
     // Since it matches REGEX_NUMERIC, it will be treated as an array index.
     // The sparse array is compacted so the item appears at index 0.
     const result = unflatten(data)
-    expect(Array.isArray(result.user)).toBe(true)
-    // @ts-expect-error - testing dynamic structure
-    expect(result.user[0]).toEqual({ id: 'abc' })
-    // @ts-expect-error - testing dynamic structure
-    expect((result.user as unknown[]).length).toBe(1)
+    const user = result.user as unknown[]
+    expect(Array.isArray(user)).toBe(true)
+    expect(user[0]).toEqual({ id: 'abc' })
+    expect(user).toHaveLength(1)
   })
 
   test('should compact sparse array when first index is missing', () => {

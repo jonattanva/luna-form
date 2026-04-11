@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { getColumn, getSpan } from '@/packages/luna-core/src/util/column'
 
-test.describe('Column', { tag: ['@unit'] }, () => {
+describe('Column', () => {
   test('should return the correct column class', () => {
     expect(getColumn()).toBe('md:grid-cols-2')
     expect(getColumn(1)).toBe('md:grid-cols-1')

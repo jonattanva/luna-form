@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { handleSourceEvent } from '@/packages/luna-core/src/handle/source-event'
 import type { DataSource, SourceEvent } from '@/packages/luna-core/src/type'
 
-test.describe('handle source event', { tag: ['@unit'] }, () => {
+describe('handle source event', () => {
   test('should do nothing if events is empty', () => {
     let called = false
     const setSource = () => {

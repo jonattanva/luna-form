@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   isEmail,
   isNumber,
@@ -10,7 +10,7 @@ import {
   isTextArea,
 } from '@/packages/luna-core/src/util/is-input'
 
-test.describe('Is Input Utility', { tag: ['@unit'] }, () => {
+describe('Is Input Utility', () => {
   test('should identify select month inputs correctly', () => {
     const fieldMonth = {
       name: 'birthMonth',

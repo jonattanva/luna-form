@@ -38,6 +38,9 @@ export const SELECTS = [
   SELECT_YEAR,
 ]
 
+export const CHIPS = 'chips'
+export const CHIPS_DAYS = 'chips/days'
+
 export const COLUMN = 'column'
 export const DESCRIPTION = 'description'
 export const FIELDS = 'fields'
@@ -60,10 +63,10 @@ export const DATA_READONLY = 'data-readonly'
 export const PREFIX_ARIA = 'aria'
 export const PREFIX_DATA = 'data'
 
-export const MIN = 'min'
 export const MAX = 'max'
-export const MIN_LENGTH = 'minLength'
 export const MAX_LENGTH = 'maxLength'
+export const MIN = 'min'
+export const MIN_LENGTH = 'minLength'
 
 export const $REF = '$ref'
 export const SET = 'set'
@@ -78,8 +81,6 @@ export const TYPE = 'type'
 export const TIMEZONE_REGIONS: Record<string, string> = {
   Africa: 'Africa',
   America: 'Americas',
-  Antarctica: 'Other',
-  Arctic: 'Other',
   Asia: 'Asia / Pacific',
   Atlantic: 'Atlantic',
   Australia: 'Asia / Pacific',

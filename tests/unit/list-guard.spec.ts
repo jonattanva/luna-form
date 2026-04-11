@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import type { FieldState, List } from '@/packages/luna-core/src/type'
 
 function resolveContainerHidden(
@@ -15,7 +15,7 @@ function resolveAllFieldsHidden(
   if (fields.length === 0) return true
   return fields.every((entry) => {
     if ('fields' in entry) {
-      return entry.fields.every(
+      return entry.fields?.every(
         (f) => states[f.name]?.hidden ?? f.hidden ?? false
       )
     }
@@ -23,7 +23,7 @@ function resolveAllFieldsHidden(
   })
 }
 
-test.describe('SectionGuard container logic', { tag: ['@unit'] }, () => {
+describe('SectionGuard container logic', () => {
   test('list with static hidden:true should be hidden', () => {
     const container: List = {
       name: 'items',

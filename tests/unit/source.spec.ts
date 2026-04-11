@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { mergeSource } from '@/packages/luna-core/src/util/source'
 import type { DataSource } from '@/packages/luna-core/src/type'
 
-test.describe('Source Util', { tag: ['@unit'] }, () => {
+describe('Source Util', () => {
   test('should return null for empty array', () => {
     expect(mergeSource([])).toBeNull()
   })

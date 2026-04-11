@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { fetcher } from '@/packages/luna-core/src/fetcher'
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -10,12 +10,12 @@ const jsonResponse = (body: unknown, status = 200) =>
 let originalFetch: typeof fetch
 let calls: Array<{ url: string; init?: RequestInit }>
 
-test.describe('Fetcher', { tag: ['@unit'] }, () => {
-  test.beforeEach(() => {
+describe('Fetcher', () => {
+  beforeEach(() => {
     calls = []
-    originalFetch = global.fetch
+    originalFetch = globalThis.fetch
 
-    global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       calls.push({
         url: typeof input === 'string' ? input : input.toString(),
         init,
@@ -25,8 +25,8 @@ test.describe('Fetcher', { tag: ['@unit'] }, () => {
     }
   })
 
-  test.afterEach(() => {
-    global.fetch = originalFetch
+  afterEach(() => {
+    globalThis.fetch = originalFetch
   })
 
   test('should throw error for invalid URL', async () => {

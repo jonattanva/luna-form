@@ -13,6 +13,8 @@ import {
 import { getCurrentValue, getType, toOptions } from '../util/extract'
 import {
   isCheckbox,
+  isChips,
+  isChipsDays,
   isInput,
   isNumber,
   isOptions,
@@ -28,6 +30,7 @@ import {
 } from '../util/is-input'
 import { isObject, isString } from '../util/is-type'
 import type {
+  Chips,
   CommonProps,
   DataSource,
   Field,
@@ -39,6 +42,14 @@ import type {
 } from '../type'
 
 const now = getCurrentYear()
+
+export function buildOptionChips(field: Field) {
+  if (isChips(field)) {
+    if (isChipsDays(field)) {
+      return getWeekDays()
+    }
+  }
+}
 
 export function buildOptionSelect(field: Field) {
   if (isSelect(field)) {
@@ -100,6 +111,13 @@ export function buildCommon(
     }
   }
 
+  if (isChips(field)) {
+    return {
+      ...commonProps,
+      ...defineChips(field),
+    }
+  }
+
   return commonProps
 }
 
@@ -116,12 +134,25 @@ function defineInput(input: Input) {
   }
 }
 
-function defineSelect(field: Field) {
-  const options = buildOptionSelect(field)
+function defineWithOptions<T>(
+  field: Field,
+  builder: (field: Field) => T | undefined
+) {
+  const options = builder(field)
   if (options) {
     return { options }
   }
   return {}
+}
+
+function defineSelect(field: Field) {
+  return defineWithOptions(field, buildOptionSelect)
+}
+
+function defineChips(field: Chips) {
+  const withOptions = defineWithOptions(field, buildOptionChips)
+  const multiple = field.advanced?.multiple ?? true
+  return { ...withOptions, multiple }
 }
 
 function defineTextArea(field: Field) {
@@ -280,6 +311,9 @@ export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
     return {
       checked: isValidValue(value) ? value : false,
     }
+  }
+  if (isChips(field)) {
+    return { value: Array.isArray(value) ? value : [] }
   }
   return { value: value ?? '' }
 }

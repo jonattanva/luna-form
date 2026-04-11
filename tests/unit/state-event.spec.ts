@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { handleStateEvent } from '@/packages/luna-core/src/handle/state-event'
 import type { FieldState, StateEvent } from '@/packages/luna-core/src/type'
 
-test.describe('handle state event', { tag: ['@unit'] }, () => {
+describe('handle state event', () => {
   test('should do nothing if events is empty', () => {
     let called = false
     const setState = () => {

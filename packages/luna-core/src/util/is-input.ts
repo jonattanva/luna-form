@@ -1,6 +1,8 @@
 import { isString } from './is-type'
 import {
   CHECKBOX,
+  CHIPS,
+  CHIPS_DAYS,
   COLUMN,
   INPUT,
   INPUT_EMAIL,
@@ -21,6 +23,7 @@ import {
   TYPE_TEXT,
 } from './constant'
 import type {
+  Chips,
   Column,
   Field,
   Input,
@@ -39,10 +42,14 @@ export const isSelectYear = (field: Field): boolean =>
 export const isSelectTimezone = (field: Field): boolean =>
   createTypeChecker(SELECT_TIMEZONE)(field)
 
+export const isChipsDays = (field: Field): boolean =>
+  createTypeChecker(CHIPS_DAYS)(field)
+
 export const isSelectDay = (field: Field): boolean =>
   createTypeChecker(SELECT_DAY)(field)
 
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
+export const isChips = createTypeChecker<Chips>(CHIPS)
 export const isInput = createTypeChecker<Input>(INPUT)
 export const isRadio = createTypeChecker<Select>(RADIO)
 export const isSelect = createTypeChecker<Select>(SELECT)

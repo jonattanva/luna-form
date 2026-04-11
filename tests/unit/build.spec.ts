@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   buildOptions,
   buildSource,
@@ -7,7 +7,7 @@ import {
 } from '@/packages/luna-core/src/util/build'
 import type { Field } from '@/packages/luna-core/src/type'
 
-test.describe('Build', { tag: ['@unit'] }, () => {
+describe('Build', () => {
   test('should build source for radio fields', () => {
     const field = {
       source: [
@@ -106,7 +106,7 @@ test.describe('Build', { tag: ['@unit'] }, () => {
     expect(options).toBeUndefined()
   })
 
-  test.describe('buildOrientation', () => {
+  describe('buildOrientation', () => {
     test('should return true for radio fields', () => {
       const field = { type: 'radio', name: 'test' } as Field
       expect(buildOrientation(field)).toBe(true)
@@ -132,7 +132,7 @@ test.describe('Build', { tag: ['@unit'] }, () => {
     })
   })
 
-  test.describe('buildDisabled', () => {
+  describe('buildDisabled', () => {
     test('should return true if disabled param is true', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildDisabled(field, true)).toBe(true)

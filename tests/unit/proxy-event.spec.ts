@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { handleProxyEvent } from '@/packages/luna-core/src/handle/proxy-event'
 import type { ChangeEvent } from '@/packages/luna-core/src/type'
 
-test.describe('Proxy Event Handler', { tag: ['@unit'] }, () => {
+describe('Proxy Event Handler', () => {
   test('should separate source and value events', () => {
     const events: ChangeEvent = [
       { action: 'source', source: { url: '/api/data' }, target: 'field1' },

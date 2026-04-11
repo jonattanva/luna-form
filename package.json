@@ -19,13 +19,14 @@
     "test:e2e": "pnpm playwright test --grep '@e2e'",
     "test:e2e:ui": "pnpm playwright test --grep '@e2e' --ui",
     "test:perf": "pnpm playwright test --grep '@perf' --project=chromium",
-    "test:unit": "pnpm playwright test --grep '@unit' --project=chromium",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "typescript": "turbo run typescript"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
     "@types/eslint-plugin-jsx-a11y": "6.10.1",
-    "@types/node": "25.5.2",
+    "@types/node": "25.6.0",
     "@typescript-eslint/eslint-plugin": "8.58.1",
     "@typescript-eslint/parser": "8.58.1",
     "esbuild": "0.28.0",
@@ -37,13 +38,15 @@
     "husky": "9.1.7",
     "lint-staged": "16.4.0",
     "mitata": "1.0.34",
-    "prettier": "3.8.1",
+    "prettier": "3.8.2",
     "prettier-plugin-svelte": "3.5.1",
     "prettier-plugin-tailwindcss": "0.7.2",
     "tsx": "4.21.0",
     "turbo": "2.9.5",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.58.1"
+    "typescript-eslint": "8.58.1",
+    "vite-tsconfig-paths": "6.1.1",
+    "vitest": "4.1.4"
   },
   "license": "Apache-2.0",
   "repository": {

@@ -12,6 +12,11 @@
     },
     "strictNullChecks": true
   },
-  "include": ["benchmark/**/*", "tests/**/*", "playwright.config.ts"],
+  "include": [
+    "benchmark/**/*",
+    "tests/**/*",
+    "playwright.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

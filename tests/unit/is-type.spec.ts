@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   isObject,
   isValue,
@@ -7,7 +7,7 @@ import {
   isDataSource,
 } from '@/packages/luna-core/src/util/is-type'
 
-test.describe('Is Type Utility', { tag: ['@unit'] }, () => {
+describe('Is Type Utility', () => {
   test('should identify objects correctly', () => {
     expect(isObject({})).toBe(true)
     expect(isObject({ key: 'value' })).toBe(true)

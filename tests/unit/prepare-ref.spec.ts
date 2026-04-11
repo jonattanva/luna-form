@@ -1,7 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { prepare } from '@/packages/luna-core/src/util/prepare'
+import type { Filterable } from '@/packages/luna-core/src/type'
 
-test.describe('Prepare with $ref', { tag: ['@unit'] }, () => {
+describe('Prepare with $ref', () => {
   test('should resolve $ref correctly', () => {
     const definition = {
       common_source: {
@@ -23,7 +24,7 @@ test.describe('Prepare with $ref', { tag: ['@unit'] }, () => {
       },
     ]
 
-    const prepared = prepare(sections, definition)
+    const prepared = prepare(sections as unknown as Filterable[], definition)
     expect(prepared[0].fields[0].source).toEqual(definition.common_source)
   })
 
@@ -50,7 +51,7 @@ test.describe('Prepare with $ref', { tag: ['@unit'] }, () => {
       },
     ]
 
-    const prepared = prepare(sections, definition)
+    const prepared = prepare(sections as unknown as Filterable[], definition)
     expect(prepared[0].fields[0].source).toEqual(definition.sources.pokemon)
   })
 
@@ -69,7 +70,7 @@ test.describe('Prepare with $ref', { tag: ['@unit'] }, () => {
       },
     ]
 
-    const prepared = prepare(sections, definition)
+    const prepared = prepare(sections as unknown as Filterable[], definition)
     expect(prepared[0].fields[0].source).toEqual({
       $ref: '#/definition/missing',
     })

@@ -1,10 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   getDataAttributes,
   getAriaAttributes,
 } from '@/packages/luna-core/src/util/attributes'
 
-test.describe('Get aria and data attributes', { tag: ['@unit'] }, () => {
+describe('Get aria and data attributes', () => {
   test('should return empty object when no aria attributes are provided', () => {
     expect(getAriaAttributes({})).toEqual({})
   })

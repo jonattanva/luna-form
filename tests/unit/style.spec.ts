@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import { mergeStyle } from '@/packages/luna-core/src/util/style'
 
-test.describe('Style Helper', { tag: ['@unit'] }, () => {
+describe('Style Helper', () => {
   test('should return empty object when both styles are undefined', () => {
     expect(mergeStyle(undefined, undefined)).toEqual({})
   })

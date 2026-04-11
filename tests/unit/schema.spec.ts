@@ -1,5 +1,5 @@
 import { applyCustomValidation } from '@/packages/luna-core/src/util/schema'
-import { expect, test } from '@playwright/test'
+import { describe, expect, test } from 'vitest'
 import {
   buildSchema,
   getEmail,
@@ -12,7 +12,7 @@ import {
 import { z } from 'zod'
 import type { Field, Input } from '@/packages/luna-core/src/type'
 
-test.describe('Schema Utility', { tag: ['@unit'] }, () => {
+describe('Schema Utility', () => {
   test('should create an email schema with required validation', () => {
     const input = {
       name: 'email',

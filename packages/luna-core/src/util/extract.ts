@@ -28,7 +28,11 @@ export function getCurrentValue<T>(
   value: T,
   entity = VALUE
 ): Value | undefined {
-  if (value !== null && value !== undefined) {
+  if (value != null) {
+    if (Array.isArray(value) && value.every(isValue)) {
+      return value
+    }
+
     if (isValue(value)) {
       return value
     }
@@ -122,12 +126,10 @@ export function toOptions<T>(
 }
 
 export function getType(value: string = TYPE_TEXT): string {
-  if (value) {
-    const lastSlash = value.lastIndexOf('/')
-    const type = lastSlash === -1 ? value : value.slice(lastSlash + 1)
-    if (type && type !== INPUT) {
-      return type.trim().toLowerCase()
-    }
+  const lastSlash = value.lastIndexOf('/')
+  const type = lastSlash === -1 ? value : value.slice(lastSlash + 1)
+  if (type && type !== INPUT) {
+    return type.trim().toLowerCase()
   }
   return TYPE_TEXT
 }
@@ -146,7 +148,7 @@ export function unflatten(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
-  for (const key in data) {
+  for (const key of Object.keys(data)) {
     const parts = key.split('.')
     if (parts.length === 1) {
       result[key] = data[key]
@@ -175,18 +177,18 @@ export function unflatten(
 }
 
 function compactArrays(obj: Record<string, unknown>): void {
-  for (const key in obj) {
+  for (const key of Object.keys(obj)) {
     const value = obj[key]
     if (Array.isArray(value)) {
       const compacted = value.filter((item) => item !== undefined)
-      compacted.forEach((item) => {
-        if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
-          compactArrays(item as Record<string, unknown>)
+      for (const item of compacted) {
+        if (isObject(item)) {
+          compactArrays(item)
         }
-      })
+      }
       obj[key] = compacted
-    } else if (value !== null && typeof value === 'object') {
-      compactArrays(value as Record<string, unknown>)
+    } else if (isObject(value)) {
+      compactArrays(value)
     }
   }
 }

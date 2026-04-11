@@ -39,8 +39,10 @@ export type Hideable = {
   hidden?: boolean
 }
 
-export type Sections = Array<Section>
-export type Value = string | number | readonly string[]
+export type Sections = Section[]
+export type Multiple = readonly (string | number | boolean)[]
+
+export type Value = string | number | Multiple
 export type Option = {
   description?: string
   label: string
@@ -49,7 +51,7 @@ export type Option = {
 
 export type OptionGroup = {
   label: string
-  items: Array<Option>
+  items: Option[]
 }
 
 export type List = {
@@ -184,6 +186,12 @@ export type Select = Field & {
   source?: DataSource | Array<unknown>
 }
 
+export type Chips = Field & {
+  advanced?: {
+    multiple?: boolean
+  }
+}
+
 export type Time = Field & {
   advanced?: {
     format?: TimeFormat
@@ -233,12 +241,12 @@ export type Style = {
 
 export type Filterable = Base & { fields?: Filterable[] }
 
-export type TimezoneItem = { 
-  label: string 
-  value: string; 
+export type TimezoneItem = {
+  label: string
+  value: string
 }
 
-export type TimezoneGroup = { 
-  items: TimezoneItem[] 
-  label: string; 
+export type TimezoneGroup = {
+  items: TimezoneItem[]
+  label: string
 }
