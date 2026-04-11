@@ -53,6 +53,7 @@
     "type": "git",
     "url": "https://github.com/jonattanva/luna-form.git"
   },
+  "packageManager": "pnpm@10.30.0",
   "engines": {
     "node": ">=22.x",
     "pnpm": ">=10.x"

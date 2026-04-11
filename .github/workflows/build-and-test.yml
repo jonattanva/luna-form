@@ -23,7 +23,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 10
+          cache: true
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
         with:
@@ -119,7 +119,6 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
         with:
-          version: 10
           cache: true
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
@@ -145,9 +144,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v5
         with:
-          version: 10
           cache: true
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
@@ -176,9 +174,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v5
         with:
-          version: 10
           cache: true
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
@@ -198,9 +195,8 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v5
         with:
-          version: 10
           cache: true
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
