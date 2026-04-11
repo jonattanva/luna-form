@@ -8,7 +8,7 @@ const SCHEMA = `{
         {
           "label": "Days",
           "name": "days",
-          "type": "chips/days"
+          "type": "chips/day"
         }
       ]
     }
@@ -85,7 +85,7 @@ test.describe('Chips days form', { tag: ['@e2e'] }, () => {
               {
                 "label": "Days",
                 "name": "days",
-                "type": "chips/days"
+                "type": "chips/day"
               }
             ]
           }
@@ -120,7 +120,7 @@ test.describe('Chips days form', { tag: ['@e2e'] }, () => {
               {
                 "label": "Days",
                 "name": "days",
-                "type": "chips/days"
+                "type": "chips/day"
               }
             ]
           }
@@ -150,7 +150,7 @@ const SCHEMA_SINGLE = `{
         {
           "label": "Days",
           "name": "days",
-          "type": "chips/days",
+          "type": "chips/day",
           "advanced": { "multiple": false }
         }
       ]
