@@ -50,7 +50,6 @@
 
   const translations = $derived(translationsProp?.[lang ?? ''])
 
-  // useFormState placeholders
   const action = undefined
   const state: FormState<Record<string, unknown>> = {
     data: null,
