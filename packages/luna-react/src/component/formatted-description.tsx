@@ -1,7 +1,6 @@
 import { Description } from './description'
 import { formatMarkdown } from '../lib/string'
-import { interpolateIfNeeded } from '../../../luna-core/src/util/string'
-import { translate } from '@luna-form/core'
+import { interpolateIfNeeded, translate } from '@luna-form/core'
 import type { Config } from '../type'
 
 export function FormattedDescription(

@@ -1,4 +1,5 @@
 export const INPUT = 'input'
+export const INPUT_DATE = 'input/date'
 export const INPUT_EMAIL = 'input/email'
 export const INPUT_NUMBER = 'input/number'
 export const INPUT_PASSWORD = 'input/password'
@@ -8,6 +9,7 @@ export const INPUT_TIME = 'input/time'
 
 export const INPUTS = [
   INPUT,
+  INPUT_DATE,
   INPUT_EMAIL,
   INPUT_NUMBER,
   INPUT_PASSWORD,

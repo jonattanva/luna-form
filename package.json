@@ -34,7 +34,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-playwright": "2.10.1",
-    "globals": "17.4.0",
+    "globals": "17.5.0",
     "husky": "9.1.7",
     "lint-staged": "16.4.0",
     "mitata": "1.0.34",
@@ -53,7 +53,7 @@
     "type": "git",
     "url": "https://github.com/jonattanva/luna-form.git"
   },
-  "packageManager": "pnpm@10.30.0",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22.x",
     "pnpm": ">=10.x"

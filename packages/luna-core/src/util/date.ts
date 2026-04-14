@@ -1,6 +1,8 @@
 import { TIMEZONE_REGIONS } from './constant'
 import { isValid, parse, format as fnsFormat } from 'date-fns'
 import type {
+  Date as DateField,
+  DateFormat,
   Nullable,
   Time,
   TimeFormat,
@@ -202,6 +204,19 @@ export function getConvert(value: string | number, current?: number): number {
   return now
 }
 
+export function toNativeDate(value: string, fromFormat: DateFormat): string {
+  if (!value) {
+    return ''
+  }
+
+  try {
+    const date = parse(value, fromFormat, REF)
+    return isValid(date) ? fnsFormat(date, 'yyyy-MM-dd') : ''
+  } catch {
+    return ''
+  }
+}
+
 export function toNativeTime(value: string, fromFormat: TimeFormat): string {
   if (!value) {
     return ''
@@ -215,7 +230,10 @@ export function toNativeTime(value: string, fromFormat: TimeFormat): string {
   }
 }
 
-export function fromNativeTime(native: string, toFormat: TimeFormat = 'HH:mm'): string {
+export function fromNativeTime(
+  native: string,
+  toFormat: TimeFormat = 'HH:mm'
+): string {
   if (!native) {
     return ''
   }
@@ -230,6 +248,26 @@ export function fromNativeTime(native: string, toFormat: TimeFormat = 'HH:mm'): 
   }
 }
 
+export function fromNativeDate(
+  native: string,
+  toFormat: DateFormat = 'yyyy-MM-dd'
+): string {
+  if (!native) {
+    return ''
+  }
+  
+  try {
+    const date = parse(native, 'yyyy-MM-dd', REF)
+    return isValid(date) ? fnsFormat(date, toFormat) : ''
+  } catch {
+    return ''
+  }
+}
+
 export function getTimeFormat(field: Time): TimeFormat {
   return field.advanced?.format ?? 'HH:mm'
+}
+
+export function getDateFormat(field: DateField): DateFormat {
+  return field.advanced?.format ?? 'yyyy-MM-dd'
 }

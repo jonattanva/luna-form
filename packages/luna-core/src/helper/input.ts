@@ -3,11 +3,13 @@ import { buildOptions, buildSource } from '../util/build'
 import {
   getConvert,
   getCurrentYear,
+  getDateFormat,
   getMonth,
   getTimeFormat,
   getTimezones,
   getWeekDays,
   getYear,
+  toNativeDate,
   toNativeTime,
 } from '../util/date'
 import { getCurrentValue, getType, toOptions } from '../util/extract'
@@ -16,6 +18,7 @@ import {
   isChips,
   isChipsDays,
   isChipsMonths,
+  isDate,
   isInput,
   isNumber,
   isOptions,
@@ -32,6 +35,7 @@ import {
 import { isObject, isString } from '../util/is-type'
 import type {
   Chips,
+  Date as DateField,
   CommonProps,
   DataSource,
   Field,
@@ -243,6 +247,10 @@ export function getInputValue<K>(field: Field, value?: Nullable<K>) {
     return getTimeValue(field, currentValue)
   }
 
+  if (isDate(field) && isValidValue(currentValue)) {
+    return getDateValue(field, currentValue)
+  }
+
   return currentValue
 }
 
@@ -330,4 +338,11 @@ export function prepareDefaultValue<T>(field: Field, value?: Nullable<T>) {
     }
   }
   return { defaultValue: value }
+}
+
+function getDateValue(field: DateField, currentValue?: Value) {
+  const format = getDateFormat(field)
+  return isString(currentValue)
+    ? toNativeDate(currentValue, format)
+    : currentValue
 }

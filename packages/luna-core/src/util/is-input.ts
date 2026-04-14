@@ -6,6 +6,7 @@ import {
   CHIPS_MONTHS,
   COLUMN,
   INPUT,
+  INPUT_DATE,
   INPUT_EMAIL,
   INPUT_NUMBER,
   INPUT_TIME,
@@ -52,13 +53,17 @@ export const isChipsDays = (field: Field): boolean =>
 export const isChipsMonths = (field: Field): boolean =>
   createTypeChecker(CHIPS_MONTHS)(field)
 
+export const isDate = createTypeChecker<Field>(INPUT_DATE)
+export const isTime = createTypeChecker<Time>(INPUT_TIME)
+
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isChips = createTypeChecker<Chips>(CHIPS)
-export const isInput = createTypeChecker<Input>(INPUT)
 export const isRadio = createTypeChecker<Select>(RADIO)
+
+export const isInput = createTypeChecker<Input>(INPUT)
 export const isSelect = createTypeChecker<Select>(SELECT)
 export const isTextArea = createTypeChecker<Input>(TEXTAREA)
-export const isTime = createTypeChecker<Time>(INPUT_TIME)
+
 export const isText = createTypeChecker<Input>(
   TYPE_TEXT,
   TYPE_EMAIL,

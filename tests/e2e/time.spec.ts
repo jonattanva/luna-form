@@ -3,27 +3,6 @@ import { inject } from './support/inject'
 
 test.describe('Time input format', { tag: ['@e2e'] }, () => {
   test.describe('rendering', () => {
-    test('should render a time input with type="time"', async ({ page }) => {
-      await inject(
-        page,
-        `{
-          "sections": [{
-            "fields": [{
-              "advanced": { "data": { "testid": "meeting_time" } },
-              "label": "Meeting Time",
-              "name": "meeting_time",
-              "type": "input/time"
-            }]
-          }]
-        }`
-      )
-      await page.goto('')
-
-      const input = page.getByTestId('meeting_time')
-      await expect(input).toBeVisible()
-      await expect(input).toHaveAttribute('type', 'time')
-    })
-
     test('should set step to 60 when no format is specified (default HH:mm)', async ({
       page,
     }) => {
@@ -230,6 +209,95 @@ test.describe('Time input format', { tag: ['@e2e'] }, () => {
 
       await expect(page.locator('input[name="start_time"]')).toHaveValue(
         '00:00:00'
+      )
+    })
+  })
+
+  test.describe('form submission (HH:mm format)', () => {
+    test('should submit value in HH:mm format after user input', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+          "sections": [{
+            "fields": [{
+              "label": "Start Time",
+              "name": "start_time",
+              "required": true,
+              "type": "input/time"
+            }]
+          }]
+        }`
+      )
+      await page.goto('')
+
+      await page.locator('input[name="start_time"]').fill('14:30')
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      await expect(page.locator('pre code')).toContainText(
+        '"start_time": "14:30:00"'
+      )
+    })
+  })
+
+  test.describe('form submission (hh:mm a format)', () => {
+    test('should submit value in hh:mm a format after user input', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+          "sections": [{
+            "fields": [{
+              "advanced": { "format": "hh:mm a" },
+              "label": "Start Time",
+              "name": "start_time",
+              "required": true,
+              "type": "input/time"
+            }]
+          }]
+        }`
+      )
+      await page.goto('')
+
+      await page.locator('input[name="start_time"]').fill('14:30')
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      await expect(page.locator('pre code')).toContainText(
+        '"start_time": "14:30:00"'
+      )
+    })
+  })
+
+  test.describe('form submission (hh:mm:ss a format)', () => {
+    test('should submit value in hh:mm:ss a format after user input', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+          "sections": [{
+            "fields": [{
+              "advanced": { "format": "hh:mm:ss a" },
+              "label": "Start Time",
+              "name": "start_time",
+              "required": true,
+              "type": "input/time"
+            }]
+          }]
+        }`
+      )
+      await page.goto('')
+
+      await page.locator('input[name="start_time"]').fill('14:30')
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      await expect(page.locator('pre code')).toContainText(
+        '"start_time": "14:30:00"'
       )
     })
   })

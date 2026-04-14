@@ -15,14 +15,15 @@ export type AriaAttributes = {
 }
 
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
+export type DateFormat = 'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy'
 
 export type DataSource = {
-  url: string
   body?: BodyInit | Record<string, unknown>
   cache?: RequestCache
   headers?: HeadersInit
   method?: string
   namespace?: string
+  url: string
 }
 
 export type Source = {
@@ -50,8 +51,8 @@ export type Option = {
 }
 
 export type OptionGroup = {
-  label: string
   items: Option[]
+  label: string
 }
 
 export type List = {
@@ -192,17 +193,21 @@ export type Chips = Field & {
   }
 }
 
-export type Time = Field & {
+type TemporalField<T> = Field & {
   advanced?: {
-    format?: TimeFormat
+    format?: T
   }
 }
+
+export type Date = TemporalField<DateFormat>
+export type Time = TemporalField<TimeFormat>
 
 export type Environment = {
   [key: string]: Value
 }
 
 export type Protocol = 'http' | 'https'
+
 export type RemotePattern = {
   hostname?: string
   port?: number
@@ -210,9 +215,9 @@ export type RemotePattern = {
 }
 
 export type FormStateError = {
-  title: string
   description?: string
   details?: Nullable<Record<string, string[]> | string[]>
+  title: string
 }
 
 export type BaseConfig<T> = {

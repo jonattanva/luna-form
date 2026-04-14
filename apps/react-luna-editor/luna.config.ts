@@ -18,6 +18,7 @@ import {
   defineSelect,
   defineTextArea,
 } from 'react-luna-form/config'
+import { DatePickerInput } from './components/ui/wrapper/date-picker'
 
 export default defineConfig({
   alert: AlertForm,
@@ -30,6 +31,7 @@ export default defineConfig({
     defineTextArea(Textarea),
 
     defineCustomInput('checkbox/switch', Switch),
+    defineCustomInput('input/date', DatePickerInput),
     defineCustomInput('select/timezone', ComboboxWithGroup),
   ],
 })

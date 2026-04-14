@@ -6,14 +6,15 @@ import { reportInputErrorAtom } from '../lib/error-store'
 import { reportValueAtom, valueAtom } from '../lib/value-store'
 import { useCallback, useEffect, useRef, useTransition } from 'react'
 import { useDataSource } from '../hook/use-data-source'
+import { useFormat } from '../hook/use-format'
 import { useInput } from '../hook/use-input'
 import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from '../hook/use-timeout'
 import { useValue } from '../hook/use-value'
 import {
+  fromNativeDate,
   fromNativeTime,
   getEntity,
-  getTimeFormat,
   handleProxyEvent,
   handleSourceEvent,
   handleStateEvent,
@@ -21,7 +22,6 @@ import {
   isClickable,
   isOptions,
   isTextable,
-  isTime,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
@@ -104,7 +104,7 @@ export function Input(
     value
   )
 
-  const timeFormat = isTime(props.field) ? getTimeFormat(props.field) : null
+  const { dateFormat, timeFormat } = useFormat(props.field)
 
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
@@ -234,12 +234,18 @@ export function Input(
   const getValue = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const native = event.target.value
-      if (timeFormat === null) {
-        return native
+
+      if (timeFormat !== null) {
+        return fromNativeTime(native, timeFormat)
       }
-      return fromNativeTime(native, timeFormat)
+
+      if (dateFormat !== null) {
+        return fromNativeDate(native, dateFormat)
+      }
+
+      return native
     },
-    [timeFormat]
+    [timeFormat, dateFormat]
   )
 
   const onChange = useCallback(

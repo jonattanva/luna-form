@@ -1,10 +1,10 @@
 {
   "name": "react-luna-form",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
-  "types": "./dist/types/client/index.d.ts",
+  "types": "./dist/types/luna-react/src/client/index.d.ts",
   "scripts": {
     "build": "node esbuild.mjs && pnpm run types",
     "dev": "node esbuild.mjs --watch",
