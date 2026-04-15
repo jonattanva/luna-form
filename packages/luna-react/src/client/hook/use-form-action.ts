@@ -5,8 +5,11 @@ import { startTransition, useActionState } from 'react'
 import {
   buildSchema,
   flatten,
+  getDateFormat,
   getFormData,
+  isDate,
   logger,
+  toNativeDate,
   translate,
   unflatten,
   type Field,
@@ -66,7 +69,8 @@ export function useFormState<T, F = Record<string, unknown>>(
       }
 
       const form = getFormData(formData)
-      const validated = schema.safeParse(form)
+      const normalized = normalizeDateFields(form, fields)
+      const validated = schema.safeParse(normalized)
 
       if (!validated.success) {
         const errors = flatten(validated.error)
@@ -87,7 +91,7 @@ export function useFormState<T, F = Record<string, unknown>>(
         })
       }
 
-      const unflattened = unflatten(form) as F & T
+      const unflattened = unflatten(normalized) as F & T
 
       if (action) {
         try {
@@ -149,4 +153,27 @@ function failure<T>(
     error,
     success: false,
   }
+}
+
+function normalizeDateFields(
+  form: Record<string, unknown>,
+  fields: Field[]
+): Record<string, unknown> {
+  const result = { ...form }
+  for (const field of fields) {
+    if (
+      isDate(field) &&
+      typeof result[field.name] === 'string' &&
+      result[field.name]
+    ) {
+      const native = toNativeDate(
+        result[field.name] as string,
+        getDateFormat(field)
+      )
+      if (native) {
+        result[field.name] = native
+      }
+    }
+  }
+  return result
 }

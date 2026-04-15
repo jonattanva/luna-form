@@ -15,6 +15,7 @@ import {
   fromNativeDate,
   fromNativeTime,
   getEntity,
+  getFormatProps,
   handleProxyEvent,
   handleSourceEvent,
   handleStateEvent,
@@ -65,6 +66,9 @@ export function Input(
 
   const initialEventsProcessedRef = useRef(false)
 
+  const { dateFormat, timeFormat } = useFormat(props.field)
+  const formatProps = getFormatProps(dateFormat, timeFormat)
+
   const valueRef = useRef(value)
   valueRef.current = value
 
@@ -104,7 +108,7 @@ export function Input(
     value
   )
 
-  const { dateFormat, timeFormat } = useFormat(props.field)
+  const inputProps = prepareInputValue(props.field, defaultValue)
 
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
@@ -166,8 +170,6 @@ export function Input(
       })
     })
   }
-
-  const inputProps = prepareInputValue(props.field, defaultValue)
 
   const validated = useCallback(
     (value: string) => {
@@ -233,17 +235,20 @@ export function Input(
 
   const getValue = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const native = event.target.value
+      const raw = event.target.value
 
       if (timeFormat !== null) {
-        return fromNativeTime(native, timeFormat)
+        return fromNativeTime(raw, timeFormat)
       }
 
       if (dateFormat !== null) {
-        return fromNativeDate(native, dateFormat)
+        // Calendar commits native yyyy-MM-dd → convert to display format
+        // User types display format directly → pass through as-is
+        const converted = fromNativeDate(raw, dateFormat)
+        return converted || raw
       }
 
-      return native
+      return raw
     },
     [timeFormat, dateFormat]
   )
@@ -307,6 +312,7 @@ export function Input(
         {...commonPropsWithOptions}
         {...props.ariaAttributes}
         {...props.dataAttributes}
+        {...formatProps}
         {...inputProps}
         onBlur={onBlur}
         onChange={onChange}

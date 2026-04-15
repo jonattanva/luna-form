@@ -29,4 +29,16 @@ describe('toNativeDate', () => {
   test('should return empty string when value does not match format', () => {
     expect(toNativeDate('01/15/2024', 'dd/MM/yyyy')).toBe('')
   })
+
+  test('should convert MMMM d, yyyy to yyyy-MM-dd', () => {
+    expect(toNativeDate('January 15, 2024', 'MMMM d, yyyy')).toBe('2024-01-15')
+  })
+
+  test('should convert end-of-year MMMM d, yyyy to yyyy-MM-dd', () => {
+    expect(toNativeDate('December 31, 2023', 'MMMM d, yyyy')).toBe('2023-12-31')
+  })
+
+  test('should return empty string when value does not match MMMM d, yyyy', () => {
+    expect(toNativeDate('2024-01-15', 'MMMM d, yyyy')).toBe('')
+  })
 })

@@ -1,6 +1,7 @@
 import { MAX, MAX_LENGTH, MIN, MIN_LENGTH, OPTIONS } from '../util/constant'
 import { buildOptions, buildSource } from '../util/build'
 import {
+  fromNativeDate,
   getConvert,
   getCurrentYear,
   getDateFormat,
@@ -44,6 +45,8 @@ import type {
   Select,
   Time,
   Value,
+  TimeFormat,
+  DateFormat,
 } from '../type'
 
 const now = getCurrentYear()
@@ -325,9 +328,17 @@ export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
       checked: isValidValue(value) ? value : false,
     }
   }
+
   if (isChips(field)) {
     return { value: Array.isArray(value) ? value : [] }
   }
+
+  if (isDate(field)) {
+    if (isString(value) && isValidValue(value)) {
+      return { value: fromNativeDate(value, getDateFormat(field)) }
+    }
+  }
+
   return { value: value ?? '' }
 }
 
@@ -345,4 +356,12 @@ function getDateValue(field: DateField, currentValue?: Value) {
   return isString(currentValue)
     ? toNativeDate(currentValue, format)
     : currentValue
+}
+
+export function getFormatProps(
+  dateFormat: Nullable<DateFormat>,
+  timeFormat: Nullable<TimeFormat>
+) {
+  const format = dateFormat ?? timeFormat
+  return format ? { 'data-format': format } : {}
 }

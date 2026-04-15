@@ -15,7 +15,7 @@ export type AriaAttributes = {
 }
 
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
-export type DateFormat = 'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy'
+export type DateFormat = 'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'MMMM d, yyyy'
 
 export type DataSource = {
   body?: BodyInit | Record<string, unknown>

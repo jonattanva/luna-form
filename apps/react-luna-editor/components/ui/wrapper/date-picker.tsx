@@ -19,20 +19,26 @@ import {
 
 const NATIVE_FORMAT = 'yyyy-MM-dd'
 
-function parseNativeDate(value: string): Date | undefined {
+function parseDate(value: string, format: string): Date | undefined {
   if (!value) {
     return undefined
   }
 
-  const date = parse(value, NATIVE_FORMAT, new Date())
-  return isValid(date) ? date : undefined
+  try {
+    const date = parse(value, format, new Date())
+    return isValid(date) ? date : undefined
+  } catch {
+    return undefined
+  }
 }
 
 export function DatePickerInput({
   onChange,
   value,
+  'data-format': dateFormat = NATIVE_FORMAT,
   ...props
 }: {
+  'data-format'?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   value?: string
 }) {
@@ -70,13 +76,12 @@ export function DatePickerInput({
   }
 
   function handleCalendarSelect(date: Date | undefined) {
-    const formatted = date ? fnsFormat(date, NATIVE_FORMAT) : ''
-    setLocalValue(formatted)
-    commit(formatted)
+    const native = date ? fnsFormat(date, NATIVE_FORMAT) : ''
+    commit(native)
     setOpen(false)
   }
 
-  const selectedDate = parseNativeDate(value ?? '')
+  const selectedDate = parseDate(value ?? '', dateFormat)
 
   return (
     <InputGroup>
@@ -116,6 +121,7 @@ export function DatePickerInput({
             <Calendar
               mode="single"
               selected={selectedDate}
+              defaultMonth={selectedDate}
               onSelect={handleCalendarSelect}
             />
           </PopoverContent>

@@ -250,7 +250,7 @@ export function fromNativeTime(
 
 export function fromNativeDate(
   native: string,
-  toFormat: DateFormat = 'yyyy-MM-dd'
+  toFormat: DateFormat = 'MMMM d, yyyy'
 ): string {
   if (!native) {
     return ''
@@ -269,5 +269,5 @@ export function getTimeFormat(field: Time): TimeFormat {
 }
 
 export function getDateFormat(field: DateField): DateFormat {
-  return field.advanced?.format ?? 'yyyy-MM-dd'
+  return field.advanced?.format ?? 'MMMM d, yyyy'
 }
