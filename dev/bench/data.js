@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776480622548,
+  "lastUpdate": 1776480655459,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -3317,6 +3317,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 589,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "a84486da9d1dc571a2976d7b215c9e9dec2f836f",
+          "message": "feat: add timezone utilities and refactor input components\n\nIntroduce timezone data loading/compute utilities in luna-core and a\ntimezone input in luna-react. Split the input component into focused\nbase/create/dateable/selectable/textable modules with shared strategies\nand hooks. Fix e2e description locator to avoid strict-mode collision\nwith the code editor.\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
+          "timestamp": "2026-04-17T21:46:55-05:00",
+          "tree_id": "f7fbbe304d9587b00546b496c6e62fa8e1162436",
+          "url": "https://github.com/jonattanva/luna-form/commit/a84486da9d1dc571a2976d7b215c9e9dec2f836f"
+        },
+        "date": 1776480654799,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 283,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 626,
             "unit": "ms"
           }
         ]
