@@ -3,7 +3,6 @@ import { isValid, parse, format as fnsFormat } from 'date-fns'
 import type {
   Date as DateField,
   DateFormat,
-  Nullable,
   Time,
   TimeFormat,
   TimezoneGroup,
@@ -112,13 +111,7 @@ function getTimezoneCity(tz: string): string {
   return tz.slice(tz.lastIndexOf('/') + 1).replace(/_/g, ' ')
 }
 
-let cachedResult: Nullable<TimezoneGroup[]> = null
-
 export function getTimezones(): TimezoneGroup[] {
-  if (cachedResult) {
-    return cachedResult
-  }
-
   const date = new Date()
 
   const detectedTimezone = getUserTimezone()
@@ -167,12 +160,7 @@ export function getTimezones(): TimezoneGroup[] {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([label, items]) => ({ label, items }))
 
-  cachedResult = [
-    { label: 'Suggested', items: [detectedItem] },
-    ...sortedGroups,
-  ]
-
-  return cachedResult
+  return [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
 }
 
 // Cannot access current time from a Client Component without a fallback UI defined
@@ -255,7 +243,7 @@ export function fromNativeDate(
   if (!native) {
     return ''
   }
-  
+
   try {
     const date = parse(native, 'yyyy-MM-dd', REF)
     return isValid(date) ? fnsFormat(date, toFormat) : ''
