@@ -18,7 +18,8 @@ export function Form<
     onSuccess?: (data: T) => void
     onValueChange?: (input: { name: string; value: unknown }) => void
     readOnly?: boolean
-    sections: Sections
+    sections?: Sections
+    steps?: Sections
     translations?: Record<string, Record<string, string>>
     value?: Nullable<T>
   }>

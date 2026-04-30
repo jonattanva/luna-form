@@ -16,6 +16,7 @@
     noValidate,
     readOnly,
     sections: sectionsProp,
+    steps: stepsProp,
   }: {
     action?: string | ((formData: FormData) => void)
     children: Slot
@@ -25,10 +26,12 @@
     isPending?: boolean
     noValidate?: boolean
     readOnly?: boolean
-    sections: Sections
+    sections?: Sections
+    steps?: Sections
   } = $props()
 
-  const sections = $derived(prepare(sectionsProp, definition))
+  const isStep = $derived(!!stepsProp)
+  const sections = $derived(prepare(sectionsProp ?? stepsProp ?? [], definition, isStep))
 
   function handleAction(event: SubmitEvent) {
     if (typeof action === 'function') {

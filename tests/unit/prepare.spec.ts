@@ -114,4 +114,16 @@ describe('Prepare Utility', () => {
     const prepared = prepare(sections)
     expect(prepared).toHaveLength(1)
   })
+
+  test('should assign step numbers when isStep is true', () => {
+    const sections = [
+      { id: '1', fields: [{ name: 'f1', type: 'text' }] },
+      { id: '2', fields: [{ name: 'f2', type: 'text' }] },
+    ] as Section[]
+
+    const result = prepare(sections, {}, true)
+    expect(result).toHaveLength(2)
+    expect(result[0].step).toBe(1)
+    expect(result[1].step).toBe(2)
+  })
 })

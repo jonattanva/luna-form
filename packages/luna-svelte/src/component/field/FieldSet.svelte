@@ -99,7 +99,7 @@
     class="flex flex-col data-[empty=false]:gap-6"
     id={section.id?.toString()}
   >
-    <Legend description={section.description} title={section.title} />
+    <Legend description={section.description} step={section.step} title={section.title} />
     <Group {compact}>
       {#if children}
         {@render children()}

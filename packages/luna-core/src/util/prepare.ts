@@ -7,12 +7,22 @@ const REGEX_REF = /^#\/definition\//
 
 export function prepare<T extends Filterable>(
   base: readonly T[] = [],
-  definition?: Definition
+  definition?: Definition,
+  isStep?: boolean
 ) {
   const resolved = resolveRefs(base, definition)
-  return Array.isArray(resolved)
+  const items = Array.isArray(resolved)
     ? resolved.filter(filter).sort((a, b) => getOrder(a) - getOrder(b))
     : []
+
+  if (isStep) {
+    return items.map((item, index) => ({
+      ...item,
+      step: index + 1,
+    }))
+  }
+
+  return items
 }
 
 export function resolveRefs(

@@ -30,6 +30,7 @@ export function FieldSet(
       description={props.section.description}
       empty={fields.length === 0}
       id={props.section.id?.toString()}
+    step={props.section.step}
       title={props.section.title}
     >
       {group}
