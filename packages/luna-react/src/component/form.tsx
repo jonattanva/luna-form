@@ -16,10 +16,12 @@ export function Form(
     isPending?: boolean
     noValidate?: boolean
     readOnly?: boolean
-    sections: Sections
+    sections?: Sections
+    steps?: Sections
   }>
 ) {
-  const sections = prepare(props.sections, props.definition)
+  const isStep = !!props.steps
+  const sections = prepare(props.sections ?? props.steps ?? [], props.definition, isStep)
 
   return (
     <div className="h-full w-full">

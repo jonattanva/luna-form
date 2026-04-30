@@ -21,7 +21,8 @@ export function FormContent<
     onSuccess?: (data: T) => void
     onValueChange?: (input: { name: string; value: unknown }) => void
     readOnly?: boolean
-    sections: Sections
+    sections?: Sections
+    steps?: Sections
     translations?: Record<string, Record<string, string>>
     value?: Nullable<T>
   }>
@@ -60,6 +61,7 @@ export function FormContent<
         noValidate
         readOnly={props.readOnly}
         sections={props.sections}
+        steps={props.steps}
       >
         {({ disabled, fields }) => (
           <Slot

@@ -29,7 +29,8 @@
     onSuccess?: (data: Record<string, unknown>) => void
     onValueChange?: (input: { name: string; value: unknown }) => void
     readOnly?: boolean
-    sections: Sections
+    sections?: Sections
+    steps?: Sections
     translations?: Record<string, Record<string, string>>
     value?: Nullable<Record<string, unknown>>
   }
@@ -42,6 +43,7 @@
     lang,
     readOnly,
     sections,
+    steps,
     translations: translationsProp,
     value: valueProp,
   }: Props = $props()
@@ -84,6 +86,7 @@
   noValidate
   {readOnly}
   {sections}
+  {steps}
 >
   {#snippet children({ disabled, fields })}
     <Slot {disabled} {fields} style={config.style}>

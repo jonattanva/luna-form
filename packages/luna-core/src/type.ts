@@ -85,6 +85,7 @@ export type Section = {
   fields?: Fields
   id?: string | number
   separator?: boolean
+  step?: number
   title?: string
 } & Base
 
