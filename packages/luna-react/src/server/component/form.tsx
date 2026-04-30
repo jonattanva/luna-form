@@ -6,6 +6,9 @@ import type { Definition, Sections } from '@luna-form/core'
 
 export function Form(
   props: Readonly<{
+    advanced?: {
+      step?: boolean
+    }
     children?: React.ReactNode
     config: Config
     context?: Record<string, unknown>
@@ -21,6 +24,7 @@ export function Form(
 
   return (
     <Component
+      advanced={props.advanced}
       config={props.config}
       control={props.children}
       definition={props.definition}

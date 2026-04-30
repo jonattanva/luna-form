@@ -6,55 +6,59 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     await inject(
       page,
       `{
-          "sections": [
-              {
-                  "title": "Profile",
-                  "description": "Fill in your profile information.",
-                  "separator": true
-              },
-              {
-                  "separator": true,
-                  "fields": [
-                      {
-                          "advanced": {
-                              "data": {
-                                "testid": "name"
-                              },
-                              "horizontal": true
-                          },
-                          "label": "Name",
-                          "name": "name",
-                          "type": "input/text",
-                          "required": true,
-                          "description": "Provide your full name for identification",
-                          "validation": {
-                              "required": "Name is required"
-                          }
-                      }
-                  ]
-              },
-              {
-                  "fields": [
-                      {
-                          "advanced": {
-                              "data": {
-                                "testid": "message"
-                              },
-                              "horizontal": true
-                          },
-                          "label": "Message",
-                          "name": "message",
-                          "type": "textarea",
-                          "required": true,
-                          "description": "You can write your message here. Keep it short, preferably under 100 characters.",
-                          "validation": {
-                              "required": "Message is required"
-                          }
-                      }
-                  ]
-              }
-          ]
-      }`
+  "sections": [
+    {
+      "advanced": {
+        "separator": true
+      },
+      "title": "Profile",
+      "description": "Fill in your profile information."
+    },
+    {
+      "advanced": {
+        "separator": true
+      },
+      "fields": [
+        {
+          "advanced": {
+            "data": {
+              "testid": "name"
+            },
+            "horizontal": true
+          },
+          "label": "Name",
+          "name": "name",
+          "type": "input/text",
+          "required": true,
+          "description": "Provide your full name for identification",
+          "validation": {
+            "required": "Name is required"
+          }
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "advanced": {
+            "data": {
+              "testid": "message"
+            },
+            "horizontal": true
+          },
+          "label": "Message",
+          "name": "message",
+          "type": "textarea",
+          "required": true,
+          "description": "You can write your message here. Keep it short, preferably under 100 characters.",
+          "validation": {
+            "required": "Message is required"
+          }
+        }
+      ]
+    }
+  ]
+}`
     )
     await page.goto('')
 
@@ -89,30 +93,34 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
       `{
           "sections": [
               {
-                  "title": "Profile",
-                  "description": "Fill in your profile information.",
-                  "separator": true
+                "advanced": {
+                    "separator": true
+                },
+                "title": "Profile",
+                "description": "Fill in your profile information."
               },
               {
-                  "separator": true,
-                  "fields": [
-                      {
-                          "advanced": {
-                              "data": {
-                                "testid": "name"
-                              },
-                              "horizontal": true
-                          },
-                          "label": "Name",
-                          "name": "name",
-                          "type": "input/text",
-                          "required": true,
-                          "description": "Provide your full name for identification",
-                          "validation": {
-                              "required": "Name is required"
-                          }
-                      }
-                  ]
+                "advanced": {
+                    "separator": true
+                },
+                "fields": [
+                    {
+                        "advanced": {
+                            "data": {
+                            "testid": "name"
+                            },
+                            "horizontal": true
+                        },
+                        "label": "Name",
+                        "name": "name",
+                        "type": "input/text",
+                        "required": true,
+                        "description": "Provide your full name for identification",
+                        "validation": {
+                            "required": "Name is required"
+                        }
+                    }
+                ]
               },
               {
                   "fields": [

@@ -1,9 +1,11 @@
 {
     "sections": [
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Payment Method",
             "description": "All transactions are secure and encrypted",
-            "separator": true,
             "fields": [
                 {
                     "label": "Name on card",

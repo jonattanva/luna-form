@@ -1,13 +1,16 @@
 import { Control as Action } from './control'
 import { FieldSet } from './field/field-set'
 import { Group } from './group'
-import { VisibilityGuard } from '../client/component/guard/visibility-guard'
 import { Separator } from './separator'
+import { VisibilityGuard } from '../client/component/guard/visibility-guard'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Control, Slot } from '../type'
 
 export function Form(
   props: Readonly<{
+    advanced?: {
+      step?: boolean
+    }
     action?: (formData: FormData) => void
     children: Slot
     config: Config
@@ -26,14 +29,22 @@ export function Form(
       <form noValidate={props.noValidate} action={props.action}>
         <Group>
           {sections.map((section, index) => (
-            <VisibilityGuard key={index} fields={section.fields ?? []}>
-              <FieldSet section={section} style={props.config.style}>
+            <VisibilityGuard
+              key={`key-${section.id}-${index}`}
+              fields={section.fields ?? []}
+            >
+              <FieldSet
+                advanced={props.advanced}
+                section={section}
+                step={index + 1}
+                style={props.config.style}
+              >
                 {props.children({
                   disabled: props.readOnly,
                   fields: section.fields,
                 })}
               </FieldSet>
-              {section.separator && <Separator />}
+              {section.advanced?.separator && <Separator />}
             </VisibilityGuard>
           ))}
           {props.control && (

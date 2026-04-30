@@ -1,6 +1,9 @@
 {
     "sections": [
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Payment Method",
             "description": "All transactions are secure and encrypted",
             "fields": [
@@ -122,7 +125,6 @@
                     "order": 3
                 }
             ],
-            "separator": true,
             "order": 1
         },
         {

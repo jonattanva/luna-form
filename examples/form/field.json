@@ -1,7 +1,9 @@
 {
     "sections": [
         {
-            "compact": true,
+            "advanced": {
+                "compact": true
+            },
             "fields": [
                 {
                     "type": "column",
@@ -192,9 +194,11 @@
             ]
         },
         {
+            "advanced": {
+                "compact": true,
+                "collapsible": true
+            },
             "title": "Source",
-            "compact": true,
-            "advanced": true,
             "fields": [
                 {
                     "label": "Get options from",
@@ -351,9 +355,11 @@
             ]
         },
         {
+            "advanced": {
+                "compact": true,
+                "collapsible": true
+            },
             "title": "Advanced options",
-            "compact": true,
-            "advanced": true,
             "fields": [
                 {
                     "label": "Name",
@@ -576,9 +582,11 @@
             ]
         },
         {
+            "advanced": {
+                "compact": true,
+                "collapsible": true
+            },
             "title": "Validation rules",
-            "compact": true,
-            "advanced": true,
             "fields": [
                 {
                     "label": "Required error",
@@ -629,9 +637,11 @@
             ]
         },
         {
+            "advanced": {
+                "compact": true,
+                "collapsible": true
+            },
             "title": "Developer",
-            "compact": true,
-            "advanced": true,
             "fields": [
                 {
                     "advanced": {

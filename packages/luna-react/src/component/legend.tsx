@@ -25,8 +25,8 @@ export function Legend(
   if (props.step) {
     return (
       <div className="flex flex-row items-start gap-4">
-        <div className="bg-primary text-primary-foreground flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-          <span className="text-lg font-bold">{props.step}</span>
+        <div className="bg-primary text-primary-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+          <span className="text-sm font-bold">{props.step}</span>
         </div>
         {content}
       </div>

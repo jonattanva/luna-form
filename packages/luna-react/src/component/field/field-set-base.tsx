@@ -6,17 +6,22 @@ export function FieldSetBase(
     description?: string
     empty?: boolean
     id?: string
+    step?: number
     title?: string
   }>
 ) {
   return (
     <fieldset
-      data-slot="field-set"
-      data-empty={props.empty}
       className="flex flex-col data-[empty=false]:gap-6"
+      data-empty={props.empty}
+      data-slot="field-set"
       id={props.id}
     >
-      <Legend description={props.description} title={props.title} />
+      <Legend
+        description={props.description}
+        step={props.step}
+        title={props.title}
+      />
       {props.children}
     </fieldset>
   )

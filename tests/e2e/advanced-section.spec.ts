@@ -10,8 +10,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -49,9 +51,11 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
             "description": "These are optional settings.",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -88,8 +92,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -124,8 +130,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -154,8 +162,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -186,9 +196,11 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
             "description": "Hidden until expanded.",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -225,8 +237,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
             ]
           },
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Debug Mode",
@@ -268,8 +282,10 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
+            "advanced": {
+                "collapsible": true
+            },
             "title": "Advanced Options",
-            "advanced": true,
             "fields": [
               {
                 "label": "Option A",

@@ -1,10 +1,12 @@
 {
     "sections": [
         {
+            "advanced": {
+                "compact": true,
+                "separator": true
+            },
             "title": "Show these items on the desktop",
             "description": "Select the items you want to show on the desktop.",
-            "separator": true,
-            "compact": true,
             "fields": [
                 {
                     "label": "Hard disk",
@@ -44,9 +46,11 @@
             ]
         },
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Responses",
             "description": "Get notified when ChatGPT responds to requests that take time, likere search or image generation.",
-            "separator": true,
             "fields": [
                 {
                     "label": "Push notifications",

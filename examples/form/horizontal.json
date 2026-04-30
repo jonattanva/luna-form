@@ -1,12 +1,16 @@
 {
     "sections": [
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Profile",
-            "description": "Fill in your profile information.",
-            "separator": true
+            "description": "Fill in your profile information."
         },
         {
-            "separator": true,
+            "advanced": {
+                "separator": true
+            },
             "fields": [
                 {
                     "advanced": {

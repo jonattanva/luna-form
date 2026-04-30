@@ -1,9 +1,11 @@
 {
     "sections": [
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Responses",
             "description": "Get notified when ChatGPT responds to requests that take time, likere search or image generation.",
-            "separator": true,
             "fields": [
                 {
                     "label": "Push notifications",
@@ -52,9 +54,11 @@
             ]
         },
         {
+            "advanced": {
+                "separator": true
+            },
             "title": "Subscription Plan",
             "description": "Yearly and lifetime plans offer significant savings.",
-            "compact": true,
             "fields": [
                 {
                     "name": "subscription",

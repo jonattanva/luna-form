@@ -165,9 +165,11 @@ test.describe('Visibility form', { tag: ['@e2e'] }, () => {
       `{
             "sections": [
                 {
+                    "advanced": {
+                        "separator": true
+                    },
                     "title": "Section with Separator",
                     "description": "This section has a separator.",
-                    "separator": true,
                     "fields": [
                         {
                             "label": "Name",

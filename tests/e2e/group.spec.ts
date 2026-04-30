@@ -40,7 +40,9 @@ test.describe('Group component', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "compact": true,
+            "advanced": {
+              "compact": true
+            },
             "fields": [
               {
                 "label": "Email",
@@ -122,8 +124,10 @@ test.describe('Group component', { tag: ['@e2e'] }, () => {
             ]
           },
           {
+            "advanced": {
+              "compact": true
+            },
             "title": "Section B",
-            "compact": true,
             "fields": [
               {
                 "label": "Field B",

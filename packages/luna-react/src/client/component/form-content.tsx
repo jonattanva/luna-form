@@ -12,6 +12,9 @@ export function FormContent<
   F = Record<string, unknown>,
 >(
   props: Readonly<{
+    advanced?: {
+      step?: boolean
+    }
     action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>
     children?: Control
     config: Config
@@ -53,6 +56,7 @@ export function FormContent<
         ))}
       <Body
         action={action}
+        advanced={props.advanced}
         config={props.config}
         control={props.children}
         definition={props.definition}

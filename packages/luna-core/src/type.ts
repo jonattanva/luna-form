@@ -91,20 +91,16 @@ export type CommonProps = {
 }
 
 export type Section = {
-  advanced?: boolean
-  compact?: boolean
+  advanced?: {
+    collapsible?: boolean
+    compact?: boolean
+    separator?: boolean
+  }
   description?: string
   fields?: Fields
   id?: string | number
-  separator?: boolean
   title?: string
 } & Base
-
-export type Step = {
-  sections: Sections
-} & Base
-
-export type Steps = Step[]
 
 export type Column = {
   advanced?: {
