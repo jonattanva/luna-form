@@ -6,16 +6,19 @@ import {
   type Style,
 } from '@luna-form/core'
 import { SlotBase, type SlotComponents } from './slot-base'
-import type { Children } from '../../type'
+import type { Children, Config } from '../../type'
 
 export function SlotList(
   props: Readonly<{
     children: Children
     components: SlotComponents
+    config: Config
+    context?: Record<string, unknown>
     disabled?: boolean
     field: List
     index: number
     style?: Style
+    translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
@@ -46,9 +49,12 @@ export function SlotList(
     <SlotBase
       children={props.children}
       components={props.components}
+      config={props.config}
+      context={props.context}
       disabled={props.disabled}
       fields={fields}
       style={props.style}
+      translations={props.translations}
       value={props.value}
     />
   )

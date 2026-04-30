@@ -10,7 +10,7 @@ import {
 import { Column } from '../column'
 import { Fragment } from 'react'
 import { SlotList } from './slot-list'
-import type { Children } from '../../type'
+import type { Children, Config } from '../../type'
 import type { FieldProps } from '../field/field'
 import type { ListProps } from '../field/field-list'
 
@@ -23,9 +23,12 @@ export function SlotBase(
   props: Readonly<{
     children: Children
     components: SlotComponents
+    config: Config
+    context?: Record<string, unknown>
     disabled?: boolean
     fields?: Fields
     style?: Style
+    translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
@@ -34,7 +37,12 @@ export function SlotBase(
   return prepare(props.fields).map((field, index) => (
     <Fragment key={index}>
       {isColumn(field) && (
-        <Column column={field}>
+        <Column
+          column={field}
+          config={props.config}
+          context={props.context}
+          translations={props.translations}
+        >
           <SlotBase {...props} fields={field.fields} />
         </Column>
       )}
@@ -49,10 +57,13 @@ export function SlotBase(
             <SlotList
               children={props.children}
               components={props.components}
+              config={props.config}
+              context={props.context}
               disabled={props.disabled}
               field={field}
               index={index}
               style={props.style}
+              translations={props.translations}
               value={props.value}
             />
           )}

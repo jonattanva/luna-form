@@ -14,8 +14,20 @@ export type AriaAttributes = {
   [key: `aria-${string}`]: string | number | boolean
 }
 
+export type Description =
+  | string
+  | {
+      collapsed?: boolean
+      message: string
+      title: string
+    }
+
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
-export type DateFormat = 'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'MMMM d, yyyy'
+export type DateFormat =
+  | 'yyyy-MM-dd'
+  | 'MM/dd/yyyy'
+  | 'dd/MM/yyyy'
+  | 'MMMM d, yyyy'
 
 export type DataSource = {
   body?: BodyInit | Record<string, unknown>
@@ -88,11 +100,17 @@ export type Section = {
   title?: string
 } & Base
 
+export type Step = {
+  sections: Sections
+} & Base
+
+export type Steps = Step[]
+
 export type Column = {
   advanced?: {
     cols?: number
   }
-  description?: string
+  description?: Description
   fields: Array<Field>
   type: 'column' | (string & {})
 } & Base
@@ -157,7 +175,7 @@ export type Field = CommonProps & {
   event?: {
     change?: ChangeEvent
   }
-  description?: string
+  description?: Description
   fields?: never
   label?: string
   name: string

@@ -248,4 +248,124 @@ test.describe('FormattedDescription component', { tag: ['@e2e'] }, () => {
     })
     await expect(selectDesc).toBeVisible()
   })
+
+  test('should render description object with title and chevron', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Username",
+                "name": "username",
+                "type": "input/text",
+                "description": {
+                  "title": "Need help?",
+                  "message": "This is a detailed help message.",
+                  "collapsed": true
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const title = page.getByRole('button', { name: 'Need help?' })
+    await expect(title).toBeVisible()
+
+    // Message should be hidden initially
+    const message = page.getByText('This is a detailed help message.', {
+      exact: true,
+    })
+    await expect(message).toBeHidden()
+
+    // Click to expand
+    await title.click()
+    await expect(message).toBeVisible()
+
+    // Click to collapse
+    await title.click()
+    await expect(message).toBeHidden()
+  })
+
+  test('should render description object initially expanded', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Username",
+                "name": "username",
+                "type": "input/text",
+                "description": {
+                  "title": "Need help?",
+                  "message": "This is a detailed help message.",
+                  "collapsed": false
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const message = page.getByText('This is a detailed help message.', {
+      exact: true,
+    })
+    await expect(message).toBeVisible()
+  })
+
+  test('should support interpolation and translation in description object', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "lang": "en",
+        "translations": {
+          "en": {
+            "help_message": "Detailed help here",
+            "help_title": "Get help"
+          }
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Username",
+                "name": "username",
+                "type": "input/text",
+                "description": {
+                  "title": "help_title",
+                  "message": "help_message",
+                  "collapsed": true
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const title = page.getByRole('button', { name: 'Get help' })
+    await expect(title).toBeVisible()
+
+    await title.click()
+    const message = page.getByText('Detailed help here', { exact: true })
+    await expect(message).toBeVisible()
+  })
 })

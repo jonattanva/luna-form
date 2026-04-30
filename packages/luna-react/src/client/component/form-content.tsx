@@ -63,9 +63,12 @@ export function FormContent<
       >
         {({ disabled, fields }) => (
           <Slot
+            config={props.config}
+            context={props.context}
             disabled={disabled}
             fields={fields}
             style={props.config.style}
+            translations={translations}
             value={value}
           >
             {(internal) => (
