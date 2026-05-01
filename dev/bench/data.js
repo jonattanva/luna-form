@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777671588704,
+  "lastUpdate": 1777671619471,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -3987,6 +3987,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 602,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "7d7e1a714fb95f33f74a01b063dba9efb229cfe7",
+          "message": "feat: add collapsible and collapsed support to list items",
+          "timestamp": "2026-05-01T16:38:59-05:00",
+          "tree_id": "04884fddfb1d17e19dd8f2c3c5e8aa5a2de0ebaa",
+          "url": "https://github.com/jonattanva/luna-form/commit/7d7e1a714fb95f33f74a01b063dba9efb229cfe7"
+        },
+        "date": 1777671619117,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 276,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 634,
             "unit": "ms"
           }
         ]
