@@ -21,6 +21,8 @@ export function FieldList(props: ListProps) {
       {items.map((key, index) => (
         <FieldListItem
           canRemove={canRemove}
+          collapsible={props.field.advanced?.collapsible}
+          collapsed={props.field.advanced?.collapsed}
           index={index}
           isMultiField={isMultiField}
           key={key}

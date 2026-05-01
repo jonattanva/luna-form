@@ -70,6 +70,8 @@ export type OptionGroup = {
 export type List = {
   advanced?: {
     action?: string
+    collapsed?: boolean
+    collapsible?: boolean
     length?: Length<number>
   }
   description?: string

@@ -19,6 +19,8 @@ export function FieldList(props: ListProps) {
 
   return getInitialList(props.field, props.value).map((index) => (
     <FieldListItem
+      collapsed={props.field.advanced?.collapsed}
+      collapsible={props.field.advanced?.collapsible}
       index={index}
       isMultiField={isMultiField}
       key={index}
