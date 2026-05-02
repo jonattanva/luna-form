@@ -1,6 +1,7 @@
-import { Activity, useCallback, useState } from 'react'
 import { ChevronIcon } from '../chevron-icon'
+import { Collapsible } from '../collapsible'
 import { formatMarkdown } from '../../lib/string'
+import { useCallback, useState } from 'react'
 import type { Section } from '@luna-form/core'
 
 export function FieldSetAdvanced(
@@ -34,7 +35,7 @@ export function FieldSetAdvanced(
           <span>{formatMarkdown(props.section.title)}</span>
         </button>
       </legend>
-      <Activity mode={isOpen ? 'visible' : 'hidden'}>
+      <Collapsible visible={isOpen}>
         <div
           className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-slate-300 pl-4 dark:border-slate-600"
           data-slot="field-set-content"
@@ -46,7 +47,7 @@ export function FieldSetAdvanced(
           )}
           {props.group}
         </div>
-      </Activity>
+      </Collapsible>
     </fieldset>
   )
 }

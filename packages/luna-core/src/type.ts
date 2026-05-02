@@ -73,6 +73,7 @@ export type List = {
     collapsed?: boolean
     collapsible?: boolean
     length?: Length<number>
+    preview?: string[]
   }
   description?: string
   fields: Array<Field | Column>

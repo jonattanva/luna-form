@@ -1,5 +1,6 @@
-import { getLabel, isMultiFieldList } from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
+import { FieldPreview } from './field-preview'
+import { getLabel, isMultiFieldList } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import { useFieldList } from '../../hook/use-field-list'
 import type { ListProps } from '../../../component/field/field-list'
@@ -14,7 +15,9 @@ export function FieldList(props: ListProps) {
   const action = props.field.advanced?.action ?? 'Add item'
 
   const hasLimit = max !== Infinity
+
   const isMultiField = isMultiFieldList(props.field)
+  const previews = props.field.advanced?.preview
 
   return (
     <>
@@ -28,6 +31,14 @@ export function FieldList(props: ListProps) {
           key={key}
           label={label}
           onRemove={handleRemove}
+          preview={
+            previews && (
+              <FieldPreview
+                name={`${props.field.name}.${key}`}
+                previews={previews}
+              />
+            )
+          }
         >
           {props.children(key)}
         </FieldListItem>

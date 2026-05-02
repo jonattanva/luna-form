@@ -43,6 +43,49 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
     await expect(field).toBeHidden()
   })
 
+  test('should persist field values when section is collapsed and submitted', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "advanced": { "collapsible": true },
+            "title": "Advanced Options",
+            "fields": [
+              { "label": "Secret Token", "name": "token", "type": "input/text" }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const fieldset = page.locator('[data-advanced="true"]')
+    const toggle = fieldset.getByRole('button', { name: 'Advanced Options' })
+
+    // 1. Abrir y llenar
+    await toggle.click()
+    await page.getByLabel('Secret Token').fill('luna-secret-123')
+
+    // 2. Cerrar (oculta el campo)
+    await toggle.click()
+    await expect(page.getByLabel('Secret Token')).toBeHidden()
+
+    // 3. Abrir de nuevo y validar que el valor sigue en el campo
+    await toggle.click()
+    await expect(page.getByLabel('Secret Token')).toHaveValue('luna-secret-123')
+
+    // 4. Enviar formulario
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    // 5. Verificar que el valor persiste en la salida
+    await expect(page.locator('pre code')).toContainText(
+      '"token": "luna-secret-123"'
+    )
+  })
+
   test('should expand on click showing fields and description', async ({
     page,
   }) => {

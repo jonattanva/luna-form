@@ -10,11 +10,13 @@ export function useStore() {
   const clearSources = useSetAtom(clearInputSourceAtom)
 
   return useCallback(
-    (names: string | string[]) => {
+    (names: string | string[], options?: { keepValue?: boolean }) => {
       const target = Array.isArray(names) ? names : [names]
       clearErrors(target)
       clearSources(target)
-      clearValues(target)
+      if (!options?.keepValue) {
+        clearValues(target)
+      }
     },
     [clearErrors, clearSources, clearValues]
   )

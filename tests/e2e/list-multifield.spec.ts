@@ -71,7 +71,9 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
     await inject(page, MULTIFIELD_LIST)
     await page.goto('')
 
-    const card = page.getByText('Email Addresses 1').locator('..').locator('..')
+    const card = page
+      .locator('[data-slot="list-item-card"]')
+      .filter({ hasText: 'Email Addresses 1' })
     await expect(card).toHaveClass(/rounded-lg/)
     await expect(card).toHaveClass(/border/)
   })

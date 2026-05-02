@@ -33,7 +33,7 @@ export type InputCoreProps = Readonly<{
   field: Field
   horizontal?: boolean
   onMount: (name: string, schema: Schema, field: Field) => void
-  onUnmount: (name: string) => void
+  onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   translations?: Record<string, string>
   value?: Nullable<Record<string, unknown>>
@@ -121,24 +121,45 @@ export function useInputCore(
         )
 
         handleStateEvent(selected, states, (targets, state) => {
-          setFieldStates((prev) => {
+          setFieldStates((previous) => {
             if (state) {
               return targets.reduce(
                 (acc, target) => ({
                   ...acc,
                   [target]: state,
                 }),
-                prev
+                previous
               )
             }
 
-            return targets.reduce((acc, target) => omitKey(acc, target), prev)
+            return targets.reduce(
+              (acc, target) => omitKey(acc, target),
+              previous
+            )
           })
+
+          if (state?.hidden === true) {
+            setValues((previous) => {
+              let changed = false
+              const next = { ...previous }
+              for (const key of Object.keys(previous)) {
+                if (
+                  targets.some(
+                    (target) => key === target || key.startsWith(`${target}.`)
+                  )
+                ) {
+                  delete next[key]
+                  changed = true
+                }
+              }
+              return changed ? next : previous
+            })
+          }
         })
 
         handleValueEvent(selected, values, (target, value) => {
-          setValues((prev) => ({
-            ...prev,
+          setValues((previous) => ({
+            ...previous,
             [target]: value,
           }))
         })

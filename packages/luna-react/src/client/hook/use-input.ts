@@ -1,11 +1,12 @@
+import { KeepValueContext } from '../context/keep-value-context'
 import { getSchema } from '@luna-form/core'
-import { useEffect, useEffectEvent, useMemo } from 'react'
+import { useContext, useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
   field: Field,
   onMount: (name: string, schema: Schema, field: Field) => void,
-  onUnmount: (name: string) => void,
+  onUnmount: (name: string, options?: { keepValue?: boolean }) => void,
   translations?: Record<string, string>
 ) {
   const { name } = field
@@ -13,6 +14,8 @@ export function useInput(
     () => getSchema(field, translations),
     [field, translations]
   )
+
+  const keepValue = useContext(KeepValueContext)
 
   const onMountHandler = useEffectEvent((name: string) => {
     if (name) {
@@ -22,7 +25,9 @@ export function useInput(
 
   const onUnmountHandler = useEffectEvent((name: string) => {
     if (name) {
-      onUnmount(name)
+      onUnmount(name, {
+        keepValue,
+      })
     }
   })
 

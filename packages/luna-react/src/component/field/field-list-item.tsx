@@ -1,7 +1,8 @@
-import { Activity, useState } from 'react'
 import { ChevronIcon } from '../chevron-icon'
+import { Collapsible } from '../collapsible'
 import { Group } from '../group'
 import { twMerge } from 'tailwind-merge'
+import { useState } from 'react'
 
 export function FieldListItem(
   props: Readonly<{
@@ -13,9 +14,14 @@ export function FieldListItem(
     isMultiField: boolean
     label: string
     onRemove?: (index: number) => void
+    preview?: React.ReactNode
   }>
 ) {
-  const [isOpen, setIsOpen] = useState(!props.collapsed)
+  // When `collapsible` is false there is no toggle button, so `collapsed: true`
+  // would render an unreachable state. Ignore `collapsed` in that case.
+  const [isOpen, setIsOpen] = useState(
+    props.collapsible ? !props.collapsed : true
+  )
 
   function handleRemove() {
     if (props.canRemove && props.onRemove) {
@@ -46,7 +52,10 @@ export function FieldListItem(
 
   if (props.isMultiField) {
     return (
-      <div className="rounded-lg border border-slate-100 p-4 dark:border-slate-900">
+      <div
+        data-slot="list-item-card"
+        className="rounded-lg border border-slate-100 p-4 dark:border-slate-900"
+      >
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {props.collapsible && (
@@ -63,15 +72,20 @@ export function FieldListItem(
                 <ChevronIcon expanded={isOpen} />
               </button>
             )}
-            <span className="text-sm font-medium text-slate-400 dark:text-slate-500">
+            <span className="text-sm font-medium text-slate-300 dark:text-slate-400">
               {props.label} {props.index + 1}
+              {!isOpen && props.preview && (
+                <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-slate-400 dark:text-slate-500">
+                  {props.preview}
+                </div>
+              )}
             </span>
           </div>
           {removeButton}
         </div>
-        <Activity mode={isOpen ? 'visible' : 'hidden'}>
+        <Collapsible visible={isOpen}>
           <Group>{props.children}</Group>
-        </Activity>
+        </Collapsible>
       </div>
     )
   }
@@ -82,9 +96,10 @@ export function FieldListItem(
         <button
           aria-label={isOpen ? 'Collapse' : 'Expand'}
           className={twMerge(
-            'mt-1 rounded p-1 text-slate-400 hover:bg-slate-50',
+            'rounded p-1 text-slate-400 hover:bg-slate-50',
             'transition-colors duration-150',
-            'dark:text-slate-500 dark:hover:bg-slate-800'
+            'dark:text-slate-500 dark:hover:bg-slate-800',
+            isOpen && 'mt-7'
           )}
           onClick={handleToggle}
           type="button"
@@ -93,11 +108,15 @@ export function FieldListItem(
         </button>
       )}
       <div className="flex grow flex-col">
-        <Activity mode={isOpen ? 'visible' : 'hidden'}>
+        <Collapsible visible={isOpen}>
           <Group>{props.children}</Group>
-        </Activity>
+        </Collapsible>
       </div>
-      {removeButton && <div className="shrink-0">{removeButton}</div>}
+      {removeButton && (
+        <div className={twMerge('shrink-0', isOpen && 'mt-7')}>
+          {removeButton}
+        </div>
+      )}
     </div>
   )
 }

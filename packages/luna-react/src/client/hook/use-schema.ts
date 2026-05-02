@@ -16,13 +16,16 @@ export function useSchema() {
   }, [])
 
   const onUnmount = useCallback(
-    (name: string) => {
+    (name: string, options?: { keepValue?: boolean }) => {
       if (schemaRef.current[name]) {
         delete schemaRef.current[name]
         fieldsRef.current = fieldsRef.current.filter((field) => {
           return field.name !== name
         })
-        clear([name])
+
+        clear([name], {
+          keepValue: options?.keepValue,
+        })
       }
     },
     [clear]

@@ -269,4 +269,81 @@ test.describe('Recursive Visibility', { tag: ['@e2e'] }, () => {
     await expect(adminSection).toHaveCount(0)
     await expect(adminField).toHaveCount(0)
   })
+
+  test('should clear value from store when section is hidden via state event', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "title": "Trigger Section",
+            "fields": [
+              {
+                "label": "Show Personal",
+                "name": "show_personal",
+                "type": "select",
+                "source": [
+                  { "label": "Yes", "value": "yes" },
+                  { "label": "No", "value": "no" }
+                ],
+                "event": {
+                  "change": [
+                    {
+                      "action": "state",
+                      "target": "personal_name",
+                      "state": { "hidden": true },
+                      "when": "no"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "advanced": { "collapsible": true },
+            "title": "Personal Info",
+            "fields": [
+              {
+                "label": "Personal Name",
+                "name": "personal_name",
+                "type": "input/text"
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    // Open the collapsible section so the field can receive a value
+    const personalFieldset = page.locator('[data-advanced="true"]')
+    await personalFieldset
+      .getByRole('button', { name: 'Personal Info' })
+      .click()
+
+    // Fill the personal name with "Pepe"
+    const personalName = page.getByLabel('Personal Name')
+    await personalName.fill('Pepe')
+    await expect(personalName).toHaveValue('Pepe')
+
+    // Trigger the state event that hides the personal_name field
+    const trigger = page
+      .locator('[data-slot="field"]')
+      .filter({ hasText: 'Show Personal' })
+      .getByRole('combobox')
+      .first()
+    await trigger.click()
+    await page.getByRole('option', { name: 'No' }).click()
+
+    // The field disappears (and so does the now-empty section)
+    await expect(personalName).toHaveCount(0)
+
+    // Submit the form: the value of "Pepe" must NOT remain in the store output
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.locator('pre code')).not.toContainText('Pepe')
+    await expect(page.locator('pre code')).not.toContainText('personal_name')
+  })
 })
