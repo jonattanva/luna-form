@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777750623352,
+  "lastUpdate": 1777750655120,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4075,6 +4075,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 634,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "a045de4a92d3f4d0e382a2beab62f36fbcfbebd5",
+          "message": "chore: update pnpm-lock.yaml with tool updates",
+          "timestamp": "2026-05-02T14:36:20-05:00",
+          "tree_id": "ebd265db3dfd0c93331c14a7ba5027c1e809d941",
+          "url": "https://github.com/jonattanva/luna-form/commit/a045de4a92d3f4d0e382a2beab62f36fbcfbebd5"
+        },
+        "date": 1777750654478,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 271,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 202,
             "unit": "ms"
           }
         ]
