@@ -1,13 +1,17 @@
 import * as esbuild from 'esbuild'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import pkg from './package.json' with { type: 'json' }
 
 const dependencies = Object.keys(pkg.peerDependencies)
 const isWatch = process.argv.includes('--watch')
 
+const outputs = []
+
 function entry(entryPoints, callback) {
   entryPoints = Array.isArray(entryPoints) ? entryPoints : [entryPoints]
 
-  callback(async (format, outdir) => {
+  return callback(async (format, outdir) => {
     const options = {
       bundle: true,
       drop: ['console', 'debugger'],
@@ -26,21 +30,36 @@ function entry(entryPoints, callback) {
       console.log(`Watching ${entryPoints.join(', ')} (${format})...`)
     } else {
       await esbuild.build(options)
+      outputs.push(join(outdir, 'index.js'))
     }
   })
 }
 
-entry('./src/server/index.ts', async (build) => {
-  await build('esm', './dist/server/esm')
-  await build('cjs', './dist/server/cjs')
-})
+await Promise.all([
+  entry('./src/server/index.ts', async (build) => {
+    await build('esm', './dist/server/esm')
+    await build('cjs', './dist/server/cjs')
+  }),
+  entry('./src/client/index.ts', async (build) => {
+    await build('esm', './dist/client/esm')
+    await build('cjs', './dist/client/cjs')
+  }),
+  entry('./src/config/index.ts', async (build) => {
+    await build('esm', './dist/config/esm')
+    await build('cjs', './dist/config/cjs')
+  }),
+])
 
-entry('./src/client/index.ts', async (build) => {
-  await build('esm', './dist/client/esm')
-  await build('cjs', './dist/client/cjs')
-})
+if (!isWatch) {
+  const unminified = outputs.filter((file) => {
+    const content = readFileSync(file, 'utf8')
+    return content.includes('// src/') || content.split('\n').length > 5
+  })
 
-entry('./src/config/index.ts', async (build) => {
-  await build('esm', './dist/config/esm')
-  await build('cjs', './dist/config/cjs')
-})
+  if (unminified.length > 0) {
+    console.error(
+      `Build produced un-minified output in:\n${unminified.map((f) => `  - ${f}`).join('\n')}`
+    )
+    process.exit(1)
+  }
+}

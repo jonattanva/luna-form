@@ -6,7 +6,7 @@
   "module": "./dist/client/esm/index.js",
   "types": "./dist/types/luna-react/src/client/index.d.ts",
   "scripts": {
-    "build": "node esbuild.mjs && pnpm run types",
+    "build": "rm -rf dist && node esbuild.mjs && pnpm run types",
     "dev": "node esbuild.mjs --watch",
     "lint": "eslint . --cache",
     "prettier:check": "prettier --check .",
