@@ -204,7 +204,7 @@ export type Select = Field & {
   source?: DataSource | Array<unknown>
 }
 
-export type Chips = Field & {
+export type Chips = Select & {
   advanced?: {
     multiple?: boolean
   }

@@ -91,7 +91,7 @@ export function isField(slot: Field | Column | List): slot is Field {
 }
 
 export function isOptions(field: Field): field is Select {
-  return isSelect(field) || isRadio(field)
+  return isSelect(field) || isRadio(field) || isChips(field)
 }
 
 export function isTextable(field: Field): boolean {

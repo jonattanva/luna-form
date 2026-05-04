@@ -7,7 +7,7 @@ type Option = {
   value: string
 }
 
-export function DayOfWeekWrapper({
+export function Chips({
   name,
   onChange,
   options = [],
@@ -34,6 +34,7 @@ export function DayOfWeekWrapper({
       target: { value: next as unknown as string },
     } as React.ChangeEvent<HTMLInputElement>)
   }
+
   return (
     <div className="flex gap-2">
       {name &&
@@ -46,13 +47,13 @@ export function DayOfWeekWrapper({
             type="button"
             onClick={() => toggleDay(option.value)}
             className={cn(
-              'flex size-10 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+              'flex items-center justify-center rounded-md p-2 text-sm font-semibold transition-colors',
               selected
                 ? 'bg-violet-600 text-white'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            {option.label.charAt(0).toUpperCase()}
+            {option.label}
           </button>
         )
       })}

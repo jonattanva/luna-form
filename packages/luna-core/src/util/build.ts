@@ -1,6 +1,6 @@
 import { $REF } from './constant'
 import { isObject } from './is-type'
-import { isCheckbox, isRadio, isSelect } from './is-input'
+import { isCheckbox, isChips, isRadio, isSelect } from './is-input'
 import type { Field, Nullable } from '../type'
 
 export function buildOptions(
@@ -35,7 +35,11 @@ export function buildDisabled(field: Field, disabled?: boolean) {
 }
 
 export function buildSource(field: Field) {
-  if (isRadio(field) || (isSelect(field) && !field.disabled)) {
+  if (
+    isRadio(field) ||
+    isChips(field) ||
+    (isSelect(field) && !field.disabled)
+  ) {
     const source = field.source
     if (Array.isArray(source) || (isObject(source) && !($REF in source))) {
       return source
