@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777915195656,
+  "lastUpdate": 1777915230288,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4251,6 +4251,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 640,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "b3d0c151456d0db8f86b19002e74e2f47816adb1",
+          "message": "feat: implement generic Chips component and update luna-core types",
+          "timestamp": "2026-05-04T12:18:58-05:00",
+          "tree_id": "a4a21177912239d12136fc47e2a16978c7020cc1",
+          "url": "https://github.com/jonattanva/luna-form/commit/b3d0c151456d0db8f86b19002e74e2f47816adb1"
+        },
+        "date": 1777915229644,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 274,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 603,
             "unit": "ms"
           }
         ]
