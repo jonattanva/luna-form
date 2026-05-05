@@ -34,6 +34,7 @@ export function DayOfWeekWrapper({
       target: { value: next as unknown as string },
     } as React.ChangeEvent<HTMLInputElement>)
   }
+
   return (
     <div className="flex gap-2">
       {name &&

@@ -36,6 +36,7 @@ export function FieldList(props: ListProps) {
               <FieldPreview
                 name={`${props.field.name}.${key}`}
                 previews={previews}
+                value={props.value}
               />
             )
           }
@@ -47,25 +48,31 @@ export function FieldList(props: ListProps) {
         aria-disabled={!canAdd}
         aria-label={hasLimit ? `${action}, ${items.length} of ${max}` : action}
         className={twMerge(
-          'flex w-full items-center gap-1.5 rounded py-1',
+          'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-slate-200 px-4',
           'text-sm font-medium text-slate-500',
           'transition-colors duration-150',
-          'hover:text-slate-800',
+          'hover:border-slate-300 hover:text-slate-800',
           'focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none',
-          'dark:text-slate-400 dark:hover:text-slate-200',
+          'dark:border-slate-800 dark:text-slate-400',
+          'dark:hover:border-slate-700 dark:hover:text-slate-200',
+          hasLimit ? 'justify-between' : 'justify-center',
           !canAdd &&
-            'cursor-not-allowed opacity-50 hover:text-slate-500 dark:hover:text-slate-400'
+            'cursor-not-allowed opacity-50 hover:border-slate-200 hover:text-slate-500 dark:hover:border-slate-800 dark:hover:text-slate-400'
         )}
         disabled={!canAdd}
         onClick={addItem}
         type="button"
       >
-        <span aria-hidden="true">+</span>
-        {action}
+        <span className="flex items-center gap-2">
+          <span aria-hidden="true" className="text-base leading-none">
+            +
+          </span>
+          {action}
+        </span>
         {hasLimit && (
           <span
             aria-hidden="true"
-            className="ml-auto text-slate-400 tabular-nums dark:text-slate-500"
+            className="text-slate-400 tabular-nums dark:text-slate-500"
           >
             {items.length} / {max}
           </span>

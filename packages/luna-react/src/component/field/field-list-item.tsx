@@ -37,7 +37,7 @@ export function FieldListItem(
     <button
       aria-label={`Remove ${props.label} item ${props.index + 1}`}
       className={twMerge(
-        'rounded p-1 text-xl text-slate-400',
+        'flex size-6 items-center justify-center rounded text-xl leading-none text-slate-400',
         'transition-colors duration-150',
         'hover:text-red-500',
         'focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none',
@@ -46,8 +46,50 @@ export function FieldListItem(
       onClick={handleRemove}
       type="button"
     >
-      <span aria-hidden="true">&#215;</span>
+      <span aria-hidden="true" className="leading-none">
+        &#215;
+      </span>
     </button>
+  )
+
+  const labelContent = (
+    <span className="text-sm font-medium text-slate-300 group-hover:underline dark:text-slate-400">
+      {props.label} {props.index + 1}
+      {!isOpen && props.preview && (
+        <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-slate-400 dark:text-slate-500">
+          {props.preview}
+        </div>
+      )}
+    </span>
+  )
+
+  const header = (props.isMultiField || props.collapsible) && (
+    <div
+      className={twMerge(
+        'flex items-center justify-between gap-2',
+        props.isMultiField && 'mb-3'
+      )}
+    >
+      {props.collapsible ? (
+        <button
+          aria-expanded={isOpen}
+          aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${props.label} ${props.index + 1}`}
+          className={twMerge(
+            'group flex grow items-center gap-2 rounded p-1 text-left text-slate-400',
+            'focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none',
+            'dark:text-slate-500'
+          )}
+          onClick={handleToggle}
+          type="button"
+        >
+          <ChevronIcon expanded={isOpen} />
+          {labelContent}
+        </button>
+      ) : (
+        labelContent
+      )}
+      {removeButton}
+    </div>
   )
 
   if (props.isMultiField) {
@@ -56,33 +98,18 @@ export function FieldListItem(
         data-slot="list-item-card"
         className="rounded-lg border border-slate-100 p-4 dark:border-slate-900"
       >
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {props.collapsible && (
-              <button
-                aria-label={isOpen ? 'Collapse' : 'Expand'}
-                className={twMerge(
-                  'rounded p-1 text-slate-400 hover:bg-slate-50',
-                  'transition-colors duration-150',
-                  'dark:text-slate-500 dark:hover:bg-slate-800'
-                )}
-                onClick={handleToggle}
-                type="button"
-              >
-                <ChevronIcon expanded={isOpen} />
-              </button>
-            )}
-            <span className="text-sm font-medium text-slate-300 dark:text-slate-400">
-              {props.label} {props.index + 1}
-              {!isOpen && props.preview && (
-                <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-slate-400 dark:text-slate-500">
-                  {props.preview}
-                </div>
-              )}
-            </span>
-          </div>
-          {removeButton}
-        </div>
+        {header}
+        <Collapsible visible={isOpen}>
+          <Group>{props.children}</Group>
+        </Collapsible>
+      </div>
+    )
+  }
+
+  if (props.collapsible) {
+    return (
+      <div className="flex flex-col gap-2">
+        {header}
         <Collapsible visible={isOpen}>
           <Group>{props.children}</Group>
         </Collapsible>
@@ -92,31 +119,10 @@ export function FieldListItem(
 
   return (
     <div className="flex items-start gap-2">
-      {props.collapsible && (
-        <button
-          aria-label={isOpen ? 'Collapse' : 'Expand'}
-          className={twMerge(
-            'rounded p-1 text-slate-400 hover:bg-slate-50',
-            'transition-colors duration-150',
-            'dark:text-slate-500 dark:hover:bg-slate-800',
-            isOpen && 'mt-7'
-          )}
-          onClick={handleToggle}
-          type="button"
-        >
-          <ChevronIcon expanded={isOpen} />
-        </button>
-      )}
       <div className="flex grow flex-col">
-        <Collapsible visible={isOpen}>
-          <Group>{props.children}</Group>
-        </Collapsible>
+        <Group>{props.children}</Group>
       </div>
-      {removeButton && (
-        <div className={twMerge('shrink-0', isOpen && 'mt-7')}>
-          {removeButton}
-        </div>
-      )}
+      {removeButton && <div className="shrink-0">{removeButton}</div>}
     </div>
   )
 }

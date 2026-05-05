@@ -87,6 +87,10 @@ test.describe('List Collapsible @e2e', () => {
     await expect(itemInput).toBeHidden()
     await expect(expandButton).toBeVisible()
 
+    // Even while collapsed, the list label + index header stays visible so
+    // the user knows what the collapsed row represents.
+    await expect(page.getByText('Collapsed By Default List 1')).toBeVisible()
+
     // Expand reveals the input
     await expandButton.click()
     await expect(itemInput).toBeVisible()
@@ -126,6 +130,62 @@ test.describe('List Collapsible @e2e', () => {
     await page.getByRole('button', { name: 'Submit' }).click()
     await expect(page.locator('pre code')).toContainText('"foo"')
     await expect(page.locator('pre code')).toContainText('"bar"')
+  })
+
+  test('should show preview from initial value when starting collapsed', async ({
+    page,
+  }) => {
+    // Regression: items inside a collapsed `<Activity mode="hidden">` defer
+    // their effects, so the preview's value atom is empty on first render.
+    // The preview must fall back to the form's initial value tree so the
+    // collapsed header shows the loaded data without forcing a toggle.
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Collapsible Multi List",
+                "name": "multi_list",
+                "type": "list",
+                "advanced": {
+                  "collapsible": true,
+                  "collapsed": true,
+                  "preview": ["key"]
+                },
+                "fields": [
+                  {
+                    "name": "key",
+                    "label": "Key",
+                    "type": "input/text"
+                  },
+                  {
+                    "name": "value",
+                    "label": "Value",
+                    "type": "input/text"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "value": {
+          "multi_list": [{ "key": "Demo", "value": "demo" }]
+        }
+      }`
+    )
+    await page.goto('')
+
+    const card = page.locator('[data-slot="list-item-card"]')
+
+    // Item is collapsed, the inner inputs are hidden.
+    await expect(page.locator('input[name="multi_list.0.key"]')).toBeHidden()
+
+    // The header label and the preview value derived from the initial value
+    // must both be visible without expanding the item.
+    await expect(card.getByText('Collapsible Multi List 1')).toBeVisible()
+    await expect(card.getByText('Demo')).toBeVisible()
   })
 
   test('should ignore collapsed when collapsible is false (fields stay reachable)', async ({
