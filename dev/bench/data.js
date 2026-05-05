@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777917237762,
+  "lastUpdate": 1778018455495,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -2861,6 +2861,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.03987541600000009,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "8d3189b47da2fa029090cf66192ea18c1f3c0555",
+          "message": "refactor: optimize collapsible list headers and enhance list add button UI\n\n- Extract resolveValue into a shared utility to fix preview issues in collapsed items.\n- Enhance FieldList and FieldListItem styling (dashed borders, centered add button, space-between counter).\n- Improve collapsible header interaction: whole header is now clickable and underlies on hover.\n- Fix regression where previews in collapsed items would be empty on first render by falling back to initial values.\n- Update dependencies and bump package versions to 0.0.47.\n- Add comprehensive E2E tests for list add button and collapsible headers.",
+          "timestamp": "2026-05-05T17:00:03-05:00",
+          "tree_id": "e5eef55a0fe0495020ab0cbd0340d709bdb3e867",
+          "url": "https://github.com/jonattanva/luna-form/commit/8d3189b47da2fa029090cf66192ea18c1f3c0555"
+        },
+        "date": 1778018454654,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0023436960000000227,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.003526279999999929,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03853468400000008,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0010260319999999864,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00183104000000003,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.044339504000000036,
             "unit": "ms"
           }
         ]
