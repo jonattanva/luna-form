@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778018455495,
+  "lastUpdate": 1778018499833,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4515,6 +4515,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 603,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "8d3189b47da2fa029090cf66192ea18c1f3c0555",
+          "message": "refactor: optimize collapsible list headers and enhance list add button UI\n\n- Extract resolveValue into a shared utility to fix preview issues in collapsed items.\n- Enhance FieldList and FieldListItem styling (dashed borders, centered add button, space-between counter).\n- Improve collapsible header interaction: whole header is now clickable and underlies on hover.\n- Fix regression where previews in collapsed items would be empty on first render by falling back to initial values.\n- Update dependencies and bump package versions to 0.0.47.\n- Add comprehensive E2E tests for list add button and collapsible headers.",
+          "timestamp": "2026-05-05T17:00:03-05:00",
+          "tree_id": "e5eef55a0fe0495020ab0cbd0340d709bdb3e867",
+          "url": "https://github.com/jonattanva/luna-form/commit/8d3189b47da2fa029090cf66192ea18c1f3c0555"
+        },
+        "date": 1778018499219,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 265,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 188,
             "unit": "ms"
           }
         ]
