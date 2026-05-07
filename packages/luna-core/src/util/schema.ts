@@ -106,9 +106,15 @@ export function getBoolean(
   }, z.coerce.boolean())
 
   if (input.required) {
-    schema = schema.refine((value) => value === true, {
-      message: getRequiredMessage(input, translations),
-    })
+    if (input.type === 'input/checkbox') {
+      schema = schema.refine((value) => value === true, {
+        message: getRequiredMessage(input, translations),
+      })
+    } else {
+      schema = schema.refine((value) => typeof value === 'boolean', {
+        message: getRequiredMessage(input, translations),
+      })
+    }
     return z.preprocess((value) => (value === null ? false : value), schema)
   }
   return schema.nullable()

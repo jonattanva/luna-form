@@ -269,6 +269,44 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).toContainText('"active": true')
   })
 
+  test('should not show "Invalid input" when selecting "No" in a required select/active field', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    // Seleccionamos "No" (que se traduce a false)
+    await page.getByRole('option', { name: 'No' }).click()
+
+    // Verificamos que NO aparezca el mensaje de error "Invalid input"
+    await expect(page.getByText('Invalid input')).toBeHidden()
+
+    // Intentamos hacer submit para asegurar que pasa la validación
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText('"active": false')
+  })
+
   test('should render select fetch source correctly', async ({ page }) => {
     await inject(
       page,
