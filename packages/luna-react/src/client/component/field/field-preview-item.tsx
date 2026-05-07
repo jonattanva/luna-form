@@ -1,41 +1,46 @@
-import { isObject } from '@luna-form/core'
-import { reportValueAtom } from '../../lib/value-store'
-import { useAtomValue } from 'jotai'
+import { isEmpty, isObject } from '@luna-form/core'
+import { twMerge } from 'tailwind-merge'
+import { useResolvedValue } from '../../hook/use-resolved-value'
 
 export function FieldPreviewItem({
+  className,
   initialValue,
   name,
   separator,
 }: Readonly<{
+  className?: string
   initialValue?: unknown
   name: string
   separator?: boolean
 }>) {
-  // Inputs that mount inside a collapsed `<Activity mode="hidden">` defer their
-  // effects until they become visible, so the value atom is empty on the first
-  // render. Fall back to the form's initial value tree (resolved by the
-  // parent) so the preview reflects the loaded data even before the user
-  // expands the item. Once the input mounts and reports its value, the atom
-  // takes precedence.
-  const atomValue = useAtomValue(reportValueAtom(name))
-  const value = atomValue ?? initialValue
+  const value = useResolvedValue(name, initialValue)
 
-  if (value == null || value === '') {
+  if (isEmpty(value) || isObject(value) || Array.isArray(value)) {
     return null
   }
 
-  if (isObject(value) || Array.isArray(value)) {
-    return null
-  }
+  const displayValue = String(value)
 
   return (
-    <>
+    <div className="flex items-center gap-1.5 overflow-hidden">
       {separator && (
-        <span className="text-xs text-slate-300 dark:text-slate-600">·</span>
+        <span
+          aria-hidden="true"
+          className="text-xs text-slate-300 select-none dark:text-slate-600"
+        >
+          ·
+        </span>
       )}
-      <span className="max-w-[150px] overflow-hidden text-xs text-ellipsis">
-        {`${value}`}
+      <span
+        aria-label={displayValue}
+        className={twMerge(
+          'max-w-[150px] overflow-hidden text-xs text-ellipsis whitespace-nowrap',
+          className
+        )}
+        title={displayValue}
+      >
+        {displayValue}
       </span>
-    </>
+    </div>
   )
 }

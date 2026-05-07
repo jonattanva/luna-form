@@ -25,23 +25,25 @@ export function FormPreview() {
   }
 
   return (
-    <div className="flex h-full flex-1 flex-col items-stretch overflow-y-auto">
+    <div className="flex h-full flex-1 flex-col items-stretch overflow-x-hidden overflow-y-auto">
       <div className="flex w-full justify-center">
         <div className="w-full max-w-md p-6">
-          <Form
-            {...form}
-            config={config}
-            action={action}
-            onSuccess={handleSuccess}
-          >
-            {({ isPending }) => (
-              <div className="flex w-full justify-end">
-                <Button type="submit" disabled={isPending}>
-                  Submit
-                </Button>
-              </div>
-            )}
-          </Form>
+          <div className="flex w-full flex-col gap-6">
+            <Form
+              {...form}
+              config={config}
+              action={action}
+              onSuccess={handleSuccess}
+            >
+              {({ isPending }) => (
+                <div className="flex w-full justify-end">
+                  <Button type="submit" disabled={isPending}>
+                    Submit
+                  </Button>
+                </div>
+              )}
+            </Form>
+          </div>
         </div>
       </div>
     </div>

@@ -84,6 +84,10 @@ test.describe('List field - multi-field card layout', { tag: ['@e2e'] }, () => {
 
     const header = page.getByText('Email Addresses 1')
     await expect(header).toBeVisible()
+    // Multi-field lists are always collapsible, so it should have a toggle button
+    await expect(
+      page.getByRole('button', { name: /Collapse|Expand/ })
+    ).toBeVisible()
   })
 
   test('should render all fields inside the card', async ({ page }) => {

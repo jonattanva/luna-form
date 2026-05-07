@@ -91,7 +91,9 @@ export function useFormState<T, F = Record<string, unknown>>(
         })
       }
 
-      const unflattened = unflatten(normalized) as F & T
+      const unflattened = unflatten(
+        validated.data as Record<string, unknown>
+      ) as F & T
 
       if (action) {
         try {

@@ -157,11 +157,15 @@ export function useInputCore(
           }
         })
 
-        handleValueEvent(selected, values, (target, value) => {
-          setValues((previous) => ({
-            ...previous,
-            [target]: value,
-          }))
+        handleValueEvent(selected, values, (target, resolve) => {
+          setValues((previous) => {
+            const current = previous[target]
+            const next = resolve(current)
+            if (next === current) {
+              return previous
+            }
+            return { ...previous, [target]: next }
+          })
         })
       })
     })

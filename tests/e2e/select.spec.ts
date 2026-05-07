@@ -176,6 +176,99 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     }
   })
 
+  test('should render both options for select active input type', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    await expect(page.getByRole('option', { name: 'Yes' })).toBeVisible()
+    await expect(page.getByRole('option', { name: 'No' })).toBeVisible()
+  })
+
+  test('should work correctly with select active input type', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    const option = page.getByRole('option', { name: 'No' })
+    await option.click()
+
+    const form = page.locator('form')
+    await expect(form).toContainText('No')
+  })
+
+  test('should submit the correct value for select active input type', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await select.click()
+
+    await page.getByRole('option', { name: 'Yes' }).click()
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText('"active": true')
+  })
+
   test('should render select fetch source correctly', async ({ page }) => {
     await inject(
       page,

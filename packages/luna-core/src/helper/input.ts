@@ -24,6 +24,7 @@ import {
   isNumber,
   isOptions,
   isSelect,
+  isSelectActive,
   isSelectDay,
   isSelectMonth,
   isSelectTimezone,
@@ -91,6 +92,13 @@ function defineOptionSelect(select: Select) {
 
   if (isSelectTimezone(select)) {
     return getTimezones()
+  }
+
+  if (isSelectActive(select)) {
+    return [
+      { value: 'true', label: 'Yes' },
+      { value: 'false', label: 'No' },
+    ]
   }
 }
 

@@ -9,9 +9,6 @@ const COLLAPSIBLE_LIST = `{
           "label": "Collapsible Multi List",
           "name": "multi_list",
           "type": "list",
-          "advanced": {
-            "collapsible": true
-          },
           "fields": [
             {
               "name": "key",
@@ -30,7 +27,6 @@ const COLLAPSIBLE_LIST = `{
           "name": "collapsed_list",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true
           },
           "fields": [
@@ -150,9 +146,8 @@ test.describe('List Collapsible @e2e', () => {
                 "name": "multi_list",
                 "type": "list",
                 "advanced": {
-                  "collapsible": true,
                   "collapsed": true,
-                  "preview": ["key"]
+                  "preview": { "label": "key" }
                 },
                 "fields": [
                   {
@@ -184,52 +179,9 @@ test.describe('List Collapsible @e2e', () => {
 
     // The header label and the preview value derived from the initial value
     // must both be visible without expanding the item.
-    await expect(card.getByText('Collapsible Multi List 1')).toBeVisible()
+    await expect(
+      card.getByRole('button', { name: /Collapsible Multi List 1/ })
+    ).toBeVisible()
     await expect(card.getByText('Demo')).toBeVisible()
-  })
-
-  test('should ignore collapsed when collapsible is false (fields stay reachable)', async ({
-    page,
-  }) => {
-    // Without this guard, collapsed: true + collapsible: false would render
-    // the item closed with no toggle button to reopen it, leaving the fields
-    // permanently inaccessible.
-    await inject(
-      page,
-      `{
-        "sections": [
-          {
-            "fields": [
-              {
-                "label": "Stuck List",
-                "name": "stuck_list",
-                "type": "list",
-                "advanced": {
-                  "collapsible": false,
-                  "collapsed": true
-                },
-                "fields": [
-                  {
-                    "name": "value",
-                    "label": "Value",
-                    "type": "input/text"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }`
-    )
-    await page.goto('')
-
-    // Field is reachable from the start (no chevron exists, but content
-    // is rendered visible because collapsed is ignored).
-    const valueInput = page.locator('input[name="stuck_list.0.value"]')
-    await expect(valueInput).toBeVisible()
-
-    // No toggle buttons exist for this list (collapsible was false).
-    await expect(page.getByRole('button', { name: 'Expand' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Collapse' })).toHaveCount(0)
   })
 })

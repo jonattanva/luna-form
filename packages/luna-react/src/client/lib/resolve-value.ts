@@ -3,9 +3,9 @@
 // any segment cannot be reached.
 export function resolveValue(
   name: string,
-  currentValue: Record<string, unknown>
+  currentValue: Record<string, unknown> | unknown[]
 ): unknown {
-  if (name in currentValue) {
+  if (!Array.isArray(currentValue) && name in currentValue) {
     return currentValue[name]
   }
 

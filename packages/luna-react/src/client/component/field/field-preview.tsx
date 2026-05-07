@@ -1,29 +1,52 @@
 import { FieldPreviewItem } from './field-preview-item'
 import { resolveValue } from '../../lib/resolve-value'
-import type { Nullable } from '@luna-form/core'
+import { useMemo } from 'react'
 
 export function FieldPreview({
+  className,
+  label = 'Preview',
   name,
   previews,
   value,
 }: Readonly<{
+  className?: string
+  label?: string
   name: string
-  previews: string[]
-  value?: Nullable<Record<string, unknown>>
+  previews: string | string[]
+  value?: Record<string, unknown> | unknown[] | null
 }>) {
+  const fields = useMemo(
+    () => (Array.isArray(previews) ? previews : [previews]),
+    [previews]
+  )
+
+  const resolvedValues = useMemo(() => {
+    if (value == null) {
+      return {}
+    }
+
+    return Object.fromEntries(
+      fields.map((preview) => [
+        preview,
+        resolveValue(`${name}.${preview}`, value),
+      ])
+    )
+  }, [fields, value, name])
+
   return (
-    <div className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-      {previews.map((preview, index) => {
-        const path = `${name}.${preview}`
-        return (
-          <FieldPreviewItem
-            initialValue={value ? resolveValue(path, value) : undefined}
-            key={preview}
-            name={path}
-            separator={index > 0}
-          />
-        )
-      })}
+    <div
+      aria-label={label}
+      className="flex items-center gap-1.5 overflow-hidden"
+    >
+      {fields.map((preview, index) => (
+        <FieldPreviewItem
+          className={className}
+          initialValue={resolvedValues[preview]}
+          key={preview}
+          name={`${name}.${preview}`}
+          separator={index > 0}
+        />
+      ))}
     </div>
   )
 }

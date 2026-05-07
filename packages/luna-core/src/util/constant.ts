@@ -27,6 +27,7 @@ export const LIST = 'list'
 export const DATA_TABLE = 'data-table'
 
 export const SELECT = 'select'
+export const SELECT_ACTIVE = 'select/active'
 export const SELECT_DAY = 'select/day'
 export const SELECT_MONTH = 'select/month'
 export const SELECT_TIMEZONE = 'select/timezone'
@@ -34,6 +35,7 @@ export const SELECT_YEAR = 'select/year'
 
 export const SELECTS = [
   SELECT,
+  SELECT_ACTIVE,
   SELECT_DAY,
   SELECT_MONTH,
   SELECT_TIMEZONE,

@@ -12,7 +12,7 @@ export function FieldSetBase(
 ) {
   return (
     <fieldset
-      className="flex flex-col data-[empty=false]:gap-6"
+      className="flex w-full min-w-0 flex-col data-[empty=false]:gap-6"
       data-empty={props.empty}
       data-slot="field-set"
       id={props.id}
@@ -22,7 +22,7 @@ export function FieldSetBase(
         step={props.step}
         title={props.title}
       />
-      {props.children}
+      <div className="w-full min-w-0">{props.children}</div>
     </fieldset>
   )
 }

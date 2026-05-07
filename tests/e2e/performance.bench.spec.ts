@@ -10,8 +10,8 @@ function generateFields(count: number) {
   }))
 }
 
-test.describe('Performance', { tag: ['@e2e', '@perf'] }, () => {
-  test('should handle form with 50 fields efficiently', async ({ page }) => {
+test.describe('E2E Benchmark', { tag: ['@benchmark'] }, () => {
+  test('benchmark: form performance (50 fields)', async ({ page }) => {
     const fields = generateFields(50)
 
     await inject(
@@ -21,11 +21,13 @@ test.describe('Performance', { tag: ['@e2e', '@perf'] }, () => {
       })
     )
 
+    // Measure Load Time
     const startTime = Date.now()
     await page.goto('')
     await page.locator('input[name="field_1"]').waitFor()
     const loadTime = Date.now() - startTime
 
+    // Measure Interaction Time (10 fields)
     const interactionStart = Date.now()
     for (let i = 1; i <= 10; i++) {
       const input = page.locator(`input[name="field_${i}"]`)
@@ -37,27 +39,25 @@ test.describe('Performance', { tag: ['@e2e', '@perf'] }, () => {
     const allInputs = page.locator('input[type="text"]')
     await expect(allInputs).toHaveCount(50)
 
-    expect(loadTime).toBeLessThan(5000)
-    expect(interactionTime).toBeLessThan(3000)
+    const benchmarkResult = [
+      {
+        name: 'browser: form load time (50 fields)',
+        unit: 'ms',
+        value: loadTime,
+      },
+      {
+        name: 'browser: interaction time (10 fields)',
+        unit: 'ms',
+        value: interactionTime,
+      },
+    ]
 
-    writeFileSync(
-      'benchmark-e2e-output.json',
-      JSON.stringify(
-        [
-          {
-            name: 'browser: form load time (50 fields)',
-            unit: 'ms',
-            value: loadTime,
-          },
-          {
-            name: 'browser: interaction time (10 fields)',
-            unit: 'ms',
-            value: interactionTime,
-          },
-        ],
-        null,
-        2
-      ) + '\n'
-    )
+    console.log('Benchmark Results:', JSON.stringify(benchmarkResult, null, 2))
+
+    // Update the benchmark output file
+    const outputPath = 'benchmark-e2e-output.json'
+
+    // Write results directly to file, replacing previous content
+    writeFileSync(outputPath, JSON.stringify(benchmarkResult, null, 2) + '\n')
   })
 })

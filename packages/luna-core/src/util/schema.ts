@@ -4,6 +4,7 @@ import {
   isEmail,
   isNumber,
   isRadio,
+  isSelectActive,
   isSelectMonth,
   isSelectYear,
 } from './is-input'
@@ -28,12 +29,13 @@ type SchemaGetter = (
 ) => z.ZodType
 
 const approach: Array<[SchemaChecker, SchemaGetter]> = [
-  [isNumber, getNumber],
-  [isEmail, getEmail],
-  [isSelectYear, getYearSchema],
-  [isSelectMonth, getMonthSchema],
   [isCheckbox, getBoolean],
+  [isEmail, getEmail],
+  [isNumber, getNumber],
   [isRadio, getRadio],
+  [isSelectActive, getBoolean],
+  [isSelectMonth, getMonthSchema],
+  [isSelectYear, getYearSchema],
 ]
 
 export function buildSchema(
@@ -90,7 +92,19 @@ export function getBoolean(
   input: Input,
   translations?: Record<string, string>
 ) {
-  let schema = z.coerce.boolean()
+  let schema = z.preprocess((value) => {
+    if (typeof value === 'string') {
+      if (value === 'true') {
+        return true
+      }
+
+      if (value === 'false') {
+        return false
+      }
+    }
+    return value
+  }, z.coerce.boolean())
+
   if (input.required) {
     schema = schema.refine((value) => value === true, {
       message: getRequiredMessage(input, translations),

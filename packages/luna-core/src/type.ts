@@ -73,7 +73,7 @@ export type List = {
     collapsed?: boolean
     collapsible?: boolean
     length?: Length<number>
-    preview?: string[]
+    preview?: { label?: string; tags?: string[]; badge?: string }
   }
   description?: string
   fields: Array<Field | Column>
@@ -143,6 +143,7 @@ export type SourceEvent = ActionEvent<'source'> & {
 }
 
 export type ValueEvent = ActionEvent<'value'> & {
+  onlyIfTargetEmpty?: boolean
   value: Record<string, Value | Array<Record<string, unknown>>>
 }
 

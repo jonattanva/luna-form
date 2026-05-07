@@ -13,6 +13,7 @@ import {
   LIST,
   RADIO,
   SELECT,
+  SELECT_ACTIVE,
   SELECT_DAY,
   SELECT_MONTH,
   SELECT_TIMEZONE,
@@ -34,6 +35,9 @@ import type {
   Select,
   Time,
 } from '../type'
+
+export const isSelectActive = (field: Field): boolean =>
+  createTypeChecker(SELECT_ACTIVE)(field)
 
 export const isSelectDay = (field: Field): boolean =>
   createTypeChecker(SELECT_DAY)(field)

@@ -36,7 +36,7 @@ export function Chips({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex w-full flex-wrap gap-2">
       {name &&
         value.map((v) => <input key={v} type="hidden" name={name} value={v} />)}
       {options.map((option) => {
@@ -47,13 +47,14 @@ export function Chips({
             type="button"
             onClick={() => toggleDay(option.value)}
             className={cn(
-              'flex items-center justify-center rounded-md p-2 text-sm font-semibold transition-colors',
+              'flex min-w-0 flex-1 items-center justify-center rounded-md p-2 text-sm font-semibold transition-colors',
+              'sm:min-w-[80px] sm:flex-none',
               selected
                 ? 'bg-violet-600 text-white'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
           >
-            {option.label}
+            <span className="truncate">{option.label}</span>
           </button>
         )
       })}

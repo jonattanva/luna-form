@@ -582,4 +582,57 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await expect(documentLabel).toHaveValue('DNI selected')
     await expect(passportNumber).toBeHidden()
   })
+
+  test('should only set value when target is empty if onlyIfTargetEmpty is true', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Nickname",
+                            "name": "nickname",
+                            "type": "input/text",
+                            "event": {
+                                "change": [{
+                                    "action": "value",
+                                    "onlyIfTargetEmpty": true,
+                                    "value": {
+                                        "display_name": "{value}"
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "label": "Display Name",
+                            "name": "display_name",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const nickname = page.locator('input[name="nickname"]')
+    const displayName = page.locator('input[name="display_name"]')
+
+    await nickname.fill('lunabot')
+    await nickname.blur()
+
+    await expect(displayName).toHaveValue('lunabot')
+
+    await displayName.fill('Custom Name')
+    await displayName.blur()
+
+    await nickname.fill('lunabot-v2')
+    await nickname.blur()
+
+    await expect(displayName).toHaveValue('Custom Name')
+  })
 })
