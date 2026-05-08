@@ -29,6 +29,37 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
     await expect(input).toHaveValue('HELLO WORLD')
   })
 
+  test('should apply uppercase transform on initial value from JSON', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "localUppercase": "hello world"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "name": "localUppercase",
+                "type": "input/text",
+                "advanced": {
+                  "transform": "uppercase"
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="localUppercase"]')
+    // We expect the initial value to be transformed to uppercase
+    await expect(input).toHaveValue('HELLO WORLD')
+  })
+
   test('should apply lowercase transform on typing', async ({ page }) => {
     await inject(
       page,

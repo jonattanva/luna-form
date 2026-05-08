@@ -7,6 +7,9 @@ import {
   isSelectActive,
   isSelectMonth,
   isSelectYear,
+  isChips,
+  isChipsDays,
+  isChipsMonths,
 } from './is-input'
 import { isEmpty } from './is-type'
 import { operators } from './operator'
@@ -36,6 +39,9 @@ const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isSelectActive, getBoolean],
   [isSelectMonth, getMonthSchema],
   [isSelectYear, getYearSchema],
+  [isChips, getArraySchema],
+  [isChipsDays, getArraySchema],
+  [isChipsMonths, getArraySchema],
 ]
 
 export function buildSchema(
@@ -322,4 +328,22 @@ function getRequiredMessage(
   return input.validation?.required
     ? translate(input.validation?.required, translations)
     : undefined
+}
+
+export function getArraySchema(
+  input: Input,
+  translations?: Record<string, string>
+) {
+  let baseSchema = z.array(z.string())
+
+  if (input.required) {
+    baseSchema = baseSchema.min(1, getRequiredMessage(input, translations))
+  }
+
+  return z.preprocess((value) => {
+    if (isEmpty(value)) {
+      return []
+    }
+    return Array.isArray(value) ? value.map(String) : [String(value)]
+  }, baseSchema)
 }

@@ -245,9 +245,9 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     const submittedData = {
       name: 'Jane Smith',
       card_number: '1234 5678 9012 3456',
-      month: '1',
-      year: currentYear.toString(),
-      cvv: '123',
+      month: 1,
+      year: currentYear,
+      cvv: 123,
     }
 
     await expect(page.locator('pre code')).toContainText(

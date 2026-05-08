@@ -219,7 +219,7 @@ test.describe(
 
       await page.getByRole('button', { name: 'Submit' }).click()
       await expect(page.getByText('Form submitted successfully')).toBeVisible()
-      await expect(page.locator('pre code')).toContainText('"birth_month": "6"')
+      await expect(page.locator('pre code')).toContainText('"birth_month": 6')
     })
 
     /**

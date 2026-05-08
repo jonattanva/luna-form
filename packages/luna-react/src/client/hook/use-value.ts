@@ -1,5 +1,11 @@
 import { deepEqual } from 'fast-equals'
-import { isValidValue, type Field, type Nullable } from '@luna-form/core'
+import {
+  applyTransform,
+  isInput,
+  isValidValue,
+  type Field,
+  type Nullable,
+} from '@luna-form/core'
 import { reportValueAtom } from '../lib/value-store'
 import { resolveValue } from '../lib/resolve-value'
 import { useAtom } from 'jotai'
@@ -17,11 +23,17 @@ export function useValue(
   const onCurrentValueChange = useEffectEvent(
     (currentValue: Record<string, unknown>) => {
       const newValue = resolveValue(name, currentValue)
+
       if (isValidValue(newValue)) {
-        if (!deepEqual(value, newValue)) {
+        const transformedValue = isInput(field)
+          ? applyTransform(newValue, field.advanced?.transform)
+          : newValue
+
+        if (!deepEqual(value, transformedValue)) {
           skipNextOnChangeRef.current = true
         }
-        setValue(newValue)
+
+        setValue(transformedValue)
       }
     }
   )

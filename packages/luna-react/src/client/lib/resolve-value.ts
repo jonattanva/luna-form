@@ -1,3 +1,5 @@
+import { isObject } from '@luna-form/core'
+
 // Resolve a dotted path against a value tree, traversing both objects and
 // arrays (using numeric segments as array indices). Returns `undefined` when
 // any segment cannot be reached.
@@ -24,8 +26,8 @@ export function resolveValue(
     if (Array.isArray(result)) {
       const index = Number(key)
       result = Number.isInteger(index) ? result[index] : undefined
-    } else if (typeof result === 'object') {
-      result = (result as Record<string, unknown>)[key]
+    } else if (isObject(result)) {
+      result = result[key]
     } else {
       return undefined
     }
