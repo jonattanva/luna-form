@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778255132300,
+  "lastUpdate": 1778255228702,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4853,6 +4853,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 210,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "8a45dec49fe9d41537510319324559263a6454a3",
+          "message": "feat: enhance schema validation and event documentation\n\n- Update luna-core to support array-based validation for chips and lists\n- Refactor useValue hook in luna-react to apply transforms during resolution\n- Add comprehensive documentation for the change event system (ValueEvent, StateEvent, SourceEvent)\n- Fix E2E tests related to date selection types (string to number)\n- Improve resolveValue to safely handle object traversal",
+          "timestamp": "2026-05-08T10:44:32-05:00",
+          "tree_id": "f321f00b2ff846b3d1eacdb4e044d12c1f4baaf1",
+          "url": "https://github.com/jonattanva/luna-form/commit/8a45dec49fe9d41537510319324559263a6454a3"
+        },
+        "date": 1778255228458,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 287,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 662,
             "unit": "ms"
           }
         ]
