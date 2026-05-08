@@ -146,6 +146,8 @@ test.describe('Section Steps', { tag: ['@e2e'] }, () => {
 
     const step1 = page.locator('legend').getByText('1', { exact: true })
     await expect(step1).toBeHidden()
-    await expect(page.getByText('Payment Method')).toBeVisible()
+    await expect(
+      page.locator('legend').getByText('Payment Method')
+    ).toBeVisible()
   })
 })
