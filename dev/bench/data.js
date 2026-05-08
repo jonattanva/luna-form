@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778273239426,
+  "lastUpdate": 1778273272924,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5029,6 +5029,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 560,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "a3a84910f0a08cf4a989f4d98cf07a4be81a1e9c",
+          "message": "test(e2e): fix flaky list-add-button hover test in firefox\n\n- enabled reducedMotion in playwright.config.ts\n- added motion-reduce:transition-none to AddButton\n- replaced hover({ force: true }) with dispatchEvent('mouseenter')\n- removed flaky setTimeout/raf waits in favour of reduced motion",
+          "timestamp": "2026-05-08T15:46:22-05:00",
+          "tree_id": "b646fe9bf34b40477079b6eb629d639aa60cfb67",
+          "url": "https://github.com/jonattanva/luna-form/commit/a3a84910f0a08cf4a989f4d98cf07a4be81a1e9c"
+        },
+        "date": 1778273272462,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 292,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 707,
             "unit": "ms"
           }
         ]
