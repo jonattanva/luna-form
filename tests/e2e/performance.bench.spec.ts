@@ -10,7 +10,7 @@ function generateFields(count: number) {
   }))
 }
 
-test.describe('E2E Benchmark', { tag: ['@benchmark'] }, () => {
+test.describe('E2E Benchmark', { tag: ['@benchmark', '@perf'] }, () => {
   test('benchmark: form performance (50 fields)', async ({ page }) => {
     const fields = generateFields(50)
 
