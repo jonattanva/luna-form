@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778212210377,
+  "lastUpdate": 1778255132300,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -3131,6 +3131,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.04517622599999993,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "8a45dec49fe9d41537510319324559263a6454a3",
+          "message": "feat: enhance schema validation and event documentation\n\n- Update luna-core to support array-based validation for chips and lists\n- Refactor useValue hook in luna-react to apply transforms during resolution\n- Add comprehensive documentation for the change event system (ValueEvent, StateEvent, SourceEvent)\n- Fix E2E tests related to date selection types (string to number)\n- Improve resolveValue to safely handle object traversal",
+          "timestamp": "2026-05-08T10:44:32-05:00",
+          "tree_id": "f321f00b2ff846b3d1eacdb4e044d12c1f4baaf1",
+          "url": "https://github.com/jonattanva/luna-form/commit/8a45dec49fe9d41537510319324559263a6454a3"
+        },
+        "date": 1778255131917,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.002338127999999983,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0034401360000000524,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.0425155860000001,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0014235259999999244,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0016651359999999614,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.04719284200000004,
             "unit": "ms"
           }
         ]
