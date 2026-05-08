@@ -143,7 +143,7 @@ test.describe('List Add Button @e2e', () => {
       border: getComputedStyle(el).borderColor,
       color: getComputedStyle(el).color,
     }))
-    await button.hover({ force: true })
+    await button.dispatchEvent('mouseenter')
     const after = await button.evaluate((el) => ({
       border: getComputedStyle(el).borderColor,
       color: getComputedStyle(el).color,

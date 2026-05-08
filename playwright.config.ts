@@ -22,6 +22,9 @@ export default defineConfig({
       width: 1280,
       height: 720,
     },
+    contextOptions: {
+      reducedMotion: 'reduce',
+    },
   },
   projects: [
     {
