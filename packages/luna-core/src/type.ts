@@ -189,9 +189,12 @@ export type Length<T> = {
   min?: T
 }
 
+export type Transform = 'lowercase' | 'uppercase' | 'remove-space' | 'remove-accent'
+
 export type Input = Field & {
   advanced?: {
     length?: Length<number>
+    transform?: Transform | Transform[]
   }
 }
 

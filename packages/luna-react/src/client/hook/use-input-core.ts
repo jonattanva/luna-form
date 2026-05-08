@@ -7,13 +7,14 @@ import { useInput } from './use-input'
 import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from './use-timeout'
 import {
+  applyTransform,
   handleProxyEvent,
   handleSourceEvent,
   handleStateEvent,
   handleValueEvent,
   isClickable,
+  isInput,
   translate,
-  validateCustom,
   type AriaAttributes,
   type CommonProps,
   type DataAttributes,
@@ -21,6 +22,8 @@ import {
   type Field,
   type Nullable,
   type Schema,
+  type Schemas,
+  validateCustom,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
 
@@ -31,6 +34,7 @@ export type InputCoreProps = Readonly<{
   context?: Record<string, unknown>
   dataAttributes?: DataAttributes
   field: Field
+  getSchema: () => readonly [Schemas, Field[]]
   horizontal?: boolean
   onMount: (name: string, schema: Schema, field: Field) => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
@@ -42,10 +46,10 @@ export type InputCoreProps = Readonly<{
 export function useInputCore(
   props: InputCoreProps,
   deps: Readonly<{
+    setSource: (target: string, source?: DataSource) => void
     setValue: (value: unknown) => void
     shouldSkipOnChange: () => boolean
     value: unknown
-    setSource: (target: string, source?: DataSource) => void
   }>
 ) {
   const store = useStore()
@@ -85,20 +89,36 @@ export function useInputCore(
     placeholder,
   }
 
+  function getTransform(target: string) {
+    const [, fields] = props.getSchema()
+    const current = fields.find((field) => {
+      return field.name === target
+    })
+
+    if (current && isInput(current)) {
+      const transform = current.advanced?.transform
+      if (transform) {
+        return transform
+      }
+    }
+  }
+
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
   // useEffect. The ref allows onChange to always read the latest props without
   // adding them as useCallback dependencies, avoiding unnecessary re-renders.
   const onValueChangeRef = useRef<((value: unknown) => void) | null>(null)
   onValueChangeRef.current = (value: unknown) => {
-    setValue(value)
+    const newValue = isInput(props.field)
+      ? applyTransform(value, props.field.advanced?.transform)
+      : value
+
+    setValue(newValue)
     if (props.onValueChange) {
-      const attributes = props.dataAttributes ?? {}
       props.onValueChange({
-        data: Object.keys(attributes).length > 0 ? attributes : undefined,
         name: props.field.name,
         type: props.field.type,
-        value,
+        value: newValue,
       })
     }
   }
@@ -161,10 +181,15 @@ export function useInputCore(
           setValues((previous) => {
             const current = previous[target]
             const next = resolve(current)
-            if (next === current) {
+
+            const transform = getTransform(target)
+            const newValue = !transform ? next : applyTransform(next, transform)
+
+            if (newValue === current) {
               return previous
             }
-            return { ...previous, [target]: next }
+
+            return { ...previous, [target]: newValue }
           })
         })
       })

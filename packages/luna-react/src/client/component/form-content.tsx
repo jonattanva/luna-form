@@ -31,8 +31,8 @@ export function FormContent<
 ) {
   const translations = props.translations?.[props.lang ?? '']
 
-  const [schema, onMount, onUnmount] = useSchema()
-  const [action, state, isPending] = useFormState(schema, props.action, {
+  const [getSchema, onMount, onUnmount] = useSchema()
+  const [action, state, isPending] = useFormState(getSchema, props.action, {
     onSuccess: props.onSuccess,
     validation: props.config.validation.submit,
     translations,
@@ -80,6 +80,7 @@ export function FormContent<
                 {...internal}
                 config={props.config}
                 context={props.context}
+                getSchema={getSchema}
                 onMount={onMount}
                 onUnmount={onUnmount}
                 onValueChange={props.onValueChange}

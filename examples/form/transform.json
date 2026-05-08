@@ -1,0 +1,59 @@
+{
+  "fields": [
+    {
+      "name": "sourceField",
+      "label": "Source Field",
+      "type": "input/text",
+      "event": {
+        "change": [
+          {
+            "action": "value",
+            "value": {
+              "targetTransform": "{sourceField}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "targetTransform",
+      "label": "Target Transform Field",
+      "type": "input/text",
+      "advanced": {
+        "transform": ["remove-space", "uppercase"]
+      }
+    },
+    {
+      "name": "localUppercase",
+      "label": "Local Uppercase",
+      "type": "input/text",
+      "advanced": {
+        "transform": "uppercase"
+      }
+    },
+    {
+      "name": "localLowercase",
+      "label": "Local Lowercase",
+      "type": "input/text",
+      "advanced": {
+        "transform": "lowercase"
+      }
+    },
+    {
+      "name": "localRemoveSpace",
+      "label": "Local Remove Space",
+      "type": "input/text",
+      "advanced": {
+        "transform": "remove-space"
+      }
+    },
+    {
+      "name": "localRemoveAccent",
+      "label": "Local Remove Accent",
+      "type": "input/text",
+      "advanced": {
+        "transform": "remove-accent"
+      }
+    }
+  ]
+}

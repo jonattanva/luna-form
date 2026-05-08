@@ -7,7 +7,7 @@ export default defineConfig([
   tsWithJsxA11yConfig(import.meta.dirname),
   {
     ...eslintPlaywright.configs['flat/recommended'],
-    files: ['tests/**'],
+    files: ['tests/e2e/**'],
     rules: {
       ...eslintPlaywright.configs['flat/recommended'].rules,
     },
