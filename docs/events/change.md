@@ -4,6 +4,10 @@ The `change` event in Luna Form allows you to trigger a sequence of actions when
 
 Luna Form evaluates the array sequentially, applying the declared updates or conditions.
 
+## Value Interpolation
+
+In many actions (like `value` and `source`), you may want to use the value of the field that triggered the change. You can use the special string `{value}` to capture and inject this value dynamically into strings or objects. Similarly, you can capture the current value of _other_ fields using their field name in braces (e.g., `{otherFieldName}`).
+
 ## Supported Actions
 
 The `change` event array supports three action types, indicated by the `action` property: `value`, `state`, and `source`.
@@ -17,7 +21,7 @@ The `value` action is used to explicitly set or update the value of one or more 
 **Properties:**
 
 - `action` (string): Must be set to `"value"`.
-- `value` (object): A key-value mapping where each key represents a target field name, and the value is the new data to apply to that field. You can use string interpolation (e.g., `{sourceField}`) to pass the changed value dynamically.
+- `value` (object): A key-value mapping where each key represents a target field name, and the value is the new data to apply to that field. You can use string interpolation like `{value}` to pass the changed value, or `{otherField}` to grab the value of another field.
 - `onlyIfTargetEmpty` (boolean, optional): If `true`, the target field's value will only be updated if it is currently empty. Useful for applying default or propagated values without overwriting user input.
 
 **Example:**
@@ -52,7 +56,7 @@ The `state` action modifies the interactive state or visibility of other fields 
 - `state` (object): An object containing the boolean flags denoting the new state.
   - `disabled` (boolean, optional): Whether the field should be disabled.
   - `hidden` (boolean, optional): Whether the field should be hidden from view.
-- `when` (string | array of strings | Condition object, optional): A condition that specifies when this state should be applied. If the condition evaluates to true (or the field's new value matches the string/array), the state properties are applied.
+- `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied. If the condition evaluates to true (or the field's new value matches the string/array), the state properties are applied.
 
 **Example:**
 
