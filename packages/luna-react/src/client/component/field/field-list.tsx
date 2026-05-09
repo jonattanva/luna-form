@@ -5,7 +5,7 @@ import { useFieldList } from '../../hook/use-field-list'
 import type { ListProps } from '../../../component/field/field-list'
 
 const ADD_BUTTON_BASE_CLASSES =
-  'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-slate-200 px-4 text-sm font-medium text-slate-500 transition-colors duration-150 motion-reduce:transition-none hover:border-slate-300 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200'
+  'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-slate-200 px-4 text-sm font-medium text-slate-500 transition-none hover:border-slate-300 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200'
 
 export function FieldList(props: ListProps) {
   const { field, value, children } = props
