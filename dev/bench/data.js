@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778300711240,
+  "lastUpdate": 1778300742252,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5117,6 +5117,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 707,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "bdb29e384aaf80104a0178460ff58dcf6c1b7d1a",
+          "message": "fix(luna-react): disable transition on list add button for stable e2e testing",
+          "timestamp": "2026-05-08T23:24:30-05:00",
+          "tree_id": "7462c34d4e09a3285c162eefde036f841738ec96",
+          "url": "https://github.com/jonattanva/luna-form/commit/bdb29e384aaf80104a0178460ff58dcf6c1b7d1a"
+        },
+        "date": 1778300741809,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 266,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 501,
             "unit": "ms"
           }
         ]
