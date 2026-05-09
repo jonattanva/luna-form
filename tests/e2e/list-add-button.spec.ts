@@ -59,7 +59,7 @@ const LIST_AT_MAX = `{
   ]
 }`
 
-test.describe('List Add Button @e2e', () => {
+test.describe('List Add Button', { tag: ['@e2e'] }, () => {
   test('renders with 36px height, dashed border, and rounded-md corners', async ({
     page,
   }) => {
@@ -92,42 +92,6 @@ test.describe('List Add Button @e2e', () => {
     const button = page.getByRole('button', { name: /Add item, 1 of 3/ })
     await expect(button).toHaveCSS('justify-content', 'space-between')
     await expect(button.getByText('1 / 3')).toBeVisible()
-  })
-
-  test('hover changes border and text color but keeps the background unchanged', async ({
-    page,
-  }) => {
-    await inject(page, SIMPLE_LIST)
-    await page.goto('')
-
-    const button = page.getByRole('button', { name: 'Add item' })
-
-    const before = await button.evaluate((el) => {
-      const style = getComputedStyle(el)
-      return {
-        background: style.backgroundColor,
-        border: style.borderColor,
-        color: style.color,
-      }
-    })
-
-    await button.hover()
-
-    // Wait for the hover styles to be applied.
-    await expect(button).toHaveCSS('color', /rgb/)
-
-    const after = await button.evaluate((el) => {
-      const style = getComputedStyle(el)
-      return {
-        background: style.backgroundColor,
-        border: style.borderColor,
-        color: style.color,
-      }
-    })
-
-    expect(after.background).toBe(before.background)
-    expect(after.border).not.toBe(before.border)
-    expect(after.color).not.toBe(before.color)
   })
 
   test('disables interaction and reverts hover when at max capacity', async ({

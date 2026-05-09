@@ -39,7 +39,7 @@ const PREVIEW_OBJECT_FIXTURE = `{
   }
 }`
 
-test.describe('List Preview Object @e2e', () => {
+test.describe('List Preview Object', { tag: ['@e2e'] }, () => {
   test.beforeEach(async ({ page }) => {
     await inject(page, PREVIEW_OBJECT_FIXTURE)
     await page.goto('')

@@ -42,7 +42,7 @@ const COLLAPSIBLE_LIST = `{
   ]
 }`
 
-test.describe('List Collapsible @e2e', () => {
+test.describe('List Collapsible', { tag: ['@e2e'] }, () => {
   test.beforeEach(async ({ page }) => {
     await inject(page, COLLAPSIBLE_LIST)
     await page.goto('')
