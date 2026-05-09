@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778303256547,
+  "lastUpdate": 1778303287860,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5293,6 +5293,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 620,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "b754720db2fa4b6a850d0d6c90dbdafde7ad11d8",
+          "message": "refactor(tests): update e2e test tags format and remove unstable hover test",
+          "timestamp": "2026-05-09T00:06:42-05:00",
+          "tree_id": "54f78ea43aa7b052903d69968d3f018110b13e76",
+          "url": "https://github.com/jonattanva/luna-form/commit/b754720db2fa4b6a850d0d6c90dbdafde7ad11d8"
+        },
+        "date": 1778303287638,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 280,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 614,
             "unit": "ms"
           }
         ]
