@@ -113,6 +113,9 @@ test.describe('List Add Button @e2e', () => {
 
     await button.hover()
 
+    // Wait for the hover styles to be applied.
+    await expect(button).toHaveCSS('color', /rgb/)
+
     const after = await button.evaluate((el) => {
       const style = getComputedStyle(el)
       return {
