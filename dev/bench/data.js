@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778302403752,
+  "lastUpdate": 1778302435140,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5205,6 +5205,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 501,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "08e501c25d28a46677b13687ade0e4fa19ae78ac",
+          "message": "fix(test): wait for hover styles in list-add-button e2e",
+          "timestamp": "2026-05-08T23:52:33-05:00",
+          "tree_id": "a9381db64be79d674a25c17255bd9218c9540992",
+          "url": "https://github.com/jonattanva/luna-form/commit/08e501c25d28a46677b13687ade0e4fa19ae78ac"
+        },
+        "date": 1778302434527,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 262,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 620,
             "unit": "ms"
           }
         ]
