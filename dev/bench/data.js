@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778273272924,
+  "lastUpdate": 1778300711240,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -3293,6 +3293,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.05175389799999994,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "bdb29e384aaf80104a0178460ff58dcf6c1b7d1a",
+          "message": "fix(luna-react): disable transition on list add button for stable e2e testing",
+          "timestamp": "2026-05-08T23:24:30-05:00",
+          "tree_id": "7462c34d4e09a3285c162eefde036f841738ec96",
+          "url": "https://github.com/jonattanva/luna-form/commit/bdb29e384aaf80104a0178460ff58dcf6c1b7d1a"
+        },
+        "date": 1778300710647,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.002454400000000078,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0035292680000000016,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03911696000000006,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.001089992000000052,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0018067579999999452,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.04347500600000001,
             "unit": "ms"
           }
         ]
