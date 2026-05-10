@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778385122284,
+  "lastUpdate": 1778385165907,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5523,6 +5523,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 220,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "d6ca7c2df0e3f8ee281af4935777a9e2db0cfaf9",
+          "message": "feat: implement relative target resolution in list events using 'list/field' syntax and update docs",
+          "timestamp": "2026-05-09T22:51:04-05:00",
+          "tree_id": "0d2a0c3b6db83e8e03fcd8f92c0357bc9ab6fd34",
+          "url": "https://github.com/jonattanva/luna-form/commit/d6ca7c2df0e3f8ee281af4935777a9e2db0cfaf9"
+        },
+        "date": 1778385165174,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 538,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 132,
             "unit": "ms"
           }
         ]
