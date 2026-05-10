@@ -14,6 +14,7 @@ import {
   handleValueEvent,
   isClickable,
   isInput,
+  resolveTarget,
   translate,
   type AriaAttributes,
   type CommonProps,
@@ -136,14 +137,18 @@ export function useInputCore(
 
     handleProxyEvent(events, ({ sources, states, values }) => {
       startTransition(() => {
-        handleSourceEvent(selected, sources, (target, source) =>
-          setSource(target, source)
-        )
+        handleSourceEvent(selected, sources, (target, source) => {
+          setSource(resolveTarget(target, props.field.name), source)
+        })
 
         handleStateEvent(selected, states, (targets, state) => {
+          const newTargets = targets.map((target) =>
+            resolveTarget(target, props.field.name)
+          )
+
           setFieldStates((previous) => {
             if (state) {
-              return targets.reduce(
+              return newTargets.reduce(
                 (acc, target) => ({
                   ...acc,
                   [target]: state,
@@ -152,10 +157,9 @@ export function useInputCore(
               )
             }
 
-            return targets.reduce(
-              (acc, target) => omitKey(acc, target),
-              previous
-            )
+            return newTargets.reduce((acc, target) => {
+              return omitKey(acc, target)
+            }, previous)
           })
 
           if (state?.hidden === true) {
@@ -164,9 +168,9 @@ export function useInputCore(
               const next = { ...previous }
               for (const key of Object.keys(previous)) {
                 if (
-                  targets.some(
-                    (target) => key === target || key.startsWith(`${target}.`)
-                  )
+                  newTargets.some((target) => {
+                    return key === target || key.startsWith(`${target}.`)
+                  })
                 ) {
                   delete next[key]
                   changed = true
@@ -178,18 +182,19 @@ export function useInputCore(
         })
 
         handleValueEvent(selected, values, (target, resolve) => {
+          const newTarget = resolveTarget(target, props.field.name)
           setValues((previous) => {
-            const current = previous[target]
+            const current = previous[newTarget]
             const next = resolve(current)
 
-            const transform = getTransform(target)
+            const transform = getTransform(newTarget)
             const newValue = !transform ? next : applyTransform(next, transform)
 
             if (newValue === current) {
               return previous
             }
 
-            return { ...previous, [target]: newValue }
+            return { ...previous, [newTarget]: newValue }
           })
         })
       })

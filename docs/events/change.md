@@ -6,7 +6,36 @@ Luna Form evaluates the array sequentially, applying the declared updates or con
 
 ## Value Interpolation
 
-In many actions (like `value` and `source`), you may want to use the value of the field that triggered the change. You can use the special string `{value}` to capture and inject this value dynamically into strings or objects. Similarly, you can capture the current value of _other_ fields using their field name in braces (e.g., `{otherFieldName}`).
+In many actions (like `value` and `source`), you may want to use the value of the field that triggered the change. You can use the special string `{value}` to capture and inject this value dynamically into strings or objects.
+
+## Target Resolution in Lists
+
+When working with fields inside a `list`, targets are resolved globally (from the form root) by default. To target another field within the **same list item**, use the following syntax:
+
+`"listName/fieldName"`
+
+This tells Luna Form to find the current iteration of `listName` and update the `fieldName` within that specific row.
+
+**Example:**
+If you have a list named `users` and you want one field to update another field called `nickname` in same row:
+
+```json
+{
+  "name": "fullname",
+  "event": {
+    "change": [
+      {
+        "action": "value",
+        "value": {
+          "users/nickname": "{value}"
+        }
+      }
+    ]
+  }
+}
+```
+
+If you specify `"nickname"` (without the list prefix and slash), it will attempt to update a field named `nickname` at the root of the form.
 
 ## Supported Actions
 
@@ -21,7 +50,7 @@ The `value` action is used to explicitly set or update the value of one or more 
 **Properties:**
 
 - `action` (string): Must be set to `"value"`.
-- `value` (object): A key-value mapping where each key represents a target field name, and the value is the new data to apply to that field. You can use string interpolation like `{value}` to pass the changed value, or `{otherField}` to grab the value of another field.
+- `value` (object): A key-value mapping where each key represents a target field name, and the value is the new data to apply to that field. You can use string interpolation like `{value}` to pass the changed value.
 - `onlyIfTargetEmpty` (boolean, optional): If `true`, the target field's value will only be updated if it is currently empty. Useful for applying default or propagated values without overwriting user input.
 
 **Example:**
@@ -34,7 +63,7 @@ The `value` action is used to explicitly set or update the value of one or more 
         "action": "value",
         "onlyIfTargetEmpty": true,
         "value": {
-          "billingAddress": "{shippingAddress}",
+          "billingAddress": "{value}",
           "hasProvidedAddress": true
         }
       }
@@ -204,18 +233,4 @@ Hide a "State/Province" field if the selected "Country" is not in a specific lis
 }
 ```
 
-**3. Evaluating Another Field (`field`):**
-Disable a submit button when the user changes a checkbox, but only if the "Age" field is less than 18.
-
-```json
-{
-  "action": "state",
-  "target": "submitButton",
-  "state": { "disabled": true },
-  "when": {
-    "field": "age",
-    "operator": "lt",
-    "value": 18
-  }
-}
-```
+---
