@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778519317662,
+  "lastUpdate": 1778519353227,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5699,6 +5699,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 472,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "f93c5aec03e3c6176323244f989d952120bae471",
+          "message": "fix(luna-react): resolve value hydration in InputBase and add E2E tests for onlyIfTargetEmpty",
+          "timestamp": "2026-05-11T12:07:31-05:00",
+          "tree_id": "808c0118ee6198eaea01f00e4816a0c20b27300e",
+          "url": "https://github.com/jonattanva/luna-form/commit/f93c5aec03e3c6176323244f989d952120bae471"
+        },
+        "date": 1778519352586,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 290,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 648,
             "unit": "ms"
           }
         ]
