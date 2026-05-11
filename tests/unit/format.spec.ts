@@ -6,11 +6,7 @@ import {
 
 describe('formatFilters.currency', () => {
   test('formats USD with en-US locale', () => {
-    const result = formatFilters.currency(
-      1234.56,
-      ['USD'],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.currency(1234.56, ['USD'], { locale: 'en-US' })
     expect(result).toBe('$1,234.56')
   })
 
@@ -20,11 +16,7 @@ describe('formatFilters.currency', () => {
   })
 
   test('formats EUR with es-ES locale', () => {
-    const result = formatFilters.currency(
-      1234.56,
-      ['EUR'],
-      { locale: 'es-ES' }
-    )
+    const result = formatFilters.currency(1234.56, ['EUR'], { locale: 'es-ES' })
     // The result contains a non-breaking space; assert via includes.
     expect(result).toContain('1234,56')
     expect(result).toContain('€')
@@ -69,57 +61,43 @@ describe('formatFilters.number', () => {
 
 describe('formatFilters.date', () => {
   test('formats ISO string with default short style', () => {
-    const result = formatFilters.date(
-      '2026-05-10',
-      [],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.date('2026-05-10', [], { locale: 'en-US' })
     expect(result).toMatch(/5\/10\/26|5\/9\/26/) // timezone may shift
   })
 
   test('formats with long style', () => {
-    const result = formatFilters.date(
-      '2026-05-10',
-      ['long'],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.date('2026-05-10', ['long'], {
+      locale: 'en-US',
+    })
     expect(result).toMatch(/May (9|10), 2026/)
   })
 
   test('formats relative style', () => {
     const future = new Date(Date.now() + 7 * 86400 * 1000)
-    const result = formatFilters.date(
-      future.toISOString(),
-      ['relative'],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.date(future.toISOString(), ['relative'], {
+      locale: 'en-US',
+    })
     expect(result).toMatch(/in /i)
   })
 
   test('falls back to String for invalid date', () => {
-    expect(
-      formatFilters.date('not-a-date', [], { locale: 'en-US' })
-    ).toBe('not-a-date')
+    expect(formatFilters.date('not-a-date', [], { locale: 'en-US' })).toBe(
+      'not-a-date'
+    )
   })
 })
 
 describe('formatFilters.duration', () => {
   test('returns relative distance for ISO date input', () => {
     const past = new Date(Date.now() - 90 * 86400 * 1000)
-    const result = formatFilters.duration(
-      past.toISOString(),
-      [],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.duration(past.toISOString(), [], {
+      locale: 'en-US',
+    })
     expect(result.toLowerCase()).toContain('ago')
   })
 
   test('formats milliseconds (default unit) as legible breakdown', () => {
-    const result = formatFilters.duration(
-      93_600_000,
-      [],
-      { locale: 'en-US' }
-    )
+    const result = formatFilters.duration(93_600_000, [], { locale: 'en-US' })
     expect(result).toContain('1 day')
     expect(result).toContain('2 hours')
   })
@@ -136,15 +114,15 @@ describe('formatFilters.duration', () => {
   })
 
   test('falls back to String when value is neither date nor number', () => {
-    expect(
-      formatFilters.duration('garbage', [], { locale: 'en-US' })
-    ).toBe('garbage')
+    expect(formatFilters.duration('garbage', [], { locale: 'en-US' })).toBe(
+      'garbage'
+    )
   })
 
   test('falls back to String when unit is unknown', () => {
-    expect(
-      formatFilters.duration(10, ['weeks'], { locale: 'en-US' })
-    ).toBe('10')
+    expect(formatFilters.duration(10, ['weeks'], { locale: 'en-US' })).toBe(
+      '10'
+    )
   })
 })
 
@@ -156,14 +134,10 @@ describe('applyFormatFilter', () => {
   })
 
   test('returns undefined when filter does not exist', () => {
-    expect(
-      applyFormatFilter(1, 'unknown', { locale: 'en-US' })
-    ).toBeUndefined()
+    expect(applyFormatFilter(1, 'unknown', { locale: 'en-US' })).toBeUndefined()
   })
 
   test('returns undefined for empty expression', () => {
-    expect(
-      applyFormatFilter(1, '', { locale: 'en-US' })
-    ).toBeUndefined()
+    expect(applyFormatFilter(1, '', { locale: 'en-US' })).toBeUndefined()
   })
 })

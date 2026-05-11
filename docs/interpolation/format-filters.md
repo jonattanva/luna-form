@@ -103,7 +103,7 @@ Produces a localized human-readable duration in years, months, days, hours, minu
 - **Multipliers to milliseconds**:
 
   | Unit  | Multiplier |
-  |-------|------------|
+  | ----- | ---------- |
   | `ms`  | 1          |
   | `s`   | 1,000      |
   | `min` | 60,000     |

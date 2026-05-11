@@ -84,21 +84,21 @@ describe('interpolate', () => {
   })
 
   test('should apply percent pipe filter', () => {
-    expect(
-      interpolate('{x | percent}', { x: 0.25 }, { locale: 'en-US' })
-    ).toBe('25%')
+    expect(interpolate('{x | percent}', { x: 0.25 }, { locale: 'en-US' })).toBe(
+      '25%'
+    )
   })
 
   test('should preserve placeholder when filter is unknown', () => {
-    expect(
-      interpolate('{x | unknown}', { x: 5 }, { locale: 'en-US' })
-    ).toBe('{x | unknown}')
+    expect(interpolate('{x | unknown}', { x: 5 }, { locale: 'en-US' })).toBe(
+      '{x | unknown}'
+    )
   })
 
   test('should preserve placeholder when piped value is null/undefined', () => {
-    expect(
-      interpolate('{x | currency:USD}', {}, { locale: 'en-US' })
-    ).toBe('{x | currency:USD}')
+    expect(interpolate('{x | currency:USD}', {}, { locale: 'en-US' })).toBe(
+      '{x | currency:USD}'
+    )
   })
 
   test('should chain multiple pipe filters', () => {
