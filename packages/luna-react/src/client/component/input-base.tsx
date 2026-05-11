@@ -1,5 +1,6 @@
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
+import { resolveValue } from '../lib/resolve-value'
 import { useCallback, useEffect, useRef } from 'react'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
@@ -66,7 +67,8 @@ export function InputBase(
       return
     }
 
-    if (!isValidValue(defaultValue)) {
+    const hydratedValue = resolveValue(props.field.name, props.value)
+    if (!isValidValue(hydratedValue)) {
       return
     }
 

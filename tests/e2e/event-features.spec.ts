@@ -58,4 +58,99 @@ test.describe('Event change features', { tag: ['@e2e'] }, () => {
     await sourceInput.fill('Value 3')
     await expect(targetInput).toHaveValue('Manual Value')
   })
+
+  test('should mirror full value when typing continuously into source with onlyIfTargetEmpty', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Source Field",
+                "name": "source",
+                "type": "input",
+                "event": {
+                  "change": [
+                    {
+                      "action": "value",
+                      "onlyIfTargetEmpty": true,
+                      "value": {
+                        "target": "{value}"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Target Field",
+                "name": "target",
+                "type": "input"
+              }
+            ]
+          }
+        ],
+        "value": {}
+      }`
+    )
+    await page.goto('')
+
+    const sourceInput = page.getByLabel('Source Field')
+    const targetInput = page.getByLabel('Target Field')
+
+    await sourceInput.click()
+    await sourceInput.pressSequentially('demo', { delay: 50 })
+
+    await expect(targetInput).toHaveValue('demo')
+  })
+
+  test('should not overwrite hydrated target value with onlyIfTargetEmpty source', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Source Field",
+                "name": "source",
+                "type": "input",
+                "event": {
+                  "change": [
+                    {
+                      "action": "value",
+                      "onlyIfTargetEmpty": true,
+                      "value": {
+                        "target": "{value}"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Target Field",
+                "name": "target",
+                "type": "input"
+              }
+            ]
+          }
+        ],
+        "value": {
+          "source": "saved-source",
+          "target": "saved-target"
+        }
+      }`
+    )
+    await page.goto('')
+
+    const sourceInput = page.getByLabel('Source Field')
+    const targetInput = page.getByLabel('Target Field')
+
+    await expect(sourceInput).toHaveValue('saved-source')
+    await expect(targetInput).toHaveValue('saved-target')
+  })
 })
