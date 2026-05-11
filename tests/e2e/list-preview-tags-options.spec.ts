@@ -143,49 +143,55 @@ const RADIO_FIXTURE = `{
   }
 }`
 
-test.describe('List Preview Tags - Option-bearing fields', { tag: ['@e2e'] }, () => {
-  test.describe('Built-in options and inline source', () => {
-    test.beforeEach(async ({ page }) => {
-      await inject(page, FIXTURE)
-      await page.goto('')
+test.describe(
+  'List Preview Tags - Option-bearing fields',
+  { tag: ['@e2e'] },
+  () => {
+    test.describe('Built-in options and inline source', () => {
+      test.beforeEach(async ({ page }) => {
+        await inject(page, FIXTURE)
+        await page.goto('')
+      })
+
+      test('select field renders the option label, not the raw value', async ({
+        page,
+      }) => {
+        const firstCard = page.locator('[data-slot="list-item-card"]').first()
+        await expect(firstCard).toContainText('Activo')
+        await expect(firstCard).not.toContainText('active')
+      })
+
+      test('chips field expands into separate labels for each selected value', async ({
+        page,
+      }) => {
+        const firstCard = page.locator('[data-slot="list-item-card"]').first()
+        const weekdayNames = Array.from({ length: 7 }, (_, i) =>
+          new Date(2000, 0, 2 + i).toLocaleString('default', {
+            weekday: 'long',
+          })
+        )
+        await expect(firstCard).toContainText(weekdayNames[1])
+        await expect(firstCard).toContainText(weekdayNames[3])
+        await expect(firstCard).not.toContainText(weekdayNames[0])
+      })
+
+      test('empty chips selection emits no tag entries for that field', async ({
+        page,
+      }) => {
+        const secondCard = page.locator('[data-slot="list-item-card"]').nth(1)
+        const weekdayNames = Array.from({ length: 7 }, (_, i) =>
+          new Date(2000, 0, 2 + i).toLocaleString('default', {
+            weekday: 'long',
+          })
+        )
+        for (const name of weekdayNames) {
+          await expect(secondCard).not.toContainText(name)
+        }
+      })
     })
 
-    test('select field renders the option label, not the raw value', async ({
-      page,
-    }) => {
-      const firstCard = page.locator('[data-slot="list-item-card"]').first()
-      await expect(firstCard).toContainText('Activo')
-      await expect(firstCard).not.toContainText('active')
-    })
-
-    test('chips field expands into separate labels for each selected value', async ({
-      page,
-    }) => {
-      const firstCard = page.locator('[data-slot="list-item-card"]').first()
-      const weekdayNames = Array.from({ length: 7 }, (_, i) =>
-        new Date(2000, 0, 2 + i).toLocaleString('default', { weekday: 'long' })
-      )
-      await expect(firstCard).toContainText(weekdayNames[1])
-      await expect(firstCard).toContainText(weekdayNames[3])
-      await expect(firstCard).not.toContainText(weekdayNames[0])
-    })
-
-    test('empty chips selection emits no tag entries for that field', async ({
-      page,
-    }) => {
-      const secondCard = page.locator('[data-slot="list-item-card"]').nth(1)
-      const weekdayNames = Array.from({ length: 7 }, (_, i) =>
-        new Date(2000, 0, 2 + i).toLocaleString('default', { weekday: 'long' })
-      )
-      for (const name of weekdayNames) {
-        await expect(secondCard).not.toContainText(name)
-      }
-    })
-
-  })
-
-  test.describe('Required badge with boolean source', () => {
-    const REQUIRED_FIXTURE_TRUE = `{
+    test.describe('Required badge with boolean source', () => {
+      const REQUIRED_FIXTURE_TRUE = `{
       "sections": [{
         "fields": [{
           "name": "field",
@@ -207,7 +213,7 @@ test.describe('List Preview Tags - Option-bearing fields', { tag: ['@e2e'] }, ()
       "value": { "field": [{ "label": "A", "required": true }] }
     }`
 
-    const REQUIRED_FIXTURE_FALSE = `{
+      const REQUIRED_FIXTURE_FALSE = `{
       "sections": [{
         "fields": [{
           "name": "field",
@@ -229,7 +235,7 @@ test.describe('List Preview Tags - Option-bearing fields', { tag: ['@e2e'] }, ()
       "value": { "field": [{ "label": "A", "required": false }] }
     }`
 
-    const REQUIRED_FIXTURE_EMPTY = `{
+      const REQUIRED_FIXTURE_EMPTY = `{
       "sections": [{
         "fields": [{
           "name": "field",
@@ -250,43 +256,43 @@ test.describe('List Preview Tags - Option-bearing fields', { tag: ['@e2e'] }, ()
       }]
     }`
 
-    test('required:true (boolean) resolves to "Yes" in badge', async ({
-      page,
-    }) => {
-      await inject(page, REQUIRED_FIXTURE_TRUE)
-      await page.goto('')
-      const badge = page.getByText('Yes', { exact: true })
-      await expect(badge).toBeVisible()
-      await expect(badge).toHaveClass(/bg-primary/)
+      test('required:true (boolean) resolves to "Yes" in badge', async ({
+        page,
+      }) => {
+        await inject(page, REQUIRED_FIXTURE_TRUE)
+        await page.goto('')
+        const badge = page.getByText('Yes', { exact: true })
+        await expect(badge).toBeVisible()
+        await expect(badge).toHaveClass(/bg-primary/)
+      })
+
+      test('required:false (boolean) resolves to "No" in badge', async ({
+        page,
+      }) => {
+        await inject(page, REQUIRED_FIXTURE_FALSE)
+        await page.goto('')
+        const badge = page.getByText('No', { exact: true })
+        await expect(badge).toBeVisible()
+        await expect(badge).toHaveClass(/bg-primary/)
+      })
+
+      test('no initial value: badge slot is empty (no Yes/No shown)', async ({
+        page,
+      }) => {
+        await inject(page, REQUIRED_FIXTURE_EMPTY)
+        await page.goto('')
+        // Wait for the form header to render.
+        await expect(
+          page.getByRole('button', { name: /Expand field 1/ })
+        ).toBeVisible()
+        // No badge text should be shown.
+        await expect(page.getByText('Yes', { exact: true })).toHaveCount(0)
+        await expect(page.getByText('No', { exact: true })).toHaveCount(0)
+      })
     })
 
-    test('required:false (boolean) resolves to "No" in badge', async ({
-      page,
-    }) => {
-      await inject(page, REQUIRED_FIXTURE_FALSE)
-      await page.goto('')
-      const badge = page.getByText('No', { exact: true })
-      await expect(badge).toBeVisible()
-      await expect(badge).toHaveClass(/bg-primary/)
-    })
-
-    test('no initial value: badge slot is empty (no Yes/No shown)', async ({
-      page,
-    }) => {
-      await inject(page, REQUIRED_FIXTURE_EMPTY)
-      await page.goto('')
-      // Wait for the form header to render.
-      await expect(
-        page.getByRole('button', { name: /Expand field 1/ })
-      ).toBeVisible()
-      // No badge text should be shown.
-      await expect(page.getByText('Yes', { exact: true })).toHaveCount(0)
-      await expect(page.getByText('No', { exact: true })).toHaveCount(0)
-    })
-  })
-
-  test.describe('Reactivity', () => {
-    const REACTIVITY_FIXTURE = `{
+    test.describe('Reactivity', () => {
+      const REACTIVITY_FIXTURE = `{
       "sections": [
         {
           "fields": [
@@ -323,76 +329,76 @@ test.describe('List Preview Tags - Option-bearing fields', { tag: ['@e2e'] }, ()
       }
     }`
 
-    test('select edit then collapse: preview reactively reflects new option label', async ({
-      page,
-    }) => {
-      await inject(page, REACTIVITY_FIXTURE)
-      await page.goto('')
+      test('select edit then collapse: preview reactively reflects new option label', async ({
+        page,
+      }) => {
+        await inject(page, REACTIVITY_FIXTURE)
+        await page.goto('')
 
-      const header = page.getByRole('button', { name: /Expand Schedule 1/ })
-      await expect(header).toContainText('Activo')
+        const header = page.getByRole('button', { name: /Expand Schedule 1/ })
+        await expect(header).toContainText('Activo')
 
-      await header.click()
+        await header.click()
 
-      const statusSelect = page.locator('select[name="schedule.0.status"]')
-      await statusSelect.selectOption('inactive')
+        const statusSelect = page.locator('select[name="schedule.0.status"]')
+        await statusSelect.selectOption('inactive')
 
-      await page.getByRole('button', { name: /Collapse Schedule 1/ }).click()
+        await page.getByRole('button', { name: /Collapse Schedule 1/ }).click()
 
-      await expect(header).toContainText('Inactivo')
-      await expect(header).not.toContainText('Activo')
-    })
-  })
-
-  test.describe('Custom advanced.options mapping (id/name keys)', () => {
-    test.beforeEach(async ({ page }) => {
-      await inject(page, CUSTOM_OPTIONS_FIXTURE)
-      await page.goto('')
+        await expect(header).toContainText('Inactivo')
+        await expect(header).not.toContainText('Activo')
+      })
     })
 
-    test('chips with advanced.options mapping resolves to the mapped label', async ({
-      page,
-    }) => {
-      const card = page.locator('[data-slot="list-item-card"]').first()
-      await expect(card).toContainText('Text')
-      await expect(card).not.toContainText(/\btext\b/)
+    test.describe('Custom advanced.options mapping (id/name keys)', () => {
+      test.beforeEach(async ({ page }) => {
+        await inject(page, CUSTOM_OPTIONS_FIXTURE)
+        await page.goto('')
+      })
+
+      test('chips with advanced.options mapping resolves to the mapped label', async ({
+        page,
+      }) => {
+        const card = page.locator('[data-slot="list-item-card"]').first()
+        await expect(card).toContainText('Text')
+        await expect(card).not.toContainText(/\btext\b/)
+      })
+
+      test('text field as preview tag still renders its raw value', async ({
+        page,
+      }) => {
+        const card = page.locator('[data-slot="list-item-card"]').first()
+        await expect(card).toContainText('firstName')
+      })
+
+      test('select with boolean source values resolves to the label (Yes/No)', async ({
+        page,
+      }) => {
+        const card = page.locator('[data-slot="list-item-card"]').first()
+        const badge = card.getByText('Yes', { exact: true })
+        await expect(badge).toBeVisible()
+        await expect(badge).toHaveClass(/bg-primary/)
+      })
+
+      test('preview label shows the input/text value', async ({ page }) => {
+        const card = page.locator('[data-slot="list-item-card"]').first()
+        await expect(card).toContainText('First Name')
+      })
     })
 
-    test('text field as preview tag still renders its raw value', async ({
-      page,
-    }) => {
-      const card = page.locator('[data-slot="list-item-card"]').first()
-      await expect(card).toContainText('firstName')
-    })
+    test.describe('Radio with advanced.options mapping', () => {
+      test.beforeEach(async ({ page }) => {
+        await inject(page, RADIO_FIXTURE)
+        await page.goto('')
+      })
 
-    test('select with boolean source values resolves to the label (Yes/No)', async ({
-      page,
-    }) => {
-      const card = page.locator('[data-slot="list-item-card"]').first()
-      const badge = card.getByText('Yes', { exact: true })
-      await expect(badge).toBeVisible()
-      await expect(badge).toHaveClass(/bg-primary/)
+      test('radio field renders the option label, not the raw value', async ({
+        page,
+      }) => {
+        const card = page.locator('[data-slot="list-item-card"]').first()
+        await expect(card).toContainText('With secret key')
+        await expect(card).not.toContainText('with-secret-key')
+      })
     })
-
-    test('preview label shows the input/text value', async ({ page }) => {
-      const card = page.locator('[data-slot="list-item-card"]').first()
-      await expect(card).toContainText('First Name')
-    })
-
-  })
-
-  test.describe('Radio with advanced.options mapping', () => {
-    test.beforeEach(async ({ page }) => {
-      await inject(page, RADIO_FIXTURE)
-      await page.goto('')
-    })
-
-    test('radio field renders the option label, not the raw value', async ({
-      page,
-    }) => {
-      const card = page.locator('[data-slot="list-item-card"]').first()
-      await expect(card).toContainText('With secret key')
-      await expect(card).not.toContainText('with-secret-key')
-    })
-  })
-})
+  }
+)

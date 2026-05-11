@@ -31,7 +31,7 @@ export function FieldPreviewItem({
       : value == null || value === ''
         ? []
         : [value]
-        
+
     const labels = raw
       .filter((v) => v !== null && v !== undefined && v !== '')
       .map((v) => resolveOptionLabel(v, options))
