@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778506088441,
+  "lastUpdate": 1778506118230,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5611,6 +5611,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 132,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "c0e3503c845a49a7e35ede31551f6fa1542f9bf7",
+          "message": "feat: add conditional interpolation and liquid format filters\n\n- Implement date and currency formatting for interpolation\n- Add conditional rendering for list items and descriptions\n- Update state handling for events\n- Add e2e and unit tests for new features",
+          "timestamp": "2026-05-11T08:26:56-05:00",
+          "tree_id": "ee9206d9526c7ea560c9e1cbed49a8d20fba6e74",
+          "url": "https://github.com/jonattanva/luna-form/commit/c0e3503c845a49a7e35ede31551f6fa1542f9bf7"
+        },
+        "date": 1778506117839,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 213,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 472,
             "unit": "ms"
           }
         ]
