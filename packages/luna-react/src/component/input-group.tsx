@@ -1,4 +1,4 @@
-import { FormattedDescription } from './formatted-description'
+import { FieldDescription } from './field-description'
 import { InputLabel } from './input-label'
 import type { Config } from '../type'
 import type { Field } from '@luna-form/core'
@@ -26,10 +26,10 @@ export function InputGroup(
       )}
       {props.children}
       {props.horizontal === false && (
-        <FormattedDescription
+        <FieldDescription
           config={props.config}
           context={props.context}
-          text={props.field.description}
+          field={props.field}
           translations={props.translations}
         />
       )}

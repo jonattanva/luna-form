@@ -1,30 +1,37 @@
+import { applyFormatFilter } from './format'
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
 
 const REGEX_MARKDOWN_LINK = /\[([^\]]{1,500})\]\(([^)]{1,2000})\)/g
 
+export type InterpolateOptions = {
+  locale?: string
+}
+
 /**
  * Replaces placeholders in the format {key} with values from the provided object.
- * Supports nested objects using dot notation (e.g., {user.id}).
+ * Supports nested objects using dot notation (e.g., {user.id}) and pipe filters
+ * (e.g., {price | currency:USD}).
  */
 export function interpolate<T>(
   template: T,
-  values: Record<string, unknown> = {}
+  values: Record<string, unknown> = {},
+  options: InterpolateOptions = {}
 ): T {
   if (isString(template)) {
-    return replacePlaceholders(template, values) as T
+    return replacePlaceholders(template, values, options) as T
   }
 
   if (Array.isArray(template)) {
     return template.map((item) => {
-      return interpolate(item, values)
+      return interpolate(item, values, options)
     }) as T
   }
 
   if (isObject(template)) {
     const results: Record<string, unknown> = {}
     for (const key in template) {
-      results[key] = interpolate(template[key], values)
+      results[key] = interpolate(template[key], values, options)
     }
     return results as T
   }
@@ -34,9 +41,12 @@ export function interpolate<T>(
 
 export function interpolateIfNeeded<T>(
   template: T,
-  values: Record<string, unknown> = {}
+  values: Record<string, unknown> = {},
+  options: InterpolateOptions = {}
 ): T {
-  return isInterpolated(template) ? interpolate(template, values) : template
+  return isInterpolated(template)
+    ? interpolate(template, values, options)
+    : template
 }
 
 export function isInterpolated(template: unknown): boolean {
@@ -57,14 +67,43 @@ export function isInterpolated(template: unknown): boolean {
 
 function replacePlaceholders(
   template: string,
-  values: Record<string, unknown> = {}
+  values: Record<string, unknown> = {},
+  options: InterpolateOptions = {}
 ): string {
-  return template.replace(/{([^}]{1,200})}/g, (match, key) => {
-    const value = key.includes('.') ? extract(values, key) : values[key]
-    if (isValue(value)) {
-      return String(value)
+  return template.replace(/{([^}]{1,200})}/g, (match, expression) => {
+    const segments = String(expression)
+      .split('|')
+      .map((s) => s.trim())
+
+    const [keyExpr, ...filters] = segments
+    if (!keyExpr) {
+      return match
     }
-    return match
+
+    const initial = keyExpr.includes('.')
+      ? extract(values, keyExpr)
+      : values[keyExpr]
+
+    if (filters.length === 0) {
+      return isValue(initial) ? String(initial) : match
+    }
+
+    if (initial === undefined || initial === null) {
+      return match
+    }
+
+    let current: unknown = initial
+    for (const filter of filters) {
+      const result = applyFormatFilter(current, filter, {
+        locale: options.locale,
+      })
+      if (result === undefined) {
+        return match
+      }
+      current = result
+    }
+
+    return String(current)
   })
 }
 

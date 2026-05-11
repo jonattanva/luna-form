@@ -6,7 +6,9 @@ Luna Form evaluates the array sequentially, applying the declared updates or con
 
 ## Value Interpolation
 
-In many actions (like `value` and `source`), you may want to use the value of the field that triggered the change. You can use the special string `{value}` to capture and inject this value dynamically into strings or objects.
+In many actions (like `value`, `source`, and `state`), you may want to use the value of the field that triggered the change. You can use the special string `{value}` to capture and inject this value dynamically into strings or objects.
+
+Placeholders also support format filters with pipe syntax (`{value | filter:arg}`) for locale-aware formatting of currency, dates, percentages, and durations. See [Format Filters](../interpolation/format-filters.md) for the full reference.
 
 ## Target Resolution in Lists
 
@@ -82,9 +84,10 @@ The `state` action modifies the interactive state or visibility of other fields 
 
 - `action` (string): Must be set to `"state"`.
 - `target` (string | array of strings): The field name, or an array of field names, that the state modifications should be applied to.
-- `state` (object): An object containing the boolean flags denoting the new state.
+- `state` (object): An object containing the new state to apply. Properties are independent of field names — the form may safely contain a field whose `name` is `"description"`, `"disabled"` or `"hidden"`; `target` identifies the field, the keys inside `state` configure it.
   - `disabled` (boolean, optional): Whether the field should be disabled.
   - `hidden` (boolean, optional): Whether the field should be hidden from view.
+  - `description` (string | object, optional): A new description to render for the target field. Supports interpolation and format filters, e.g. `"Total to pay: {value | currency:USD}"`.
 - `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied. If the condition evaluates to true (or the field's new value matches the string/array), the state properties are applied.
 
 **Example:**
@@ -111,6 +114,31 @@ The `state` action modifies the interactive state or visibility of other fields 
         "when": {
           "operator": "eq",
           "value": "paypal"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Updating description with interpolation and filters:**
+
+```json
+{
+  "label": "Price",
+  "name": "price",
+  "type": "input/text",
+  "event": {
+    "change": [
+      {
+        "action": "state",
+        "target": "price",
+        "state": {
+          "description": "Total to pay: {value | currency:USD}"
+        },
+        "when": {
+          "operator": "neq",
+          "value": ""
         }
       }
     ]

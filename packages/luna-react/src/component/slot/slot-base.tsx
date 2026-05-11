@@ -52,7 +52,11 @@ export function SlotBase(
         </Field>
       )}
       {isList(field) && (
-        <List field={field} value={props.value}>
+        <List
+          field={field}
+          translations={props.translations}
+          value={props.value}
+        >
           {(index) => (
             <SlotList
               children={props.children}

@@ -46,14 +46,14 @@ test.describe('Event change features', { tag: ['@e2e'] }, () => {
 
     // 2. Clear target manually
     await targetInput.fill('')
-    
+
     // 3. Change source again, target should be populated because it's empty
     await sourceInput.fill('Value 2')
     await expect(targetInput).toHaveValue('Value 2')
 
     // 4. Fill target manually with something else
     await targetInput.fill('Manual Value')
-    
+
     // 5. Change source again, target should NOT be overwritten
     await sourceInput.fill('Value 3')
     await expect(targetInput).toHaveValue('Manual Value')

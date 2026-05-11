@@ -149,16 +149,16 @@ export function useInputCore(
           setFieldStates((previous) => {
             if (state) {
               return newTargets.reduce(
-                (acc, target) => ({
-                  ...acc,
+                (previous, target) => ({
+                  ...previous,
                   [target]: state,
                 }),
                 previous
               )
             }
 
-            return newTargets.reduce((acc, target) => {
-              return omitKey(acc, target)
+            return newTargets.reduce((previous, target) => {
+              return omitKey(previous, target)
             }, previous)
           })
 

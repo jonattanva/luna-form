@@ -1,4 +1,4 @@
-import { FormattedDescription } from './formatted-description'
+import { FieldDescription } from './field-description'
 import { Label } from './label'
 import { interpolateIfNeeded, translate, type Field } from '@luna-form/core'
 import type { Config } from '../type'
@@ -32,10 +32,10 @@ export function InputLabel(
         {translate(label, props.translations)}
       </Label>
       {props.horizontal === true && (
-        <FormattedDescription
+        <FieldDescription
           config={props.config}
           context={props.context}
-          text={props.field.description}
+          field={props.field}
           translations={props.translations}
         />
       )}

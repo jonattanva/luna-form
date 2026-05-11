@@ -3,11 +3,11 @@ import { List } from '../../../component/list'
 import { VisibilityGuard } from './visibility-guard'
 import type { ListProps } from '../../../component/field/field-list'
 
-export function ListGuard({ children, field, value }: ListProps) {
+export function ListGuard({ children, field, translations, value }: ListProps) {
   return (
     <VisibilityGuard container={field} fields={field.fields}>
       <List field={field}>
-        <FieldList field={field} value={value}>
+        <FieldList field={field} translations={translations} value={value}>
           {children}
         </FieldList>
       </List>

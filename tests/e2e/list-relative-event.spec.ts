@@ -55,17 +55,17 @@ test.describe('List Relative Target Event', { tag: ['@e2e'] }, () => {
 
     // Add first item
     await page.getByRole('button', { name: 'Add user' }).click()
-    
+
     // Fill label of first item
     const label0 = page.locator('input[name="users.0.label"]')
     const name0 = page.locator('input[name="users.0.name"]')
     const globalField = page.locator('input[name="global_field"]')
 
     await label0.fill('John Doe')
-    
+
     // Verify sibling 'name' in the same row is updated
     await expect(name0).toHaveValue('John Doe')
-    
+
     // Verify global field is also updated (normal absolute syntax)
     await expect(globalField).toHaveValue('updated from list')
 
@@ -75,10 +75,10 @@ test.describe('List Relative Target Event', { tag: ['@e2e'] }, () => {
     const name1 = page.locator('input[name="users.1.name"]')
 
     await label1.fill('Jane Smith')
-    
+
     // Verify second item's name is updated correctly
     await expect(name1).toHaveValue('Jane Smith')
-    
+
     // Verify first item's name remains unchanged by the second item's event
     await expect(name0).toHaveValue('John Doe')
   })

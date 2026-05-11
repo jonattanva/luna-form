@@ -10,6 +10,7 @@ import { FieldListItem } from './field-list-item'
 export type ListProps = Readonly<{
   children: (index: number) => React.ReactNode
   field: List
+  translations?: Record<string, string>
   value?: Nullable<Record<string, unknown>>
 }>
 

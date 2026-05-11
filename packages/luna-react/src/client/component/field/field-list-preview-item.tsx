@@ -1,8 +1,9 @@
+import { evaluateCondition, translate } from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
 import { FieldPreview } from './field-preview'
 import { FieldPreviewValue } from './field-preview-value'
 import { resolveValue } from '../../lib/resolve-value'
-import type { List, Nullable } from '@luna-form/core'
+import type { List, Nullable, PreviewItem } from '@luna-form/core'
 import type { ReactNode } from 'react'
 
 export function FieldListPreviewItem({
@@ -17,6 +18,7 @@ export function FieldListPreviewItem({
   previewBadge,
   previewLabel,
   previewTags,
+  translations,
   value,
 }: {
   canRemove: boolean
@@ -27,12 +29,14 @@ export function FieldListPreviewItem({
   itemKey: string | number
   label: string
   onRemove: (index: number) => void
-  previewBadge?: string | string[]
-  previewLabel?: string
-  previewTags?: string | string[]
+  previewBadge?: PreviewItem
+  previewLabel?: PreviewItem
+  previewTags?: PreviewItem[]
+  translations?: Record<string, string>
   value?: Nullable<Record<string, unknown> | unknown[]>
 }) {
   const name = `${field.name}.${itemKey}`
+  const fallbackLabel = `${label} ${index + 1}`
 
   return (
     <FieldListItem
@@ -42,35 +46,82 @@ export function FieldListPreviewItem({
       isMultiField={isMultiField}
       label={label}
       onRemove={onRemove}
-      previewLabel={
-        previewLabel ? (
-          <FieldPreviewValue
-            initialValue={
-              value ? resolveValue(`${name}.${previewLabel}`, value) : undefined
-            }
-            name={`${name}.${previewLabel}`}
-          >
-            {(val) => val || `${label} ${index + 1}`}
-          </FieldPreviewValue>
-        ) : undefined
-      }
+      previewLabel={renderPreviewLabel({
+        fallbackLabel,
+        name,
+        previewLabel,
+        translations,
+        value,
+      })}
       previewBadge={
         previewBadge ? (
           <FieldPreview
             className="bg-primary text-primary-foreground rounded-md px-1.5 py-0.5 leading-none font-bold uppercase"
             name={name}
             previews={previewBadge}
+            translations={translations}
             value={value}
           />
         ) : undefined
       }
       previewTags={
         previewTags ? (
-          <FieldPreview name={name} previews={previewTags} value={value} />
+          <FieldPreview
+            name={name}
+            previews={previewTags}
+            translations={translations}
+            value={value}
+          />
         ) : undefined
       }
     >
       {children}
     </FieldListItem>
+  )
+}
+
+function renderPreviewLabel({
+  fallbackLabel,
+  name,
+  previewLabel,
+  translations,
+  value,
+}: {
+  fallbackLabel: string
+  name: string
+  previewLabel?: PreviewItem
+  translations?: Record<string, string>
+  value?: Nullable<Record<string, unknown> | unknown[]>
+}): ReactNode {
+  if (previewLabel === undefined) {
+    return undefined
+  }
+
+  const item =
+    typeof previewLabel === 'string' ? { field: previewLabel } : previewLabel
+
+  if (item.when !== undefined) {
+    const itemValue = value ? resolveValue(name, value) : undefined
+    if (!evaluateCondition(itemValue, item.when)) {
+      return undefined
+    }
+  }
+
+  if (item.label !== undefined) {
+    return translate(item.label, translations)
+  }
+
+  if (item.field === undefined) {
+    return undefined
+  }
+
+  const fieldName = `${name}.${item.field}`
+  return (
+    <FieldPreviewValue
+      initialValue={value ? resolveValue(fieldName, value) : undefined}
+      name={fieldName}
+    >
+      {(val) => val || fallbackLabel}
+    </FieldPreviewValue>
   )
 }

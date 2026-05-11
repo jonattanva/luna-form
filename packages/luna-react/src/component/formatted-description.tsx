@@ -17,12 +17,17 @@ export function FormattedDescription(
     context?: Record<string, unknown>
     text?: DescriptionType
     translations?: Record<string, string>
+    value?: unknown
   }>
 ) {
   const interpolateOpts = {
     context: props.context,
     env: props.config?.env,
+    value: props.value,
   }
+
+  const locale = props.config?.env?.locale as string | undefined
+  const formatOptions = { locale }
 
   const [isExpanded, setIsExpanded] = useState(() => {
     if (isObject(props.text) && 'collapsed' in props.text) {
@@ -37,7 +42,11 @@ export function FormattedDescription(
     isObject(props.text) && isString(props.text.title)
       ? formatMarkdown(
           translate(
-            interpolateIfNeeded(props.text.title, interpolateOpts),
+            interpolateIfNeeded(
+              props.text.title,
+              interpolateOpts,
+              formatOptions
+            ),
             props.translations
           )
         )
@@ -47,7 +56,8 @@ export function FormattedDescription(
     translate(
       interpolateIfNeeded(
         isString(props.text) ? props.text : props.text?.message,
-        interpolateOpts
+        interpolateOpts,
+        formatOptions
       ),
       props.translations
     )

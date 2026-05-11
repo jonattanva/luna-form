@@ -2,10 +2,10 @@ import { FieldList } from '../field/field-list'
 import { List } from '../list'
 import type { ListProps } from '../field/field-list'
 
-export function ListSlot({ children, field, value }: ListProps) {
+export function ListSlot({ children, field, translations, value }: ListProps) {
   return (
     <List field={field}>
-      <FieldList field={field} value={value}>
+      <FieldList field={field} translations={translations} value={value}>
         {children}
       </FieldList>
     </List>

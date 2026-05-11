@@ -67,13 +67,25 @@ export type OptionGroup = {
   label: string
 }
 
+export type PreviewItem =
+  | string
+  | {
+      field?: string
+      label?: string
+      when?: string | string[] | Condition
+    }
+
 export type List = {
   advanced?: {
     action?: string
     collapsed?: boolean
     collapsible?: boolean
     length?: Length<number>
-    preview?: { label?: string; tags?: string[]; badge?: string }
+    preview?: {
+      label?: PreviewItem
+      tags?: PreviewItem[]
+      badge?: PreviewItem
+    }
   }
   description?: string
   fields: Array<Field | Column>
@@ -129,6 +141,7 @@ export type CustomValidation = {
 }
 
 export type FieldState = {
+  description?: Description
   disabled?: boolean
   hidden?: boolean
 }

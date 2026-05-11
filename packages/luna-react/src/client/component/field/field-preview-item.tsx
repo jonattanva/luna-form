@@ -7,19 +7,23 @@ export function FieldPreviewItem({
   initialValue,
   name,
   separator,
+  staticLabel,
 }: Readonly<{
   className?: string
   initialValue?: unknown
-  name: string
+  name?: string
   separator?: boolean
+  staticLabel?: string
 }>) {
-  const value = useResolvedValue(name, initialValue)
+  const value = useResolvedValue(name ?? '', initialValue)
 
-  if (isEmpty(value) || isObject(value) || Array.isArray(value)) {
-    return null
+  if (staticLabel === undefined) {
+    if (isEmpty(value) || isObject(value) || Array.isArray(value)) {
+      return null
+    }
   }
 
-  const displayValue = String(value)
+  const displayValue = staticLabel ?? String(value)
 
   return (
     <div className="flex items-center gap-1.5 overflow-hidden">
