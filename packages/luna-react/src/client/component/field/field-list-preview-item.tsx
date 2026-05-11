@@ -57,6 +57,7 @@ export function FieldListPreviewItem({
         previewBadge ? (
           <FieldPreview
             className="bg-primary text-primary-foreground rounded-md px-1.5 py-0.5 leading-none font-bold uppercase"
+            fields={field.fields}
             name={name}
             previews={previewBadge}
             translations={translations}
@@ -67,6 +68,7 @@ export function FieldListPreviewItem({
       previewTags={
         previewTags ? (
           <FieldPreview
+            fields={field.fields}
             name={name}
             previews={previewTags}
             translations={translations}

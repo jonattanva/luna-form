@@ -35,11 +35,11 @@ export function FieldListItem(
     <button
       aria-label={`Remove ${props.label} item ${props.index + 1}`}
       className={twMerge(
-        'flex size-6 items-center justify-center rounded text-xl leading-none text-slate-400',
+        'flex size-6 items-center justify-center rounded text-xl leading-none text-zinc-400',
         'transition-colors duration-150',
         'hover:text-red-500',
-        'focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none',
-        'dark:text-slate-500 dark:hover:text-red-400'
+        'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',
+        'dark:text-zinc-500 dark:hover:text-red-400'
       )}
       onClick={handleRemove}
       type="button"
@@ -51,7 +51,7 @@ export function FieldListItem(
   )
 
   const labelContent = (
-    <div className="flex min-w-0 flex-col font-medium text-slate-700 dark:text-slate-400">
+    <div className="flex min-w-0 flex-col font-medium text-zinc-700 dark:text-zinc-400">
       <span className="text-base">
         {props.previewLabel ?? (
           <>
@@ -60,7 +60,7 @@ export function FieldListItem(
         )}
       </span>
       {!isOpen && props.previewTags && (
-        <div className="flex items-center gap-2 overflow-hidden text-xs font-normal text-ellipsis whitespace-nowrap text-slate-500 dark:text-slate-500">
+        <div className="flex items-center gap-2 overflow-hidden text-xs font-normal text-ellipsis whitespace-nowrap text-zinc-500 dark:text-zinc-500">
           {props.previewTags}
         </div>
       )}
@@ -82,9 +82,9 @@ export function FieldListItem(
               props.index + 1
             }`}
             className={twMerge(
-              'group flex grow items-center gap-2 rounded p-1 text-left text-slate-400',
-              'focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:outline-none',
-              'dark:text-slate-500'
+              'group flex grow items-center gap-2 rounded p-1 text-left text-zinc-400',
+              'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',
+              'dark:text-zinc-500'
             )}
             onClick={handleToggle}
             type="button"
@@ -107,7 +107,7 @@ export function FieldListItem(
     return (
       <div
         data-slot="list-item-card"
-        className="box-border w-full min-w-0 rounded-lg border border-slate-100 p-4 dark:border-slate-900"
+        className="box-border w-full min-w-0 rounded-lg border border-zinc-100 p-4 dark:border-zinc-900"
       >
         {header}
         <Collapsible visible={isOpen}>

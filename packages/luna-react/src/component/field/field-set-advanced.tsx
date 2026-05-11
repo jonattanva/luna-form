@@ -27,7 +27,7 @@ export function FieldSetAdvanced(
     >
       <legend>
         <button
-          className="flex cursor-pointer items-center gap-2 text-base font-medium text-slate-600 dark:text-slate-400"
+          className="flex cursor-pointer items-center gap-2 text-base font-medium text-zinc-600 dark:text-zinc-400"
           onClick={handleOpen}
           type="button"
         >
@@ -37,11 +37,11 @@ export function FieldSetAdvanced(
       </legend>
       <Collapsible visible={isOpen}>
         <div
-          className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-slate-300 pl-4 dark:border-slate-600"
+          className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-zinc-300 pl-4 dark:border-zinc-600"
           data-slot="field-set-content"
         >
           {props.section.description && (
-            <p className="text-sm leading-normal font-normal text-slate-600 dark:text-slate-400">
+            <p className="text-sm leading-normal font-normal text-zinc-600 dark:text-zinc-400">
               {formatMarkdown(props.section.description)}
             </p>
           )}

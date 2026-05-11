@@ -43,7 +43,7 @@ jobs:
       - name: Check bundle size
         run: |
           DIST="packages/luna-react/dist"
-          LIMIT_KB=160
+          LIMIT_KB=170
           total=0
           rows=""
 

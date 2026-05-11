@@ -1,6 +1,7 @@
 import { COLUMN } from './constant'
 import { extract } from './extract'
-import type { List, Nullable } from '../type'
+import { isColumn } from './is-input'
+import type { Column, Field, List, Nullable } from '../type'
 
 function getInitialCount(
   list: List,
@@ -34,4 +35,20 @@ export function getInitialList(
 
 export function getLabel(list: List): string {
   return list.label ?? list.name
+}
+
+export function flattenListFields(
+  fields: Array<Field | Column>
+): Record<string, Field> {
+  const out: Record<string, Field> = {}
+  for (const row of fields) {
+    if (isColumn(row)) {
+      for (const child of row.fields) {
+        out[child.name] = child
+      }
+    } else {
+      out[row.name] = row
+    }
+  }
+  return out
 }

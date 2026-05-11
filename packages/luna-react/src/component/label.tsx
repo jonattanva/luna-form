@@ -31,7 +31,7 @@ export function Label(
     >
       {props.children}
       {showOptionalLabel && !props.field.required && (
-        <span className="text-sm text-slate-600 dark:text-slate-400">
+        <span className="text-sm text-zinc-600 dark:text-zinc-400">
           {translate('(Optional)', props.translations)}
         </span>
       )}

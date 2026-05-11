@@ -68,7 +68,7 @@ export function FormattedDescription(
       <div className="flex flex-col gap-2">
         {title && (
           <button
-            className="flex items-center gap-1 text-left text-xs font-medium text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
+            className="flex items-center gap-1 text-left text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             onClick={handleExpandToggle}
             type="button"
           >

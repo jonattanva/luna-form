@@ -57,7 +57,7 @@ test.describe('Description component', { tag: ['@e2e'] }, () => {
       hasText: 'We will never share your email.',
     })
     await expect(description).toHaveClass(/text-xs/)
-    await expect(description).toHaveClass(/text-slate-600/)
+    await expect(description).toHaveClass(/text-zinc-600/)
   })
 
   test('should render description below the input field', async ({ page }) => {

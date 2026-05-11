@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { getInitialList } from '@/packages/luna-core/src/util/list'
-import type { List } from '@/packages/luna-core/src/type'
+import {
+  flattenListFields,
+  getInitialList,
+} from '@/packages/luna-core/src/util/list'
+import type { Column, Field, List } from '@/packages/luna-core/src/type'
 
 describe('List', () => {
   test('should return [0] as default when no count is specified', () => {
@@ -90,5 +93,27 @@ describe('List', () => {
     }
 
     expect(getInitialList(list, value)).toEqual([0, 1, 2, 3])
+  })
+})
+
+describe('flattenListFields', () => {
+  test('returns an empty record for an empty array', () => {
+    expect(flattenListFields([])).toEqual({})
+  })
+
+  test('keys top-level Field entries by name', () => {
+    const a: Field = { name: 'a', type: 'input/text' }
+    const b: Field = { name: 'b', type: 'checkbox' }
+    expect(flattenListFields([a, b])).toEqual({ a, b })
+  })
+
+  test('flattens children of Column entries', () => {
+    const inner: Field = { name: 'inner', type: 'input/text' }
+    const column: Column = { type: 'column', fields: [inner] }
+    const sibling: Field = { name: 'sibling', type: 'checkbox' }
+    expect(flattenListFields([column, sibling])).toEqual({
+      inner,
+      sibling,
+    })
   })
 })

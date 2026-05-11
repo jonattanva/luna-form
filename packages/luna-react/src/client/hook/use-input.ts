@@ -1,6 +1,6 @@
 import { KeepValueContext } from '../context/keep-value-context'
 import { getSchema } from '@luna-form/core'
-import { useContext, useEffect, useEffectEvent, useMemo } from 'react'
+import { use, useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
@@ -15,7 +15,7 @@ export function useInput(
     [field, translations]
   )
 
-  const keepValue = useContext(KeepValueContext)
+  const keepValue = use(KeepValueContext)
 
   const onMountHandler = useEffectEvent((name: string) => {
     if (name) {

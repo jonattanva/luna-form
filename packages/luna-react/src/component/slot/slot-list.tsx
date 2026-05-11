@@ -47,7 +47,6 @@ export function SlotList(
 
   return (
     <SlotBase
-      children={props.children}
       components={props.components}
       config={props.config}
       context={props.context}
@@ -56,6 +55,8 @@ export function SlotList(
       style={props.style}
       translations={props.translations}
       value={props.value}
-    />
+    >
+      {props.children}
+    </SlotBase>
   )
 }

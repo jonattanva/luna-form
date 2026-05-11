@@ -5,7 +5,7 @@ import { useFieldList } from '../../hook/use-field-list'
 import type { ListProps } from '../../../component/field/field-list'
 
 const ADD_BUTTON_BASE_CLASSES =
-  'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-slate-200 px-4 text-sm font-medium text-slate-500 transition-none hover:border-slate-300 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-slate-800 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-slate-200'
+  'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-zinc-200 px-4 text-sm font-medium text-zinc-500 transition-none hover:border-zinc-300 hover:text-zinc-800 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
 
 export function FieldList(props: ListProps) {
   const { field, translations, value, children } = props
@@ -55,7 +55,7 @@ export function FieldList(props: ListProps) {
           ADD_BUTTON_BASE_CLASSES,
           hasLimit ? 'justify-between' : 'justify-center',
           !canAdd &&
-            'cursor-not-allowed opacity-50 hover:border-slate-200 hover:text-slate-500 dark:hover:border-slate-800 dark:hover:text-slate-400'
+            'cursor-not-allowed opacity-50 hover:border-zinc-200 hover:text-zinc-500 dark:hover:border-zinc-800 dark:hover:text-zinc-400'
         )}
         disabled={!canAdd}
         onClick={addItem}
@@ -70,7 +70,7 @@ export function FieldList(props: ListProps) {
         {hasLimit && (
           <span
             aria-hidden="true"
-            className="text-slate-400 tabular-nums dark:text-slate-500"
+            className="text-zinc-400 tabular-nums dark:text-zinc-500"
           >
             {items.length} / {max}
           </span>

@@ -43,6 +43,7 @@ import type {
   Field,
   Input,
   Nullable,
+  Option,
   Select,
   Time,
   Value,
@@ -372,4 +373,68 @@ export function getFormatProps(
 ) {
   const format = dateFormat ?? timeFormat
   return format ? { 'data-format': format } : {}
+}
+
+function normalizePreviewOptions(
+  items: readonly unknown[]
+): Array<Option | string> {
+  const out: Array<Option | string> = []
+  for (const item of items) {
+    if (typeof item === 'string') {
+      out.push(item)
+      continue
+    }
+    if (
+      isObject(item) &&
+      'value' in item &&
+      'label' in item &&
+      isString(item.value) &&
+      isString(item.label)
+    ) {
+      out.push({ label: item.label, value: item.value })
+    }
+  }
+  return out
+}
+
+export function getPreviewOptions(
+  field: Field
+): Array<Option | string> | undefined {
+  if (!isOptions(field)) {
+    return undefined
+  }
+
+  const builtIn = isChips(field)
+    ? buildOptionChips(field)
+    : buildOptionSelect(field)
+  if (Array.isArray(builtIn)) {
+    const flat = normalizePreviewOptions(builtIn)
+    return flat.length > 0 ? flat : undefined
+  }
+
+  const source = buildSource(field)
+  if (Array.isArray(source)) {
+    const mapped = toOptions(source, field.advanced?.options)
+    const flat = normalizePreviewOptions(mapped)
+    return flat.length > 0 ? flat : undefined
+  }
+
+  return undefined
+}
+
+export function resolveOptionLabel(
+  value: unknown,
+  options: Array<Option | string>
+): string {
+  const str = String(value)
+  for (const opt of options) {
+    if (typeof opt === 'string') {
+      if (opt === str) {
+        return opt
+      }
+    } else if (opt.value === str) {
+      return opt.label
+    }
+  }
+  return str
 }
