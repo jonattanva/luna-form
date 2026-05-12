@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778555555950,
+  "lastUpdate": 1778555589639,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5875,6 +5875,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 198,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "69e1f0f2214fefdcb41fddf5376af68f28acbf1f",
+          "message": "docs: remove deprecated collapsible property from list field and update types",
+          "timestamp": "2026-05-11T22:11:48-05:00",
+          "tree_id": "7fb26dc27d715b820c2e923623e88caada13222e",
+          "url": "https://github.com/jonattanva/luna-form/commit/69e1f0f2214fefdcb41fddf5376af68f28acbf1f"
+        },
+        "date": 1778555589395,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 279,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 617,
             "unit": "ms"
           }
         ]
