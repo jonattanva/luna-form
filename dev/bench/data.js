@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778617322936,
+  "lastUpdate": 1778617360955,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -6105,6 +6105,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 631,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "d58eebeb771c928a55574b8a50c9fb9555b19277",
+          "message": "ci: increase e2e test timeout to 60 minutes",
+          "timestamp": "2026-05-12T15:21:28-05:00",
+          "tree_id": "29699c8b625aa63d7ce7d31a51fc8af2d9c7979d",
+          "url": "https://github.com/jonattanva/luna-form/commit/d58eebeb771c928a55574b8a50c9fb9555b19277"
+        },
+        "date": 1778617360602,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 360,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 251,
             "unit": "ms"
           }
         ]
