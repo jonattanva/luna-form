@@ -79,7 +79,6 @@ export type List = {
   advanced?: {
     action?: string
     collapsed?: boolean
-    collapsible?: boolean
     length?: Length<number>
     preview?: {
       label?: PreviewItem

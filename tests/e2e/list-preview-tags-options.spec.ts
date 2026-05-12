@@ -10,7 +10,6 @@ const FIXTURE = `{
           "name": "schedule",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": {
               "label": "title",
@@ -58,7 +57,6 @@ const CUSTOM_OPTIONS_FIXTURE = `{
           "name": "field",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": {
               "badge": "required",
@@ -111,7 +109,6 @@ const RADIO_FIXTURE = `{
           "name": "perms",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": {
               "label": "name",
@@ -197,7 +194,6 @@ test.describe(
           "name": "field",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": { "badge": "required", "label": "label" }
           },
@@ -219,7 +215,6 @@ test.describe(
           "name": "field",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": { "badge": "required", "label": "label" }
           },
@@ -241,7 +236,6 @@ test.describe(
           "name": "field",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": { "badge": "required", "label": "label" }
           },
@@ -302,7 +296,6 @@ test.describe(
               "type": "list",
               "advanced": {
                 "length": { "min": 1, "max": 1 },
-                "collapsible": true,
                 "collapsed": true,
                 "preview": { "label": "title", "tags": ["status"] }
               },

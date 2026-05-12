@@ -10,9 +10,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {
@@ -51,7 +48,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": { "collapsible": true },
             "title": "Advanced Options",
             "fields": [
               { "label": "Secret Token", "name": "token", "type": "input/text" }
@@ -94,9 +90,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "description": "These are optional settings.",
             "fields": [
@@ -135,9 +128,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {
@@ -173,9 +163,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {
@@ -205,9 +192,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {
@@ -239,9 +223,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "description": "Hidden until expanded.",
             "fields": [
@@ -280,9 +261,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
             ]
           },
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {
@@ -325,9 +303,6 @@ test.describe('Advanced section (collapsible)', { tag: ['@e2e'] }, () => {
       `{
         "sections": [
           {
-            "advanced": {
-                "collapsible": true
-            },
             "title": "Advanced Options",
             "fields": [
               {

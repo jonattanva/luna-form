@@ -10,7 +10,6 @@ const HEADER_FIXTURE = `{
           "name": "multi",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "preview": { "label": "key", "tags": ["value"] }
           },
           "fields": [
@@ -23,7 +22,6 @@ const HEADER_FIXTURE = `{
           "name": "single",
           "type": "list",
           "advanced": {
-            "collapsible": true,
             "collapsed": true,
             "preview": { "label": "item" }
           },

@@ -20,12 +20,11 @@ The `advanced` property customizes structural interaction rules and layout rende
 
 - **`action`** _(string)_: A custom label applied strictly to the generic "Add item" button rendering at the end of the collection (e.g. `"Add email address"`).
 - **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles.
-- **`collapsible`** _(boolean)_: When `true`, list elements wrap seamlessly into user-expanding accordions instead of vertical flat blocks. Helpful for rich inner form collections.
-- **`collapsed`** _(boolean)_: Only effective if `collapsible: true`. When enabled, list items default to a visually collapsed representation upon mounting or adding.
+- **`collapsed`** _(boolean)_: When enabled, list items default to a visually collapsed representation upon mounting or adding.
 
 ### Collapsed Previews (`preview` object)
 
-If list items render into structural wrappers relying on collapsibles, the **`preview`** object handles mapping internal field values outward toward the unexpanded accordion headers directly.
+If list items render into structural wrappers (e.g., when they contain multiple fields and become automatically collapsible), the **`preview`** object handles mapping internal field values outward toward the unexpanded accordion headers directly.
 
 - **`label`** _(string | PreviewItem)_: Targets a primary field to replace the list element's fallback title string.
 - **`badge`** _(string | PreviewItem)_: Extracts a selected field mapping dynamically as an isolated badge indicator beside the label.
@@ -92,7 +91,6 @@ See [Change Events](../events/change.md#target-resolution-in-lists) structure de
   "description": "Please detail your previous relevant jobs.",
   "advanced": {
     "action": "Add Experience Record",
-    "collapsible": true,
     "collapsed": true,
     "length": {
       "min": 1,

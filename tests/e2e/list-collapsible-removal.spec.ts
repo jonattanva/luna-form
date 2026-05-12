@@ -9,7 +9,6 @@ const TWO_REMOVABLE_ITEMS = `{
           "label": "Multi",
           "name": "multi",
           "type": "list",
-          "advanced": { "collapsible": true },
           "fields": [
             { "name": "key", "label": "Key", "type": "input/text" },
             { "name": "value", "label": "Value", "type": "input/text" }
