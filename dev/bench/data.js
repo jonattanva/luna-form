@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778624538100,
+  "lastUpdate": 1778624566514,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -6247,6 +6247,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 251,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "049f1d18dd79fc0827f7994b51a8d1014b6bb503",
+          "message": "chore: reduce benchmark noise by increasing iterations and relaxing thresholds",
+          "timestamp": "2026-05-12T17:21:28-05:00",
+          "tree_id": "0cf720b5a9cefa05102c1d74cd6d4a725e7c1bc0",
+          "url": "https://github.com/jonattanva/luna-form/commit/049f1d18dd79fc0827f7994b51a8d1014b6bb503"
+        },
+        "date": 1778624566250,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 265,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 609,
             "unit": "ms"
           }
         ]
