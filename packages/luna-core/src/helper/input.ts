@@ -348,6 +348,10 @@ export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
     }
   }
 
+  if (isSelectActive(field)) {
+    return { value: isValidValue(value) ? String(value) : '' }
+  }
+
   return { value: value ?? '' }
 }
 

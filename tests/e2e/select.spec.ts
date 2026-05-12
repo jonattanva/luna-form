@@ -307,6 +307,114 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).toContainText('"active": false')
   })
 
+  test('should display correct option when initial value is boolean true', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "value": { "active": true },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await expect(select).toContainText('Yes')
+  })
+
+  test('should display correct option when initial value is boolean false', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "value": { "active": false },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await expect(select).toContainText('No')
+  })
+
+  test('should display correct option when initial value is string "true"', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "value": { "active": "true" },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await expect(select).toContainText('Yes')
+  })
+
+  test('should display correct option when initial value is string "false"', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "value": { "active": "false" },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await expect(select).toContainText('No')
+  })
+
   test('should render select fetch source correctly', async ({ page }) => {
     await inject(
       page,
