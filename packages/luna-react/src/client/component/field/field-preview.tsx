@@ -7,6 +7,7 @@ import {
 } from '@luna-form/core'
 import { FieldPreviewItem } from './field-preview-item'
 import { resolveValue } from '../../lib/resolve-value'
+import { useLiveItemValue } from '../../hook/use-live-item-value'
 import { useMemo } from 'react'
 import type { Column, Field, PreviewItem } from '@luna-form/core'
 
@@ -55,10 +56,10 @@ export function FieldPreview({
     [fields]
   )
 
-  const itemValue = useMemo(
-    () => (value ? resolveValue(name, value) : undefined),
-    [name, value]
-  )
+  // Reactive item value: merges the live Jotai form state on top of the
+  // initial value tree so `when` conditions re-evaluate when the user edits
+  // sibling fields. Without this, `when` only sees the initial snapshot.
+  const itemValue = useLiveItemValue(name, value)
 
   const visibleItems = useMemo<Entry[]>(() => {
     const result: Entry[] = []

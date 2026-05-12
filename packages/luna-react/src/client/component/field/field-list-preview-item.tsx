@@ -3,6 +3,7 @@ import { FieldListItem } from '../../../component/field/field-list-item'
 import { FieldPreview } from './field-preview'
 import { FieldPreviewValue } from './field-preview-value'
 import { resolveValue } from '../../lib/resolve-value'
+import { useLiveItemValue } from '../../hook/use-live-item-value'
 import type { List, Nullable, PreviewItem } from '@luna-form/core'
 import type { ReactNode } from 'react'
 
@@ -38,6 +39,10 @@ export function FieldListPreviewItem({
   const name = `${field.name}.${itemKey}`
   const fallbackLabel = `${label} ${index + 1}`
 
+  // Live item value used to evaluate `previewLabel.when` reactively against
+  // user edits. Mirrors FieldPreview's reactive `itemValue` logic.
+  const liveItemValue = useLiveItemValue(name, value)
+
   return (
     <FieldListItem
       canRemove={canRemove}
@@ -48,6 +53,7 @@ export function FieldListPreviewItem({
       onRemove={onRemove}
       previewLabel={renderPreviewLabel({
         fallbackLabel,
+        liveItemValue,
         name,
         previewLabel,
         translations,
@@ -84,12 +90,14 @@ export function FieldListPreviewItem({
 
 function renderPreviewLabel({
   fallbackLabel,
+  liveItemValue,
   name,
   previewLabel,
   translations,
   value,
 }: {
   fallbackLabel: string
+  liveItemValue: unknown
   name: string
   previewLabel?: PreviewItem
   translations?: Record<string, string>
@@ -103,8 +111,7 @@ function renderPreviewLabel({
     typeof previewLabel === 'string' ? { field: previewLabel } : previewLabel
 
   if (item.when !== undefined) {
-    const itemValue = value ? resolveValue(name, value) : undefined
-    if (!evaluateCondition(itemValue, item.when)) {
+    if (!evaluateCondition(liveItemValue, item.when)) {
       return undefined
     }
   }
