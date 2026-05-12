@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778603356508,
+  "lastUpdate": 1778603571311,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5963,6 +5963,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 617,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "f657ac7f184bfb0839a7e2c77f4d7aff4f671fd6",
+          "message": "feat: add reactive preview label conditions for list items and bump versions to 0.0.50",
+          "timestamp": "2026-05-12T11:28:19-05:00",
+          "tree_id": "5aa15ebe9f2fb291b845bd962aee26010eb4d61d",
+          "url": "https://github.com/jonattanva/luna-form/commit/f657ac7f184bfb0839a7e2c77f4d7aff4f671fd6"
+        },
+        "date": 1778603571058,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 278,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 631,
             "unit": "ms"
           }
         ]
