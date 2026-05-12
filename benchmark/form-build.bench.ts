@@ -7,8 +7,8 @@ type BenchmarkResult = {
   value: number
 }
 
-const WARMUP_ITERATIONS = 50
-const MEASURED_ITERATIONS = 500
+const WARMUP_ITERATIONS = 5000
+const MEASURED_ITERATIONS = 50000
 
 function measure(label: string, fn: () => void): BenchmarkResult {
   for (let i = 0; i < WARMUP_ITERATIONS; i++) {
