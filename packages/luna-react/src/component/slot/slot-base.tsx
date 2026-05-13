@@ -27,6 +27,7 @@ export function SlotBase(
     context?: Record<string, unknown>
     disabled?: boolean
     fields?: Fields
+    onValueChange?: (input: { name: string; value: unknown }) => void
     style?: Style
     translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
@@ -54,6 +55,7 @@ export function SlotBase(
       {isList(field) && (
         <List
           field={field}
+          onValueChange={props.onValueChange}
           translations={props.translations}
           value={props.value}
         >

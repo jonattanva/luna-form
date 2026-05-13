@@ -24,6 +24,10 @@ export function FormPreview() {
     })
   }
 
+  function handleValueChange(values: Record<string, unknown>) {
+    console.log('Form values changed:', values)
+  }
+
   return (
     <div className="flex h-full flex-1 flex-col items-stretch overflow-x-hidden overflow-y-auto">
       <div className="flex w-full justify-center">
@@ -34,6 +38,7 @@ export function FormPreview() {
               config={config}
               action={action}
               onSuccess={handleSuccess}
+              onValueChange={handleValueChange}
             >
               {({ isPending }) => (
                 <div className="flex w-full justify-end">

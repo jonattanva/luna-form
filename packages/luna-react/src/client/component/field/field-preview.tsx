@@ -88,7 +88,7 @@ export function FieldPreview({
       const options = childField ? getPreviewOptions(childField) : undefined
 
       result.push({
-        key: item.field,
+        key: `${index}:${item.field}`,
         initialValue,
         options,
         previewName,
