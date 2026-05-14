@@ -6,6 +6,7 @@ import {
 } from '@luna-form/core'
 import { useSetAtom, useStore } from 'jotai'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
 
 export function useFieldList(
@@ -35,6 +36,13 @@ export function useFieldList(
   const onValueChangeRef = useRef(onValueChange)
   onValueChangeRef.current = onValueChange
 
+  // Collapsed items live inside <Activity mode="hidden">, where useEffect is
+  // suspended. Their leaf inputs never hydrate the flat valueAtom from the
+  // value prop, so we keep the prop in a ref and use it as a fallback when
+  // reconstructing the list value.
+  const valuePropRef = useRef(value)
+  valuePropRef.current = value
+
   // Flat list of leaf field names (skipping columns), computed once per field.
   const leafNames = useMemo(() => {
     const names: string[] = []
@@ -56,10 +64,21 @@ export function useFieldList(
       values: Record<string, unknown>
     ): Array<Record<string, unknown>> => {
       const prefix = `${field.name}.`
+      const valueProp = valuePropRef.current
+
       return currentItems.map((stableId) => {
         const item: Record<string, unknown> = {}
         for (const name of leafNames) {
-          item[name] = values[`${prefix}${stableId}.${name}`]
+          const fullKey = `${prefix}${stableId}.${name}`
+          const fromStore = values[fullKey]
+
+          if (fromStore !== undefined) {
+            item[name] = fromStore
+          } else if (valueProp) {
+            item[name] = resolveValue(fullKey, valueProp)
+          } else {
+            item[name] = undefined
+          }
         }
         return item
       })
@@ -84,8 +103,9 @@ export function useFieldList(
 
     const id = nextId.current++
     const nextItems = [...itemsRef.current, id]
+
     setItems(nextItems)
-    emitChange(nextItems, store.get(valueAtom) as Record<string, unknown>)
+    emitChange(nextItems, store.get(valueAtom))
   }, [emitChange, max, store])
 
   const handleRemove = useCallback(
@@ -97,9 +117,10 @@ export function useFieldList(
       const stableId = itemsRef.current[index]
       const nextItems = itemsRef.current.filter((_, i) => i !== index)
 
-      const currentValues = store.get(valueAtom) as Record<string, unknown>
+      const currentValues = store.get(valueAtom)
       const nextValues = { ...currentValues }
       const prefix = `${field.name}.`
+
       for (const name of leafNames) {
         delete nextValues[`${prefix}${stableId}.${name}`]
       }

@@ -24,8 +24,8 @@ export function FormPreview() {
     })
   }
 
-  function handleValueChange(values: Record<string, unknown>) {
-    console.log('Form values changed:', values)
+  function handleValueChange(input: { name: string; value: unknown }) {
+    console.log('Form values changed:', input)
   }
 
   return (

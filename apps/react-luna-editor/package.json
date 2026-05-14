@@ -21,7 +21,7 @@
     "date-fns": "4.1.0",
     "jotai": "2.20.0",
     "lucide-react": "1.14.0",
-    "next": "16.2.5",
+    "next": "16.2.6",
     "next-themes": "0.4.6",
     "radix-ui": "1.4.3",
     "react": "19.2.6",
@@ -29,7 +29,7 @@
     "react-dom": "19.2.6",
     "react-luna-form": "workspace:*",
     "sonner": "2.0.7",
-    "tailwind-merge": "3.5.0"
+    "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.2.4",
