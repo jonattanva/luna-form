@@ -65,17 +65,28 @@ export function useFieldList(
     ): Array<Record<string, unknown>> => {
       const prefix = `${field.name}.`
       const valueProp = valuePropRef.current
-
+      // itemsRef.current is updated in useLayoutEffect (above), which runs
+      // AFTER addItem/handleRemove finish their synchronous emit. So at this
+      // point it still holds the items array from before the in-flight
+      // setItems — and that array is the one in sync with the parent's current
+      // value prop layout. Using `indexOf(stableId)` on it tells us where the
+      // item currently lives in `value` (which the parent has been collapsing
+      // to contiguous indices after each previous emit). Falling back by
+      // `stableId` directly would mis-align after the first remove, because
+      // stable IDs become non-contiguous while `value` stays packed.
+      const valueAlignedItems = itemsRef.current
       return currentItems.map((stableId) => {
         const item: Record<string, unknown> = {}
         for (const name of leafNames) {
-          const fullKey = `${prefix}${stableId}.${name}`
-          const fromStore = values[fullKey]
-
+          const fromStore = values[`${prefix}${stableId}.${name}`]
           if (fromStore !== undefined) {
             item[name] = fromStore
           } else if (valueProp) {
-            item[name] = resolveValue(fullKey, valueProp)
+            const position = valueAlignedItems.indexOf(stableId)
+            item[name] =
+              position >= 0
+                ? resolveValue(`${prefix}${position}.${name}`, valueProp)
+                : undefined
           } else {
             item[name] = undefined
           }

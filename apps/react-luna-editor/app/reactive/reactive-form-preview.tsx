@@ -30,14 +30,9 @@ export function ReactiveFormPreview() {
     setValues((form.value as Record<string, unknown>) ?? {})
   }
 
-  function handleValueChange({
-    name,
-    value,
-  }: {
-    name: string
-    value: unknown
-  }) {
-    setValues((prev) => ({ ...prev, [name]: value }))
+  function handleValueChange(input: { name: string; value: unknown }) {
+    console.log('Form values changed:', input)
+    setValues((prev) => ({ ...prev, [input.name]: input.value }))
   }
 
   function handleSuccess(response: {
