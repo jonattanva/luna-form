@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778815702501,
+  "lastUpdate": 1778815730196,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -6599,6 +6599,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 491,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "52853f0d62e13c92b720e6e5e494c9bc4f5a4579",
+          "message": "fix(core): improve value-event autofill handling and update dependencies",
+          "timestamp": "2026-05-14T22:27:26-05:00",
+          "tree_id": "a6937280c510711ee8017fff3b6d1d1fda77404b",
+          "url": "https://github.com/jonattanva/luna-form/commit/52853f0d62e13c92b720e6e5e494c9bc4f5a4579"
+        },
+        "date": 1778815729629,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 250,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 185,
             "unit": "ms"
           }
         ]
