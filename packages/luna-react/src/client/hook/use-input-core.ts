@@ -13,6 +13,7 @@ import {
   handleStateEvent,
   handleValueEvent,
   isClickable,
+  isEmpty,
   isInput,
   resolveTarget,
   translate,
@@ -90,12 +91,13 @@ export function useInputCore(
     placeholder,
   }
 
-  function getTransform(target: string) {
+  function getField(target: string) {
     const [, fields] = props.getSchema()
-    const current = fields.find((field) => {
-      return field.name === target
-    })
+    return fields.find((field) => field.name === target)
+  }
 
+  function getTransform(target: string) {
+    const current = getField(target)
     if (current && isInput(current)) {
       const transform = current.advanced?.transform
       if (transform) {
@@ -103,6 +105,14 @@ export function useInputCore(
       }
     }
   }
+
+  // Tracks the last value the auto-fill (handleValueEvent) wrote to each
+  // target. Used to distinguish "target still owned by the auto-fill" from
+  // "user has manually edited the target" when deciding whether to honor
+  // `onlyIfTargetEmpty`. A pure `isEmpty(current)` check is insufficient:
+  // a target with a transform is non-empty after the very first source
+  // keystroke, which would freeze the auto-fill on subsequent keystrokes.
+  const lastAutoFilledTargetsRef = useRef<Map<string, unknown>>(new Map())
 
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
@@ -181,21 +191,53 @@ export function useInputCore(
           }
         })
 
-        handleValueEvent(selected, values, (target, resolve) => {
+        handleValueEvent(selected, values, (target, candidate, options) => {
           const newTarget = resolveTarget(target, props.field.name)
-          setValues((previous) => {
-            const current = previous[newTarget]
-            const next = resolve(current)
+          const transform = getTransform(newTarget)
+          const transformed = transform
+            ? applyTransform(candidate, transform)
+            : candidate
 
-            const transform = getTransform(newTarget)
-            const newValue = !transform ? next : applyTransform(next, transform)
+          const previousValues = store.get(valueAtom) as Record<string, unknown>
+          const current = previousValues[newTarget]
 
-            if (newValue === current) {
-              return previous
+          // Only honor `onlyIfTargetEmpty` when the user has actually changed
+          // the target since our last auto-fill. If `current` still equals the
+          // value we wrote, the field is still in "auto-fill" mode and we
+          // should keep mirroring the source — otherwise targets with
+          // transforms freeze after the first character (Bug A).
+          if (options.onlyIfTargetEmpty && !isEmpty(current)) {
+            const lastAutoFilled =
+              lastAutoFilledTargetsRef.current.get(newTarget)
+            if (!Object.is(lastAutoFilled, current)) {
+              return
             }
+          }
 
-            return { ...previous, [newTarget]: newValue }
-          })
+          if (transformed === current) {
+            return
+          }
+
+          setValues((previous) => ({
+            ...previous,
+            [newTarget]: transformed,
+          }))
+          lastAutoFilledTargetsRef.current.set(newTarget, transformed)
+
+          // Mirror the auto-fill up to the consumer. Without this, the parent
+          // never learns about the target's new value, so on reload (or any
+          // re-render that drops the internal atom in favor of the value
+          // prop) the auto-filled data is lost (Bug B).
+          if (props.onValueChange) {
+            const targetField = getField(newTarget)
+            if (targetField) {
+              props.onValueChange({
+                name: newTarget,
+                type: targetField.type,
+                value: transformed,
+              })
+            }
+          }
         })
       })
     })
