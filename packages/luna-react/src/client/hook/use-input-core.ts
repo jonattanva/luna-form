@@ -172,13 +172,22 @@ export function useInputCore(
             }, previous)
           })
 
-          if (state?.hidden === true) {
+          const targetsToClear =
+            state?.hidden === true
+              ? newTargets
+              : state === undefined
+                ? newTargets.filter(
+                    (target) => getField(target)?.hidden === true
+                  )
+                : []
+
+          if (targetsToClear.length > 0) {
             setValues((previous) => {
               let changed = false
               const next = { ...previous }
               for (const key of Object.keys(previous)) {
                 if (
-                  newTargets.some((target) => {
+                  targetsToClear.some((target) => {
                     return key === target || key.startsWith(`${target}.`)
                   })
                 ) {

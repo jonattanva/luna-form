@@ -13,15 +13,25 @@ export function evaluateCondition<T>(
   }
 
   if (isString(when)) {
-    return getValue(selected, VALUE) === when
+    const current = getValue(selected, VALUE)
+    if (Array.isArray(current)) {
+      return current.length === 1 && current[0] === when
+    }
+    return current === when
   }
 
   if (isBoolean(when)) {
-    return Boolean(getValue(selected, VALUE)) === when
+    const current = getValue(selected, VALUE)
+    const truthy = Array.isArray(current) ? current.length > 0 : Boolean(current)
+    return truthy === when
   }
 
   if (Array.isArray(when)) {
-    return when.includes(String(getValue(selected, VALUE)))
+    const current = getValue(selected, VALUE)
+    if (Array.isArray(current)) {
+      return current.some((value) => when.includes(String(value)))
+    }
+    return when.includes(String(current))
   }
 
   return evaluateOperator(selected, when)
