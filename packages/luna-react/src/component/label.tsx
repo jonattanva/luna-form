@@ -23,15 +23,17 @@ export function Label(
       data-slot="field-label"
       data-normal={normal}
       className={twMerge(
-        'flex w-fit items-center gap-2 text-sm leading-snug font-medium select-none',
+        'flex w-fit items-center text-sm leading-snug font-medium select-none',
+        '[[data-slot=column]_&]:md:line-clamp-2 [[data-slot=column]_&]:md:min-h-[2lh]',
         'data-[normal=true]:font-normal',
         'group-data-[readonly=true]:cursor-not-allowed group-data-[readonly=true]:opacity-50'
       )}
       htmlFor={props.field.name}
+      title={typeof props.children === 'string' ? props.children : undefined}
     >
       {props.children}
       {showOptionalLabel && !props.field.required && (
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
           {translate('(Optional)', props.translations)}
         </span>
       )}

@@ -52,16 +52,16 @@ export function FormattedDescription(
         )
       : undefined
 
-  const message = formatMarkdown(
-    translate(
-      interpolateIfNeeded(
-        isString(props.text) ? props.text : props.text?.message,
-        interpolateOpts,
-        formatOptions
-      ),
-      props.translations
-    )
+  const rawMessage = translate(
+    interpolateIfNeeded(
+      isString(props.text) ? props.text : props.text?.message,
+      interpolateOpts,
+      formatOptions
+    ),
+    props.translations
   )
+
+  const message = formatMarkdown(rawMessage)
 
   if (message) {
     return (
@@ -76,7 +76,7 @@ export function FormattedDescription(
             <ChevronIcon expanded={isExpanded} />
           </button>
         )}
-        {isExpanded && <Description>{message}</Description>}
+        {isExpanded && <Description title={rawMessage}>{message}</Description>}
       </div>
     )
   }

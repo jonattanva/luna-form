@@ -1,6 +1,7 @@
 import {
   isColumn,
   isField,
+  isList,
   type List,
   type Nullable,
   type Style,
@@ -24,7 +25,7 @@ export function SlotList(
 ) {
   const fields = Array.isArray(props.field.fields)
     ? props.field.fields.map((field) => {
-        if (isField(field)) {
+        if (isField(field) || isList(field)) {
           return {
             ...field,
             name: `${props.field.name}.${props.index}.${field.name}`,
