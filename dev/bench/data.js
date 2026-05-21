@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779324821130,
+  "lastUpdate": 1779324858833,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -6863,6 +6863,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 663,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "572c11783ea0d4239321d83fb1e7ea7fbc9bf06d",
+          "message": "docs: update and expand field documentation including select, specialized selectors and markdown support",
+          "timestamp": "2026-05-20T19:52:53-05:00",
+          "tree_id": "7f4325a787a7f282f855c70f7149c3204e2e4f61",
+          "url": "https://github.com/jonattanva/luna-form/commit/572c11783ea0d4239321d83fb1e7ea7fbc9bf06d"
+        },
+        "date": 1779324858432,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 351,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 135,
             "unit": "ms"
           }
         ]
