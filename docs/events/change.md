@@ -87,8 +87,11 @@ The `state` action modifies the interactive state or visibility of other fields 
 - `state` (object): An object containing the new state to apply. Properties are independent of field names — the form may safely contain a field whose `name` is `"description"`, `"disabled"` or `"hidden"`; `target` identifies the field, the keys inside `state` configure it.
   - `disabled` (boolean, optional): Whether the field should be disabled.
   - `hidden` (boolean, optional): Whether the field should be hidden from view. **Note:** When a field becomes hidden (`hidden: true`), its current value is automatically cleared from the form state to ensure no non-applicable data is submitted.
-  - `description` (string | object, optional): A new description to render for the target field. Supports interpolation and format filters, e.g. `"Total to pay: {value | currency:USD}"`.
-- `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied. If the condition evaluates to true (or the field's new value matches the string/array), the state properties are applied.
+  - `description` (string | object, optional): A new description to render for the target field. Supports interpolation, format filters, and **Markdown** (specifically links). e.g. `"Check our [terms](https://example.com) for details."`.
+- `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied.
+  - If a **string** is provided, it matches exactly against the field's new value.
+  - If an **array of strings** is provided, it performs an **OR match** (the state is applied if the field's new value matches _any_ string in the array).
+  - If a **Condition object** is provided, it evaluates complex logic.
 
 **Example:**
 

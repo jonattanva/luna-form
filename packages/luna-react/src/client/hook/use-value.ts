@@ -20,31 +20,40 @@ export function useValue(
   const skipNextOnChangeRef = useRef(false)
   const [value, setValue] = useAtom(reportValueAtom(name))
 
+  const applyValue = useEffectEvent((rawValue: unknown) => {
+    const transformedValue = isInput(field)
+      ? applyTransform(rawValue, field.advanced?.transform)
+      : rawValue
+
+    if (!deepEqual(value, transformedValue)) {
+      skipNextOnChangeRef.current = true
+    }
+
+    setValue(transformedValue)
+  })
+
   const onCurrentValueChange = useEffectEvent(
     (currentValue: Record<string, unknown>) => {
       const newValue = resolveValue(name, currentValue)
 
       if (isValidValue(newValue)) {
-        const transformedValue = isInput(field)
-          ? applyTransform(newValue, field.advanced?.transform)
-          : newValue
-
-        if (!deepEqual(value, transformedValue)) {
-          skipNextOnChangeRef.current = true
-        }
-
-        setValue(transformedValue)
+        applyValue(newValue)
+      } else if (isValidValue(field.defaultValue)) {
+        applyValue(field.defaultValue)
       }
     }
   )
 
   useEffect(() => {
-    if (!currentValue) {
+    if (currentValue) {
+      onCurrentValueChange(currentValue)
       return
     }
 
-    onCurrentValueChange(currentValue)
-  }, [currentValue])
+    if (isValidValue(field.defaultValue)) {
+      applyValue(field.defaultValue)
+    }
+  }, [currentValue, field.defaultValue])
 
   const shouldSkipOnChange = useCallback(() => {
     if (skipNextOnChangeRef.current) {

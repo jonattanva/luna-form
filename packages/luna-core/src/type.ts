@@ -55,7 +55,7 @@ export type Hideable = {
 export type Sections = Section[]
 export type Multiple = readonly (string | number | boolean)[]
 
-export type Value = string | number | Multiple
+export type Value = string | number | boolean | Multiple
 export type Option = {
   description?: string
   label: string
@@ -184,6 +184,7 @@ export type Field = CommonProps & {
     horizontal?: boolean
     reverse?: boolean
   }
+  defaultValue?: Value
   event?: {
     change?: ChangeEvent
   }

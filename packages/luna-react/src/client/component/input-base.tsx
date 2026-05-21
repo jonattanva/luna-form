@@ -58,7 +58,10 @@ export function InputBase(
   const inputProps = prepareInputValue(props.field, defaultValue)
 
   useEffect(() => {
-    if (initialEventsProcessedRef.current || !props.value) {
+    const hasInitialSource =
+      !!props.value || isValidValue(props.field.defaultValue)
+
+    if (initialEventsProcessedRef.current || !hasInitialSource) {
       return
     }
 
@@ -67,7 +70,13 @@ export function InputBase(
       return
     }
 
-    const hydratedValue = resolveValue(props.field.name, props.value)
+    const resolvedValue = props.value
+      ? resolveValue(props.field.name, props.value)
+      : undefined
+    const hydratedValue = isValidValue(resolvedValue)
+      ? resolvedValue
+      : props.field.defaultValue
+
     if (!isValidValue(hydratedValue)) {
       return
     }

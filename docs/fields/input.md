@@ -21,7 +21,8 @@ Luna Form's input fields inherit the standard logical properties available to al
 - **`name`** _(string, required)_: The unique identifier for the field in the form output.
 - **`type`** _(string, required)_: Evaluates the type of input to render (e.g., `"input/text"`, `"input/password"`).
 - **`label`** _(string, optional)_: The human-readable label shown to the user.
-- **`description`** _(string | object, optional)_: Help text or extra context for the form field.
+- **`defaultValue`** _(any, optional)_: The initial value of the field when the form is mounted and no external value is provided.
+- **`description`** _(string | object, optional)_: Help text or extra context for the form field. Supports **Markdown** (specifically links).
   - Can be a direct string.
   - Or an object payload: `{ title: string, message: string, collapsed?: boolean }`.
 - **`placeholder`** _(string, optional)_: The temporary placeholder text shown when the input is empty.

@@ -255,15 +255,19 @@ export function getInputValue<K>(field: Field, value?: Nullable<K>) {
     isObject(value) && field.name in value ? value[field.name] : value
 
   const currentValue = getCurrentValue(newValue, field.advanced?.entity)
-  if (isTime(field) && isValidValue(currentValue)) {
-    return getTimeValue(field, currentValue)
+  const effectiveValue = isValidValue(currentValue)
+    ? currentValue
+    : field.defaultValue
+
+  if (isTime(field) && isValidValue(effectiveValue)) {
+    return getTimeValue(field, effectiveValue)
   }
 
-  if (isDate(field) && isValidValue(currentValue)) {
-    return getDateValue(field, currentValue)
+  if (isDate(field) && isValidValue(effectiveValue)) {
+    return getDateValue(field, effectiveValue)
   }
 
-  return currentValue
+  return effectiveValue
 }
 
 function getTimeValue(field: Time, currentValue?: Value) {

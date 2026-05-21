@@ -9,7 +9,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 - **`name`** _(string, required)_: The unique identifier. The resulting form state binds to an array containing objects referencing the child elements.
 - **`type`** _(string, required)_: Evaluates the type definition exactly to `"list"`.
 - **`label`** _(string, optional)_: The human-readable label (typically rendered as a fieldset legend).
-- **`description`** _(string | object, optional)_: Help text or extra context shown globally just under the legend.
+- **`description`** _(string | object, optional)_: Help text or extra context shown globally just under the legend. Supports **Markdown** (specifically links).
 - **`fields`** _(Array<Field | Column>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array.
 
 ---
@@ -35,7 +35,7 @@ Previews can map seamlessly pointing out the desired child `name` simply as stri
 
 - **`field`** _(string)_: The child layout field name.
 - **`label`** _(string)_: Provides contextual prefix naming before mapping the preview value statically.
-- **`when`** _(string | string[] | Condition)_: Standard complex logical operators dictating runtime evaluation rules when a tag or standard preview conditionally displays inside the wrapper.
+- **`when`** _(string | string[] | Condition)_: Standard complex logical operators dictating runtime evaluation rules. When an **array** is provided, it performs an **OR match** against the field's current value.
 
 ---
 
