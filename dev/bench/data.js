@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779484446730,
+  "lastUpdate": 1779484472308,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -7039,6 +7039,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 635,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "c65ce54f0c91792090d6bfb500e6adc4a4d18169",
+          "message": "fix(react): apply defaultValue silently in onCurrentValueChange fallback\n\nWhen the form receives a value prop that does not include this specific\nfield but the field has a defaultValue, the fallback inside\nonCurrentValueChange armed the skip flag on mount, causing the first\nuser interaction to be silently dropped on select/active and other\nSelectable-strategy fields (chips, etc.).\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
+          "timestamp": "2026-05-22T16:13:03-05:00",
+          "tree_id": "f6ffa5505fba750e7b1a1b8fda1c9a01a1271e75",
+          "url": "https://github.com/jonattanva/luna-form/commit/c65ce54f0c91792090d6bfb500e6adc4a4d18169"
+        },
+        "date": 1779484472071,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 254,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 554,
             "unit": "ms"
           }
         ]
