@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779460832452,
+  "lastUpdate": 1779484446730,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4535,6 +4535,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.030249271360000003,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "c65ce54f0c91792090d6bfb500e6adc4a4d18169",
+          "message": "fix(react): apply defaultValue silently in onCurrentValueChange fallback\n\nWhen the form receives a value prop that does not include this specific\nfield but the field has a defaultValue, the fallback inside\nonCurrentValueChange armed the skip flag on mount, causing the first\nuser interaction to be silently dropped on select/active and other\nSelectable-strategy fields (chips, etc.).\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
+          "timestamp": "2026-05-22T16:13:03-05:00",
+          "tree_id": "f6ffa5505fba750e7b1a1b8fda1c9a01a1271e75",
+          "url": "https://github.com/jonattanva/luna-form/commit/c65ce54f0c91792090d6bfb500e6adc4a4d18169"
+        },
+        "date": 1779484446319,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00037069132000000027,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0011604510399999993,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.032873493139999994,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00042093509999999694,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006004685599999993,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.0283666521,
             "unit": "ms"
           }
         ]
