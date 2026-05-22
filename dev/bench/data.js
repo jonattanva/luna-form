@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779460797561,
+  "lastUpdate": 1779460832452,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -6951,6 +6951,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 135,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "ab99b00c45af2cc8a3bc2f5a9d17769d7fd82448",
+          "message": "fix(react): apply defaultValue silently to avoid skipping first user change and update CI workflow concurrency",
+          "timestamp": "2026-05-22T09:38:52-05:00",
+          "tree_id": "a3da0df5c8b23cf106f910b61ea3253c6e437041",
+          "url": "https://github.com/jonattanva/luna-form/commit/ab99b00c45af2cc8a3bc2f5a9d17769d7fd82448"
+        },
+        "date": 1779460831759,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 278,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 635,
             "unit": "ms"
           }
         ]
