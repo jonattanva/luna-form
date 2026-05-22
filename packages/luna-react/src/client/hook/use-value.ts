@@ -39,7 +39,7 @@ export function useValue(
       if (isValidValue(newValue)) {
         applyValue(newValue)
       } else if (isValidValue(field.defaultValue)) {
-        applyValue(field.defaultValue)
+        applyValue(field.defaultValue, true)
       }
     }
   )

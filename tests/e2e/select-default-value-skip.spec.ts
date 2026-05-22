@@ -84,5 +84,43 @@ test.describe(
       await expect(page.getByText('Form submitted successfully')).toBeVisible()
       await expect(page.locator('pre code')).toContainText('"priority": "high"')
     })
+
+    test('select/active with defaultValue switches on first click when form has a value prop for another field', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+            "value": { "name": "test" },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Name",
+                            "name": "name",
+                            "type": "input/text"
+                        },
+                        {
+                            "label": "Active",
+                            "name": "active",
+                            "type": "select/active",
+                            "defaultValue": "false"
+                        }
+                    ]
+                }
+            ]
+        }`
+      )
+
+      await page.goto('')
+
+      const select = page.getByRole('combobox')
+      await expect(select).toContainText('No')
+
+      await select.click()
+      await page.getByRole('option', { name: 'Yes' }).click()
+
+      await expect(select).toContainText('Yes')
+    })
   }
 )
