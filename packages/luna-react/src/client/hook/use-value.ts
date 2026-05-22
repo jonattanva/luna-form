@@ -20,12 +20,12 @@ export function useValue(
   const skipNextOnChangeRef = useRef(false)
   const [value, setValue] = useAtom(reportValueAtom(name))
 
-  const applyValue = useEffectEvent((rawValue: unknown) => {
+  const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
     const transformedValue = isInput(field)
       ? applyTransform(rawValue, field.advanced?.transform)
       : rawValue
 
-    if (!deepEqual(value, transformedValue)) {
+    if (!silent && !deepEqual(value, transformedValue)) {
       skipNextOnChangeRef.current = true
     }
 
@@ -51,7 +51,7 @@ export function useValue(
     }
 
     if (isValidValue(field.defaultValue)) {
-      applyValue(field.defaultValue)
+      applyValue(field.defaultValue, true)
     }
   }, [currentValue, field.defaultValue])
 
