@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780018138377,
+  "lastUpdate": 1780018167953,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -7127,6 +7127,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 554,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "7e7eb979f883e1605f52d62d5ccbad0241389c20",
+          "message": "fix chips double selection",
+          "timestamp": "2026-05-28T20:27:59-05:00",
+          "tree_id": "517acedc083304dce4ec4b7cd906be65f9d5d418",
+          "url": "https://github.com/jonattanva/luna-form/commit/7e7eb979f883e1605f52d62d5ccbad0241389c20"
+        },
+        "date": 1780018167301,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 267,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 630,
             "unit": "ms"
           }
         ]
