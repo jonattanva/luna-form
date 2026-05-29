@@ -1,4 +1,5 @@
 import { createInput } from './input-create'
+import { deepEqual } from 'fast-equals'
 import { getEntity, isOptions, isValidValue } from '@luna-form/core'
 import { useDataSource } from '../hook/use-data-source'
 import type { Config } from '../../type'
@@ -18,8 +19,15 @@ export const InputSelectable = createInput({
 
   getValue: (event) => event.target.value,
 
-  shouldSkipChange: ({ shouldSkipOnChange, hasClickable }) =>
-    !hasClickable && shouldSkipOnChange(),
+  shouldSkipChange: ({
+    shouldSkipOnChange,
+    hasClickable,
+    inputValue,
+    valueRef,
+  }) =>
+    !hasClickable &&
+    shouldSkipOnChange() &&
+    (!inputValue || deepEqual(inputValue, valueRef.current)),
 
   dispatchChange: ({ applyChangeEventsRef, data, entity, inputValue }) => {
     applyChangeEventsRef.current?.(getEntity(inputValue, data, entity))
