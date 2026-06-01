@@ -1,8 +1,9 @@
 import { fieldStateAtom } from '../lib/state-store'
+import { ListPathContext } from '../context/list-path-context'
 import { omitKey } from '../lib/store-helper'
 import { reportInputErrorAtom } from '../lib/error-store'
 import { reportValueAtom, valueAtom } from '../lib/value-store'
-import { useCallback, useRef, useTransition } from 'react'
+import { use, useCallback, useRef, useTransition } from 'react'
 import { useInput } from './use-input'
 import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from './use-timeout'
@@ -59,6 +60,11 @@ export function useInputCore(
 
   const setTimeoutRef = useTimeout()
   const [, startTransition] = useTransition()
+
+  // Translates consumer-facing names from the list's stable id to the item's
+  // current position (identity outside lists). Consumed unconditionally: the
+  // context value has a stable identity, so this never triggers re-renders.
+  const translateListPath = use(ListPathContext)
 
   const { setValue, shouldSkipOnChange, value, setSource } = deps
 
@@ -127,7 +133,7 @@ export function useInputCore(
     setValue(newValue)
     if (props.onValueChange) {
       props.onValueChange({
-        name: props.field.name,
+        name: translateListPath(props.field.name),
         type: props.field.type,
         value: newValue,
       })
@@ -241,7 +247,7 @@ export function useInputCore(
             const targetField = getField(newTarget)
             if (targetField) {
               props.onValueChange({
-                name: newTarget,
+                name: translateListPath(newTarget),
                 type: targetField.type,
                 value: transformed,
               })

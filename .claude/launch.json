@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "luna",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "serve"],
+      "port": 3000
+    }
+  ]
+}

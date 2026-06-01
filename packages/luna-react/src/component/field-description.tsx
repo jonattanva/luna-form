@@ -13,8 +13,8 @@ export function FieldDescription(
     translations?: Record<string, string>
   }>
 ) {
-  const state = useAtomValue(reportFieldStateAtom(props.field.name))
   const value = useAtomValue(reportValueAtom(props.field.name))
+  const state = useAtomValue(reportFieldStateAtom(props.field.name))
 
   const text = state?.description ?? props.field.description
 

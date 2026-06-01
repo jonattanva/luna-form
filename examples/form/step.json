@@ -1,0 +1,269 @@
+{
+  "advanced": { "step": true },
+  "sections": [
+    {
+      "title": "Your webhook address",
+      "description": "Share this address with the other application. Every time you send data here, this flow will run.",
+      "fields": [
+        {
+          "label": "Webhook URL",
+          "name": "webhook",
+          "type": "input/text",
+          "required": true,
+          "readonly": true
+        }
+      ]
+    },
+    {
+      "title": "What information should be included?",
+      "description": "Define the data you expect to receive. If any field marked as required is missing, we will automatically reject the request.",
+      "fields": [
+        {
+          "advanced": {
+            "action": "Add another field",
+            "collapsed": true,
+            "preview": {
+              "badge": {
+                "when": { "field": "required", "operator": "eq", "value": "true" },
+                "label": "Required"
+              },
+              "label": "label",
+              "tags": ["type", "name"]
+            },
+            "length": { "min": 0 }
+          },
+          "name": "field",
+          "type": "list",
+          "fields": [
+            {
+              "advanced": { "cols": 3 },
+              "type": "column",
+              "fields": [
+                {
+                  "advanced": { "cols": 2 },
+                  "label": "Name that users will see",
+                  "name": "label",
+                  "type": "input/text",
+                  "event": {
+                    "change": [
+                      {
+                        "action": "value",
+                        "onlyIfTargetEmpty": true,
+                        "value": { "field/name": "{value}" }
+                      }
+                    ]
+                  },
+                  "required": true
+                },
+                {
+                  "advanced": { "cols": 1 },
+                  "label": "Required?",
+                  "name": "required",
+                  "type": "select/active",
+                  "required": true,
+                  "defaultValue": false
+                }
+              ]
+            },
+            {
+              "advanced": {
+                "multiple": false,
+                "options": { "description": "description", "label": "name", "value": "id" }
+              },
+              "name": "type",
+              "type": "chips",
+              "source": [
+                { "id": "text", "name": "Text", "description": "Names, notes, or any simple text" },
+                { "id": "number", "name": "Number", "description": "Quantities, prices, or measures" },
+                { "id": "email", "name": "Email", "description": "A standard email address" },
+                { "id": "phone", "name": "Phone", "description": "Phone numbers with or without symbols" },
+                { "id": "boolean", "name": "Boolean", "description": "Yes/No or True/False choices" },
+                { "id": "date", "name": "Date", "description": "A specific calendar day or time" },
+                { "id": "link", "name": "Link", "description": "A clickable website address" },
+                { "id": "list", "name": "List / Collection", "description": "Groups of items or detailed records" }
+              ],
+              "event": {
+                "change": [
+                  {
+                    "action": "state",
+                    "target": "field/type_collection",
+                    "state": { "hidden": false },
+                    "when": ["list"]
+                  }
+                ]
+              }
+            },
+            {
+              "advanced": {
+                "multiple": false,
+                "options": { "description": "description", "label": "name", "value": "id" }
+              },
+              "label": "What kind of items are in this list?",
+              "name": "type_collection",
+              "type": "chips",
+              "source": [
+                { "id": "simpleList", "name": "Simple list", "description": "Just single pieces of information, like a list of names, numbers, or emails" },
+                { "id": "detailedItems", "name": "Detailed items", "description": "Each item is a group of fields, like a \"Contact\" with its own name and phone number" }
+              ],
+              "required": true,
+              "hidden": true,
+              "event": {
+                "change": [
+                  {
+                    "action": "state",
+                    "target": "field/data_type",
+                    "state": { "hidden": false },
+                    "when": ["simpleList"]
+                  },
+                  {
+                    "action": "state",
+                    "target": "field/collection_type",
+                    "state": { "hidden": false },
+                    "when": ["detailedItems"]
+                  }
+                ]
+              }
+            },
+            {
+              "advanced": { "options": { "label": "name", "value": "id" } },
+              "label": "Data type",
+              "name": "data_type",
+              "type": "select",
+              "source": [
+                { "id": "text", "name": "Text", "description": "Names, notes, or any simple text" },
+                { "id": "number", "name": "Number", "description": "Quantities, prices, or measures" },
+                { "id": "email", "name": "Email", "description": "A standard email address" },
+                { "id": "phone", "name": "Phone", "description": "Phone numbers with or without symbols" },
+                { "id": "boolean", "name": "Boolean", "description": "Yes/No or True/False choices" },
+                { "id": "date", "name": "Date", "description": "A specific calendar day or time" },
+                { "id": "link", "name": "Link", "description": "A clickable website address" }
+              ],
+              "required": true,
+              "hidden": true
+            },
+            {
+              "advanced": {
+                "action": "Add property to item",
+                "collapsed": true,
+                "preview": {
+                  "badge": {
+                    "when": { "field": "required", "operator": "eq", "value": "true" },
+                    "label": "Required"
+                  },
+                  "label": "label",
+                  "tags": ["type", "name"]
+                },
+                "length": { "min": 0 }
+              },
+              "label": "What's inside each item?",
+              "description": "Define the information you expect for every item in this list",
+              "name": "collection_type",
+              "type": "list",
+              "fields": [
+                {
+                  "advanced": { "cols": 3 },
+                  "type": "column",
+                  "fields": [
+                    {
+                      "advanced": { "cols": 2 },
+                      "label": "Name that users will see",
+                      "name": "label",
+                      "type": "input/text",
+                      "event": {
+                        "change": [
+                          {
+                            "action": "value",
+                            "onlyIfTargetEmpty": true,
+                            "value": { "collection/name": "{value}" }
+                          }
+                        ]
+                      },
+                      "required": true
+                    },
+                    {
+                      "advanced": { "cols": 1 },
+                      "label": "Required?",
+                      "name": "required",
+                      "type": "select/active",
+                      "required": true,
+                      "defaultValue": false
+                    }
+                  ]
+                },
+                {
+                  "advanced": {
+                    "multiple": false,
+                    "options": { "description": "description", "label": "name", "value": "id" }
+                  },
+                  "name": "type",
+                  "type": "chips",
+                  "source": [
+                    { "id": "text", "name": "Text", "description": "Names, notes, or any simple text" },
+                    { "id": "number", "name": "Number", "description": "Quantities, prices, or measures" },
+                    { "id": "email", "name": "Email", "description": "A standard email address" },
+                    { "id": "phone", "name": "Phone", "description": "Phone numbers with or without symbols" },
+                    { "id": "boolean", "name": "Boolean", "description": "Yes/No or True/False choices" },
+                    { "id": "date", "name": "Date", "description": "A specific calendar day or time" },
+                    { "id": "link", "name": "Link", "description": "A clickable website address" }
+                  ]
+                },
+                {
+                  "type": "column",
+                  "fields": [
+                    {
+                      "label": "Example ",
+                      "name": "example",
+                      "type": "input/text",
+                      "description": "We use it for previewing and validating tests."
+                    },
+                    {
+                      "label": "Hint or help",
+                      "name": "description",
+                      "type": "input/text",
+                      "description": "It appears as a reminder when someone edits this flow."
+                    }
+                  ]
+                },
+                {
+                  "advanced": { "transform": ["remove-space", "lowercase", "remove-accents"] },
+                  "label": "Technical key",
+                  "name": "name",
+                  "type": "input/text",
+                  "description": "Without spaces or accents. That's how developers will see it in the message.",
+                  "required": true
+                }
+              ],
+              "required": true,
+              "hidden": true
+            },
+            {
+              "type": "column",
+              "fields": [
+                {
+                  "label": "Example ",
+                  "name": "example",
+                  "type": "input/text",
+                  "description": "We use it for previewing and validating tests."
+                },
+                {
+                  "label": "Hint or help",
+                  "name": "description",
+                  "type": "input/text",
+                  "description": "It appears as a reminder when someone edits this flow."
+                }
+              ]
+            },
+            {
+              "advanced": { "transform": ["remove-space", "lowercase", "remove-accents"] },
+              "label": "Technical key",
+              "name": "name",
+              "type": "input/text",
+              "description": "Without spaces or accents. That's how developers will see it in the message.",
+              "required": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
