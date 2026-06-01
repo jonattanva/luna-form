@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780326933631,
+  "lastUpdate": 1780326963491,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -7215,6 +7215,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 630,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "359664cea9aa041027f4d51d311871ba5ea0d676",
+          "message": "Merge pull request #38 from jonattanva/fix/list-remove-nonlast-hydrated-item\n\nfix(react): list keeps trailing item value on non-last removal",
+          "timestamp": "2026-06-01T10:14:40-05:00",
+          "tree_id": "e67ae60ef45b50658413cf304de0c61881bf1eab",
+          "url": "https://github.com/jonattanva/luna-form/commit/359664cea9aa041027f4d51d311871ba5ea0d676"
+        },
+        "date": 1780326963150,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 283,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 683,
             "unit": "ms"
           }
         ]
