@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780355924835,
+  "lastUpdate": 1780355949841,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -7303,6 +7303,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 683,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "15c576f2034e315ab525d5f5bde89a9d59e28dac",
+          "message": "Merge pull request #39 from jonattanva/fix/grid-alignment-truncation\n\nfeat(luna-react): improve grid alignment with label truncation",
+          "timestamp": "2026-06-01T18:18:04-05:00",
+          "tree_id": "46326772d693068ff326708d65282d33fed8927b",
+          "url": "https://github.com/jonattanva/luna-form/commit/15c576f2034e315ab525d5f5bde89a9d59e28dac"
+        },
+        "date": 1780355949585,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 267,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 569,
             "unit": "ms"
           }
         ]
