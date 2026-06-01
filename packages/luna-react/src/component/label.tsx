@@ -1,6 +1,7 @@
 import {
   isCheckbox,
   isRadio,
+  isString,
   translate,
   type Field,
   type Style,
@@ -24,16 +25,17 @@ export function Label(
       data-normal={normal}
       className={twMerge(
         'flex w-fit items-center text-sm leading-snug font-medium select-none',
-        '[[data-slot=column]_&]:md:line-clamp-2 [[data-slot=column]_&]:md:min-h-[2lh]',
-        'data-[normal=true]:font-normal',
+        'data-[normal=true]:font-normal [[data-slot=column]_&]:md:w-full',
         'group-data-[readonly=true]:cursor-not-allowed group-data-[readonly=true]:opacity-50'
       )}
       htmlFor={props.field.name}
-      title={typeof props.children === 'string' ? props.children : undefined}
+      title={isString(props.children) ? props.children : undefined}
     >
-      {props.children}
+      <span className="[[data-slot=column]_&]:md:truncate">
+        {props.children}
+      </span>
       {showOptionalLabel && !props.field.required && (
-        <span className="ml-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="ml-2 flex-shrink-0 text-sm text-zinc-600 dark:text-zinc-400">
           {translate('(Optional)', props.translations)}
         </span>
       )}
