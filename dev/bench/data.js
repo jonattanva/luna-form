@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780018167953,
+  "lastUpdate": 1780326933631,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -4643,6 +4643,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.0311499565,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "359664cea9aa041027f4d51d311871ba5ea0d676",
+          "message": "Merge pull request #38 from jonattanva/fix/list-remove-nonlast-hydrated-item\n\nfix(react): list keeps trailing item value on non-last removal",
+          "timestamp": "2026-06-01T10:14:40-05:00",
+          "tree_id": "e67ae60ef45b50658413cf304de0c61881bf1eab",
+          "url": "https://github.com/jonattanva/luna-form/commit/359664cea9aa041027f4d51d311871ba5ea0d676"
+        },
+        "date": 1780326933220,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00035205491999999933,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.00114192498,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03393920958,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00043316687999999883,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006000298199999997,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.02817051082,
             "unit": "ms"
           }
         ]
