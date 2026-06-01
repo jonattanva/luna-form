@@ -1,6 +1,7 @@
 import {
   getInitialList,
   isColumn,
+  isValidValue,
   type List,
   type Nullable,
 } from '@luna-form/core'
@@ -36,12 +37,12 @@ export function useFieldList(
   const onValueChangeRef = useRef(onValueChange)
   onValueChangeRef.current = onValueChange
 
-  // Collapsed items live inside <Activity mode="hidden">, where useEffect is
-  // suspended. Their leaf inputs never hydrate the flat valueAtom from the
-  // value prop, so we keep the prop in a ref and use it as a fallback when
-  // reconstructing the list value.
-  const valuePropRef = useRef(value)
-  valuePropRef.current = value
+  // Snapshot of the value prop captured once at mount. The parent compacts the
+  // emitted array on every change, so the live prop can no longer be indexed by
+  // stable id after a non-last removal. This original snapshot keeps the
+  // `stable id -> initial value` mapping resolvable for seeding and as a
+  // serialization fallback.
+  const initialValueRef = useRef(value)
 
   // Flat list of leaf field names (skipping columns), computed once per field.
   const leafNames = useMemo(() => {
@@ -58,38 +59,65 @@ export function useFieldList(
     return names
   }, [field.fields])
 
+  // Hydrate the flat value atom up front, keyed by stable id, from the initial
+  // value prop. Collapsed items live inside <Activity mode="hidden">, where the
+  // leaf inputs' hydration effect is suspended, so without this their values are
+  // only reachable positionally — which breaks once a non-last item is removed
+  // and the parent re-passes a compacted array. Seeding by stable id makes
+  // preview, inputs and serialization read from the atom regardless of how the
+  // parent reindexes `value`. Mount-only: re-running after a removal would
+  // resurrect the deleted item's values from the snapshot.
+  useLayoutEffect(() => {
+    const initial = initialValueRef.current
+    if (!initial) {
+      return
+    }
+
+    const prefix = `${field.name}.`
+    const next = { ...store.get(valueAtom) }
+    let changed = false
+
+    for (const id of items) {
+      for (const name of leafNames) {
+        const key = `${prefix}${id}.${name}`
+        if (key in next) {
+          continue
+        }
+        const resolved = resolveValue(key, initial)
+        if (isValidValue(resolved)) {
+          next[key] = resolved
+          changed = true
+        }
+      }
+    }
+
+    if (changed) {
+      setValues(next)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const computeListValue = useCallback(
     (
       currentItems: readonly number[],
       values: Record<string, unknown>
     ): Array<Record<string, unknown>> => {
       const prefix = `${field.name}.`
-      const valueProp = valuePropRef.current
-      // itemsRef.current is updated in useLayoutEffect (above), which runs
-      // AFTER addItem/handleRemove finish their synchronous emit. So at this
-      // point it still holds the items array from before the in-flight
-      // setItems — and that array is the one in sync with the parent's current
-      // value prop layout. Using `indexOf(stableId)` on it tells us where the
-      // item currently lives in `value` (which the parent has been collapsing
-      // to contiguous indices after each previous emit). Falling back by
-      // `stableId` directly would mis-align after the first remove, because
-      // stable IDs become non-contiguous while `value` stays packed.
-      const valueAlignedItems = itemsRef.current
+      const initial = initialValueRef.current
       return currentItems.map((stableId) => {
         const item: Record<string, unknown> = {}
         for (const name of leafNames) {
-          const fromStore = values[`${prefix}${stableId}.${name}`]
-          if (fromStore !== undefined) {
-            item[name] = fromStore
-          } else if (valueProp) {
-            const position = valueAlignedItems.indexOf(stableId)
-            item[name] =
-              position >= 0
-                ? resolveValue(`${prefix}${position}.${name}`, valueProp)
+          const key = `${prefix}${stableId}.${name}`
+          const fromStore = values[key]
+          // Edited and seeded values live in the atom keyed by stable id.
+          // Anything missing falls back to the initial snapshot by the same
+          // stable-id path — never the live (compacted) value prop.
+          item[name] =
+            fromStore !== undefined
+              ? fromStore
+              : initial
+                ? resolveValue(key, initial)
                 : undefined
-          } else {
-            item[name] = undefined
-          }
         }
         return item
       })
