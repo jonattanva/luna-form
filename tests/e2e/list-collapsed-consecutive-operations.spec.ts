@@ -72,10 +72,12 @@ function captureValueChanges(page: Page): ValueChange[] {
     if (!msg.text().startsWith('Form values changed:')) {
       return
     }
+
     const arg = msg.args()[1]
     if (!arg) {
       return
     }
+
     arg
       .jsonValue()
       .then((value) => {
