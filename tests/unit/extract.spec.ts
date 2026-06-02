@@ -42,6 +42,28 @@ describe('Extract', () => {
     expect(extract(data, 'items')).toBeNull()
   })
 
+  test('should traverse arrays by numeric index', () => {
+    const nested = {
+      field: [{ items: [{ key: 'name' }, { key: 'phone' }] }],
+    }
+
+    expect(extract(nested, 'field.0.items')).toEqual([
+      { key: 'name' },
+      { key: 'phone' },
+    ])
+    expect(extract(nested, 'field.0.items.1.key')).toBe('phone')
+    expect(extract(nested, 'field.0.items.0.key')).toBe('name')
+  })
+
+  test('should return null for invalid array indices', () => {
+    const nested = {
+      field: [{ items: [{ key: 'name' }] }],
+    }
+
+    expect(extract(nested, 'field.5.items')).toBeNull()
+    expect(extract(nested, 'field.x.items')).toBeNull()
+  })
+
   test('should extract array correctly', () => {
     const data = {
       user: {

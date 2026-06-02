@@ -85,11 +85,20 @@ export function extract<T>(
     return null
   }
 
-  let result: Record<string, T> | T = value
+  // Traverse objects by key and arrays by numeric index, so paths that point
+  // inside a list (e.g. "field.0.items") resolve the same way resolveValue does
+  // in luna-react. Without the array branch, descending into an array returns
+  // null (isObject is false for arrays) and nested lists never hydrate.
+  let result: unknown = value
   for (const key of keys) {
     if (isObject(result) && key in result) {
-      const obj = result as Record<string, T>
-      result = obj[key]
+      result = (result as Record<string, unknown>)[key]
+    } else if (Array.isArray(result)) {
+      const index = Number(key)
+      if (!Number.isInteger(index) || index < 0 || index >= result.length) {
+        return null
+      }
+      result = result[index]
     } else {
       return null
     }
