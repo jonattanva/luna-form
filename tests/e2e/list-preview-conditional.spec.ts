@@ -53,7 +53,12 @@ test.describe('List Preview Conditional', { tag: ['@e2e'] }, () => {
   test('badge with static label renders when condition matches', async ({
     page,
   }) => {
-    const badge = page.getByText('Required', { exact: true })
+    // A leaf field is also labelled "Required"; it lives (hidden) inside the
+    // collapsed card content, so scope to the visible preview badge to avoid a
+    // strict-mode match against those hidden labels.
+    const badge = page.getByText('Required', { exact: true }).filter({
+      visible: true,
+    })
     await expect(badge).toBeVisible()
     await expect(badge).toHaveClass(/bg-primary/)
     await expect(badge).toHaveClass(/text-primary-foreground/)
