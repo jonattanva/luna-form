@@ -73,6 +73,7 @@ export function InputBase(
     const resolvedValue = props.value
       ? resolveValue(props.field.name, props.value)
       : undefined
+
     const hydratedValue = isValidValue(resolvedValue)
       ? resolvedValue
       : props.field.defaultValue
@@ -81,19 +82,18 @@ export function InputBase(
       return
     }
 
-    if (!isInitialReady(props.field, defaultValue, data)) {
+    if (!isInitialReady(props.field, hydratedValue, data)) {
       return
     }
 
     initialEventsProcessedRef.current = true
 
-    const selected = buildInitialSelected(defaultValue, data, entity)
+    const selected = buildInitialSelected(hydratedValue, data, entity)
     applyChangeEventsRef.current?.(selected)
   }, [
     applyChangeEventsRef,
     buildInitialSelected,
     data,
-    defaultValue,
     entity,
     isInitialReady,
     props.field,
