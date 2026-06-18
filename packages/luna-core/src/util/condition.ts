@@ -22,7 +22,10 @@ export function evaluateCondition<T>(
 
   if (isBoolean(when)) {
     const current = getValue(selected, VALUE)
-    const truthy = Array.isArray(current) ? current.length > 0 : Boolean(current)
+    const truthy = Array.isArray(current)
+      ? current.length > 0
+      : Boolean(current)
+
     return truthy === when
   }
 

@@ -34,7 +34,7 @@ export function getInitialList(
 }
 
 export function getLabel(list: List): string {
-  return list.label ?? list.name
+  return list.advanced?.title ?? list.label ?? list.name
 }
 
 export function flattenListFields(

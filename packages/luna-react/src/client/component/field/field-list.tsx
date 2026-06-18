@@ -1,5 +1,5 @@
 import { FieldListPreviewItem } from './field-list-preview-item'
-import { getLabel, isMultiFieldList } from '@luna-form/core'
+import { getLabel, isMultiFieldList, logger } from '@luna-form/core'
 import { ListPathContext } from '../../context/list-path-context'
 import { twMerge } from 'tailwind-merge'
 import { useFieldList } from '../../hook/use-field-list'
@@ -19,6 +19,8 @@ export function FieldList(props: ListProps) {
 
   const hasLimit = max !== Infinity
   const isMultiField = isMultiFieldList(field)
+
+  logger.info('Label: ', label)
 
   const {
     label: previewLabel,

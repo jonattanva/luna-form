@@ -1,10 +1,10 @@
 import { Switch as Component } from '../switch'
-import * as CheckboxPrimitive from '@radix-ui/react-switch'
+import { Switch as SwitchPrimitive } from 'radix-ui'
 
 export function Switch({
   onChange,
   ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root> & {
+}: React.ComponentProps<typeof SwitchPrimitive.Root> & {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 }) {
   function handleCheckedChange(value: boolean | 'indeterminate') {

@@ -1,4 +1,4 @@
-import { evaluateCondition, translate } from '@luna-form/core'
+import { evaluateCondition, isString, translate } from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
 import { FieldPreview } from './field-preview'
 import { FieldPreviewValue } from './field-preview-value'
@@ -107,8 +107,7 @@ function renderPreviewLabel({
     return undefined
   }
 
-  const item =
-    typeof previewLabel === 'string' ? { field: previewLabel } : previewLabel
+  const item = isString(previewLabel) ? { field: previewLabel } : previewLabel
 
   if (item.when !== undefined) {
     if (!evaluateCondition(liveItemValue, item.when)) {
@@ -125,12 +124,13 @@ function renderPreviewLabel({
   }
 
   const fieldName = `${name}.${item.field}`
+
   return (
     <FieldPreviewValue
       initialValue={value ? resolveValue(fieldName, value) : undefined}
       name={fieldName}
     >
-      {(val) => val || fallbackLabel}
+      {(value) => value || fallbackLabel}
     </FieldPreviewValue>
   )
 }

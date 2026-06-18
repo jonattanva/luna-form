@@ -25,11 +25,9 @@ export function handleValueEvent<T>(
 ) {
   for (const event of events) {
     for (const [target, value] of Object.entries(event.value)) {
-      apply(
-        target,
-        selected ? interpolate(value, selected) : undefined,
-        { onlyIfTargetEmpty: event.onlyIfTargetEmpty ?? false }
-      )
+      apply(target, selected ? interpolate(value, selected) : undefined, {
+        onlyIfTargetEmpty: event.onlyIfTargetEmpty ?? false,
+      })
     }
   }
 }

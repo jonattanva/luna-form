@@ -35,14 +35,16 @@ export function buildDisabled(field: Field, disabled?: boolean) {
 }
 
 export function buildSource(field: Field) {
-  if (
-    isRadio(field) ||
-    isChips(field) ||
-    (isSelect(field) && !field.disabled)
-  ) {
+  if (isValid(field)) {
     const source = field.source
     if (Array.isArray(source) || (isObject(source) && !($REF in source))) {
       return source
     }
   }
+}
+
+function isValid(field: Field) {
+  return (
+    isRadio(field) || isChips(field) || (isSelect(field) && !field.disabled)
+  )
 }

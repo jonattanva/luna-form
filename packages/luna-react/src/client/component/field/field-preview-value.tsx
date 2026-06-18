@@ -14,6 +14,7 @@ export function FieldPreviewValue({
 
   const hasInvalidValue =
     isEmpty(value) || isObject(value) || Array.isArray(value)
+
   const displayValue = hasInvalidValue ? '' : String(value)
 
   return <>{children(displayValue)}</>
