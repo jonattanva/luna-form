@@ -44,6 +44,9 @@ importers:
       husky:
         specifier: 9.1.7
         version: 9.1.7
+      jotai:
+        specifier: 2.20.1
+        version: 2.20.1(@babel/core@7.29.7)(@babel/template@7.29.7)(@types/react@19.2.17)(react@19.2.7)
       lint-staged:
         specifier: 17.0.7
         version: 17.0.7
@@ -74,6 +77,9 @@ importers:
       vitest:
         specifier: 4.1.9
         version: 4.1.9(@types/node@25.9.3)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
 
   apps/react-luna-editor:
     dependencies:
