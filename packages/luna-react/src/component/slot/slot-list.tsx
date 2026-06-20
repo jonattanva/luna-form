@@ -18,6 +18,7 @@ export function SlotList(
     disabled?: boolean
     field: List
     index: number
+    onValueChange?: (input: { name: string; value: unknown }) => void
     style?: Style
     translations?: Record<string, string>
     value?: Nullable<Record<string, unknown>>
@@ -53,6 +54,7 @@ export function SlotList(
       context={props.context}
       disabled={props.disabled}
       fields={fields}
+      onValueChange={props.onValueChange}
       style={props.style}
       translations={props.translations}
       value={props.value}

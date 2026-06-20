@@ -67,6 +67,7 @@ export function SlotBase(
               disabled={props.disabled}
               field={field}
               index={index}
+              onValueChange={props.onValueChange}
               style={props.style}
               translations={props.translations}
               value={props.value}
