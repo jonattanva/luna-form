@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781979974893,
+  "lastUpdate": 1781979999400,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8271,6 +8271,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 179,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "67028e4d33317c662e66f20e707f37e8662c1441",
+          "message": "fix list",
+          "timestamp": "2026-06-20T13:25:20-05:00",
+          "tree_id": "0b32b138143ff645f718d0501eab5db9d2f66ad1",
+          "url": "https://github.com/jonattanva/luna-form/commit/67028e4d33317c662e66f20e707f37e8662c1441"
+        },
+        "date": 1781979999072,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 266,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 560,
             "unit": "ms"
           }
         ]
