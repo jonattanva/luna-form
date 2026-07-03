@@ -106,6 +106,7 @@ export function InputBase(
 
       if (
         shouldSkipChange({
+          field: props.field,
           shouldSkipOnChange,
           hasClickable,
           inputValue,

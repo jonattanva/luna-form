@@ -15,6 +15,7 @@ export type InputStrategies = Readonly<{
 
   shouldSkipChange: (
     ctx: Readonly<{
+      field: Field
       shouldSkipOnChange: () => boolean
       hasClickable: boolean
       inputValue: string
