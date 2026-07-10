@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783712650679,
+  "lastUpdate": 1783712684265,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8393,6 +8393,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 611,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bc510fb2f31ea7b72999417f7fc690daf858aa26",
+          "message": "Merge pull request #40 from jonattanva/feat/headless-form-schema\n\nHeadless form schema + declarative validation vocabulary",
+          "timestamp": "2026-07-10T14:43:14-05:00",
+          "tree_id": "e7887a7e5da5d7210be0d7cd19a9ff819aca017a",
+          "url": "https://github.com/jonattanva/luna-form/commit/bc510fb2f31ea7b72999417f7fc690daf858aa26"
+        },
+        "date": 1783712683582,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 315,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 684,
             "unit": "ms"
           }
         ]
