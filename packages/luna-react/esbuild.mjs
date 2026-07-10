@@ -48,6 +48,10 @@ await Promise.all([
     await build('esm', './dist/config/esm')
     await build('cjs', './dist/config/cjs')
   }),
+  entry('./src/schema/index.ts', async (build) => {
+    await build('esm', './dist/schema/esm')
+    await build('cjs', './dist/schema/cjs')
+  }),
 ])
 
 if (!isWatch) {

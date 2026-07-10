@@ -78,6 +78,11 @@ The `validation` object resolves form errors overriding generic defaults, mappin
   - `field`: Optional target reference string.
   - `operator`: Logical evaluation operations (e.g., `eq`, `neq`, `gt`, `lt`).
   - `message`: The resulting validation string.
+- **`requiredWhen`** _(WhenRule | WhenRule[])_: Makes the field required only when a condition over a sibling field holds.
+- **`pattern`** _(PatternRule)_: Validates the value against a regular expression (with optional interpolation bypass).
+- **`rules`** _(AssertRule[])_: A list of gated assertions (`oneOf`, `min`/`max`, `pattern`, …).
+
+_See the full [Validation reference](../validation/overview.md) for `requiredWhen`, `pattern`, `rules`, the operator vocabulary, and headless (server-side) validation._
 
 ---
 

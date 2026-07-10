@@ -92,6 +92,9 @@ export type List = {
   label?: string
   name: string
   type: 'list' | (string & {})
+  validation?: {
+    length?: Length<string>
+  }
 } & Base
 
 export type Fields = Array<Field | Column | List>
@@ -126,7 +129,18 @@ export type Column = {
   type: 'column' | (string & {})
 } & Base
 
-export type Operator = 'eq' | 'neq' | 'in' | 'nin' | 'gt' | 'gte' | 'lt' | 'lte'
+export type Operator =
+  | 'eq'
+  | 'neq'
+  | 'in'
+  | 'nin'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'contains'
+  | 'exists'
+  | 'truthy'
 
 export type Condition = {
   field?: string
@@ -168,11 +182,46 @@ export type StateEvent = ActionEvent<'state'> & {
 
 export type ChangeEvent = Array<SourceEvent | ValueEvent | StateEvent>
 
+// A condition evaluated against sibling data (item scope inside lists, root
+// otherwise). Shares the `Condition` shape so `evaluateCondition` can reuse it.
+export type WhenRule = {
+  field: string
+  operator?: Operator
+  value?: string | number | boolean | Array<string | number>
+  message?: string
+}
+
+// Regex/format assertion. `allowInterpolation` skips the check when the value
+// is an interpolation template (e.g. `@{...}`), mirroring how http URLs allow
+// dynamic values to bypass the `https?://` scheme check.
+export type PatternRule = {
+  regex: string
+  flags?: string
+  message?: string
+  allowInterpolation?: boolean
+}
+
+export type WhenClause = WhenRule | WhenRule[] | { all?: WhenRule[]; any?: WhenRule[] }
+
+// General declarative rule: assert something about a field's value, optionally
+// gated by a `when` condition over sibling data.
+export type AssertRule = {
+  when?: WhenClause
+  assert: 'required' | 'minItems' | 'maxItems' | 'pattern' | 'oneOf' | 'min' | 'max'
+  value?: string | number | Array<string | number> | PatternRule
+  message: string
+}
+
 export type Validation = {
   custom?: CustomValidation | Array<CustomValidation>
   email?: string
   length?: Length<string>
   required?: string
+  // Field is required only when the condition(s) hold. Multiple rules OR together.
+  requiredWhen?: WhenRule | Array<WhenRule>
+  pattern?: PatternRule
+  // Escape-hatch-in-JSON: a general list of gated assertions (see AssertRule).
+  rules?: Array<AssertRule>
 }
 
 export type Field = CommonProps & {
