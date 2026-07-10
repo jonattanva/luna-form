@@ -10,6 +10,9 @@ export const operators: Record<
   lte,
   neq,
   nin,
+  contains,
+  exists,
+  truthy,
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/
@@ -80,4 +83,31 @@ function lt(current: unknown, value: unknown): boolean {
 
 function lte(current: unknown, value: unknown): boolean {
   return toComparableNumber(current) <= toComparableNumber(value)
+}
+
+// Substring / membership: string contains string, or array contains value.
+function contains(current: unknown, value: unknown): boolean {
+  if (typeof current === 'string') {
+    return current.includes(String(value))
+  }
+  if (Array.isArray(current)) {
+    return current.map(String).includes(String(value))
+  }
+  return false
+}
+
+// Unary (value ignored): the field has a non-empty value.
+function exists(current: unknown): boolean {
+  if (Array.isArray(current)) {
+    return current.length > 0
+  }
+  return current !== null && current !== undefined && current !== ''
+}
+
+// Unary (value ignored): the field is truthy.
+function truthy(current: unknown): boolean {
+  if (Array.isArray(current)) {
+    return current.length > 0
+  }
+  return Boolean(current)
 }

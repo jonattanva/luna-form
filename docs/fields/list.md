@@ -19,7 +19,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 The `advanced` property customizes structural interaction rules and layout rendering for the collection container.
 
 - **`action`** _(string)_: A custom label applied strictly to the generic "Add item" button rendering at the end of the collection (e.g. `"Add email address"`).
-- **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles.
+- **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles. The matching error messages are declared under the list's `validation.length` — see the [Validation reference](../validation/overview.md#list-length).
 - **`collapsed`** _(boolean)_: When enabled, list items default to a visually collapsed representation upon mounting or adding.
 
 ### Collapsed Previews (`preview` object)

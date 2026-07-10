@@ -1,7 +1,9 @@
 import { MAX, MIN } from './constant'
 import {
   isCheckbox,
+  isColumn,
   isEmail,
+  isList,
   isNumber,
   isRadio,
   isSelectActive,
@@ -11,14 +13,25 @@ import {
   isChipsDays,
   isChipsMonths,
 } from './is-input'
-import { isEmpty } from './is-type'
+import { isEmpty, isObject, isString } from './is-type'
+import { extract } from './extract'
+import { isInterpolated } from './string'
 import { operators } from './operator'
+import { resolveRefs } from './prepare'
 import { z } from 'zod'
 import type {
+  AssertRule,
   CustomValidation,
+  Definition,
   Field,
+  Fields,
   Input,
+  List,
+  PatternRule,
   Schemas,
+  Sections,
+  WhenClause,
+  WhenRule,
   ZodSchema,
 } from '../type'
 import { translate } from './translate'
@@ -49,11 +62,12 @@ export function buildSchema(
   fields: Field[] = [],
   translations?: Record<string, string>
 ) {
-  const schema = z.object(schemas)
+  const object = z.object(schemas)
   if (fields.length === 0) {
-    return schema
+    return object
   }
-  return applyCustomValidation(schema, fields, translations)
+  const withCustom = applyCustomValidation(object, fields, translations)
+  return applyDeclarativeRules(withCustom, fields, translations)
 }
 
 export function flatten(error: z.ZodError<Record<string, unknown>>) {
@@ -346,4 +360,313 @@ export function getArraySchema(
     }
     return Array.isArray(value) ? value.map(String) : [String(value)]
   }, baseSchema)
+}
+
+// ---------------------------------------------------------------------------
+// Headless schema builder: derives a Zod object schema from a form definition
+// (the same `sections`/`definition` the <Form> renders from) WITHOUT React.
+//
+// It walks the resolved tree (sections -> columns -> lists -> leaves) and
+// produces a NESTED object schema (`z.array(z.object(...))` for lists), reusing
+// the per-field `getSchema`. This is the single source of truth consumed both
+// by the runtime (submit validation) and headless callers (server-side).
+//
+// PHASE 0 scope: structural walk + per-field schema + nested arrays for lists.
+// The declarative rule vocabulary (requiredWhen, pattern, rules, list min/max)
+// lands in the next phase on top of this walker.
+// ---------------------------------------------------------------------------
+
+export function buildFormSchema(
+  sections: Sections,
+  translations?: Record<string, string>,
+  definition?: Definition
+): z.ZodType {
+  const resolved = (
+    definition ? resolveRefs(sections, definition) : sections
+  ) as Sections
+
+  return buildObject(collectSectionFields(resolved), translations)
+}
+
+// Sections are visual grouping only: every field shares one object namespace,
+// so we flatten their `fields` into a single list before building the shape.
+function collectSectionFields(sections: Sections): Fields {
+  const fields: Fields = []
+  for (const section of sections) {
+    for (const entry of section.fields ?? []) {
+      fields.push(entry)
+    }
+  }
+  return fields
+}
+
+// Builds one object level of the schema, reusing the per-field `getSchema` and
+// `buildSchema` (z.object + applyCustomValidation) so field-level AND cross-field
+// (`validation.custom`) rules live in ONE place instead of being re-derived here.
+// Lists recurse into arrays of objects; columns are structural and merge their
+// children into the current level.
+function buildObject(
+  fields: Fields,
+  translations?: Record<string, string>
+): z.ZodType {
+  const shape: Schemas = {}
+  const leaves: Field[] = []
+
+  const visit = (entries: Fields): void => {
+    for (const entry of entries) {
+      if (isColumn(entry)) {
+        visit(entry.fields)
+      } else if (isList(entry)) {
+        const items = applyListLength(
+          z.array(buildObject(entry.fields, translations)),
+          entry,
+          translations
+        )
+        // A missing list key is an empty list (not an error) so length rules
+        // still fire on absent configs, not just present-but-short ones.
+        shape[entry.name] = z.preprocess(
+          (value) => (value === undefined ? [] : value),
+          items
+        )
+      } else {
+        // Non-required leaves tolerate absent keys: stored configs are sparse
+        // (only fields the user touched). Matches luna-flow's `.optional()`
+        // config schemas; required leaves already fail on absence via getSchema.
+        const leaf = getSchema(entry, translations)
+        shape[entry.name] = entry.required ? leaf : leaf.optional()
+        leaves.push(entry)
+      }
+    }
+  }
+
+  visit(fields)
+  return buildSchema(shape, leaves, translations)
+}
+
+// Maps a ZodError to flat, dotted-path issues (e.g. `rules.0.rule.0.value`).
+// That path shape is what the runtime error store and headless callers key on,
+// unlike `flatten` which only surfaces top-level field errors.
+export function collectIssues(
+  error: z.ZodError
+): Array<{ path: string; message: string }> {
+  return error.issues.map((issue) => ({
+    path: issue.path.map(String).join('.'),
+    message: issue.message,
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// Declarative validation vocabulary (requiredWhen / pattern / rules) + list
+// length. Orchestration only: condition evaluation reuses `operators` + `extract`
+// (the same primitives as `evaluateCondition`), interpolation reuses
+// `isInterpolated`, so no evaluation logic is re-implemented here.
+// ---------------------------------------------------------------------------
+
+type RuleIssue = { path: Array<string | number>; message?: string }
+
+// Generic over the schema type so it preserves ZodObject (Zod v4 `.superRefine`
+// keeps the type), letting `buildSchema` stay ZodObject-typed for the runtime.
+export function applyDeclarativeRules<T extends z.ZodType>(
+  schema: T,
+  fields: Field[] = [],
+  translations?: Record<string, string>
+): T {
+  const relevant = fields.filter(hasDeclarativeRules)
+  if (relevant.length === 0) {
+    return schema
+  }
+
+  return schema.superRefine((value, ctx) => {
+    const data = (isObject(value) ? value : {}) as Record<string, unknown>
+    for (const field of relevant) {
+      for (const issue of fieldIssues(data, field, translations)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: issue.path,
+          message: issue.message,
+        })
+      }
+    }
+  })
+}
+
+function hasDeclarativeRules(field: Field): boolean {
+  const validation = field.validation
+  return (
+    validation !== undefined &&
+    (validation.requiredWhen !== undefined ||
+      validation.pattern !== undefined ||
+      validation.rules !== undefined)
+  )
+}
+
+function fieldIssues(
+  data: Record<string, unknown>,
+  field: Field,
+  translations?: Record<string, string>
+): RuleIssue[] {
+  const issues: RuleIssue[] = []
+  const value = data[field.name]
+
+  const requiredWhen = field.validation?.requiredWhen
+  if (requiredWhen) {
+    const rules = Array.isArray(requiredWhen) ? requiredWhen : [requiredWhen]
+    const firing = rules.find((rule) => conditionHolds(data, rule))
+    if (firing && !hasValue(value)) {
+      issues.push({
+        path: [field.name],
+        message: message(
+          firing.message ?? field.validation?.required,
+          translations
+        ),
+      })
+    }
+  }
+
+  const pattern = field.validation?.pattern
+  if (pattern && !matchesPattern(pattern, value)) {
+    issues.push({
+      path: [field.name],
+      message: message(pattern.message, translations),
+    })
+  }
+
+  for (const rule of field.validation?.rules ?? []) {
+    if (whenHolds(data, rule.when) && !runAssert(rule, value)) {
+      issues.push({
+        path: [field.name],
+        message: message(rule.message, translations),
+      })
+    }
+  }
+
+  return issues
+}
+
+// Evaluates a single WhenRule against sibling data. Reuses `extract` (path
+// resolution, incl. item scope inside lists) and `operators` (shared map).
+function conditionHolds(
+  data: Record<string, unknown>,
+  rule: WhenRule
+): boolean {
+  const operation = operators[rule.operator ?? 'eq']
+  if (!operation) {
+    return false
+  }
+  return operation(extract(data, rule.field), rule.value)
+}
+
+function whenHolds(data: Record<string, unknown>, when?: WhenClause): boolean {
+  if (!when) {
+    return true
+  }
+  if (Array.isArray(when)) {
+    return when.every((rule) => conditionHolds(data, rule))
+  }
+  if ('field' in when) {
+    return conditionHolds(data, when)
+  }
+  const all = when.all
+    ? when.all.every((rule) => conditionHolds(data, rule))
+    : true
+  const any = when.any
+    ? when.any.some((rule) => conditionHolds(data, rule))
+    : true
+  return all && any
+}
+
+function runAssert(rule: AssertRule, value: unknown): boolean {
+  switch (rule.assert) {
+    case 'required':
+      return hasValue(value)
+    case 'minItems':
+      return Array.isArray(value) && value.length >= Number(rule.value)
+    case 'maxItems':
+      return Array.isArray(value) && value.length <= Number(rule.value)
+    case 'min':
+      return sizeOf(value) >= Number(rule.value)
+    case 'max':
+      return sizeOf(value) <= Number(rule.value)
+    case 'oneOf':
+      return (
+        Array.isArray(rule.value) &&
+        rule.value.map(String).includes(String(value))
+      )
+    case 'pattern':
+      return isPatternRule(rule.value)
+        ? matchesPattern(rule.value, value)
+        : true
+    default:
+      return true
+  }
+}
+
+function matchesPattern(pattern: PatternRule, value: unknown): boolean {
+  if (!hasValue(value)) {
+    return true // emptiness is a `required`/`requiredWhen` concern, not pattern's
+  }
+  if (typeof value !== 'string') {
+    return true
+  }
+  if (pattern.allowInterpolation && isInterpolated(value)) {
+    return true
+  }
+  return new RegExp(pattern.regex, pattern.flags).test(value)
+}
+
+// "Has a meaningful value" for required-style checks. Trims strings so a
+// whitespace-only value counts as empty (matching the legacy `hasText`), while
+// delegating arrays/other types to the shared `exists` operator. The trim lives
+// here, not in `exists`, so the operator's semantics stay pure for conditions.
+function hasValue(value: unknown): boolean {
+  if (isString(value)) {
+    return value.trim().length > 0
+  }
+  return operators.exists(value, undefined)
+}
+
+function sizeOf(value: unknown): number {
+  if (typeof value === 'number') {
+    return value
+  }
+
+  if (isString(value) || Array.isArray(value)) {
+    return value.length
+  }
+
+  return 0
+}
+
+function isPatternRule(value: unknown): value is PatternRule {
+  return isObject(value) && 'regex' in value
+}
+
+function message(
+  value: string | undefined,
+  translations?: Record<string, string>
+): string | undefined {
+  return value ? translate(value, translations) : undefined
+}
+
+function applyListLength<T extends z.ZodType>(
+  items: z.ZodArray<T>,
+  list: List,
+  translations?: Record<string, string>
+): z.ZodArray<T> {
+  let schema = items
+  const min = list.advanced?.length?.min
+  if (min !== undefined) {
+    schema = schema.min(
+      min,
+      message(list.validation?.length?.min, translations)
+    )
+  }
+  const max = list.advanced?.length?.max
+  if (max !== undefined) {
+    schema = schema.max(
+      max,
+      message(list.validation?.length?.max, translations)
+    )
+  }
+  return schema
 }

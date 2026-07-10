@@ -4,7 +4,9 @@ import { describe, expect, test } from 'vitest'
 describe('operators map', () => {
   test('should expose all expected operators', () => {
     expect(Object.keys(operators).sort()).toEqual([
+      'contains',
       'eq',
+      'exists',
       'gt',
       'gte',
       'in',
@@ -12,6 +14,7 @@ describe('operators map', () => {
       'lte',
       'neq',
       'nin',
+      'truthy',
     ])
   })
 
