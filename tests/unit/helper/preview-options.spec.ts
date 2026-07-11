@@ -3,7 +3,7 @@ import {
   getPreviewOptions,
   resolveOptionLabel,
 } from '@/packages/luna-core/src/helper/input'
-import type { Field } from '@/packages/luna-core/src/type'
+import type { Field, Select } from '@/packages/luna-core/src/type'
 
 describe('getPreviewOptions', () => {
   test('returns undefined for fields without options', () => {
@@ -34,7 +34,7 @@ describe('getPreviewOptions', () => {
   })
 
   test('returns literal array source for chips', () => {
-    const field: Field = {
+    const field: Select = {
       name: 'priority',
       type: 'chips',
       source: [
@@ -49,7 +49,7 @@ describe('getPreviewOptions', () => {
   })
 
   test('returns literal array source for select', () => {
-    const field: Field = {
+    const field: Select = {
       name: 'status',
       type: 'select',
       source: [
@@ -64,11 +64,14 @@ describe('getPreviewOptions', () => {
   })
 
   test('returns undefined for $ref DataSource', () => {
-    const field: Field = {
+    // A $ref source is a runtime-only shape resolved during prepare; the Select
+    // type models only inline DataSource/array sources, so cast to reach the
+    // defensive branch in buildSource.
+    const field = {
       name: 'country',
       type: 'select',
       source: { $ref: '#/definitions/countries' },
-    }
+    } as unknown as Select
     expect(getPreviewOptions(field)).toBeUndefined()
   })
 
@@ -78,7 +81,7 @@ describe('getPreviewOptions', () => {
   })
 
   test('applies advanced.options mapping over source objects', () => {
-    const field: Field = {
+    const field: Select = {
       name: 'priority',
       type: 'select',
       source: [
