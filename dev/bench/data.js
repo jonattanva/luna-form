@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783797972383,
+  "lastUpdate": 1783797997637,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8597,6 +8597,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 245,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "29adaf5015234011ac7425e6ea6a226bad478686",
+          "message": "Merge pull request #44 from jonattanva/fix/fields-union-types-0.0.73\n\nfix types",
+          "timestamp": "2026-07-11T14:25:24-05:00",
+          "tree_id": "37d64600fe232c294f01d07127c84d38e2c8a285",
+          "url": "https://github.com/jonattanva/luna-form/commit/29adaf5015234011ac7425e6ea6a226bad478686"
+        },
+        "date": 1783797997324,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 252,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 197,
             "unit": "ms"
           }
         ]
