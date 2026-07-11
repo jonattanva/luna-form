@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783740873845,
+  "lastUpdate": 1783740901782,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8427,6 +8427,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 684,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "62047155a3fc520f0b0f536e920a0635bc46f4e2",
+          "message": "Merge pull request #41 from jonattanva/feat/nested-hidden-expression-schema\n\nfeat(schema): nested dotted names, @-expression patterns, hidden-awareness (0.0.70)",
+          "timestamp": "2026-07-10T22:33:38-05:00",
+          "tree_id": "31389d9d2cf03f035d2a753e6e7f734d64ddd607",
+          "url": "https://github.com/jonattanva/luna-form/commit/62047155a3fc520f0b0f536e920a0635bc46f4e2"
+        },
+        "date": 1783740901452,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 282,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 668,
             "unit": "ms"
           }
         ]
