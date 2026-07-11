@@ -147,8 +147,7 @@ describe('store-helper', () => {
       store.set(
         atom(null, (_get, set) => {
           set(base, { field1: { validatorA: false, validatorB: true } })
-        }),
-        null
+        })
       )
 
       store.set(clear, ['validatorA'])
@@ -164,8 +163,7 @@ describe('store-helper', () => {
       store.set(
         atom(null, (_get, set) => {
           set(base, { field1: { validatorA: false } })
-        }),
-        null
+        })
       )
 
       store.set(clear, ['validatorA'])
@@ -185,8 +183,7 @@ describe('store-helper', () => {
             validatorA: { someOther: true },
             field1: { validatorA: false },
           })
-        }),
-        null
+        })
       )
 
       store.set(clear, ['validatorA'])
@@ -323,7 +320,7 @@ describe('store-helper', () => {
       store.set(report('b'), 'y')
       expect(store.get(base)).toEqual({ a: 'x', b: 'y' })
 
-      store.set(clearAll, null)
+      store.set(clearAll)
       expect(store.get(base)).toEqual({})
     })
 
@@ -336,7 +333,7 @@ describe('store-helper', () => {
         updates++
       })
 
-      store.set(clearAll, null)
+      store.set(clearAll)
       expect(updates).toBe(0)
     })
   })

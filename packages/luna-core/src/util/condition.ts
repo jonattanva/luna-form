@@ -6,7 +6,7 @@ import type { Condition, Nullable } from '../type'
 
 export function evaluateCondition<T>(
   selected: T,
-  when?: string | string[] | Condition
+  when?: string | string[] | boolean | Condition
 ): boolean {
   if (when === undefined) {
     return true
