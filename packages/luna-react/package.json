@@ -1,6 +1,6 @@
 {
   "name": "react-luna-form",
-  "version": "0.0.70",
+  "version": "0.0.71",
   "description": "A React library for building forms based on JSON",
   "main": "./dist/client/cjs/index.js",
   "module": "./dist/client/esm/index.js",
@@ -11,7 +11,7 @@
     "lint": "eslint . --cache",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly --declarationDir dist/types && node scripts/bundle-types.mjs",
     "typescript": "tsc --noEmit"
   },
   "type": "module",
