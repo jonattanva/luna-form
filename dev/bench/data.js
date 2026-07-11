@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783794248080,
+  "lastUpdate": 1783797972383,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "59b2e286e9ca21a2e3805a19b1f8ba46ca655b20",
-          "message": "refactor: rename guard components and extract list slot\n\n- Rename GuardWithSection to VisibilityGuard and GuardWithList to\n  ListGuard, following the XGuard naming pattern\n- Inline guard.ts helpers into visibility-guard.tsx and remove the file\n- Extract ListSlot from slot.tsx into its own list-slot.tsx\n- Fix ListGuard to use the client-side FieldList (with add button and\n  useFieldList hook) instead of the server-side version\n- Add list-visibility e2e tests and list-guard unit tests\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-02-23T16:57:26-05:00",
-          "tree_id": "1bde4de6277b69b89bd93679347ac87eff4c4456",
-          "url": "https://github.com/jonattanva/luna-form/commit/59b2e286e9ca21a2e3805a19b1f8ba46ca655b20"
-        },
-        "date": 1771883907113,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.002265288000000055,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0033443599999999378,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.04075675000000001,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0010049559999999928,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0017590820000000348,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.03913678399999992,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.03143290538,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "29adaf5015234011ac7425e6ea6a226bad478686",
+          "message": "Merge pull request #44 from jonattanva/fix/fields-union-types-0.0.73\n\nfix types",
+          "timestamp": "2026-07-11T14:25:24-05:00",
+          "tree_id": "37d64600fe232c294f01d07127c84d38e2c8a285",
+          "url": "https://github.com/jonattanva/luna-form/commit/29adaf5015234011ac7425e6ea6a226bad478686"
+        },
+        "date": 1783797971962,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00039794144000000016,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0012583354199999996,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03294367754,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0004340807000000041,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006000354599999991,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.02941127982,
             "unit": "ms"
           }
         ]
