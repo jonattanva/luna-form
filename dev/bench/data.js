@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783793935067,
+  "lastUpdate": 1783793962128,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8529,6 +8529,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 136,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fe2c6e2573d533aa0f0006d42883125c0af290cf",
+          "message": "Merge pull request #43 from jonattanva/feat/empty-operator-self-contained-types\n\nfeat: `empty` operator + self-contained schema types (0.0.72)",
+          "timestamp": "2026-07-11T13:18:03-05:00",
+          "tree_id": "99c5d2c03b021a5c0c9134d6a8582d260e40f0f2",
+          "url": "https://github.com/jonattanva/luna-form/commit/fe2c6e2573d533aa0f0006d42883125c0af290cf"
+        },
+        "date": 1783793961736,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 246,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 469,
             "unit": "ms"
           }
         ]
