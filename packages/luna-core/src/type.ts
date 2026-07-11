@@ -140,6 +140,7 @@ export type Operator =
   | 'lte'
   | 'contains'
   | 'exists'
+  | 'empty'
   | 'truthy'
 
 export type Condition = {
