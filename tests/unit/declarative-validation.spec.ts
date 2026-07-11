@@ -303,4 +303,97 @@ describe('declarative validation vocabulary', () => {
       schema.safeParse({ enabled: true, endpoint: 'https://x' }).success
     ).toBe(true)
   })
+
+  test('requiredWhen on nested (dotted) fields validates the nested config', () => {
+    // The web-request auth case: hidden nested credentials required only for the
+    // chosen authType, matching against the nested config the runtime persists.
+    const sections: Sections = [
+      {
+        fields: [
+          { name: 'authType', type: 'select' },
+          {
+            name: 'basicAuth.username',
+            type: 'input',
+            hidden: true,
+            validation: {
+              requiredWhen: {
+                field: 'authType',
+                operator: 'eq',
+                value: 'basic',
+              },
+              required: 'Username is required for Basic Auth',
+            },
+          },
+          {
+            name: 'basicAuth.password',
+            type: 'input',
+            hidden: true,
+            validation: {
+              requiredWhen: {
+                field: 'authType',
+                operator: 'eq',
+                value: 'basic',
+              },
+              required: 'Password is required for Basic Auth',
+            },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    // No auth -> the whole nested group is absent -> valid.
+    expect(schema.safeParse({ authType: 'none' }).success).toBe(true)
+
+    // basic + only username -> password fires with the NESTED path and the
+    // form.json message.
+    const partial = schema.safeParse({
+      authType: 'basic',
+      basicAuth: { username: 'u' },
+    })
+    expect(partial.success).toBe(false)
+    if (!partial.success) {
+      expect(collectIssues(partial.error)).toContainEqual({
+        path: 'basicAuth.password',
+        message: 'Password is required for Basic Auth',
+      })
+    }
+
+    expect(
+      schema.safeParse({
+        authType: 'basic',
+        basicAuth: { username: 'u', password: 'p' },
+      }).success
+    ).toBe(true)
+  })
+
+  test('pattern allowInterpolation also exempts @-reference expressions', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            name: 'url',
+            type: 'input/expression',
+            validation: {
+              pattern: {
+                regex: '^https?://',
+                allowInterpolation: true,
+                message: 'Web address must start with http:// or https://',
+              },
+            },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    expect(schema.safeParse({ url: 'https://api.example.com' }).success).toBe(
+      true
+    )
+    // `@`-references are resolved at run time, so the scheme check is skipped.
+    expect(schema.safeParse({ url: '@Trigger.url' }).success).toBe(true)
+    expect(schema.safeParse({ url: 'example.com' }).success).toBe(false)
+  })
 })

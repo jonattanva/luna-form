@@ -28,6 +28,7 @@ import type {
   Input,
   List,
   PatternRule,
+  Schema,
   Schemas,
   Sections,
   WhenClause,
@@ -291,7 +292,7 @@ function evaluate(
   const operator = rule.operator ?? 'eq'
   const operation = operators[operator]
   if (operation) {
-    return operation(data[name], data[rule.field])
+    return operation(readValue(data, name), readValue(data, rule.field))
   }
   return false
 }
@@ -432,15 +433,68 @@ function buildObject(
         // Non-required leaves tolerate absent keys: stored configs are sparse
         // (only fields the user touched). Matches luna-flow's `.optional()`
         // config schemas; required leaves already fail on absence via getSchema.
-        const leaf = getSchema(entry, translations)
-        shape[entry.name] = entry.required ? leaf : leaf.optional()
+        // A `hidden` field is only shown (and required) once an event reveals it,
+        // so headless it is NOT structurally required — its conditional
+        // requirement is expressed via `requiredWhen`/`rules`. Without this the
+        // deriver over-requires hidden fields the rendered form never mounts.
+        const required = Boolean(entry.required) && !entry.hidden
+        const leaf = getSchema(
+          required ? entry : { ...entry, required: false },
+          translations
+        )
+        shape[entry.name] = required ? leaf : leaf.optional()
         leaves.push(entry)
       }
     }
   }
 
   visit(fields)
-  return buildSchema(shape, leaves, translations)
+  // Dotted field names (`basicAuth.username`) become nested objects so the
+  // schema matches the nested config the runtime persists (see `nestSchemas`).
+  return buildSchema(nestSchemas(shape), leaves, translations)
+}
+
+// Groups dotted field names (e.g. `basicAuth.username`) into nested objects so
+// the headless schema matches the NESTED config the runtime persists: the
+// `<Form>` submits flat keys and then `unflatten`s them (see `useFormState`).
+// Runtime validation stays flat — only `buildObject` calls this — so it never
+// runs on live submit data.
+type SchemaGroup = Map<string, Schema | SchemaGroup>
+
+function nestSchemas(shape: Schemas): Schemas {
+  if (!Object.keys(shape).some((key) => key.includes('.'))) {
+    return shape
+  }
+
+  const root: SchemaGroup = new Map()
+  for (const [key, schema] of Object.entries(shape)) {
+    const segments = key.split('.')
+    let node = root
+    for (let index = 0; index < segments.length - 1; index++) {
+      const existing = node.get(segments[index])
+      if (existing instanceof Map) {
+        node = existing
+      } else {
+        const child: SchemaGroup = new Map()
+        node.set(segments[index], child)
+        node = child
+      }
+    }
+    node.set(segments[segments.length - 1], schema)
+  }
+
+  return materialize(root)
+}
+
+function materialize(group: SchemaGroup): Schemas {
+  const shape: Schemas = {}
+  for (const [key, value] of group) {
+    // A nested group is optional: a config may omit the whole object (e.g. no
+    // `basicAuth` when auth is off). Requirements live in `requiredWhen`.
+    shape[key] =
+      value instanceof Map ? z.object(materialize(value)).optional() : value
+  }
+  return shape
 }
 
 // Maps a ZodError to flat, dotted-path issues (e.g. `rules.0.rule.0.value`).
@@ -506,7 +560,7 @@ function fieldIssues(
   translations?: Record<string, string>
 ): RuleIssue[] {
   const issues: RuleIssue[] = []
-  const value = data[field.name]
+  const value = readValue(data, field.name)
 
   const requiredWhen = field.validation?.requiredWhen
   if (requiredWhen) {
@@ -553,7 +607,18 @@ function conditionHolds(
   if (!operation) {
     return false
   }
-  return operation(extract(data, rule.field), rule.value)
+  return operation(readValue(data, rule.field), rule.value)
+}
+
+// Resolves a field's value whether the data is FLAT (the runtime submits keys
+// by their literal—possibly dotted—name) or NESTED (headless `buildFormSchema`
+// groups dotted names into objects). Tries the literal key first, then a dotted
+// path walk, so both `{'a.b': x}` and `{a:{b:x}}` resolve the same way.
+function readValue(data: Record<string, unknown>, name: string): unknown {
+  if (name in data) {
+    return data[name]
+  }
+  return extract(data, name) ?? undefined
 }
 
 function whenHolds(data: Record<string, unknown>, when?: WhenClause): boolean {
@@ -608,10 +673,20 @@ function matchesPattern(pattern: PatternRule, value: unknown): boolean {
   if (typeof value !== 'string') {
     return true
   }
-  if (pattern.allowInterpolation && isInterpolated(value)) {
+  if (
+    pattern.allowInterpolation &&
+    (isInterpolated(value) || isReference(value))
+  ) {
     return true
   }
   return new RegExp(pattern.regex, pattern.flags).test(value)
+}
+
+// `input/expression` fields let users insert a dynamic reference with a leading
+// `@` (e.g. `@Trigger.url`). Like a `{...}` template, its concrete value is only
+// known at run time, so `allowInterpolation` skips the format check for it.
+function isReference(value: unknown): boolean {
+  return isString(value) && value.trimStart().startsWith('@')
 }
 
 // "Has a meaningful value" for required-style checks. Trims strings so a

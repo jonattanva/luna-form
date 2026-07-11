@@ -228,4 +228,57 @@ describe('buildFormSchema (headless)', () => {
     const schema = buildFormSchema(sections, undefined, { options: [] })
     expect(schema.safeParse({ permission: 'owner' }).success).toBe(true)
   })
+
+  test('nests dotted field names into a nested object schema', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            name: 'basicAuth.username',
+            type: 'input',
+            required: true,
+            validation: { required: 'Username is required' },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    // The config is nested (the runtime unflattens dotted keys on submit).
+    expect(schema.safeParse({ basicAuth: { username: 'u' } }).success).toBe(
+      true
+    )
+
+    const missing = schema.safeParse({ basicAuth: {} })
+    expect(missing.success).toBe(false)
+    if (!missing.success) {
+      expect(collectIssues(missing.error)).toContainEqual({
+        path: 'basicAuth.username',
+        message: 'Username is required',
+      })
+    }
+  })
+
+  test('does not structurally require a hidden field (visibility-gated)', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            name: 'collectionType',
+            type: 'input',
+            required: true,
+            hidden: true,
+            validation: { required: 'This should never fire when hidden' },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    // A hidden field is only mounted/required once an event reveals it, so the
+    // headless deriver must not over-require it on an absent config.
+    expect(schema.safeParse({}).success).toBe(true)
+  })
 })

@@ -92,7 +92,7 @@ Validates a string value against a regular expression.
 - **`regex`** _(string, required)_: The pattern source (compiled with `new RegExp`).
 - **`flags`** _(string, optional)_: Regex flags, e.g. `"i"`.
 - **`message`** _(string, optional)_: The error message.
-- **`allowInterpolation`** _(boolean, optional)_: When `true`, the check is **skipped** if the value is an interpolation template (contains `{...}`). Use this for fields that accept dynamic values, e.g. a URL like `{step.url}`.
+- **`allowInterpolation`** _(boolean, optional)_: When `true`, the check is **skipped** if the value is dynamic and only resolved at run time — either an interpolation template (contains `{...}`) or an [`input/expression`](../fields/input.md) reference (a value beginning with `@`, e.g. `@Trigger.url`). Use this for fields that accept dynamic values, e.g. a URL like `{step.url}` or `@step.url`.
 
 ```json
 {
@@ -266,6 +266,14 @@ if (!result.success) {
 | List `length`                                 | —                        | ✅                           |
 
 The headless builder is the superset: item-scoped conditions and list length require the nested tree it produces.
+
+### Nested (dotted) field names
+
+A field whose `name` contains a dot — e.g. `basicAuth.username` — is grouped into a **nested object** by `buildFormSchema`, matching the nested config the runtime persists (the `<Form>` submits flat keys and then un-flattens them). So `{ "name": "basicAuth.username" }` validates against `{ basicAuth: { username } }`, and its issue path is `basicAuth.username`. The nested group is optional as a whole: a config may omit it entirely (e.g. no `basicAuth` when auth is off) and rely on `requiredWhen` for the conditional requirement.
+
+### Hidden fields
+
+`buildFormSchema` treats a `hidden: true` field as **not structurally required**, even if it declares `required: true`. A hidden field is only shown once an event reveals it, so its requirement is conditional by nature — express it with [`requiredWhen`](#requiredwhen) (typically keyed on the same condition that reveals it). This keeps the headless schema from over-requiring fields the rendered form never mounts. `pattern`/format rules on a hidden field still fire when it holds a value.
 
 ---
 
