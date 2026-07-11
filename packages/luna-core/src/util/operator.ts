@@ -12,6 +12,7 @@ export const operators: Record<
   nin,
   contains,
   exists,
+  empty,
   truthy,
 }
 
@@ -102,6 +103,11 @@ function exists(current: unknown): boolean {
     return current.length > 0
   }
   return current !== null && current !== undefined && current !== ''
+}
+
+// Unary (value ignored): the field has no value — the inverse of `exists`.
+function empty(current: unknown): boolean {
+  return !exists(current)
 }
 
 // Unary (value ignored): the field is truthy.

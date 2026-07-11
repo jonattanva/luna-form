@@ -304,6 +304,70 @@ describe('declarative validation vocabulary', () => {
     ).toBe(true)
   })
 
+  test('new operators: empty gates an all-clause "at least one secret" rule', () => {
+    // The webhook secret case: `secretKey` is required when security uses a
+    // secret key AND no persisted `secretKeyPrefix` marker is present. After
+    // save the prefix stands in for the (cleared) plaintext key, so the `empty`
+    // gate goes false and the requirement lifts.
+    const sections: Sections = [
+      {
+        fields: [
+          { name: 'security', type: 'select' },
+          { name: 'secretKeyPrefix', type: 'input', hidden: true },
+          {
+            name: 'secretKey',
+            type: 'input',
+            validation: {
+              rules: [
+                {
+                  when: {
+                    all: [
+                      {
+                        field: 'security',
+                        operator: 'eq',
+                        value: 'with-secret-key',
+                      },
+                      { field: 'secretKeyPrefix', operator: 'empty' },
+                    ],
+                  },
+                  assert: 'required',
+                  message: 'Enter the secret key to sign or verify your data',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    // Security off -> no secret needed.
+    expect(schema.safeParse({ security: 'none' }).success).toBe(true)
+
+    // Security on, no prefix and no key -> required fires.
+    const missing = schema.safeParse({ security: 'with-secret-key' })
+    expect(missing.success).toBe(false)
+    if (!missing.success) {
+      expect(collectIssues(missing.error)).toContainEqual({
+        path: 'secretKey',
+        message: 'Enter the secret key to sign or verify your data',
+      })
+    }
+
+    // Security on + plaintext key provided -> satisfied.
+    expect(
+      schema.safeParse({ security: 'with-secret-key', secretKey: 's3cret' })
+        .success
+    ).toBe(true)
+
+    // Security on + persisted prefix (post-save) -> `empty` false, rule lifts.
+    expect(
+      schema.safeParse({ security: 'with-secret-key', secretKeyPrefix: 'whk_' })
+        .success
+    ).toBe(true)
+  })
+
   test('requiredWhen on nested (dotted) fields validates the nested config', () => {
     // The web-request auth case: hidden nested credentials required only for the
     // chosen authType, matching against the nested config the runtime persists.

@@ -35,7 +35,7 @@ A `WhenRule` is:
 
 - **`field`** _(string, required)_: The sibling field whose value is tested.
 - **`operator`** _(Operator, optional)_: How to compare. Defaults to `eq`. See [Operators](#operators).
-- **`value`** _(string | number | boolean | Array, optional)_: The value to compare against (ignored by the unary operators `exists` / `truthy`).
+- **`value`** _(string | number | boolean | Array, optional)_: The value to compare against (ignored by the unary operators `exists` / `empty` / `truthy`).
 - **`message`** _(string, optional)_: The error message. Falls back to `validation.required` when omitted.
 
 Provide a single rule or an array. **An array is OR** — the field is required if _any_ rule's condition holds.
@@ -205,9 +205,10 @@ Operators are shared across `custom`, `requiredWhen`, `rules` gates, and [change
 | `lt` / `lte` | `current < value` / `<=`                       | numeric                     |
 | `contains`   | `current` (string/array) contains `value`      |                             |
 | `exists`     | `current` has a value                          | **unary** — `value` ignored |
+| `empty`      | `current` has no value (inverse of `exists`)   | **unary** — `value` ignored |
 | `truthy`     | `current` is truthy                            | **unary** — `value` ignored |
 
-`contains`, `exists`, and `truthy` are the newest additions; the rest have always been available.
+`contains`, `exists`, `empty`, and `truthy` are the newest additions; the rest have always been available.
 
 ---
 

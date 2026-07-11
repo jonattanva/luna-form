@@ -5,6 +5,7 @@ describe('operators map', () => {
   test('should expose all expected operators', () => {
     expect(Object.keys(operators).sort()).toEqual([
       'contains',
+      'empty',
       'eq',
       'exists',
       'gt',
