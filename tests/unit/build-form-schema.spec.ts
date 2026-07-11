@@ -281,4 +281,78 @@ describe('buildFormSchema (headless)', () => {
     // headless deriver must not over-require it on an absent config.
     expect(schema.safeParse({}).success).toBe(true)
   })
+
+  test('accepts specialized field variants in one Sections (union widening)', () => {
+    // Regression guard for the `Fields` union: a JSON form mixes the base
+    // `Field` with the specialized variants — `Input` carrying `advanced.length`
+    // (a `textarea`), `Select` carrying `source` + `advanced.options`, a `List`
+    // and a `Column`. The `: Sections` annotation makes this a COMPILE guard
+    // too: before the union was widened, a leaf like a `textarea` with
+    // `advanced.length` failed the weak-type "no properties in common" check
+    // against the base `Field` alone.
+    const sections: Sections = [
+      {
+        advanced: { compact: true },
+        fields: [
+          {
+            // `data`/`aria` are authored with BARE keys (the runtime prefixes
+            // `data-`/`aria-`), so this also guards the `DataAttributes` /
+            // `AriaAttributes` shape.
+            advanced: {
+              length: { max: 500 },
+              data: { testid: 'notes-input' },
+              aria: { label: 'Release notes' },
+            },
+            name: 'notes',
+            type: 'textarea',
+            required: true,
+            validation: { required: 'Release notes are required' },
+          },
+          {
+            type: 'column',
+            fields: [
+              {
+                advanced: { options: { label: 'name', value: 'id' } },
+                name: 'category',
+                type: 'select',
+                source: [{ id: 'a', name: 'Alpha' }],
+                required: true,
+                validation: { required: 'Pick a category' },
+              },
+            ],
+          },
+          {
+            advanced: { length: { min: 1 } },
+            name: 'items',
+            type: 'list',
+            fields: [{ name: 'label', type: 'input', required: true }],
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    expect(
+      schema.safeParse({
+        notes: 'shipped',
+        category: 'a',
+        items: [{ label: 'x' }],
+      }).success
+    ).toBe(true)
+
+    // A missing required leaf still fails, proving the widened union did not
+    // loosen the derived schema.
+    const missing = schema.safeParse({
+      notes: '',
+      category: '',
+      items: [{ label: 'x' }],
+    })
+    expect(missing.success).toBe(false)
+    if (!missing.success) {
+      const paths = collectIssues(missing.error).map((issue) => issue.path)
+      expect(paths).toContain('notes')
+      expect(paths).toContain('category')
+    }
+  })
 })

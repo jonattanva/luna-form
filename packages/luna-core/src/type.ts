@@ -6,13 +6,13 @@ export type ZodSchema = ZodObject<{ [x: string]: Schema }, core.$strip>
 
 export type Nullable<T> = T | null
 
-export type DataAttributes = {
-  [key: `data-${string}`]: string | number | boolean
-}
+// `advanced.data` / `advanced.aria` are authored with BARE keys; the runtime
+// (`getDataAttributes` / `getAriaAttributes`) prefixes each key with `data-` /
+// `aria-` on render. So the authored shape is a plain record — a `data-*`/`aria-*`
+// keyed type would be wrong here (it would double-prefix to `data-data-*`).
+export type DataAttributes = Record<string, string | number | boolean>
 
-export type AriaAttributes = {
-  [key: `aria-${string}`]: string | number | boolean
-}
+export type AriaAttributes = Record<string, string | number | boolean>
 
 export type Description =
   | string
@@ -24,10 +24,7 @@ export type Description =
 
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
 export type DateFormat =
-  | 'yyyy-MM-dd'
-  | 'MM/dd/yyyy'
-  | 'dd/MM/yyyy'
-  | 'MMMM d, yyyy'
+  'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'MMMM d, yyyy'
 
 export type DataSource = {
   body?: BodyInit | Record<string, unknown>
@@ -88,7 +85,7 @@ export type List = {
     }
   }
   description?: string
-  fields: Array<Field | Column>
+  fields: Array<AnyField | Column>
   label?: string
   name: string
   type: 'list' | (string & {})
@@ -97,7 +94,15 @@ export type List = {
   }
 } & Base
 
-export type Fields = Array<Field | Column | List>
+// The renderable field variants. `Field` is the base shape; the specialized
+// variants (`Input`, `Select`, `Chips`, `Date`, `Time`) refine `advanced` with
+// type-specific keys (`length`, `transform`, `options`, `format`, …) and, for
+// `Select`/`Chips`, add `source`. A JSON form declares those keys directly, so
+// `Fields`/`Column`/`List` accept the whole union: a base `Field` alone has a
+// weak (all-optional) `advanced`, and a leaf such as a `textarea` carrying
+// `advanced.length` would fail the "no properties in common" check against it.
+export type AnyField = Field | Input | Select | Chips | Date | Time
+export type Fields = Array<AnyField | Column | List>
 export type Base = Orderable & Hideable
 
 export type CommonProps = {
@@ -125,7 +130,7 @@ export type Column = {
     cols?: number
   }
   description?: Description
-  fields: Array<Field>
+  fields: Array<AnyField>
   type: 'column' | (string & {})
 } & Base
 
@@ -202,13 +207,15 @@ export type PatternRule = {
   allowInterpolation?: boolean
 }
 
-export type WhenClause = WhenRule | WhenRule[] | { all?: WhenRule[]; any?: WhenRule[] }
+export type WhenClause =
+  WhenRule | WhenRule[] | { all?: WhenRule[]; any?: WhenRule[] }
 
 // General declarative rule: assert something about a field's value, optionally
 // gated by a `when` condition over sibling data.
 export type AssertRule = {
   when?: WhenClause
-  assert: 'required' | 'minItems' | 'maxItems' | 'pattern' | 'oneOf' | 'min' | 'max'
+  assert:
+    'required' | 'minItems' | 'maxItems' | 'pattern' | 'oneOf' | 'min' | 'max'
   value?: string | number | Array<string | number> | PatternRule
   message: string
 }
@@ -254,10 +261,7 @@ export type Length<T> = {
 }
 
 export type Transform =
-  | 'lowercase'
-  | 'uppercase'
-  | 'remove-space'
-  | 'remove-accent'
+  'lowercase' | 'uppercase' | 'remove-space' | 'remove-accent'
 
 export type Input = Field & {
   advanced?: {

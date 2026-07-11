@@ -437,13 +437,16 @@ function buildObject(
         // so headless it is NOT structurally required — its conditional
         // requirement is expressed via `requiredWhen`/`rules`. Without this the
         // deriver over-requires hidden fields the rendered form never mounts.
-        const required = Boolean(entry.required) && !entry.hidden
+        // The specialized variants (`Input`/`Select`/…) only add optional
+        // `advanced` keys, so build the leaf from its base `Field` shape.
+        const field: Field = entry
+        const required = Boolean(field.required) && !field.hidden
         const leaf = getSchema(
-          required ? entry : { ...entry, required: false },
+          required ? field : { ...field, required: false },
           translations
         )
-        shape[entry.name] = required ? leaf : leaf.optional()
-        leaves.push(entry)
+        shape[field.name] = required ? leaf : leaf.optional()
+        leaves.push(field)
       }
     }
   }
