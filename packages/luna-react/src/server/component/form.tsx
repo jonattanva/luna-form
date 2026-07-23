@@ -30,6 +30,7 @@ export function Form(
       definition={props.definition}
       readOnly={props.readOnly}
       sections={props.sections}
+      translations={translations}
     >
       {({ disabled, fields }) => (
         <Slot

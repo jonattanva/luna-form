@@ -6,8 +6,10 @@ import type { Section } from '@luna-form/core'
 
 export function FieldSetAdvanced(
   props: Readonly<{
-    section: Section
+    description?: string
     group: React.ReactNode
+    section: Section
+    title?: string
   }>
 ) {
   const { fields = [] } = props.section
@@ -32,7 +34,7 @@ export function FieldSetAdvanced(
           type="button"
         >
           <ChevronIcon expanded={isOpen} />
-          <span>{formatMarkdown(props.section.title)}</span>
+          <span>{formatMarkdown(props.title)}</span>
         </button>
       </legend>
       <Collapsible visible={isOpen}>
@@ -40,9 +42,9 @@ export function FieldSetAdvanced(
           className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-zinc-300 pl-4 dark:border-zinc-600"
           data-slot="field-set-content"
         >
-          {props.section.description && (
+          {props.description && (
             <p className="text-sm leading-normal font-normal text-zinc-600 dark:text-zinc-400">
-              {formatMarkdown(props.section.description)}
+              {formatMarkdown(props.description)}
             </p>
           )}
           {props.group}
