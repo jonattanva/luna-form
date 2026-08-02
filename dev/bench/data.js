@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785648062954,
+  "lastUpdate": 1785648096301,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8767,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 626,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2525ad2c64f500d6482f8e62fe2ba3575ff515da",
+          "message": "Merge pull request #51 from jonattanva/fix/benchmark-gh-pages-fetch\n\nfix(ci): stop the browser benchmark from refetching gh-pages",
+          "timestamp": "2026-08-02T00:20:12-05:00",
+          "tree_id": "09f3843251bb8479cc8e8009991c6dbfe177db72",
+          "url": "https://github.com/jonattanva/luna-form/commit/2525ad2c64f500d6482f8e62fe2ba3575ff515da"
+        },
+        "date": 1785648096279,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 208,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 149,
             "unit": "ms"
           }
         ]
