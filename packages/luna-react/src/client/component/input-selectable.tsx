@@ -10,8 +10,8 @@ function useSelectableSource(
   config: Config,
   value?: Nullable<Record<string, unknown>>
 ) {
-  const [data, setSource] = useDataSource(field, config, value)
-  return { data, setSource }
+  const [data, setSource, isStaticSource] = useDataSource(field, config, value)
+  return { data, setSource, isStaticSource }
 }
 
 // Radix (and similar components) re-emit onChange("") when a select trigger

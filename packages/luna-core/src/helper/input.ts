@@ -1,5 +1,5 @@
 import { MAX, MAX_LENGTH, MIN, MIN_LENGTH, OPTIONS } from '../util/constant'
-import { buildOptions, buildSource } from '../util/build'
+import { buildOptions, buildSource, isArraySource } from '../util/build'
 import {
   fromNativeDate,
   getConvert,
@@ -35,6 +35,7 @@ import {
   isValidValue,
 } from '../util/is-input'
 import { isObject, isString } from '../util/is-type'
+import { translateOptions } from '../util/translate'
 import type {
   Chips,
   Date as DateField,
@@ -305,9 +306,19 @@ export function getPreselectedValue(
   return value
 }
 
-export function getOptions<T>(field: Field, data?: Nullable<T[]>) {
+export function getOptions<T>(
+  field: Field,
+  data?: Nullable<T[]>,
+  translations?: Record<string, string>
+) {
   if (isOptions(field) && Array.isArray(data)) {
-    return toOptions(data, field.advanced?.options)
+    const options = toOptions(data, field.advanced?.options)
+
+    // Labels are only resolved for options declared inline in the schema.
+    // A remote source returns data, not authored copy, so it stays as fetched.
+    return isArraySource(field)
+      ? translateOptions(options, translations)
+      : options
   }
   return data
 }
@@ -316,10 +327,13 @@ export function prepareInputProps<T, K>(
   field: Field,
   commonProps: CommonProps,
   data?: Nullable<DataSource | T[]>,
-  value?: Nullable<K>
+  value?: Nullable<K>,
+  translations?: Record<string, string>
 ) {
   const currentValue = getInputValue(field, value)
-  const options = Array.isArray(data) ? getOptions(field, data) : data
+  const options = Array.isArray(data)
+    ? getOptions(field, data, translations)
+    : data
 
   const commonPropsWithOptions = mergeOptionsProps(field, commonProps, options)
 
@@ -406,7 +420,8 @@ function normalizePreviewOptions(
 }
 
 export function getPreviewOptions(
-  field: Field
+  field: Field,
+  translations?: Record<string, string>
 ): Array<Option | string> | undefined {
   if (!isOptions(field)) {
     return undefined
@@ -423,7 +438,7 @@ export function getPreviewOptions(
   const source = buildSource(field)
   if (Array.isArray(source)) {
     const mapped = toOptions(source, field.advanced?.options)
-    const flat = normalizePreviewOptions(mapped)
+    const flat = normalizePreviewOptions(translateOptions(mapped, translations))
     return flat.length > 0 ? flat : undefined
   }
 

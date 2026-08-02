@@ -43,6 +43,14 @@ export function buildSource(field: Field) {
   }
 }
 
+// True only when the schema declares its options inline as an array. Remote
+// sources, unresolved `$ref`s and the disabled-select fallback (which returns
+// form data, not schema) are all excluded, so callers can use this to tell
+// author-written labels apart from fetched data.
+export function isArraySource(field: Field): boolean {
+  return Array.isArray(buildSource(field))
+}
+
 function isValid(field: Field) {
   return (
     isRadio(field) || isChips(field) || (isSelect(field) && !field.disabled)

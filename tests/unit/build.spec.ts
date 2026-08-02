@@ -4,6 +4,7 @@ import {
   buildSource,
   buildOrientation,
   buildDisabled,
+  isArraySource,
 } from '@/packages/luna-core/src/util/build'
 import type { Field } from '@/packages/luna-core/src/type'
 
@@ -151,6 +152,60 @@ describe('Build', () => {
     test('should return false if field is not readonly and no disabled param', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildDisabled(field)).toBe(false)
+    })
+  })
+
+  describe('isArraySource', () => {
+    const source = [{ label: 'Apple', value: 'apple' }]
+
+    test('should return true for select, radio and chips with an array source', () => {
+      for (const type of ['select', 'radio', 'chips']) {
+        expect(isArraySource({ type, name: 'test', source } as Field)).toBe(
+          true
+        )
+      }
+    })
+
+    test('should return false for a remote data source', () => {
+      const field = {
+        type: 'select',
+        name: 'test',
+        source: { url: '/api/options' },
+      } as Field
+
+      expect(isArraySource(field)).toBe(false)
+    })
+
+    test('should return false for an unresolved reference', () => {
+      const field = {
+        type: 'select',
+        name: 'test',
+        source: { $ref: '#/source/options' },
+      } as unknown as Field
+
+      expect(isArraySource(field)).toBe(false)
+    })
+
+    test('should return false for a disabled select', () => {
+      const field = {
+        type: 'select',
+        name: 'test',
+        disabled: true,
+        source,
+      } as Field
+
+      expect(isArraySource(field)).toBe(false)
+    })
+
+    test('should return false for specialized selectors without a source', () => {
+      for (const type of ['select/month', 'select/active', 'chips/day']) {
+        expect(isArraySource({ type, name: 'test' } as Field)).toBe(false)
+      }
+    })
+
+    test('should return false for fields that cannot carry options', () => {
+      const field = { type: 'input/text', name: 'test', source } as Field
+      expect(isArraySource(field)).toBe(false)
     })
   })
 })
