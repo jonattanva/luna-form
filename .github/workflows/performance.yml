@@ -87,6 +87,11 @@ jobs:
           tool: customSmallerIsBetter
           output-file-path: benchmark-e2e-output.json
           gh-pages-branch: gh-pages
+          # The core benchmark step above already fetched gh-pages and committed
+          # onto it. On a pull request auto-push is false, so that commit stays
+          # local and the branch is ahead of the remote: fetching it a second
+          # time is rejected as non-fast-forward and fails the job.
+          skip-fetch-gh-pages: true
           benchmark-data-dir-path: dev/bench
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.ref == 'refs/heads/main' }}
