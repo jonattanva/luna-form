@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785645537742,
+  "lastUpdate": 1785645564385,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8699,6 +8699,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 635,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3e61236a026f65e070993d036e1b080ee1e4a394",
+          "message": "Merge pull request #50 from jonattanva/feat/locale-aware-specialized-selectors\n\nfeat(selectors): resolve built-in option labels through the form language",
+          "timestamp": "2026-08-01T23:38:02-05:00",
+          "tree_id": "e993338469b81cbb0e377d464895a7947602cfe8",
+          "url": "https://github.com/jonattanva/luna-form/commit/3e61236a026f65e070993d036e1b080ee1e4a394"
+        },
+        "date": 1785645563961,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 284,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 214,
             "unit": "ms"
           }
         ]
