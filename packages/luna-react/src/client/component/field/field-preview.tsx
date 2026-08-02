@@ -85,7 +85,9 @@ export function FieldPreview({
         value != null ? resolveValue(previewName, value) : undefined
 
       const childField = fieldLookup?.[item.field]
-      const options = childField ? getPreviewOptions(childField) : undefined
+      const options = childField
+        ? getPreviewOptions(childField, translations)
+        : undefined
 
       result.push({
         key: `${index}:${item.field}`,

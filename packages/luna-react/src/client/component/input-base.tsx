@@ -30,7 +30,11 @@ export function InputBase(
     props.field,
     props.value
   )
-  const { data, setSource } = useSource(props.field, props.config, value)
+  const { data, setSource, isStaticSource } = useSource(
+    props.field,
+    props.config,
+    value
+  )
 
   const {
     applyChangeEventsRef,
@@ -48,11 +52,14 @@ export function InputBase(
 
   const initialEventsProcessedRef = useRef(false)
 
+  // Withheld when a `source` change event swapped the schema's array for a
+  // remote DataSource: the fetched labels are data, not authored copy.
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
     commonProps,
     data,
-    value
+    value,
+    isStaticSource ? props.translations : undefined
   )
 
   const inputProps = prepareInputValue(props.field, defaultValue)

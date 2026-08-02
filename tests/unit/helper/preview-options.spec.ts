@@ -97,6 +97,36 @@ describe('getPreviewOptions', () => {
       { value: 'high', label: 'Alto' },
     ])
   })
+
+  test('translates the labels of a literal array source', () => {
+    const field: Select = {
+      name: 'status',
+      type: 'select',
+      source: [
+        { value: 'active', label: 'status_active' },
+        { value: 'inactive', label: 'status_inactive' },
+      ],
+    }
+
+    expect(
+      getPreviewOptions(field, {
+        status_active: 'Activo',
+        status_inactive: 'Inactivo',
+      })
+    ).toEqual([
+      { value: 'active', label: 'Activo' },
+      { value: 'inactive', label: 'Inactivo' },
+    ])
+  })
+
+  test('leaves built-in selector labels untranslated', () => {
+    const field: Field = { name: 'active', type: 'select/active' }
+
+    expect(getPreviewOptions(field, { Yes: 'Sí', No: 'No' })).toEqual([
+      { value: 'true', label: 'Yes' },
+      { value: 'false', label: 'No' },
+    ])
+  })
 })
 
 describe('resolveOptionLabel', () => {

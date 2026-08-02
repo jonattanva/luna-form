@@ -112,3 +112,28 @@ Renders chips for the 12 months of the year.
   "label": "Subscription Months"
 }
 ```
+
+---
+
+## Localization
+
+The option labels of these selectors are produced by the framework, not written in the schema, so they are **not** resolved against the `translations` dictionary the way an inline [array source](select.md#translating-options) is.
+
+- `select/month`, `select/day`, `chips/day` and `chips/month` take their names from the runtime locale.
+- `select/year` renders plain numbers.
+- `select/active` renders `Yes` and `No`, and `select/timezone` renders its region groups and zone names in English.
+
+To control the wording, declare an explicit `source`. It overrides the built-in options and, being an array, its labels go through the dictionary:
+
+```json
+{
+  "name": "active",
+  "type": "select/active",
+  "source": [
+    { "value": "true", "label": "active_yes" },
+    { "value": "false", "label": "active_no" }
+  ]
+}
+```
+
+For `select/timezone` the override must keep the group shape (`{ "label": "...", "items": [...] }`) that the grouped selector expects.

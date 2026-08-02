@@ -79,6 +79,48 @@ Inside `advanced.options`, you can map:
 
 ---
 
+## Translating Options
+
+When the options are declared inline as an array, `label` and `description` are resolved against the form dictionary, exactly like a field's own `label`. Missing keys fall back to the key itself.
+
+```json
+{
+  "lang": "es",
+  "translations": {
+    "es": {
+      "fruit_apple": "Manzana",
+      "fruit_banana": "Plátano"
+    }
+  },
+  "sections": [
+    {
+      "fields": [
+        {
+          "name": "fruit",
+          "type": "select",
+          "source": [
+            { "value": "apple", "label": "fruit_apple" },
+            { "value": "banana", "label": "fruit_banana" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+This applies to `select`, `radio` and `chips`, works with `advanced.options` mapping, and reaches the collapsed preview of a list.
+
+Three rules bound the behavior:
+
+- **`value` is never translated.** It is the technical value submitted with the form, so the payload stays identical in every language.
+- **Only array sources are translated.** A remote `DataSource` returns data, not authored copy, so its labels are rendered as fetched. The same applies when a `source` change event replaces the array with a remote source at runtime.
+- **Only object options are translated.** In a bare string array (`["apple", "banana"]`) the string is both the label and the value, so translating it would change what the form submits.
+
+Specialized selectors carry their own built-in labels and are not resolved against the dictionary. See [Specialized Selectors](specialized-selectors.md#localization).
+
+---
+
 ---
 
 ## Core Properties

@@ -30,7 +30,8 @@ export function Input(
     props.field,
     props.commonProps,
     source,
-    props.value
+    props.value,
+    props.translations
   )
 
   const defaultProps = prepareDefaultValue(props.field, defaultValue)

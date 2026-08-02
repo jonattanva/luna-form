@@ -288,4 +288,99 @@ describe('Input Helper', () => {
       defaultValue: undefined,
     })
   })
+
+  describe('option translation', () => {
+    const translations = {
+      fruit_apple: 'Manzana',
+      fruit_banana: 'Plátano',
+    }
+
+    test('should translate labels when the source is a literal array', () => {
+      const field: Select = {
+        name: 'fruit',
+        type: 'select',
+        source: [
+          { label: 'fruit_apple', value: 'apple' },
+          { label: 'fruit_banana', value: 'banana' },
+        ],
+      }
+
+      expect(
+        getOptions(field, field.source as unknown[], translations)
+      ).toEqual([
+        { label: 'Manzana', value: 'apple' },
+        { label: 'Plátano', value: 'banana' },
+      ])
+    })
+
+    test('should not translate labels fetched from a remote source', () => {
+      const field: Select = {
+        name: 'fruit',
+        type: 'select',
+        source: { url: '/api/fruits' },
+      }
+      const data = [{ label: 'fruit_apple', value: 'apple' }]
+
+      expect(getOptions(field, data, translations)).toEqual([
+        { label: 'fruit_apple', value: 'apple' },
+      ])
+    })
+
+    test('should not translate built-in selector options', () => {
+      const field: Field = { name: 'active', type: 'select/active' }
+      const data = [{ label: 'Yes', value: 'true' }]
+
+      expect(getOptions(field, data, { Yes: 'Sí' })).toEqual([
+        { label: 'Yes', value: 'true' },
+      ])
+    })
+
+    test('should translate the label resolved through advanced.options', () => {
+      const field: Select = {
+        name: 'fruit',
+        type: 'select',
+        advanced: { options: { label: 'name', value: 'id' } },
+        source: [{ id: 'apple', name: 'fruit_apple' }],
+      }
+
+      expect(
+        getOptions(field, field.source as unknown[], translations)
+      ).toEqual([{ label: 'Manzana', value: 'apple' }])
+    })
+
+    test('should keep the submitted value untranslated', () => {
+      const field: Select = {
+        name: 'fruit',
+        type: 'select',
+        required: true,
+        source: [{ label: 'fruit_apple', value: 'apple' }],
+      }
+
+      const result = prepareInputProps(
+        field,
+        { id: 'fruit-id' },
+        field.source as unknown[],
+        undefined,
+        translations
+      )
+
+      expect(result.commonPropsWithOptions).toEqual({
+        id: 'fruit-id',
+        options: [{ label: 'Manzana', value: 'apple' }],
+      })
+      expect(result.defaultValue).toEqual({ label: 'Manzana', value: 'apple' })
+    })
+
+    test('should leave options untouched without translations', () => {
+      const field: Select = {
+        name: 'fruit',
+        type: 'select',
+        source: [{ label: 'fruit_apple', value: 'apple' }],
+      }
+
+      expect(getOptions(field, field.source as unknown[])).toEqual([
+        { label: 'fruit_apple', value: 'apple' },
+      ])
+    })
+  })
 })
