@@ -321,7 +321,7 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
     ).toBeVisible()
   })
 
-  test.describe('specialized selectors stay out of the dictionary', () => {
+  test.describe('specialized selectors', () => {
     test('should not translate the built-in options of select/month', async ({
       page,
     }) => {
@@ -352,7 +352,7 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
       await expect(page.getByRole('option', { name: 'enero' })).toBeVisible()
     })
 
-    test('should not translate select/active without a source', async ({
+    test('should translate the built-in options of select/active', async ({
       page,
     }) => {
       await inject(
@@ -374,8 +374,68 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
 
       await page.getByRole('combobox').click()
 
+      // `select/active` is the one built-in selector whose labels are copy
+      // rather than locale data, so its English text doubles as the key.
+      await expect(page.getByRole('option', { name: 'Sí' })).toBeVisible()
+      await expect(page.getByRole('option', { name: 'Yes' })).toHaveCount(0)
+    })
+
+    // `fr` on purpose: the library ships no built-in dictionary for it, so the
+    // options fall all the way back to their English source text.
+    test('should keep the built-in options of select/active in English when nothing translates them', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+          "lang": "fr",
+          "translations": { "fr": { "autre_cle": "Autre" } },
+          "sections": [
+            {
+              "fields": [
+                { "label": "Activo", "name": "active", "type": "select/active" }
+              ]
+            }
+          ]
+        }`
+      )
+
+      await page.goto('')
+
+      await page.getByRole('combobox').click()
+
       await expect(page.getByRole('option', { name: 'Yes' })).toBeVisible()
-      await expect(page.getByRole('option', { name: 'Sí' })).toHaveCount(0)
+      await expect(page.getByRole('option', { name: 'No' })).toBeVisible()
+    })
+
+    test('should submit the raw value when the built-in options are translated', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+          "lang": "es",
+          "translations": { "es": { "Yes": "Sí", "No": "No" } },
+          "sections": [
+            {
+              "fields": [
+                { "label": "Activo", "name": "active", "type": "select/active" }
+              ]
+            }
+          ]
+        }`
+      )
+
+      await page.goto('')
+
+      await page.getByRole('combobox').click()
+      await page.getByRole('option', { name: 'Sí' }).click()
+
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      await expect(page.locator('pre code')).toContainText('"active": true')
+      await expect(page.locator('pre code')).not.toContainText('Sí')
     })
 
     test('should translate select/active when the schema declares a source', async ({

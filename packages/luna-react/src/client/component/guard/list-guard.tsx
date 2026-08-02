@@ -13,7 +13,7 @@ export function ListGuard({
 }: ListProps) {
   return (
     <VisibilityGuard container={field} fields={field.fields}>
-      <List field={field}>
+      <List field={field} translations={translations}>
         <FieldList
           field={field}
           lang={lang}

@@ -1,5 +1,6 @@
 import { Form as Component } from '../../component/form'
 import { Input } from './input'
+import { resolveDictionary } from '@luna-form/core'
 import { Slot } from '../../component/slot/slot'
 import type { Config } from '../../type'
 import type { Definition, Sections } from '@luna-form/core'
@@ -20,7 +21,7 @@ export function Form(
     value?: Record<string, unknown>
   }>
 ) {
-  const translations = props.translations?.[props.lang ?? '']
+  const translations = resolveDictionary(props.lang, props.translations)
 
   return (
     <Component

@@ -86,6 +86,7 @@ export function FieldListPreviewItem({
           />
         ) : undefined
       }
+      translations={translations}
     >
       {children}
     </FieldListItem>

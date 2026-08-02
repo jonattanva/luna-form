@@ -70,13 +70,21 @@ function defineOptionChips(field: Chips, lang?: string) {
   }
 }
 
-export function buildOptionSelect(field: Field, lang?: string) {
+export function buildOptionSelect(
+  field: Field,
+  lang?: string,
+  translations?: Record<string, string>
+) {
   if (isSelect(field)) {
-    return defineOptionSelect(field, lang)
+    return defineOptionSelect(field, lang, translations)
   }
 }
 
-function defineOptionSelect(select: Select, lang?: string) {
+function defineOptionSelect(
+  select: Select,
+  lang?: string,
+  translations?: Record<string, string>
+) {
   if (isSelectDay(select)) {
     return getWeekDays(lang)
   }
@@ -96,18 +104,26 @@ function defineOptionSelect(select: Select, lang?: string) {
     return getTimezones()
   }
 
+  // The only built-in selector whose labels are authored copy rather than
+  // locale data, so it is the only one resolved against the dictionary. The
+  // schema cannot name these strings, so they act as their own keys the same
+  // way `(Optional)` does.
   if (isSelectActive(select)) {
-    return [
-      { value: 'true', label: 'Yes' },
-      { value: 'false', label: 'No' },
-    ]
+    return translateOptions(
+      [
+        { value: 'true', label: 'Yes' },
+        { value: 'false', label: 'No' },
+      ],
+      translations
+    )
   }
 }
 
 export function buildCommon(
   field: Field,
   disabled: boolean = false,
-  lang?: string
+  lang?: string,
+  translations?: Record<string, string>
 ): CommonProps {
   const commonProps: CommonProps = {
     disabled,
@@ -127,7 +143,7 @@ export function buildCommon(
   if (isSelect(field)) {
     return {
       ...commonProps,
-      ...defineWithOptions(field, lang, buildOptionSelect),
+      ...defineWithOptions(buildOptionSelect(field, lang, translations)),
     }
   }
 
@@ -161,20 +177,14 @@ function defineInput(input: Input) {
   }
 }
 
-function defineWithOptions<T>(
-  field: Field,
-  lang: string | undefined,
-  builder: (field: Field, lang?: string) => T | undefined
-) {
-  const options = builder(field, lang)
-  if (options) {
-    return { options }
-  }
-  return {}
+function defineWithOptions<T>(options: T | undefined) {
+  return options ? { options } : {}
 }
 
 function defineChips(field: Chips, lang?: string) {
-  const withOptions = defineWithOptions(field, lang, buildOptionChips)
+  // Chips only have locale-driven built-ins (days, months), so no dictionary
+  // reaches the builder.
+  const withOptions = defineWithOptions(buildOptionChips(field, lang))
   const multiple = field.advanced?.multiple ?? true
   return { ...withOptions, multiple }
 }
@@ -432,7 +442,7 @@ export function getPreviewOptions(
 
   const builtIn = isChips(field)
     ? buildOptionChips(field, lang)
-    : buildOptionSelect(field, lang)
+    : buildOptionSelect(field, lang, translations)
   if (Array.isArray(builtIn)) {
     const flat = normalizePreviewOptions(builtIn)
     return flat.length > 0 ? flat : undefined

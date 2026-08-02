@@ -54,6 +54,7 @@ export function SlotBase(
           field={field}
           lang={props.lang}
           style={props.style}
+          translations={props.translations}
         >
           {props.children}
         </Field>

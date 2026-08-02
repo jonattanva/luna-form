@@ -355,4 +355,46 @@ describe('buildFormSchema (headless)', () => {
       expect(paths).toContain('category')
     }
   })
+
+  describe('list length messages', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            advanced: { length: { min: 2, max: 3 } },
+            name: 'items',
+            type: 'list',
+            fields: [{ name: 'label', type: 'input' }],
+            validation: {
+              length: { min: 'items_min', max: 'items_max' },
+            },
+          },
+        ],
+      },
+    ]
+
+    function messagesFor(translations?: Record<string, string>) {
+      const schema = buildFormSchema(sections, translations)
+      const result = schema.safeParse({ items: [{ label: 'x' }] })
+
+      expect(result.success).toBe(false)
+      return result.success
+        ? []
+        : collectIssues(result.error).map((issue) => issue.message)
+    }
+
+    test('should resolve the message against the dictionary', () => {
+      expect(messagesFor({ items_min: 'Agrega al menos dos' })).toContain(
+        'Agrega al menos dos'
+      )
+    })
+
+    test('should keep the key when there is no dictionary', () => {
+      expect(messagesFor()).toContain('items_min')
+    })
+
+    test('should keep the key when it is missing from the dictionary', () => {
+      expect(messagesFor({ other_key: 'Otro' })).toContain('items_min')
+    })
+  })
 })

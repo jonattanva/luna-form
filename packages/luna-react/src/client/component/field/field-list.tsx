@@ -1,5 +1,5 @@
 import { FieldListPreviewItem } from './field-list-preview-item'
-import { getLabel, isMultiFieldList, logger } from '@luna-form/core'
+import { getLabel, isMultiFieldList, translate } from '@luna-form/core'
 import { ListPathContext } from '../../context/list-path-context'
 import { twMerge } from 'tailwind-merge'
 import { useFieldList } from '../../hook/use-field-list'
@@ -14,13 +14,14 @@ export function FieldList(props: ListProps) {
   const [items, addItem, handleRemove, canAdd, canRemove, max, translatePath] =
     useFieldList(field, value, onValueChange)
 
-  const label = getLabel(field)
-  const action = field.advanced?.action ?? 'Add item'
+  const label = translate(getLabel(field), translations)
+
+  // The built-in default acts as its own key, so a form can localize the add
+  // button without having to author `advanced.action` first.
+  const action = translate(field.advanced?.action ?? 'Add item', translations)
 
   const hasLimit = max !== Infinity
   const isMultiField = isMultiFieldList(field)
-
-  logger.info('Label: ', label)
 
   const {
     label: previewLabel,

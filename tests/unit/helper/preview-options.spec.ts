@@ -119,13 +119,38 @@ describe('getPreviewOptions', () => {
     ])
   })
 
-  test('leaves built-in selector labels untranslated', () => {
+  test('translates the built-in labels of select/active', () => {
     const field: Field = { name: 'active', type: 'select/active' }
 
     expect(getPreviewOptions(field, { Yes: 'Sí', No: 'No' })).toEqual([
+      { value: 'true', label: 'Sí' },
+      { value: 'false', label: 'No' },
+    ])
+  })
+
+  test('keeps the English labels of select/active without a dictionary', () => {
+    const field: Field = { name: 'active', type: 'select/active' }
+
+    expect(getPreviewOptions(field)).toEqual([
       { value: 'true', label: 'Yes' },
       { value: 'false', label: 'No' },
     ])
+  })
+
+  test('keeps the English labels of select/active when the keys are missing', () => {
+    const field: Field = { name: 'active', type: 'select/active' }
+
+    expect(getPreviewOptions(field, { other_key: 'Otro' })).toEqual([
+      { value: 'true', label: 'Yes' },
+      { value: 'false', label: 'No' },
+    ])
+  })
+
+  test('leaves locale-driven selector labels untranslated', () => {
+    const field: Field = { name: 'month', type: 'select/month' }
+
+    const options = getPreviewOptions(field, { January: 'DICCIONARIO' }, 'en')
+    expect(options?.[0]).toEqual({ value: '1', label: 'January' })
   })
 })
 

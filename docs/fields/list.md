@@ -19,6 +19,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 The `advanced` property customizes structural interaction rules and layout rendering for the collection container.
 
 - **`action`** _(string)_: A custom label applied strictly to the generic "Add item" button rendering at the end of the collection (e.g. `"Add email address"`).
+  A custom label has to be translated by the form; the built-in `Add item` default is already translated by the library — see [Localization](#localization).
 - **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles. The matching error messages are declared under the list's `validation.length` — see the [Validation reference](../validation/overview.md#list-length).
 - **`collapsed`** _(boolean)_: When enabled, list items default to a visually collapsed representation upon mounting or adding.
 
@@ -78,6 +79,80 @@ For example, if you want a field inside the list to update another field **in th
 ```
 
 See [Change Events](../events/change.md#target-resolution-in-lists) structure definitions closely outlining array value mapping techniques cleanly.
+
+---
+
+## Localization
+
+Every piece of copy a list renders goes through the `translations` dictionary, keyed by its English source text. The keys split into two groups by who owns the text.
+
+**Declared by the form**, so only the form can translate them:
+
+- `label` and `description`, rendered as the fieldset legend and its help text.
+- `advanced.action`, the custom add-button label.
+- `advanced.title`, which supplies the caption of each item (`Contact 1`, `Contact 2`, …) and feeds the accessible names of its controls.
+
+**Owned by the library**, so `lang` alone is enough — see [built-in translations](#built-in-translations):
+
+- `Add item`, the add-button label when no `action` is declared.
+- `Expand {label} {index}`, `Collapse {label} {index}` and `Remove {label} item {index}`, the accessible names of the item controls.
+
+```json
+{
+  "lang": "es",
+  "translations": {
+    "es": {
+      "contact_label": "Contacto"
+    }
+  },
+  "sections": [
+    {
+      "fields": [
+        {
+          "label": "contact_label",
+          "name": "contacts",
+          "type": "list",
+          "fields": [
+            { "name": "name", "label": "Nombre", "type": "input/text" },
+            { "name": "email", "label": "Correo", "type": "input/email" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+The list renders as `Contacto`, its add button as `Añadir elemento`, and its controls announce `Contraer Contacto 1` and `Eliminar Contacto 1` — the form only had to name its own label.
+
+### Built-in translations
+
+The library ships translations for the copy it renders on its own behalf, because a form cannot name those strings in its schema. Today that covers **Spanish**; any other `lang` falls back to the English source text.
+
+The built-ins are layered _under_ the form's own block, so declaring a key still overrides them:
+
+```json
+{
+  "lang": "es",
+  "translations": { "es": { "Add item": "Agregar contacto" } }
+}
+```
+
+Regional tags resolve to their base language, so `es-MX` and `es-419` both get the Spanish defaults. A form's own entries keep matching on the exact tag, unchanged.
+
+### Accessible name templates
+
+The accessible names are single keys carrying `{label}` and `{index}` placeholders rather than separate words, so a translation can reorder the parts — or drop one. The Spanish default for `Remove {label} item {index}` is `Eliminar {label} {index}`, without the English `item` filler:
+
+```json
+{
+  "translations": {
+    "fr": { "Remove {label} item {index}": "Supprimer {label} {index}" }
+  }
+}
+```
+
+Left untranslated, the template fills in to the same English text it replaced.
 
 ---
 
