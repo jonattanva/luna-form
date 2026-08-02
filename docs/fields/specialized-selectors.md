@@ -119,9 +119,22 @@ Renders chips for the 12 months of the year.
 
 The option labels of these selectors are produced by the framework, not written in the schema, so they are **not** resolved against the `translations` dictionary the way an inline [array source](select.md#translating-options) is.
 
-- `select/month`, `select/day`, `chips/day` and `chips/month` take their names from the runtime locale.
+- `select/month`, `select/day`, `chips/day` and `chips/month` take their names from the form's `lang`, resolved through `Intl`. Without `lang` they fall back to the runtime locale, and a malformed tag (`es_MX`, `español`) falls back too rather than failing.
 - `select/year` renders plain numbers.
 - `select/active` renders `Yes` and `No`, and `select/timezone` renders its region groups and zone names in English.
+
+```json
+{
+  "lang": "es",
+  "sections": [
+    {
+      "fields": [{ "name": "month", "type": "select/month" }]
+    }
+  ]
+}
+```
+
+The dropdown lists `enero` through `diciembre`, while the submitted value stays the month number. Setting `lang` also keeps the server and client renders on the same locale; without it each side resolves its own default, which can differ.
 
 To control the wording, declare an explicit `source`. It overrides the built-in options and, being an array, its labels go through the dictionary:
 

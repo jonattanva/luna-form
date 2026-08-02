@@ -33,6 +33,7 @@ export function FieldPreview({
   className,
   fields,
   label = 'Preview',
+  lang,
   name,
   previews,
   translations,
@@ -41,6 +42,7 @@ export function FieldPreview({
   className?: string
   fields?: Array<Field | Column>
   label?: string
+  lang?: string
   name: string
   previews: PreviewItem | PreviewItem[]
   translations?: Record<string, string>
@@ -86,7 +88,7 @@ export function FieldPreview({
 
       const childField = fieldLookup?.[item.field]
       const options = childField
-        ? getPreviewOptions(childField, translations)
+        ? getPreviewOptions(childField, translations, lang)
         : undefined
 
       result.push({
@@ -97,7 +99,7 @@ export function FieldPreview({
       })
     }
     return result
-  }, [items, itemValue, name, value, translations, fieldLookup])
+  }, [items, itemValue, lang, name, value, translations, fieldLookup])
 
   if (visibleItems.length === 0) {
     return null

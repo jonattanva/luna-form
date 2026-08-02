@@ -329,7 +329,7 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
         page,
         `{
           "lang": "es",
-          "translations": { "es": { "January": "Enero" } },
+          "translations": { "es": { "January": "MES_DEL_DICCIONARIO" } },
           "sections": [
             {
               "fields": [
@@ -344,7 +344,12 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
 
       await page.getByRole('combobox').click()
 
-      await expect(page.getByRole('option', { name: 'Enero' })).toHaveCount(0)
+      // The month name comes from the locale, never from the dictionary, so a
+      // key matching the English label is simply ignored.
+      await expect(
+        page.getByRole('option', { name: 'MES_DEL_DICCIONARIO' })
+      ).toHaveCount(0)
+      await expect(page.getByRole('option', { name: 'enero' })).toBeVisible()
     })
 
     test('should not translate select/active without a source', async ({

@@ -54,35 +54,35 @@ import type {
 
 const now = getCurrentYear()
 
-export function buildOptionChips(field: Field) {
+export function buildOptionChips(field: Field, lang?: string) {
   if (isChips(field)) {
-    return defineOptionChips(field)
+    return defineOptionChips(field, lang)
   }
 }
 
-function defineOptionChips(field: Chips) {
+function defineOptionChips(field: Chips, lang?: string) {
   if (isChipsDays(field)) {
-    return getWeekDays()
+    return getWeekDays(lang)
   }
 
   if (isChipsMonths(field)) {
-    return getMonth()
+    return getMonth(lang)
   }
 }
 
-export function buildOptionSelect(field: Field) {
+export function buildOptionSelect(field: Field, lang?: string) {
   if (isSelect(field)) {
-    return defineOptionSelect(field)
+    return defineOptionSelect(field, lang)
   }
 }
 
-function defineOptionSelect(select: Select) {
+function defineOptionSelect(select: Select, lang?: string) {
   if (isSelectDay(select)) {
-    return getWeekDays()
+    return getWeekDays(lang)
   }
 
   if (isSelectMonth(select)) {
-    return getMonth()
+    return getMonth(lang)
   }
 
   if (isSelectYear(select)) {
@@ -106,7 +106,8 @@ function defineOptionSelect(select: Select) {
 
 export function buildCommon(
   field: Field,
-  disabled: boolean = false
+  disabled: boolean = false,
+  lang?: string
 ): CommonProps {
   const commonProps: CommonProps = {
     disabled,
@@ -126,7 +127,7 @@ export function buildCommon(
   if (isSelect(field)) {
     return {
       ...commonProps,
-      ...defineWithOptions(field, buildOptionSelect),
+      ...defineWithOptions(field, lang, buildOptionSelect),
     }
   }
 
@@ -140,7 +141,7 @@ export function buildCommon(
   if (isChips(field)) {
     return {
       ...commonProps,
-      ...defineChips(field),
+      ...defineChips(field, lang),
     }
   }
 
@@ -162,17 +163,18 @@ function defineInput(input: Input) {
 
 function defineWithOptions<T>(
   field: Field,
-  builder: (field: Field) => T | undefined
+  lang: string | undefined,
+  builder: (field: Field, lang?: string) => T | undefined
 ) {
-  const options = builder(field)
+  const options = builder(field, lang)
   if (options) {
     return { options }
   }
   return {}
 }
 
-function defineChips(field: Chips) {
-  const withOptions = defineWithOptions(field, buildOptionChips)
+function defineChips(field: Chips, lang?: string) {
+  const withOptions = defineWithOptions(field, lang, buildOptionChips)
   const multiple = field.advanced?.multiple ?? true
   return { ...withOptions, multiple }
 }
@@ -421,15 +423,16 @@ function normalizePreviewOptions(
 
 export function getPreviewOptions(
   field: Field,
-  translations?: Record<string, string>
+  translations?: Record<string, string>,
+  lang?: string
 ): Array<Option | string> | undefined {
   if (!isOptions(field)) {
     return undefined
   }
 
   const builtIn = isChips(field)
-    ? buildOptionChips(field)
-    : buildOptionSelect(field)
+    ? buildOptionChips(field, lang)
+    : buildOptionSelect(field, lang)
   if (Array.isArray(builtIn)) {
     const flat = normalizePreviewOptions(builtIn)
     return flat.length > 0 ? flat : undefined

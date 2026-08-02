@@ -13,13 +13,14 @@ export function InputBase(
     errors?: string[]
     field: Field
     horizontal?: boolean
+    lang?: string
   }>
 ) {
   if (!props.field.type) {
     return null
   }
 
-  const commonProps = buildCommon(props.field, props.disabled)
+  const commonProps = buildCommon(props.field, props.disabled, props.lang)
 
   const dataAttributes = buildDataAttributes(props.field)
   const ariaAttributes = buildAriaAttributes(props.field, props.errors)

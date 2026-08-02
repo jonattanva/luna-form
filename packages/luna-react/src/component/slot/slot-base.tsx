@@ -27,6 +27,7 @@ export function SlotBase(
     context?: Record<string, unknown>
     disabled?: boolean
     fields?: Fields
+    lang?: string
     onValueChange?: (input: { name: string; value: unknown }) => void
     style?: Style
     translations?: Record<string, string>
@@ -48,13 +49,19 @@ export function SlotBase(
         </Column>
       )}
       {isField(field) && (
-        <Field disabled={props.disabled} field={field} style={props.style}>
+        <Field
+          disabled={props.disabled}
+          field={field}
+          lang={props.lang}
+          style={props.style}
+        >
           {props.children}
         </Field>
       )}
       {isList(field) && (
         <List
           field={field}
+          lang={props.lang}
           onValueChange={props.onValueChange}
           translations={props.translations}
           value={props.value}
@@ -67,6 +74,7 @@ export function SlotBase(
               disabled={props.disabled}
               field={field}
               index={index}
+              lang={props.lang}
               onValueChange={props.onValueChange}
               style={props.style}
               translations={props.translations}

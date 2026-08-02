@@ -9,7 +9,7 @@ const ADD_BUTTON_BASE_CLASSES =
   'flex h-9 w-full items-center gap-2 rounded-md border border-dashed border-zinc-200 px-4 text-sm font-medium text-zinc-500 transition-none hover:border-zinc-300 hover:text-zinc-800 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:outline-none dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
 
 export function FieldList(props: ListProps) {
-  const { field, onValueChange, translations, value, children } = props
+  const { field, lang, onValueChange, translations, value, children } = props
 
   const [items, addItem, handleRemove, canAdd, canRemove, max, translatePath] =
     useFieldList(field, value, onValueChange)
@@ -40,6 +40,7 @@ export function FieldList(props: ListProps) {
             itemKey={key}
             key={key}
             label={label}
+            lang={lang}
             onRemove={handleRemove}
             previewBadge={previewBadge}
             previewLabel={previewLabel}
