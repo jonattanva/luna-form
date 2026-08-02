@@ -17,6 +17,7 @@ export type FieldProps = Readonly<{
   disabled?: boolean
   errors?: Record<string, string[]>
   field: Field
+  lang?: string
   style?: Style
 }>
 
@@ -43,6 +44,7 @@ export function Field(props: FieldProps) {
           errors={errors}
           field={props.field}
           horizontal={horizontal}
+          lang={props.lang}
         >
           {props.children}
         </InputBase>

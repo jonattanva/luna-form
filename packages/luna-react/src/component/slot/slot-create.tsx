@@ -11,6 +11,7 @@ export function createSlot(components: SlotComponents) {
       context?: Record<string, unknown>
       disabled?: boolean
       fields?: Fields
+      lang?: string
       onValueChange?: (input: { name: string; value: unknown }) => void
       style?: Style
       translations?: Record<string, string>

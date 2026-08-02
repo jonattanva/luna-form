@@ -15,6 +15,7 @@ export function FieldListPreviewItem({
   isMultiField,
   itemKey,
   label,
+  lang,
   onRemove,
   previewBadge,
   previewLabel,
@@ -29,6 +30,7 @@ export function FieldListPreviewItem({
   isMultiField: boolean
   itemKey: string | number
   label: string
+  lang?: string
   onRemove: (index: number) => void
   previewBadge?: PreviewItem
   previewLabel?: PreviewItem
@@ -64,6 +66,7 @@ export function FieldListPreviewItem({
           <FieldPreview
             className="bg-primary text-primary-foreground rounded-md px-1.5 py-0.5 leading-none font-bold uppercase"
             fields={field.fields}
+            lang={lang}
             name={name}
             previews={previewBadge}
             translations={translations}
@@ -75,6 +78,7 @@ export function FieldListPreviewItem({
         previewTags ? (
           <FieldPreview
             fields={field.fields}
+            lang={lang}
             name={name}
             previews={previewTags}
             translations={translations}

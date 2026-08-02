@@ -37,6 +37,7 @@ export function Form(
           context={props.context}
           disabled={disabled}
           fields={fields}
+          lang={props.lang}
           style={props.config.style}
           translations={translations}
           value={props.value}

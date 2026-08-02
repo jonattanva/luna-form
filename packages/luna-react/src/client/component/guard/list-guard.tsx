@@ -6,6 +6,7 @@ import type { ListProps } from '../../../component/field/field-list'
 export function ListGuard({
   children,
   field,
+  lang,
   onValueChange,
   translations,
   value,
@@ -15,6 +16,7 @@ export function ListGuard({
       <List field={field}>
         <FieldList
           field={field}
+          lang={lang}
           onValueChange={onValueChange}
           translations={translations}
           value={value}

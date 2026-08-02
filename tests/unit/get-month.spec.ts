@@ -18,4 +18,21 @@ describe('getMonth', () => {
       { value: '12', label: 'December' },
     ])
   })
+
+  test('should resolve the labels in the requested locale', () => {
+    const months = getMonth('es')
+
+    expect(months[0]).toEqual({ value: '1', label: 'enero' })
+    expect(months[11]).toEqual({ value: '12', label: 'diciembre' })
+  })
+
+  test('should keep the values stable across locales', () => {
+    const values = getMonth('fr').map((month) => month.value)
+    expect(values).toEqual(getMonth().map((month) => month.value))
+  })
+
+  test('should fall back to the runtime locale for a malformed tag', () => {
+    expect(getMonth('es_MX')).toEqual(getMonth())
+    expect(getMonth('')).toEqual(getMonth())
+  })
 })

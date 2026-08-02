@@ -71,6 +71,7 @@ export function FormContent<
             context={props.context}
             disabled={disabled}
             fields={fields}
+            lang={props.lang}
             onValueChange={props.onValueChange}
             style={props.config.style}
             translations={translations}

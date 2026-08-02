@@ -19,19 +19,42 @@ const getSupportedTimezones = (): string[] =>
       ).supportedValuesOf('timeZone')
     : []
 
-export function getMonth() {
+// Resolving to the runtime locale is what `toLocaleString` already did before
+// `lang` was threaded through, so an absent or unusable tag keeps the previous
+// behavior instead of forcing a language on the form.
+const DEFAULT_LOCALE = 'default'
+
+function toLocale(locale?: string): string {
+  if (!locale) {
+    return DEFAULT_LOCALE
+  }
+
+  try {
+    // A malformed tag (`es_MX`, `español`) throws a RangeError here rather than
+    // deeper inside toLocaleString, where it would take the whole form down.
+    return Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE
+  } catch {
+    return DEFAULT_LOCALE
+  }
+}
+
+export function getMonth(locale?: string) {
+  const resolved = toLocale(locale)
+
   return Array.from({ length: 12 }, (_, i) => ({
     value: (i + 1).toString(),
-    label: new Date(0, i).toLocaleString('default', {
+    label: new Date(0, i).toLocaleString(resolved, {
       month: 'long',
     }),
   }))
 }
 
-export function getWeekDays() {
+export function getWeekDays(locale?: string) {
+  const resolved = toLocale(locale)
+
   return Array.from({ length: 7 }, (_, i) => ({
     value: i.toString(),
-    label: new Date(2000, 0, 2 + i).toLocaleString('default', {
+    label: new Date(2000, 0, 2 + i).toLocaleString(resolved, {
       weekday: 'long',
     }),
   }))
