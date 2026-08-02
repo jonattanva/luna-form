@@ -5,7 +5,8 @@
       "name": "luna",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["run", "serve"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

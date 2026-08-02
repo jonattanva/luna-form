@@ -20,6 +20,7 @@ export function Form(
     noValidate?: boolean
     readOnly?: boolean
     sections: Sections
+    translations?: Record<string, string>
   }>
 ) {
   const sections = prepare(props.sections, props.definition)
@@ -38,6 +39,7 @@ export function Form(
                 section={section}
                 step={index + 1}
                 style={props.config.style}
+                translations={props.translations}
               >
                 {props.children({
                   disabled: props.readOnly,

@@ -1,7 +1,12 @@
 import { FieldSetAdvanced } from './field-set-advanced'
 import { FieldSetBase } from './field-set-base'
 import { Group } from '../group'
-import { mergeStyle, type Section, type Style } from '@luna-form/core'
+import {
+  mergeStyle,
+  translate,
+  type Section,
+  type Style,
+} from '@luna-form/core'
 
 export function FieldSet(
   props: Readonly<{
@@ -12,6 +17,7 @@ export function FieldSet(
     section: Section
     step?: number
     style?: Style
+    translations?: Record<string, string>
   }>
 ) {
   const { fields = [] } = props.section
@@ -26,17 +32,32 @@ export function FieldSet(
     return group
   }
 
+  const title = props.section.title
+    ? translate(props.section.title, props.translations)
+    : undefined
+
+  const description = props.section.description
+    ? translate(props.section.description, props.translations)
+    : undefined
+
   if (props.section.advanced?.collapsible) {
-    return <FieldSetAdvanced section={props.section} group={group} />
+    return (
+      <FieldSetAdvanced
+        description={description}
+        group={group}
+        section={props.section}
+        title={title}
+      />
+    )
   }
 
   return (
     <FieldSetBase
-      description={props.section.description}
+      description={description}
       empty={fields.length === 0}
       id={props.section.id?.toString()}
       step={step}
-      title={props.section.title}
+      title={title}
     >
       {group}
     </FieldSetBase>

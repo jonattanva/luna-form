@@ -149,4 +149,124 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     await confirmInput.blur()
     await expect(message).toBeHidden()
   })
+
+  test('should translate the title and description of a default section', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": {
+                    "section_title": "Datos personales",
+                    "section_desc": "Completa tu información básica",
+                    "name_label": "Nombre"
+                }
+            },
+            "sections": [
+                {
+                    "title": "section_title",
+                    "description": "section_desc",
+                    "fields": [
+                        {
+                            "label": "name_label",
+                            "name": "name",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    const fieldset = page.locator('[data-slot="field-set"]')
+
+    await expect(fieldset.locator('legend')).toHaveText('Datos personales')
+    await expect(
+      fieldset.getByText('Completa tu información básica', { exact: true })
+    ).toBeVisible()
+  })
+
+  test('should translate the title and description of an advanced section', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": {
+                    "advanced_title": "Opciones avanzadas",
+                    "advanced_desc": "Ajustes para usuarios expertos",
+                    "debug_label": "Modo depuración"
+                }
+            },
+            "sections": [
+                {
+                    "advanced": { "collapsible": true },
+                    "title": "advanced_title",
+                    "description": "advanced_desc",
+                    "fields": [
+                        {
+                            "label": "debug_label",
+                            "name": "debug",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    const fieldset = page.locator('[data-advanced="true"]')
+    await expect(fieldset).toHaveAttribute('data-expanded', 'false')
+
+    const toggle = fieldset.getByRole('button', { name: 'Opciones avanzadas' })
+    await expect(toggle).toBeVisible()
+
+    await toggle.click()
+    await expect(fieldset).toHaveAttribute('data-expanded', 'true')
+
+    await expect(
+      fieldset.getByText('Ajustes para usuarios expertos', { exact: true })
+    ).toBeVisible()
+  })
+
+  test('should fallback to the key when the section translation is missing', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "fr",
+            "translations": {
+                "es": {
+                    "section_title": "Datos personales"
+                }
+            },
+            "sections": [
+                {
+                    "title": "section_title",
+                    "fields": [
+                        {
+                            "label": "Name",
+                            "name": "name",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    const fieldset = page.locator('[data-slot="field-set"]')
+    await expect(fieldset.locator('legend')).toHaveText('section_title')
+  })
 })

@@ -64,6 +64,7 @@ export function FormContent<
         noValidate
         readOnly={props.readOnly}
         sections={props.sections}
+        translations={translations}
       >
         {({ disabled, fields }) => (
           <Slot
