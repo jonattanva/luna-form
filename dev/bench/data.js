@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785645564385,
+  "lastUpdate": 1785645566422,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8733,6 +8733,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 214,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "987649b543ee1ac1ba34b881c2e256bd260adeea",
+          "message": "Merge pull request #45 from jonattanva/fix/section-translation\n\nFix/section translation",
+          "timestamp": "2026-08-01T23:38:04-05:00",
+          "tree_id": "dbceddff403963f0c45874ed32bd2ac47ddb5e33",
+          "url": "https://github.com/jonattanva/luna-form/commit/987649b543ee1ac1ba34b881c2e256bd260adeea"
+        },
+        "date": 1785645565715,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 286,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 626,
             "unit": "ms"
           }
         ]
