@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785645032879,
+  "lastUpdate": 1785645067213,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -8665,6 +8665,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 158,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f89ed82299b7ae98093b3993ae53825d87949950",
+          "message": "Merge pull request #49 from jonattanva/feat/translate-array-source-options\n\nfeat(source): translate option labels for array sources",
+          "timestamp": "2026-08-01T23:29:39-05:00",
+          "tree_id": "ba8335a5bf470f0b1f91f4d5e95b7dc0d4340105",
+          "url": "https://github.com/jonattanva/luna-form/commit/f89ed82299b7ae98093b3993ae53825d87949950"
+        },
+        "date": 1785645066862,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 277,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 635,
             "unit": "ms"
           }
         ]
