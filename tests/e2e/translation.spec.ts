@@ -270,3 +270,452 @@ test.describe('Form translation', { tag: ['@e2e'] }, () => {
     await expect(fieldset.locator('legend')).toHaveText('section_title')
   })
 })
+
+test.describe('List translation', { tag: ['@e2e'] }, () => {
+  test('should translate the label and description of a list', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": {
+                    "list_label": "¿Qué contiene cada elemento?",
+                    "list_desc": "Define la información que esperas para cada elemento",
+                    "title_label": "Título"
+                }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "description": "list_desc",
+                            "label": "list_label",
+                            "name": "properties",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "title_label",
+                                    "name": "title",
+                                    "type": "input/text"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    const fieldset = page.locator('#properties')
+
+    await expect(fieldset.locator('legend')).toHaveText(
+      '¿Qué contiene cada elemento?'
+    )
+    await expect(
+      fieldset.getByText(
+        'Define la información que esperas para cada elemento',
+        { exact: true }
+      )
+    ).toBeVisible()
+  })
+
+  test('should fall back to the key when the list translation is missing', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": { "title_label": "Título" }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "description": "list_desc",
+                            "label": "list_label",
+                            "name": "properties",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "title_label",
+                                    "name": "title",
+                                    "type": "input/text"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    const fieldset = page.locator('#properties')
+
+    await expect(fieldset.locator('legend')).toHaveText('list_label')
+    await expect(fieldset.getByText('list_desc', { exact: true })).toBeVisible()
+  })
+
+  test('should translate the custom action of the add button', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": { "action_add": "Añadir propiedad" }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "advanced": { "action": "action_add" },
+                            "label": "Propiedades",
+                            "name": "properties",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "Título",
+                                    "name": "title",
+                                    "type": "input/text"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    await expect(
+      page.getByRole('button', { name: 'Añadir propiedad' })
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'action_add' })).toHaveCount(
+      0
+    )
+  })
+
+  test('should translate the built-in label of the add button', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "es",
+            "translations": {
+                "es": { "Add item": "Añadir elemento" }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "Propiedades",
+                            "name": "properties",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "Título",
+                                    "name": "title",
+                                    "type": "input/text"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    await expect(
+      page.getByRole('button', { name: 'Añadir elemento' })
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Add item' })).toHaveCount(0)
+  })
+
+  // `fr` on purpose: the library ships no built-in dictionary for it, so this
+  // exercises the bare fallback to the English source text.
+  test('should keep the built-in add button label when nothing translates it', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "fr",
+            "translations": {
+                "fr": { "list_label": "Propriétés" }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "list_label",
+                            "name": "properties",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "Título",
+                                    "name": "title",
+                                    "type": "input/text"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    await expect(page.getByRole('button', { name: 'Add item' })).toBeVisible()
+  })
+
+  test('should translate the accessible names of a list item', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "fr",
+            "translations": {
+                "fr": {
+                    "Collapse {label} {index}": "Réduire {label} {index}",
+                    "Expand {label} {index}": "Développer {label} {index}",
+                    "Remove {label} item {index}": "Supprimer {label} {index}",
+                    "contact_label": "Contact"
+                }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "contact_label",
+                            "name": "contacts",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "Nombre",
+                                    "name": "name",
+                                    "type": "input/text"
+                                },
+                                {
+                                    "label": "Correo",
+                                    "name": "email",
+                                    "type": "input/email"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "value": {
+                "contacts": [{ "name": "Ana" }, { "name": "Luis" }]
+            }
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    // The item's visible caption falls back to the list label, so it is
+    // translated together with the accessible name.
+    await expect(page.getByText('Contact 1', { exact: true })).toBeVisible()
+
+    // The template drops the English "item" filler rather than carrying it
+    // over as a word the translation has to place somewhere.
+    const toggle = page.getByRole('button', { name: 'Réduire Contact 1' })
+    await expect(toggle).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Supprimer Contact 1' })
+    ).toBeVisible()
+
+    await toggle.click()
+    await expect(
+      page.getByRole('button', { name: 'Développer Contact 1' })
+    ).toBeVisible()
+  })
+
+  test('should keep the built-in accessible names when nothing translates them', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "lang": "fr",
+            "translations": {
+                "fr": { "contact_label": "Contact" }
+            },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": "contact_label",
+                            "name": "contacts",
+                            "type": "list",
+                            "fields": [
+                                {
+                                    "label": "Nombre",
+                                    "name": "name",
+                                    "type": "input/text"
+                                },
+                                {
+                                    "label": "Correo",
+                                    "name": "email",
+                                    "type": "input/email"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "value": {
+                "contacts": [{ "name": "Ana" }, { "name": "Luis" }]
+            }
+        }`
+    )
+
+    await page.goto('/reactive')
+
+    await expect(
+      page.getByRole('button', { name: 'Collapse Contact 1' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Remove Contact item 1' })
+    ).toBeVisible()
+  })
+})
+
+test.describe('Built-in Spanish dictionary', { tag: ['@e2e'] }, () => {
+  const LIST = `{
+      "lang": "es",
+      "sections": [
+          {
+              "fields": [
+                  {
+                      "label": "Contacto",
+                      "name": "contacts",
+                      "type": "list",
+                      "fields": [
+                          {
+                              "label": "Nombre",
+                              "name": "name",
+                              "type": "input/text"
+                          },
+                          {
+                              "label": "Correo",
+                              "name": "email",
+                              "type": "input/email"
+                          }
+                      ]
+                  }
+              ]
+          }
+      ],
+      "value": { "contacts": [{ "name": "Ana" }, { "name": "Luis" }] }
+  }`
+
+  test('should localize the library copy from lang alone', async ({ page }) => {
+    await inject(page, LIST)
+    await page.goto('/reactive')
+
+    // No `translations` block at all: `lang` is the only signal.
+    await expect(
+      page.getByRole('button', { name: 'Añadir elemento' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Contraer Contacto 1' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Eliminar Contacto 1' })
+    ).toBeVisible()
+    await expect(page.getByText('(Opcional)').first()).toBeVisible()
+  })
+
+  test('should localize the built-in select/active options from lang alone', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+          "lang": "es",
+          "sections": [
+              {
+                  "fields": [
+                      {
+                          "label": "Activo",
+                          "name": "active",
+                          "type": "select/active"
+                      }
+                  ]
+              }
+          ]
+      }`
+    )
+
+    await page.goto('')
+    await page.getByRole('combobox').click()
+
+    await expect(page.getByRole('option', { name: 'Sí' })).toBeVisible()
+    await expect(page.getByRole('option', { name: 'Yes' })).toHaveCount(0)
+  })
+
+  test('should apply the defaults to a regional tag', async ({ page }) => {
+    await inject(page, LIST.replace('"lang": "es"', '"lang": "es-MX"'))
+    await page.goto('/reactive')
+
+    await expect(
+      page.getByRole('button', { name: 'Añadir elemento' })
+    ).toBeVisible()
+  })
+
+  test('should let the form override a built-in default', async ({ page }) => {
+    await inject(
+      page,
+      LIST.replace(
+        '"lang": "es",',
+        '"lang": "es", "translations": { "es": { "Add item": "Agregar contacto" } },'
+      )
+    )
+
+    await page.goto('/reactive')
+
+    await expect(
+      page.getByRole('button', { name: 'Agregar contacto' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Añadir elemento' })
+    ).toHaveCount(0)
+
+    // Keys the form did not override still come from the built-in dictionary.
+    await expect(
+      page.getByRole('button', { name: 'Contraer Contacto 1' })
+    ).toBeVisible()
+  })
+
+  test('should leave a language without a built-in dictionary in English', async ({
+    page,
+  }) => {
+    await inject(page, LIST.replace('"lang": "es"', '"lang": "ja"'))
+    await page.goto('/reactive')
+
+    await expect(page.getByRole('button', { name: 'Add item' })).toBeVisible()
+  })
+
+  test('should leave a form without lang in English', async ({ page }) => {
+    await inject(page, LIST.replace('"lang": "es",', ''))
+    await page.goto('/reactive')
+
+    await expect(page.getByRole('button', { name: 'Add item' })).toBeVisible()
+  })
+})

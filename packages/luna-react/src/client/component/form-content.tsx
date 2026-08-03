@@ -2,7 +2,9 @@ import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot/slot'
 import { renderIfExists } from '../../lib/render-If-exists'
+import { resolveDictionary } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
+import { useMemo } from 'react'
 import { useSchema } from '../hook/use-schema'
 import type { Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
@@ -29,7 +31,13 @@ export function FormContent<
     value?: Nullable<T>
   }>
 ) {
-  const translations = props.translations?.[props.lang ?? '']
+  // Merging the built-ins allocates, so it is memoized: this identity is a
+  // dependency of the per-field schema memo, and a fresh object on every render
+  // would rebuild every field's schema on every keystroke.
+  const translations = useMemo(
+    () => resolveDictionary(props.lang, props.translations),
+    [props.lang, props.translations]
+  )
 
   const [getSchema, onMount, onUnmount] = useSchema()
   const [action, state, isPending] = useFormState(getSchema, props.action, {

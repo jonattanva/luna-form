@@ -2,7 +2,7 @@ import {
   isCheckbox,
   isRadio,
   isString,
-  translate,
+  translateBuiltIn,
   type Field,
   type Style,
 } from '@luna-form/core'
@@ -36,7 +36,7 @@ export function Label(
       </span>
       {showOptionalLabel && !props.field.required && (
         <span className="ml-2 flex-shrink-0 text-sm text-zinc-600 dark:text-zinc-400">
-          {translate('(Optional)', props.translations)}
+          {translateBuiltIn('(Optional)', props.translations)}
         </span>
       )}
     </label>

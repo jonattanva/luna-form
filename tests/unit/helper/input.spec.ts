@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import {
+  buildCommon,
   prepareDefaultValue,
   getOptions,
   mergeOptionsProps,
@@ -381,6 +382,67 @@ describe('Input Helper', () => {
       expect(getOptions(field, field.source as unknown[])).toEqual([
         { label: 'fruit_apple', value: 'apple' },
       ])
+    })
+  })
+
+  describe('built-in select/active options', () => {
+    const field: Field = { name: 'active', type: 'select/active' }
+
+    test('should translate the built-in labels', () => {
+      const localization = { lang: 'es', translations: { Yes: 'Sí', No: 'No' } }
+
+      expect(buildCommon(field, false, localization)).toEqual(
+        expect.objectContaining({
+          options: [
+            { value: 'true', label: 'Sí' },
+            { value: 'false', label: 'No' },
+          ],
+        })
+      )
+    })
+
+    test('should keep the English labels without a dictionary', () => {
+      expect(buildCommon(field)).toEqual(
+        expect.objectContaining({
+          options: [
+            { value: 'true', label: 'Yes' },
+            { value: 'false', label: 'No' },
+          ],
+        })
+      )
+    })
+
+    test('should keep the English labels when the keys are missing', () => {
+      const localization = { lang: 'es', translations: { other_key: 'Otro' } }
+
+      expect(buildCommon(field, false, localization)).toEqual(
+        expect.objectContaining({
+          options: [
+            { value: 'true', label: 'Yes' },
+            { value: 'false', label: 'No' },
+          ],
+        })
+      )
+    })
+
+    test('should never translate the submitted value', () => {
+      const result = buildCommon(field, false, {
+        lang: 'es',
+        translations: { Yes: 'Sí', true: 'verdadero' },
+      }) as { options: Array<{ value: string }> }
+
+      expect(result.options[0].value).toBe('true')
+    })
+
+    test('should leave locale-driven selectors out of the dictionary', () => {
+      const month: Field = { name: 'month', type: 'select/month' }
+
+      const result = buildCommon(month, false, {
+        lang: 'en',
+        translations: { January: 'DICCIONARIO' },
+      }) as { options: Array<{ label: string }> }
+
+      expect(result.options[0].label).toBe('January')
     })
   })
 })

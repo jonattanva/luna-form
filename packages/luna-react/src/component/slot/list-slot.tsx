@@ -10,7 +10,7 @@ export function ListSlot({
   value,
 }: ListProps) {
   return (
-    <List field={field}>
+    <List field={field} translations={translations}>
       <FieldList
         field={field}
         lang={lang}

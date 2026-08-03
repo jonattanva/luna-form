@@ -14,13 +14,17 @@ export function InputBase(
     field: Field
     horizontal?: boolean
     lang?: string
+    translations?: Record<string, string>
   }>
 ) {
   if (!props.field.type) {
     return null
   }
 
-  const commonProps = buildCommon(props.field, props.disabled, props.lang)
+  const commonProps = buildCommon(props.field, props.disabled, {
+    lang: props.lang,
+    translations: props.translations,
+  })
 
   const dataAttributes = buildDataAttributes(props.field)
   const ariaAttributes = buildAriaAttributes(props.field, props.errors)

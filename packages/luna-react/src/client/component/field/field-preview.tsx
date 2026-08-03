@@ -88,7 +88,7 @@ export function FieldPreview({
 
       const childField = fieldLookup?.[item.field]
       const options = childField
-        ? getPreviewOptions(childField, translations, lang)
+        ? getPreviewOptions(childField, { lang, translations })
         : undefined
 
       result.push({

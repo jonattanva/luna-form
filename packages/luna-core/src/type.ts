@@ -105,6 +105,15 @@ export type AnyField = Field | Input | Select | Chips | Date | Time
 export type Fields = Array<AnyField | Column | List>
 export type Base = Orderable & Hideable
 
+// How a form renders text. The two always travel together — `lang` drives the
+// locale-derived labels (months, weekdays) and `translations` the dictionary —
+// so they are one argument rather than a pair every signature has to repeat and
+// every call site has to order correctly.
+export type Localization = {
+  lang?: string
+  translations?: Record<string, string>
+}
+
 export type CommonProps = {
   disabled?: boolean
   id?: string

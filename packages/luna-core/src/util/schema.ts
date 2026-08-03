@@ -35,7 +35,7 @@ import type {
   WhenRule,
   ZodSchema,
 } from '../type'
-import { translate } from './translate'
+import { translate, translateOptional } from './translate'
 
 type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
 
@@ -572,7 +572,7 @@ function fieldIssues(
     if (firing && !hasValue(value)) {
       issues.push({
         path: [field.name],
-        message: message(
+        message: translateOptional(
           firing.message ?? field.validation?.required,
           translations
         ),
@@ -584,7 +584,7 @@ function fieldIssues(
   if (pattern && !matchesPattern(pattern, value)) {
     issues.push({
       path: [field.name],
-      message: message(pattern.message, translations),
+      message: translateOptional(pattern.message, translations),
     })
   }
 
@@ -592,7 +592,7 @@ function fieldIssues(
     if (whenHolds(data, rule.when) && !runAssert(rule, value)) {
       issues.push({
         path: [field.name],
-        message: message(rule.message, translations),
+        message: translateOptional(rule.message, translations),
       })
     }
   }
@@ -719,13 +719,6 @@ function isPatternRule(value: unknown): value is PatternRule {
   return isObject(value) && 'regex' in value
 }
 
-function message(
-  value: string | undefined,
-  translations?: Record<string, string>
-): string | undefined {
-  return value ? translate(value, translations) : undefined
-}
-
 function applyListLength<T extends z.ZodType>(
   items: z.ZodArray<T>,
   list: List,
@@ -736,14 +729,14 @@ function applyListLength<T extends z.ZodType>(
   if (min !== undefined) {
     schema = schema.min(
       min,
-      message(list.validation?.length?.min, translations)
+      translateOptional(list.validation?.length?.min, translations)
     )
   }
   const max = list.advanced?.length?.max
   if (max !== undefined) {
     schema = schema.max(
       max,
-      message(list.validation?.length?.max, translations)
+      translateOptional(list.validation?.length?.max, translations)
     )
   }
   return schema

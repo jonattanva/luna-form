@@ -3,7 +3,7 @@ import { FieldSetBase } from './field-set-base'
 import { Group } from '../group'
 import {
   mergeStyle,
-  translate,
+  translateOptional,
   type Section,
   type Style,
 } from '@luna-form/core'
@@ -32,13 +32,11 @@ export function FieldSet(
     return group
   }
 
-  const title = props.section.title
-    ? translate(props.section.title, props.translations)
-    : undefined
-
-  const description = props.section.description
-    ? translate(props.section.description, props.translations)
-    : undefined
+  const title = translateOptional(props.section.title, props.translations)
+  const description = translateOptional(
+    props.section.description,
+    props.translations
+  )
 
   if (props.section.advanced?.collapsible) {
     return (

@@ -1,6 +1,7 @@
 import { ChevronIcon } from '../chevron-icon'
 import { Collapsible } from '../collapsible'
 import { Group } from '../group'
+import { interpolate, translateBuiltIn, type BuiltInKey } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import { useState } from 'react'
 
@@ -16,6 +17,7 @@ export function FieldListItem(
     previewLabel?: React.ReactNode
     previewTags?: React.ReactNode
     previewBadge?: React.ReactNode
+    translations?: Record<string, string>
   }>
 ) {
   const isCollapsible = props.isMultiField || props.collapsed != null
@@ -31,9 +33,18 @@ export function FieldListItem(
     setIsOpen((previous) => !previous)
   }
 
+  // The whole accessible name is one dictionary key, placeholders included, so
+  // a translation can reorder the parts instead of only renaming them. Left
+  // untranslated the template fills in to the English text it replaced.
+  const accessibleName = (template: BuiltInKey) =>
+    interpolate(translateBuiltIn(template, props.translations), {
+      index: props.index + 1,
+      label: props.label,
+    })
+
   const removeButton = props.canRemove && props.onRemove != null && (
     <button
-      aria-label={`Remove ${props.label} item ${props.index + 1}`}
+      aria-label={accessibleName('Remove {label} item {index}')}
       className={twMerge(
         'flex size-6 items-center justify-center rounded text-xl leading-none text-zinc-400',
         'transition-colors duration-150',
@@ -78,9 +89,9 @@ export function FieldListItem(
         <div className="flex min-w-0 grow items-center gap-2">
           <button
             aria-expanded={isOpen}
-            aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${props.label} ${
-              props.index + 1
-            }`}
+            aria-label={accessibleName(
+              isOpen ? 'Collapse {label} {index}' : 'Expand {label} {index}'
+            )}
             className={twMerge(
               'group flex grow items-center gap-2 rounded p-1 text-left text-zinc-400',
               'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',

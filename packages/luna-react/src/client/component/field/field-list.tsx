@@ -1,5 +1,10 @@
 import { FieldListPreviewItem } from './field-list-preview-item'
-import { getLabel, isMultiFieldList, logger } from '@luna-form/core'
+import {
+  getLabel,
+  isMultiFieldList,
+  translate,
+  translateBuiltIn,
+} from '@luna-form/core'
 import { ListPathContext } from '../../context/list-path-context'
 import { twMerge } from 'tailwind-merge'
 import { useFieldList } from '../../hook/use-field-list'
@@ -14,13 +19,16 @@ export function FieldList(props: ListProps) {
   const [items, addItem, handleRemove, canAdd, canRemove, max, translatePath] =
     useFieldList(field, value, onValueChange)
 
-  const label = getLabel(field)
-  const action = field.advanced?.action ?? 'Add item'
+  const label = translate(getLabel(field), translations)
+
+  // Authored copy and built-in copy resolve through different helpers: only the
+  // latter is a key the library owns and must keep in step with its dictionary.
+  const action = field.advanced?.action
+    ? translate(field.advanced.action, translations)
+    : translateBuiltIn('Add item', translations)
 
   const hasLimit = max !== Infinity
   const isMultiField = isMultiFieldList(field)
-
-  logger.info('Label: ', label)
 
   const {
     label: previewLabel,
