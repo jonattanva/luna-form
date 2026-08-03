@@ -47,6 +47,69 @@ const AUTOFILL_LIST = `{
   "value": { "field": [{}] }
 }`
 
+// The same schema plus `echo`, a second target the source writes to
+// unconditionally, and without a `value` of its own.
+//
+// `echo` is how a test can tell that the debounced batch has run without
+// asking about `name`, which is the field under test and whose value at that
+// exact instant is what the two tests below are about.
+//
+// No `value` because these tests run against `/`, which renders the form
+// without one. That is the difference that matters: `/reactive` feeds every
+// `onValueChange` straight back in as `value`, and a changed `value` prop makes
+// the field re-run its change events on the spot -- so there the copy lands
+// about 17ms after the source is typed, long before anyone can reach the
+// target. Without the echo the only thing that delivers it is the 300ms
+// debounce in `input-textable`, which is wide enough to click into a field.
+const AUTOFILL_LIST_WITH_ECHO = `{
+  "sections": [
+    {
+      "title": "Field",
+      "fields": [
+        {
+          "label": "Field",
+          "name": "field",
+          "type": "list",
+          "advanced": { "action": "Add another field", "length": { "min": 1 } },
+          "fields": [
+            {
+              "label": "Name that users will see",
+              "name": "label",
+              "type": "input/text",
+              "event": {
+                "change": [
+                  {
+                    "action": "value",
+                    "onlyIfTargetEmpty": true,
+                    "value": { "field/name": "{value}" }
+                  },
+                  {
+                    "action": "value",
+                    "value": { "field/echo": "{value}" }
+                  }
+                ]
+              }
+            },
+            {
+              "label": "Technical key",
+              "name": "name",
+              "type": "input/text",
+              "advanced": {
+                "transform": ["remove-space", "lowercase", "remove-accent"]
+              }
+            },
+            {
+              "label": "Echo",
+              "name": "echo",
+              "type": "input/text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}`
+
 function captureValueChanges(page: Page): ValueChange[] {
   const events: ValueChange[] = []
   page.on('console', (msg: ConsoleMessage) => {
@@ -166,6 +229,67 @@ test.describe(
       await expect(page.locator('input[name="field.0.name"]')).toHaveValue(
         'name'
       )
+    })
+
+    // The tests above all wait for the auto-fill to land before touching the
+    // target, which is what hid the next two: the copy is debounced by 300ms,
+    // so anyone who reaches the still-empty target inside that window has it
+    // delivered under their caret. Writing a controlled input's value while it
+    // is focused collapses the selection to the end of the new text, and
+    // everything typed afterwards lands behind it -- the report was
+    // `customeremailcustomer_email`.
+    //
+    // Nothing here is timing-dependent. The click lands well inside the 300ms,
+    // and the copy is then awaited through `echo` rather than raced, so by the
+    // first keystroke the target is provably focused and the batch has provably
+    // run. Before the fix this failed 18 times out of 18, on all three
+    // browsers, with exactly the reported value.
+    test('a target the user is already in keeps what the user typed', async ({
+      page,
+    }) => {
+      await inject(page, AUTOFILL_LIST_WITH_ECHO)
+      await page.goto('/')
+
+      const labelInput = page.locator('input[name="field.0.label"]')
+      const nameInput = page.locator('input[name="field.0.name"]')
+      const echoInput = page.locator('input[name="field.0.echo"]')
+
+      await labelInput.fill('Customer Email')
+
+      // Into the empty key before the copy is due.
+      await nameInput.click()
+
+      // `echo` is written by the same batch, so this is the copy landing.
+      await expect(echoInput).toHaveValue('Customer Email')
+
+      await nameInput.pressSequentially('customer_email')
+
+      await expect(nameInput).toHaveValue('customer_email')
+    })
+
+    // The cheap way to satisfy the test above is to throw the copy away
+    // whenever the target has focus, which would strand anyone who clicks into
+    // the key to look at it and leaves without typing: they would keep the
+    // empty required field the auto-fill exists to spare them. It is postponed,
+    // not dropped.
+    test('a target the user leaves untouched still receives the auto-fill', async ({
+      page,
+    }) => {
+      await inject(page, AUTOFILL_LIST_WITH_ECHO)
+      await page.goto('/')
+
+      const labelInput = page.locator('input[name="field.0.label"]')
+      const nameInput = page.locator('input[name="field.0.name"]')
+      const echoInput = page.locator('input[name="field.0.echo"]')
+
+      await labelInput.fill('Customer Email')
+      await nameInput.click()
+      await expect(echoInput).toHaveValue('Customer Email')
+
+      // Away without typing a thing.
+      await echoInput.click()
+
+      await expect(nameInput).toHaveValue('customeremail')
     })
   }
 )
