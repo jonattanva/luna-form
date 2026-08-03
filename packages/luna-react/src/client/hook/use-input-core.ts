@@ -246,46 +246,59 @@ export function useInputCore(
             })
           }
         })
+      })
 
-        handleValueEvent(selected, values, (target, candidate, options) => {
-          const newTarget = resolveTarget(target, props.field.name)
-          const transform = getTransform(newTarget)
-          const transformed = transform
-            ? applyTransform(candidate, transform)
-            : candidate
+      // Outside the transition on purpose. Everything above rearranges the
+      // form -- fields appearing, options being refetched -- and is better
+      // interrupted than rushed. This one writes into a field the user may be
+      // reaching for, and the focus test below is a decision about *now*, so it
+      // has to be painted now: as a transition React commits it whenever it
+      // likes -- 200ms later on a crowded form -- and by then the caret can be
+      // in the target. Writing a controlled input's value while it has focus
+      // collapses the selection to the end of the new text, so what is typed
+      // next lands behind it (`customeremail` + `customer_email`).
+      //
+      // Same work either way, once per debounced batch: what changes is the
+      // lane. It also splits the batch in two commits, so an event that both
+      // fills a field and hides it now paints the value first.
+      handleValueEvent(selected, values, (target, candidate, options) => {
+        const newTarget = resolveTarget(target, props.field.name)
+        const transform = getTransform(newTarget)
+        const transformed = transform
+          ? applyTransform(candidate, transform)
+          : candidate
 
-          const previousValues = store.get(valueAtom) as Record<string, unknown>
-          const current = previousValues[newTarget]
+        const previousValues = store.get(valueAtom) as Record<string, unknown>
+        const current = previousValues[newTarget]
 
-          // Only honor `onlyIfTargetEmpty` when the user has actually changed
-          // the target since our last auto-fill. If `current` still equals the
-          // value we wrote, the field is still in "auto-fill" mode and we
-          // should keep mirroring the source — otherwise targets with
-          // transforms freeze after the first character (Bug A).
-          if (options.onlyIfTargetEmpty && !isEmpty(current)) {
-            const applied = store.get(appliedAutoFillAtom)[newTarget]
-            if (!Object.is(applied, current)) {
-              return
-            }
-          }
-
-          if (transformed === current) {
+        // Only honor `onlyIfTargetEmpty` when the user has actually changed
+        // the target since our last auto-fill. If `current` still equals the
+        // value we wrote, the field is still in "auto-fill" mode and we
+        // should keep mirroring the source — otherwise targets with
+        // transforms freeze after the first character (Bug A).
+        if (options.onlyIfTargetEmpty && !isEmpty(current)) {
+          const applied = store.get(appliedAutoFillAtom)[newTarget]
+          if (!Object.is(applied, current)) {
             return
           }
+        }
 
-          // Held back rather than written, because the user is inside the
-          // target: setting a controlled input's value while it has focus
-          // collapses the selection to the end of the new text, so everything
-          // typed next lands behind it -- `customeremail` + `customer_email`.
-          // `onBlur` releases this the moment they leave the field, so the
-          // auto-fill is postponed, never dropped (Bug C).
-          if (isFieldFocused(newTarget)) {
-            setPendingAutoFill({ target: newTarget, value: transformed })
-            return
-          }
+        if (transformed === current) {
+          return
+        }
 
-          applyAutoFill(newTarget, transformed)
-        })
+        // Held back rather than written, because the user is inside the
+        // target: setting a controlled input's value while it has focus
+        // collapses the selection to the end of the new text, so everything
+        // typed next lands behind it -- `customeremail` + `customer_email`.
+        // `onBlur` releases this the moment they leave the field, so the
+        // auto-fill is postponed, never dropped (Bug C).
+        if (isFieldFocused(newTarget)) {
+          setPendingAutoFill({ target: newTarget, value: transformed })
+          return
+        }
+
+        applyAutoFill(newTarget, transformed)
       })
     })
   }
