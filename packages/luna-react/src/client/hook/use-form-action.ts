@@ -11,6 +11,7 @@ import {
   logger,
   toNativeDate,
   translate,
+  translateBuiltIn,
   unflatten,
   type Field,
   type FormStateError,
@@ -134,7 +135,7 @@ function buildError(error: unknown, translations?: Record<string, string>) {
   if (error instanceof Error) {
     return [error.message]
   }
-  return [translate('Unknown error', translations)]
+  return [translateBuiltIn('Unknown error', translations)]
 }
 
 function success<T>(value: Nullable<T>, preserveValues = false): FormState<T> {

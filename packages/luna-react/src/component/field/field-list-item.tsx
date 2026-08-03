@@ -1,7 +1,7 @@
 import { ChevronIcon } from '../chevron-icon'
 import { Collapsible } from '../collapsible'
 import { Group } from '../group'
-import { interpolate, translate } from '@luna-form/core'
+import { interpolate, translateBuiltIn, type BuiltInKey } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import { useState } from 'react'
 
@@ -36,8 +36,8 @@ export function FieldListItem(
   // The whole accessible name is one dictionary key, placeholders included, so
   // a translation can reorder the parts instead of only renaming them. Left
   // untranslated the template fills in to the English text it replaced.
-  const accessibleName = (template: string) =>
-    interpolate(translate(template, props.translations), {
+  const accessibleName = (template: BuiltInKey) =>
+    interpolate(translateBuiltIn(template, props.translations), {
       index: props.index + 1,
       label: props.label,
     })

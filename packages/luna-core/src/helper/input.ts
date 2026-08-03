@@ -35,7 +35,7 @@ import {
   isValidValue,
 } from '../util/is-input'
 import { isObject, isString } from '../util/is-type'
-import { translateOptions } from '../util/translate'
+import { translateOptions, type BuiltInKey } from '../util/translate'
 import type {
   Chips,
   Date as DateField,
@@ -50,13 +50,16 @@ import type {
   Value,
   TimeFormat,
   DateFormat,
+  Localization,
 } from '../type'
 
 const now = getCurrentYear()
 
-export function buildOptionChips(field: Field, lang?: string) {
+export function buildOptionChips(field: Field, localization?: Localization) {
   if (isChips(field)) {
-    return defineOptionChips(field, lang)
+    // Only `lang` reaches the builder: chips have no authored copy of their
+    // own, so the dictionary is deliberately withheld.
+    return defineOptionChips(field, localization?.lang)
   }
 }
 
@@ -70,21 +73,15 @@ function defineOptionChips(field: Chips, lang?: string) {
   }
 }
 
-export function buildOptionSelect(
-  field: Field,
-  lang?: string,
-  translations?: Record<string, string>
-) {
+export function buildOptionSelect(field: Field, localization?: Localization) {
   if (isSelect(field)) {
-    return defineOptionSelect(field, lang, translations)
+    return defineOptionSelect(field, localization)
   }
 }
 
-function defineOptionSelect(
-  select: Select,
-  lang?: string,
-  translations?: Record<string, string>
-) {
+function defineOptionSelect(select: Select, localization?: Localization) {
+  const { lang, translations } = localization ?? {}
+
   if (isSelectDay(select)) {
     return getWeekDays(lang)
   }
@@ -109,10 +106,13 @@ function defineOptionSelect(
   // schema cannot name these strings, so they act as their own keys the same
   // way `(Optional)` does.
   if (isSelectActive(select)) {
+    // `satisfies` rather than `translateBuiltIn`: the key is embedded in an
+    // option that `translateOptions` resolves, so the compile-time link is all
+    // that is needed here.
     return translateOptions(
       [
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' },
+        { value: 'true', label: 'Yes' satisfies BuiltInKey },
+        { value: 'false', label: 'No' satisfies BuiltInKey },
       ],
       translations
     )
@@ -122,8 +122,7 @@ function defineOptionSelect(
 export function buildCommon(
   field: Field,
   disabled: boolean = false,
-  lang?: string,
-  translations?: Record<string, string>
+  localization?: Localization
 ): CommonProps {
   const commonProps: CommonProps = {
     disabled,
@@ -143,7 +142,7 @@ export function buildCommon(
   if (isSelect(field)) {
     return {
       ...commonProps,
-      ...defineWithOptions(buildOptionSelect(field, lang, translations)),
+      ...defineWithOptions(buildOptionSelect(field, localization)),
     }
   }
 
@@ -157,7 +156,7 @@ export function buildCommon(
   if (isChips(field)) {
     return {
       ...commonProps,
-      ...defineChips(field, lang),
+      ...defineChips(field, localization),
     }
   }
 
@@ -181,10 +180,8 @@ function defineWithOptions<T>(options: T | undefined) {
   return options ? { options } : {}
 }
 
-function defineChips(field: Chips, lang?: string) {
-  // Chips only have locale-driven built-ins (days, months), so no dictionary
-  // reaches the builder.
-  const withOptions = defineWithOptions(buildOptionChips(field, lang))
+function defineChips(field: Chips, localization?: Localization) {
+  const withOptions = defineWithOptions(buildOptionChips(field, localization))
   const multiple = field.advanced?.multiple ?? true
   return { ...withOptions, multiple }
 }
@@ -433,16 +430,15 @@ function normalizePreviewOptions(
 
 export function getPreviewOptions(
   field: Field,
-  translations?: Record<string, string>,
-  lang?: string
+  localization?: Localization
 ): Array<Option | string> | undefined {
   if (!isOptions(field)) {
     return undefined
   }
 
   const builtIn = isChips(field)
-    ? buildOptionChips(field, lang)
-    : buildOptionSelect(field, lang, translations)
+    ? buildOptionChips(field, localization)
+    : buildOptionSelect(field, localization)
   if (Array.isArray(builtIn)) {
     const flat = normalizePreviewOptions(builtIn)
     return flat.length > 0 ? flat : undefined
@@ -451,7 +447,9 @@ export function getPreviewOptions(
   const source = buildSource(field)
   if (Array.isArray(source)) {
     const mapped = toOptions(source, field.advanced?.options)
-    const flat = normalizePreviewOptions(translateOptions(mapped, translations))
+    const flat = normalizePreviewOptions(
+      translateOptions(mapped, localization?.translations)
+    )
     return flat.length > 0 ? flat : undefined
   }
 

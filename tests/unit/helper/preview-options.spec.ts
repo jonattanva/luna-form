@@ -110,8 +110,10 @@ describe('getPreviewOptions', () => {
 
     expect(
       getPreviewOptions(field, {
-        status_active: 'Activo',
-        status_inactive: 'Inactivo',
+        translations: {
+          status_active: 'Activo',
+          status_inactive: 'Inactivo',
+        },
       })
     ).toEqual([
       { value: 'active', label: 'Activo' },
@@ -122,7 +124,9 @@ describe('getPreviewOptions', () => {
   test('translates the built-in labels of select/active', () => {
     const field: Field = { name: 'active', type: 'select/active' }
 
-    expect(getPreviewOptions(field, { Yes: 'Sí', No: 'No' })).toEqual([
+    expect(
+      getPreviewOptions(field, { translations: { Yes: 'Sí', No: 'No' } })
+    ).toEqual([
       { value: 'true', label: 'Sí' },
       { value: 'false', label: 'No' },
     ])
@@ -140,7 +144,9 @@ describe('getPreviewOptions', () => {
   test('keeps the English labels of select/active when the keys are missing', () => {
     const field: Field = { name: 'active', type: 'select/active' }
 
-    expect(getPreviewOptions(field, { other_key: 'Otro' })).toEqual([
+    expect(
+      getPreviewOptions(field, { translations: { other_key: 'Otro' } })
+    ).toEqual([
       { value: 'true', label: 'Yes' },
       { value: 'false', label: 'No' },
     ])
@@ -149,7 +155,10 @@ describe('getPreviewOptions', () => {
   test('leaves locale-driven selector labels untranslated', () => {
     const field: Field = { name: 'month', type: 'select/month' }
 
-    const options = getPreviewOptions(field, { January: 'DICCIONARIO' }, 'en')
+    const options = getPreviewOptions(field, {
+      lang: 'en',
+      translations: { January: 'DICCIONARIO' },
+    })
     expect(options?.[0]).toEqual({ value: '1', label: 'January' })
   })
 })

@@ -389,7 +389,9 @@ describe('Input Helper', () => {
     const field: Field = { name: 'active', type: 'select/active' }
 
     test('should translate the built-in labels', () => {
-      expect(buildCommon(field, false, 'es', { Yes: 'Sí', No: 'No' })).toEqual(
+      const localization = { lang: 'es', translations: { Yes: 'Sí', No: 'No' } }
+
+      expect(buildCommon(field, false, localization)).toEqual(
         expect.objectContaining({
           options: [
             { value: 'true', label: 'Sí' },
@@ -411,7 +413,9 @@ describe('Input Helper', () => {
     })
 
     test('should keep the English labels when the keys are missing', () => {
-      expect(buildCommon(field, false, 'es', { other_key: 'Otro' })).toEqual(
+      const localization = { lang: 'es', translations: { other_key: 'Otro' } }
+
+      expect(buildCommon(field, false, localization)).toEqual(
         expect.objectContaining({
           options: [
             { value: 'true', label: 'Yes' },
@@ -422,9 +426,9 @@ describe('Input Helper', () => {
     })
 
     test('should never translate the submitted value', () => {
-      const result = buildCommon(field, false, 'es', {
-        Yes: 'Sí',
-        true: 'verdadero',
+      const result = buildCommon(field, false, {
+        lang: 'es',
+        translations: { Yes: 'Sí', true: 'verdadero' },
       }) as { options: Array<{ value: string }> }
 
       expect(result.options[0].value).toBe('true')
@@ -433,8 +437,9 @@ describe('Input Helper', () => {
     test('should leave locale-driven selectors out of the dictionary', () => {
       const month: Field = { name: 'month', type: 'select/month' }
 
-      const result = buildCommon(month, false, 'en', {
-        January: 'DICCIONARIO',
+      const result = buildCommon(month, false, {
+        lang: 'en',
+        translations: { January: 'DICCIONARIO' },
       }) as { options: Array<{ label: string }> }
 
       expect(result.options[0].label).toBe('January')
