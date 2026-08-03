@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785723143598,
+  "lastUpdate": 1785723167970,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "28807dc92ecc0836a8eba86604ef0f694a5d2ad7",
-          "message": "test(e2e): fix ambiguous getByText selector in translation spec",
-          "timestamp": "2026-02-21T15:46:02-05:00",
-          "tree_id": "058e053a4fc5402e523ac969d76dd5e7b41fb34f",
-          "url": "https://github.com/jonattanva/luna-form/commit/28807dc92ecc0836a8eba86604ef0f694a5d2ad7"
-        },
-        "date": 1771706821799,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 250,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 187,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "c05e3a70d29ca1e34ee0d806f44330d75c472a24",
           "message": "remove unnecessary code",
           "timestamp": "2026-02-22T22:34:49-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 613,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a8ece23edf88f8cd003335a0ca31f3fc3cf4d600",
+          "message": "Merge pull request #52 from jonattanva/feat/built-in-translations\n\nfeat(translations): resolve the library's own copy through the dictionary",
+          "timestamp": "2026-08-02T21:11:28-05:00",
+          "tree_id": "67ed2cdb8cd22ced323b6d50c8a5edc536e54b44",
+          "url": "https://github.com/jonattanva/luna-form/commit/a8ece23edf88f8cd003335a0ca31f3fc3cf4d600"
+        },
+        "date": 1785723167932,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 277,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 587,
             "unit": "ms"
           }
         ]
