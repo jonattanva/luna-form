@@ -57,13 +57,11 @@ export type InputCoreProps = Readonly<{
 // receives an auto-fill is rendered by a different component than the source
 // that sends it, and `name` is the one identifier both sides agree on: it is
 // the atom key, and `buildCommon` puts the same string on the element.
+//
+// No guard for a missing `document`: both callers reach this from an event
+// handler or an effect, neither of which runs while rendering on the server.
 function isFieldFocused(name: string) {
-  if (typeof document === 'undefined') {
-    return false
-  }
-
-  const active = document.activeElement
-  return active instanceof HTMLElement && active.getAttribute('name') === name
+  return document.activeElement?.getAttribute('name') === name
 }
 
 export function useInputCore(
@@ -282,10 +280,7 @@ export function useInputCore(
           // `onBlur` releases this the moment they leave the field, so the
           // auto-fill is postponed, never dropped (Bug C).
           if (isFieldFocused(newTarget)) {
-            setPendingAutoFill((previous) => ({
-              ...previous,
-              [newTarget]: transformed,
-            }))
+            setPendingAutoFill({ target: newTarget, value: transformed })
             return
           }
 
@@ -319,20 +314,18 @@ export function useInputCore(
   // a dependency that changes on every render.
   const releasePendingAutoFillRef = useRef<(() => void) | null>(null)
   releasePendingAutoFillRef.current = () => {
-    const name = props.field.name
-    const value = store.get(pendingAutoFillAtom)[name]
+    const pending = store.get(pendingAutoFillAtom)
 
-    if (value === undefined) {
+    if (pending?.target !== props.field.name) {
       return
     }
 
-    setPendingAutoFill((previous) => omitKey(previous, name))
+    setPendingAutoFill(null)
 
     // Only if the field is still untouched. Whatever the user typed while the
     // auto-fill was parked is theirs, and outranks it.
-    const values = store.get(valueAtom) as Record<string, unknown>
-    if (isEmpty(values[name])) {
-      applyAutoFill(name, value)
+    if (isEmpty(store.get(valueAtom)[pending.target])) {
+      applyAutoFill(pending.target, pending.value)
     }
   }
 
