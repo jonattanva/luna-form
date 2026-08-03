@@ -2,7 +2,12 @@ import { fieldStateAtom } from '../lib/state-store'
 import { ListPathContext } from '../context/list-path-context'
 import { omitKey } from '../lib/store-helper'
 import { reportInputErrorAtom } from '../lib/error-store'
-import { reportValueAtom, valueAtom } from '../lib/value-store'
+import {
+  appliedAutoFillAtom,
+  pendingAutoFillAtom,
+  reportValueAtom,
+  valueAtom,
+} from '../lib/value-store'
 import { use, useCallback, useRef, useTransition } from 'react'
 import { useInput } from './use-input'
 import { useSetAtom, useStore } from 'jotai'
@@ -46,6 +51,19 @@ export type InputCoreProps = Readonly<{
   value?: Nullable<Record<string, unknown>>
 }>
 
+// Whether the user's caret is in this field right now.
+//
+// Read off the document instead of tracked in state because the field that
+// receives an auto-fill is rendered by a different component than the source
+// that sends it, and `name` is the one identifier both sides agree on: it is
+// the atom key, and `buildCommon` puts the same string on the element.
+//
+// No guard for a missing `document`: both callers reach this from an event
+// handler or an effect, neither of which runs while rendering on the server.
+function isFieldFocused(name: string) {
+  return document.activeElement?.getAttribute('name') === name
+}
+
 export function useInputCore(
   props: InputCoreProps,
   deps: Readonly<{
@@ -79,6 +97,8 @@ export function useInputCore(
   const setValues = useSetAtom(valueAtom)
   const setFieldStates = useSetAtom(fieldStateAtom)
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
+  const setAppliedAutoFill = useSetAtom(appliedAutoFillAtom)
+  const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
 
   const schema = useInput(
     props.field,
@@ -112,13 +132,34 @@ export function useInputCore(
     }
   }
 
-  // Tracks the last value the auto-fill (handleValueEvent) wrote to each
-  // target. Used to distinguish "target still owned by the auto-fill" from
-  // "user has manually edited the target" when deciding whether to honor
-  // `onlyIfTargetEmpty`. A pure `isEmpty(current)` check is insufficient:
-  // a target with a transform is non-empty after the very first source
-  // keystroke, which would freeze the auto-fill on subsequent keystrokes.
-  const lastAutoFilledTargetsRef = useRef<Map<string, unknown>>(new Map())
+  // Writes an auto-filled value to a target and records it as ours, so a later
+  // pass can still tell it apart from something the user typed.
+  function applyAutoFill(target: string, value: unknown) {
+    setValues((previous) => ({
+      ...previous,
+      [target]: value,
+    }))
+
+    setAppliedAutoFill((previous) => ({
+      ...previous,
+      [target]: value,
+    }))
+
+    // Mirror the auto-fill up to the consumer. Without this, the parent
+    // never learns about the target's new value, so on reload (or any
+    // re-render that drops the internal atom in favor of the value
+    // prop) the auto-filled data is lost (Bug B).
+    if (props.onValueChange) {
+      const targetField = getField(target)
+      if (targetField) {
+        props.onValueChange({
+          name: translateListPath(target),
+          type: targetField.type,
+          value,
+        })
+      }
+    }
+  }
 
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
@@ -222,9 +263,8 @@ export function useInputCore(
           // should keep mirroring the source — otherwise targets with
           // transforms freeze after the first character (Bug A).
           if (options.onlyIfTargetEmpty && !isEmpty(current)) {
-            const lastAutoFilled =
-              lastAutoFilledTargetsRef.current.get(newTarget)
-            if (!Object.is(lastAutoFilled, current)) {
+            const applied = store.get(appliedAutoFillAtom)[newTarget]
+            if (!Object.is(applied, current)) {
               return
             }
           }
@@ -233,26 +273,18 @@ export function useInputCore(
             return
           }
 
-          setValues((previous) => ({
-            ...previous,
-            [newTarget]: transformed,
-          }))
-          lastAutoFilledTargetsRef.current.set(newTarget, transformed)
-
-          // Mirror the auto-fill up to the consumer. Without this, the parent
-          // never learns about the target's new value, so on reload (or any
-          // re-render that drops the internal atom in favor of the value
-          // prop) the auto-filled data is lost (Bug B).
-          if (props.onValueChange) {
-            const targetField = getField(newTarget)
-            if (targetField) {
-              props.onValueChange({
-                name: translateListPath(newTarget),
-                type: targetField.type,
-                value: transformed,
-              })
-            }
+          // Held back rather than written, because the user is inside the
+          // target: setting a controlled input's value while it has focus
+          // collapses the selection to the end of the new text, so everything
+          // typed next lands behind it -- `customeremail` + `customer_email`.
+          // `onBlur` releases this the moment they leave the field, so the
+          // auto-fill is postponed, never dropped (Bug C).
+          if (isFieldFocused(newTarget)) {
+            setPendingAutoFill({ target: newTarget, value: transformed })
+            return
           }
+
+          applyAutoFill(newTarget, transformed)
         })
       })
     })
@@ -278,6 +310,25 @@ export function useInputCore(
     [props.field.validation?.custom, schema, setErrors, store]
   )
 
+  // Same ref pattern: read from `onBlur`, which is memoized and must not take
+  // a dependency that changes on every render.
+  const releasePendingAutoFillRef = useRef<(() => void) | null>(null)
+  releasePendingAutoFillRef.current = () => {
+    const pending = store.get(pendingAutoFillAtom)
+
+    if (pending?.target !== props.field.name) {
+      return
+    }
+
+    setPendingAutoFill(null)
+
+    // Only if the field is still untouched. Whatever the user typed while the
+    // auto-fill was parked is theirs, and outranks it.
+    if (isEmpty(store.get(valueAtom)[pending.target])) {
+      applyAutoFill(pending.target, pending.value)
+    }
+  }
+
   const onBlur = useCallback(
     (event: React.FocusEvent<HTMLInputElement>) => {
       if (!hasClickable) {
@@ -286,6 +337,8 @@ export function useInputCore(
           validated(value)
         }
       }
+
+      releasePendingAutoFillRef.current?.()
     },
     [hasClickable, props.config.validation.blur, validated]
   )
