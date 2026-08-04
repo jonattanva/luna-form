@@ -8,7 +8,7 @@ import {
 } from '@luna-form/core'
 import { ListPathContext } from '../context/list-path-context'
 import { reportValueAtom } from '../lib/value-store'
-import { resolveValue } from '../lib/resolve-value'
+import { resolveEntry } from '../lib/resolve-value'
 import { useAtom } from 'jotai'
 import { use, useCallback, useEffect, useRef, useEffectEvent } from 'react'
 
@@ -45,12 +45,33 @@ export function useValue(
 
   const onCurrentValueChange = useEffectEvent(
     (currentValue: Record<string, unknown>) => {
-      const newValue = resolveValue(translateListPath(name), currentValue)
+      const { found, value: newValue } = resolveEntry(
+        translateListPath(name),
+        currentValue
+      )
 
       if (isValidValue(newValue)) {
         applyValue(newValue)
-      } else if (isValidValue(field.defaultValue)) {
+        return
+      }
+
+      if (isValidValue(field.defaultValue)) {
         applyValue(field.defaultValue, true)
+        return
+      }
+
+      // The value names this field and holds nothing in it, which is a
+      // statement and not a gap: the field is meant to be empty. Only reachable
+      // once the two branches above have declined, so a caller passing a
+      // partial object still leaves untouched fields — and any `defaultValue` —
+      // exactly where they were.
+      //
+      // Without this a field could be filled from the outside but never cleared
+      // from the outside, because neither `undefined`, `null` nor `''` is a
+      // value worth re-feeding by the measure above. `withDeclaredFields` is
+      // how a caller says it on purpose.
+      if (found) {
+        applyValue(newValue)
       }
     }
   )
