@@ -35,6 +35,14 @@ export function ReactiveFormPreview() {
     setValues((prev) => ({ ...prev, [input.name]: input.value }))
   }
 
+  // A host putting its own state back the way it was, which is the one thing
+  // this page could not do before: everything else here only ever adds to
+  // `values`. What the form does with a value that lost a field is only
+  // observable from the outside, so it needs someone outside to lose one.
+  function handleReset() {
+    setValues((form.value as Record<string, unknown>) ?? {})
+  }
+
   function handleSuccess(response: {
     message: string
     form: Record<string, unknown>
@@ -59,7 +67,10 @@ export function ReactiveFormPreview() {
         onValueChange={handleValueChange}
       >
         {({ isPending }) => (
-          <div className="flex w-full justify-end">
+          <div className="flex w-full justify-end gap-2">
+            <Button type="button" variant="outline" onClick={handleReset}>
+              Reset values
+            </Button>
             <Button type="submit" disabled={isPending}>
               Submit
             </Button>

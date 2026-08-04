@@ -60,6 +60,22 @@ describe('Resolve Dictionary', () => {
     expect(resolveDictionary('es')?.Yes).toBe('Sí')
   })
 
+  // The submit summary is copy no form can name in its schema, the same as
+  // `(Optional)`: it is only reachable through the built-in dictionary.
+  test('should return the built-in submit error summary', () => {
+    const result = resolveDictionary('es')
+
+    expect(result?.['There were validation errors submitting the form.']).toBe(
+      'Se encontraron errores de validación al enviar el formulario.'
+    )
+    expect(result?.['Please correct the errors and try again.']).toBe(
+      'Corrige los errores e inténtalo de nuevo.'
+    )
+    expect(result?.['An unexpected error occurred submitting the form.']).toBe(
+      'Ocurrió un error inesperado al enviar el formulario.'
+    )
+  })
+
   test('should let the form override a built-in entry', () => {
     const result = resolveDictionary('es', {
       es: { 'Add item': 'Agregar contacto' },

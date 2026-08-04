@@ -10,7 +10,6 @@ import {
   isDate,
   logger,
   toNativeDate,
-  translate,
   translateBuiltIn,
   unflatten,
   type Field,
@@ -80,12 +79,12 @@ export function useFormState<T, F = Record<string, unknown>>(
         })
 
         return failure(form as T, {
-          description: translate(
+          description: translateBuiltIn(
             'Please correct the errors and try again.',
             translations
           ),
           details: [],
-          title: translate(
+          title: translateBuiltIn(
             'There were validation errors submitting the form.',
             translations
           ),
@@ -114,7 +113,7 @@ export function useFormState<T, F = Record<string, unknown>>(
         } catch (error) {
           logger.error('Error executing form action:', error)
           return failure(unflattened as T, {
-            title: translate(
+            title: translateBuiltIn(
               'An unexpected error occurred submitting the form.',
               translations
             ),

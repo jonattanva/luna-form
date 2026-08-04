@@ -712,6 +712,82 @@ test.describe('Built-in Spanish dictionary', { tag: ['@e2e'] }, () => {
     await expect(page.getByRole('button', { name: 'Add item' })).toBeVisible()
   })
 
+  // The submit summary is the only built-in copy that needs a failed submit to
+  // render, so it gets its own form: a single required field left empty.
+  const REQUIRED = `{
+      "lang": "es",
+      "sections": [
+          {
+              "fields": [
+                  {
+                      "label": "Nombre",
+                      "name": "name",
+                      "type": "input/text",
+                      "required": true,
+                      "validation": { "required": "El nombre es obligatorio" }
+                  }
+              ]
+          }
+      ]
+  }`
+
+  test('should localize the submit error summary from lang alone', async ({
+    page,
+  }) => {
+    await inject(page, REQUIRED)
+    await page.goto('/reactive')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    await expect(
+      page.getByText(
+        'Se encontraron errores de validación al enviar el formulario.'
+      )
+    ).toBeVisible()
+    await expect(
+      page.getByText('Corrige los errores e inténtalo de nuevo.')
+    ).toBeVisible()
+    await expect(
+      page.getByText('There were validation errors submitting the form.')
+    ).toHaveCount(0)
+  })
+
+  test('should let the form override the submit error summary', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      REQUIRED.replace(
+        '"lang": "es",',
+        `"lang": "es", "translations": { "es": { "There were validation errors submitting the form.": "Revisa el formulario" } },`
+      )
+    )
+
+    await page.goto('/reactive')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    await expect(page.getByText('Revisa el formulario')).toBeVisible()
+
+    // The key the form left alone still comes from the built-in dictionary.
+    await expect(
+      page.getByText('Corrige los errores e inténtalo de nuevo.')
+    ).toBeVisible()
+  })
+
+  test('should leave the submit error summary in English without a built-in dictionary', async ({
+    page,
+  }) => {
+    await inject(page, REQUIRED.replace('"lang": "es"', '"lang": "ja"'))
+    await page.goto('/reactive')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    await expect(
+      page.getByText('There were validation errors submitting the form.')
+    ).toBeVisible()
+  })
+
   test('should leave a form without lang in English', async ({ page }) => {
     await inject(page, LIST.replace('"lang": "es",', ''))
     await page.goto('/reactive')

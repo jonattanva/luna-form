@@ -12,9 +12,12 @@ import { isObject, isString } from './is-type'
 export const BUILT_IN_KEYS = [
   '(Optional)',
   'Add item',
+  'An unexpected error occurred submitting the form.',
   'Collapse {label} {index}',
   'Expand {label} {index}',
+  'Please correct the errors and try again.',
   'Remove {label} item {index}',
+  'There were validation errors submitting the form.',
   'Unknown error',
   'No',
   'Yes',
@@ -28,9 +31,15 @@ const BUILT_IN: Record<string, Record<BuiltInKey, string>> = {
   es: {
     '(Optional)': '(Opcional)',
     'Add item': 'Añadir elemento',
+    'An unexpected error occurred submitting the form.':
+      'Ocurrió un error inesperado al enviar el formulario.',
     'Collapse {label} {index}': 'Contraer {label} {index}',
     'Expand {label} {index}': 'Expandir {label} {index}',
+    'Please correct the errors and try again.':
+      'Corrige los errores e inténtalo de nuevo.',
     'Remove {label} item {index}': 'Eliminar {label} {index}',
+    'There were validation errors submitting the form.':
+      'Se encontraron errores de validación al enviar el formulario.',
     'Unknown error': 'Error desconocido',
     No: 'No',
     Yes: 'Sí',
