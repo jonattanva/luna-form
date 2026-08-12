@@ -147,6 +147,10 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     )
     await page.goto('')
 
+    // See the note in `translation.spec.ts`: the click has to wait for the
+    // client, not just for the button.
+    await expect(page.locator('input[name="name"]')).toBeVisible()
+
     await page.getByRole('button', { name: 'Submit' }).click()
 
     await expect(

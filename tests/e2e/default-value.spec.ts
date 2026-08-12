@@ -114,6 +114,12 @@ test.describe('Field defaultValue', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
+    // What this test is named after, asserted before the submit rather than
+    // only through it. The form is drawn from localStorage, so nothing exists
+    // until the client has run, and submitting first sends a form that has not
+    // collected anything yet.
+    await expect(page.getByRole('combobox')).toHaveText('DNI')
+
     await page.getByRole('button', { name: 'Submit' }).click()
 
     await expect(page.getByText('Form submitted successfully')).toBeVisible()

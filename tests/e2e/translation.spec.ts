@@ -737,6 +737,11 @@ test.describe('Built-in Spanish dictionary', { tag: ['@e2e'] }, () => {
     await inject(page, REQUIRED)
     await page.goto('/reactive')
 
+    // The form is drawn from localStorage, so nothing exists until the client
+    // has run. Submitting before the fields are on screen either loses the
+    // click or sends a form that has not collected anything yet.
+    await expect(page.locator('input[name="name"]')).toBeVisible()
+
     await page.getByRole('button', { name: 'Submit' }).click()
 
     await expect(
@@ -765,6 +770,11 @@ test.describe('Built-in Spanish dictionary', { tag: ['@e2e'] }, () => {
 
     await page.goto('/reactive')
 
+    // The form is drawn from localStorage, so nothing exists until the client
+    // has run. Submitting before the fields are on screen either loses the
+    // click or sends a form that has not collected anything yet.
+    await expect(page.locator('input[name="name"]')).toBeVisible()
+
     await page.getByRole('button', { name: 'Submit' }).click()
 
     await expect(page.getByText('Revisa el formulario')).toBeVisible()
@@ -780,6 +790,11 @@ test.describe('Built-in Spanish dictionary', { tag: ['@e2e'] }, () => {
   }) => {
     await inject(page, REQUIRED.replace('"lang": "es"', '"lang": "ja"'))
     await page.goto('/reactive')
+
+    // The form is drawn from localStorage, so nothing exists until the client
+    // has run. Submitting before the fields are on screen either loses the
+    // click or sends a form that has not collected anything yet.
+    await expect(page.locator('input[name="name"]')).toBeVisible()
 
     await page.getByRole('button', { name: 'Submit' }).click()
 

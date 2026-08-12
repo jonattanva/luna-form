@@ -51,6 +51,11 @@ test.describe(
       )
       await page.goto('')
 
+      // The value has to have reached the field before the submit, or the
+      // form is sent with nothing in it. See the note in
+      // `initial-value-list.spec.ts`.
+      await expect(page.locator('input[name="birth_date"]')).not.toHaveValue('')
+
       await page.getByRole('button', { name: 'Submit' }).click()
 
       await expect(page.getByText('Form submitted successfully')).toBeVisible()
