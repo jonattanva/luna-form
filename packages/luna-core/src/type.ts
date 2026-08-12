@@ -250,6 +250,28 @@ export type Field = CommonProps & {
     entity?: string
     horizontal?: boolean
     reverse?: boolean
+    /**
+     * Marks a field that fires its change events and keeps nothing of its own:
+     * not stored, and never reported to the consumer.
+     *
+     * For a control whose whole job is to act on *another* field -- a button
+     * that adds a row, a picker that fills a sibling. Without it the emitter
+     * also saves whatever it emitted, so a value the user can neither see nor
+     * edit ends up in the submitted form and in whatever the consumer
+     * persists.
+     *
+     * Three consequences to know before reaching for it. The field shows
+     * nothing back, because there is no value to show -- put it on a visible
+     * text input and the typing will not stick. Choosing the same value twice
+     * in a row fires twice, where an ordinary field swallows the second as a
+     * no-op: for a command that is the point, since pressing a button again is
+     * meant to do the thing again. And it does not go with `required` or
+     * `validation`, which would demand a value that by definition never
+     * arrives and block the submit with nothing on screen to explain it --
+     * nothing stops you writing that pair, so this note is the only thing
+     * standing between you and an afternoon.
+     */
+    transient?: boolean
   }
   defaultValue?: Value
   event?: {

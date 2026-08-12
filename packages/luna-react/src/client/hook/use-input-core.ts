@@ -167,6 +167,19 @@ export function useInputCore(
   // adding them as useCallback dependencies, avoiding unnecessary re-renders.
   const onValueChangeRef = useRef<((value: unknown) => void) | null>(null)
   onValueChangeRef.current = (value: unknown) => {
+    // A transient field acts and keeps nothing: neither its own stored value
+    // nor a word to the consumer. Its change events still go out -- they are
+    // the only reason it exists -- so this returns before the two writes and
+    // leaves `dispatchChange` in `input-base` alone.
+    //
+    // Leaving the stored value out is what lets it be pressed twice: the
+    // `deepEqual(inputValue, valueRef.current)` guard in `shouldSkipChange`
+    // compares against a value that is never written, so the second identical
+    // press is not read as a no-op.
+    if (props.field.advanced?.transient) {
+      return
+    }
+
     const newValue = isInput(props.field)
       ? applyTransform(value, props.field.advanced?.transform)
       : value
@@ -263,6 +276,7 @@ export function useInputCore(
       // fills a field and hides it now paints the value first.
       handleValueEvent(selected, values, (target, candidate, options) => {
         const newTarget = resolveTarget(target, props.field.name)
+
         const transform = getTransform(newTarget)
         const transformed = transform
           ? applyTransform(candidate, transform)

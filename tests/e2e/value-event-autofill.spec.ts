@@ -1,7 +1,6 @@
-import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
-
-type ValueChange = { name: string; value: unknown }
+import { captureValueChanges, lastEventFor } from './support/value-changes'
 
 // The schema the report is about: typing in `label` auto-fills `name`, which
 // carries a transform pipeline, and `onlyIfTargetEmpty` is the flag the buggy
@@ -83,38 +82,6 @@ function autoFillList({
 
 const AUTOFILL_LIST = autoFillList({ seeded: true })
 const AUTOFILL_LIST_WITH_ECHO = autoFillList({ echo: true })
-
-function captureValueChanges(page: Page): ValueChange[] {
-  const events: ValueChange[] = []
-  page.on('console', (msg: ConsoleMessage) => {
-    if (!msg.text().startsWith('Form values changed:')) {
-      return
-    }
-    const arg = msg.args()[1]
-    if (!arg) {
-      return
-    }
-    arg
-      .jsonValue()
-      .then((value) => {
-        events.push(value as ValueChange)
-      })
-      .catch(() => {})
-  })
-  return events
-}
-
-function lastEventFor(
-  events: ValueChange[],
-  name: string
-): ValueChange | undefined {
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i]?.name === name) {
-      return events[i]
-    }
-  }
-  return undefined
-}
 
 test.describe(
   'Value-event auto-fill (label -> name with transforms)',
