@@ -29,4 +29,13 @@ describe('isInterpolated', () => {
   test('should return false for empty string', () => {
     expect(isInterpolated('')).toBe(false)
   })
+
+  test('should give the same answer however many times it is called', () => {
+    // `.test()` on a global regex advances `lastIndex` and would alternate
+    // true/false on the same string. The regex behind this is module-level and
+    // deliberately not global; this is what says so.
+    for (let time = 0; time < 3; time++) {
+      expect(isInterpolated('/api/items/{id}')).toBe(true)
+    }
+  })
 })

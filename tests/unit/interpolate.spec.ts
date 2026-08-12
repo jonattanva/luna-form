@@ -129,4 +129,21 @@ describe('interpolate', () => {
       )
     ).toBe('$100.00')
   })
+
+  test('should give the same answer however many times it is called', () => {
+    // The placeholder regexes are module-level and one of them is global, so
+    // they carry `lastIndex`. Calling twice with the same input is what a
+    // leak would show up as: the second pass starting mid-string.
+    for (let time = 0; time < 3; time++) {
+      expect(interpolate('/api/{a}/{b}', { a: 1, b: 2 })).toBe('/api/1/2')
+    }
+  })
+
+  // Where `interpolate` stops and `interpolateValue` starts. Producing text is
+  // the whole contract here, and three callers lean on it -- a url, a request
+  // body, a preview label. A structure has no text, so the placeholder stays.
+  test('should leave the placeholder standing when it resolves to a structure', () => {
+    expect(interpolate('{value}', { value: { a: 1 } })).toBe('{value}')
+    expect(interpolate('{rows}', { rows: [{ key: 'a' }] })).toBe('{rows}')
+  })
 })
