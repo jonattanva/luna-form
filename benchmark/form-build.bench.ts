@@ -1,31 +1,6 @@
 import { prepare, resolveRefs } from '../packages/luna-core/src/util/prepare'
+import { measure, report, type BenchmarkResult } from './measure'
 import type { Field, Section } from '../packages/luna-core/src/type'
-
-type BenchmarkResult = {
-  name: string
-  unit: string
-  value: number
-}
-
-const WARMUP_ITERATIONS = 5000
-const MEASURED_ITERATIONS = 50000
-
-function measure(label: string, fn: () => void): BenchmarkResult {
-  for (let i = 0; i < WARMUP_ITERATIONS; i++) {
-    fn()
-  }
-
-  const start = performance.now()
-  for (let i = 0; i < MEASURED_ITERATIONS; i++) {
-    fn()
-  }
-
-  return {
-    name: label,
-    unit: 'ms',
-    value: (performance.now() - start) / MEASURED_ITERATIONS,
-  }
-}
 
 function makeFields(count: number): Field[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -89,4 +64,4 @@ const results: BenchmarkResult[] = [
   }),
 ]
 
-process.stdout.write(JSON.stringify(results, null, 2) + '\n')
+report(results)

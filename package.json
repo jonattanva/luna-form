@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "benchmark": "pnpm exec tsx benchmark/form-build.bench.ts",
+    "benchmark:interpolate": "pnpm exec tsx benchmark/interpolate.bench.ts",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "knip": "knip",
