@@ -1,4 +1,4 @@
-import { interpolate } from '../util/string'
+import { interpolateValue } from '../util/string'
 import type { Nullable, ValueEvent } from '../type'
 
 export type ValueEventApply = (
@@ -25,7 +25,7 @@ export function handleValueEvent<T>(
 ) {
   for (const event of events) {
     for (const [target, value] of Object.entries(event.value)) {
-      apply(target, selected ? interpolate(value, selected) : undefined, {
+      apply(target, selected ? interpolateValue(value, selected) : undefined, {
         onlyIfTargetEmpty: event.onlyIfTargetEmpty ?? false,
       })
     }

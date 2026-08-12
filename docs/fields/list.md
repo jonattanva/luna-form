@@ -40,6 +40,14 @@ Previews can map seamlessly pointing out the desired child `name` simply as stri
 
 ---
 
+## Filling a list from another field
+
+A `list` can be the target of a `value` change event. Aim one at the list's own name and give it an array of objects, and the list becomes exactly those rows — one object per row, each key matching a field name inside it.
+
+It assigns rather than adds: the rows you send are the rows that remain, `advanced.length` still bounds the result, and rows that survive are matched by position so they are not remounted. The full rules and a worked example are in [Targeting a list](../events/change.md#targeting-a-list).
+
+---
+
 ## Interaction Targeting in Events
 
 When interacting internally inside specific items belonging directly to iterators (`list`), Target Actions (like configuring cross dependencies over Change events) inherit relative pathing resolution logically overriding direct top-level values leveraging `"list_name/field_name"` resolution strings.

@@ -131,6 +131,14 @@ test.describe('List field initial value', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
+    // The rows have to be there before the submit, which is the thing this
+    // test is about. Sent first, the form has not collected anything yet and
+    // comes back `{}` -- which reads as the values being dropped rather than
+    // as the click having been too early.
+    await expect(page.locator('input[name$=".label"]').first()).toHaveValue(
+      'Alpha'
+    )
+
     await page.getByRole('button', { name: 'Submit' }).click()
 
     await expect(page.getByText('Form submitted successfully')).toBeVisible()

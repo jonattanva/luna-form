@@ -266,4 +266,22 @@ describe('handle value event', () => {
       expect(calls).toHaveLength(0)
     })
   })
+
+  test('should hand a structure to apply without flattening it', () => {
+    const { apply, calls } = createApply()
+
+    const rows = [{ key: 'email', data_type: ['text'] }, { key: 'name' }]
+    const events: ValueEvent[] = [
+      { action: 'value', value: { simple_body: '{value}' } },
+    ]
+
+    handleValueEvent({ value: rows }, events, apply)
+
+    // What `ValueEvent.value` has always declared it accepts -- an
+    // `Array<Record<string, unknown>>` -- arriving as one. Before, the whole
+    // template resolved to the literal `"{value}"`, so the type was reachable
+    // in the definition and unreachable at runtime.
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toEqual({ name: 'simple_body', value: rows })
+  })
 })

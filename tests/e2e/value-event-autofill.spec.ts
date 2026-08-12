@@ -1,7 +1,39 @@
-import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { inject } from './support/inject'
+import { captureValueChanges, lastEventFor } from './support/value-changes'
 
-type ValueChange = { name: string; value: unknown }
+// Types into a field without focusing it, so the caret stays wherever the test
+// put it.
+//
+// `fill` would take focus back, and the two tests that use this are about a
+// copy decided while the caret is in the *target*. Ordering it the other way
+// -- fill the source, then race to click the target inside the 300ms debounce
+// -- is what a loaded machine loses, and losing it reports the exact bug the
+// test exists to catch. Putting the caret there first leaves no window to beat.
+async function typeWithoutFocusing(page: Page, name: string, text: string) {
+  await page.evaluate(
+    ({ name, text }) => {
+      const setValue = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      )?.set
+
+      const input = document.querySelector<HTMLInputElement>(
+        `input[name="${name}"]`
+      )
+
+      if (!setValue || !input) {
+        throw new Error(`The form did not render ${name}`)
+      }
+
+      // Through the prototype setter so React notices the change; assigning
+      // `input.value` goes through its own and it does not.
+      setValue.call(input, text)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    },
+    { name, text }
+  )
+}
 
 // The schema the report is about: typing in `label` auto-fills `name`, which
 // carries a transform pipeline, and `onlyIfTargetEmpty` is the flag the buggy
@@ -83,38 +115,6 @@ function autoFillList({
 
 const AUTOFILL_LIST = autoFillList({ seeded: true })
 const AUTOFILL_LIST_WITH_ECHO = autoFillList({ echo: true })
-
-function captureValueChanges(page: Page): ValueChange[] {
-  const events: ValueChange[] = []
-  page.on('console', (msg: ConsoleMessage) => {
-    if (!msg.text().startsWith('Form values changed:')) {
-      return
-    }
-    const arg = msg.args()[1]
-    if (!arg) {
-      return
-    }
-    arg
-      .jsonValue()
-      .then((value) => {
-        events.push(value as ValueChange)
-      })
-      .catch(() => {})
-  })
-  return events
-}
-
-function lastEventFor(
-  events: ValueChange[],
-  name: string
-): ValueChange | undefined {
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i]?.name === name) {
-      return events[i]
-    }
-  }
-  return undefined
-}
 
 test.describe(
   'Value-event auto-fill (label -> name with transforms)',
@@ -213,25 +213,28 @@ test.describe(
     // everything typed afterwards lands behind it -- the report was
     // `customeremailcustomer_email`.
     //
-    // Nothing here is timing-dependent. The click lands well inside the 300ms,
-    // and the copy is then awaited through `echo` rather than raced, so by the
-    // first keystroke the target is provably focused and the batch has provably
-    // run. Before the fix this failed 18 times out of 18, on all three
-    // browsers, with exactly the reported value.
+    // The caret goes in first and the source is typed into without taking it
+    // back, so nothing has to happen within the 300ms: the copy is decided
+    // with the target provably focused however long the machine takes. It used
+    // to fill the source and then race to click, which a loaded runner loses
+    // -- and losing it reports `customeremailcustomer_email`, the very string
+    // this test exists to catch, for the one reason that has nothing to do
+    // with the bug.
+    //
+    // The copy is awaited through `echo`, written by the same batch, so by the
+    // first keystroke the batch has provably run. Before the fix this failed
+    // 18 times out of 18, on all three browsers, with exactly that value.
     test('a target the user is already in keeps what the user typed', async ({
       page,
     }) => {
       await inject(page, AUTOFILL_LIST_WITH_ECHO)
       await page.goto('/')
 
-      const labelInput = page.locator('input[name="field.0.label"]')
       const nameInput = page.locator('input[name="field.0.name"]')
       const echoInput = page.locator('input[name="field.0.echo"]')
 
-      await labelInput.fill('Customer Email')
-
-      // Into the empty key before the copy is due.
       await nameInput.click()
+      await typeWithoutFocusing(page, 'field.0.label', 'Customer Email')
 
       // `echo` is written by the same batch, so this is the copy landing.
       await expect(echoInput).toHaveValue('Customer Email')
@@ -252,12 +255,12 @@ test.describe(
       await inject(page, AUTOFILL_LIST_WITH_ECHO)
       await page.goto('/')
 
-      const labelInput = page.locator('input[name="field.0.label"]')
       const nameInput = page.locator('input[name="field.0.name"]')
       const echoInput = page.locator('input[name="field.0.echo"]')
 
-      await labelInput.fill('Customer Email')
+      // Same ordering as above, and for the same reason.
       await nameInput.click()
+      await typeWithoutFocusing(page, 'field.0.label', 'Customer Email')
       await expect(echoInput).toHaveValue('Customer Email')
 
       // Away without typing a thing.
