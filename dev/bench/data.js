@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786550762744,
+  "lastUpdate": 1786550804709,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "18656f59f8bca6581d2204e16bfdc1696c5c9c82",
-          "message": "fix(ci): restrict GITHUB_TOKEN to minimum required permissions\n\nAdds a workflow-level permissions block with contents: read to follow\nthe principle of least privilege.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-02-24T21:58:41-05:00",
-          "tree_id": "522ff2c873cfb7b018e8a8c349943ffa76a455a6",
-          "url": "https://github.com/jonattanva/luna-form/commit/18656f59f8bca6581d2204e16bfdc1696c5c9c82"
-        },
-        "date": 1771988382483,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 251,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 190,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "9ef22e2cc3e04685ef73dbf773e1d2d4c2879109",
           "message": "upgrade dependencies",
           "timestamp": "2026-02-24T22:01:10-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 605,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "718ea3d96a2b62ec265cd65b12128f05700f0a22",
+          "message": "Merge pull request #56 from jonattanva/feat/interpolate-whole-placeholder\n\nfeat(list): let a value change event assign a list",
+          "timestamp": "2026-08-12T11:05:07-05:00",
+          "tree_id": "a0bf0904b35a672cf3bc78b934b3d54c8ae5240e",
+          "url": "https://github.com/jonattanva/luna-form/commit/718ea3d96a2b62ec265cd65b12128f05700f0a22"
+        },
+        "date": 1786550804665,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 281,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 223,
             "unit": "ms"
           }
         ]
