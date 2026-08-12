@@ -1,3 +1,4 @@
+import { deepEqual } from 'fast-equals'
 import {
   getInitialList,
   isColumn,
@@ -5,7 +6,7 @@ import {
   type List,
   type Nullable,
 } from '@luna-form/core'
-import { useSetAtom, useStore } from 'jotai'
+import { useAtom, useSetAtom, useStore } from 'jotai'
 import {
   use,
   useCallback,
@@ -19,8 +20,48 @@ import {
   ListPathContext,
   type TranslateListPath,
 } from '../context/list-path-context'
+import {
+  reportMountedListAtom,
+  reportPendingListRowsAtom,
+} from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
+
+// Every key a list owns in the flat value atom: its name, the row's stable id,
+// the leaf's name. Built in four places in this file -- seeding, reading,
+// removing and assigning -- which is three too many for a template literal to
+// be retyped correctly each time.
+function itemKey(listName: string, stableId: number, leafName: string): string {
+  return `${listName}.${stableId}.${leafName}`
+}
+
+// Rows as the list would hold them: every leaf present, the ones the row left
+// out `undefined`.
+//
+// That shape is the point. `computeListValue` reads a list back out with every
+// leaf spelled in, so an incoming row carrying only some of them would compare
+// unequal to an identical row already stored -- different for having been
+// written rather than read.
+function toListValue(
+  rows: Array<Record<string, unknown>>,
+  count: number,
+  leafNames: readonly string[]
+): Array<Record<string, unknown>> {
+  const value: Array<Record<string, unknown>> = []
+
+  for (let index = 0; index < count; index++) {
+    const row = rows[index]
+    const item: Record<string, unknown> = {}
+
+    for (const name of leafNames) {
+      item[name] = row?.[name]
+    }
+
+    value.push(item)
+  }
+
+  return value
+}
 
 export function useFieldList(
   field: List,
@@ -130,13 +171,12 @@ export function useFieldList(
       return
     }
 
-    const prefix = `${field.name}.`
     const next = { ...store.get(valueAtom) }
     let changed = false
 
     for (const id of items) {
       for (const name of leafNames) {
-        const key = `${prefix}${id}.${name}`
+        const key = itemKey(field.name, id, name)
         if (key in next) {
           continue
         }
@@ -163,13 +203,12 @@ export function useFieldList(
       currentItems: readonly number[],
       values: Record<string, unknown>
     ): Array<Record<string, unknown>> => {
-      const prefix = `${field.name}.`
       const initial = initialValueRef.current
 
       return currentItems.map((stableId) => {
         const item: Record<string, unknown> = {}
         for (const name of leafNames) {
-          const key = `${prefix}${stableId}.${name}`
+          const key = itemKey(field.name, stableId, name)
           const fromStore = values[key]
 
           // Edited and seeded values live in the atom keyed by stable id.
@@ -221,10 +260,9 @@ export function useFieldList(
 
       const currentValues = store.get(valueAtom)
       const nextValues = { ...currentValues }
-      const prefix = `${field.name}.`
 
       for (const name of leafNames) {
-        delete nextValues[`${prefix}${stableId}.${name}`]
+        delete nextValues[itemKey(field.name, stableId, name)]
       }
 
       setItems(nextItems)
@@ -233,6 +271,90 @@ export function useFieldList(
     },
     [emitChange, field.name, leafNames, min, setValues, store]
   )
+
+  // Says this list is on screen, so a `value` event aimed at it can be told
+  // apart from one aimed at an ordinary field. See `list-store`.
+  const reportMounted = useSetAtom(reportMountedListAtom(field.name))
+  useEffect(() => {
+    reportMounted(true)
+    return () => reportMounted(undefined)
+  }, [reportMounted])
+
+  const [pendingRows, reportPendingRows] = useAtom(
+    reportPendingListRowsAtom(field.name)
+  )
+
+  const applyRows = useEffectEvent((rows: Array<Record<string, unknown>>) => {
+    // A list never shows fewer rows than `min`, so a shorter assignment leaves
+    // the remainder standing and empty -- the same thing `getInitialCount`
+    // does with a short `value` prop at mount. `max` is the ceiling `addItem`
+    // already respects.
+    const count = Math.min(Math.max(rows.length, min), max)
+    const currentValues = store.get(valueAtom)
+
+    // Assigning what is already there is not a change. Every other write path
+    // in the library says so before it writes -- `createRecordAtomFamily`,
+    // `useValue.applyValue`, the `apply` that hands the rows over -- and a
+    // list is the most expensive one to get wrong: without this it rebuilds
+    // every row and tells the consumer, which downstream can mean persisting
+    // a whole document again for nothing.
+    if (
+      deepEqual(
+        computeListValue(itemsRef.current, currentValues),
+        toListValue(rows, count, leafNames)
+      )
+    ) {
+      return
+    }
+
+    // Positional reuse, so a row that survives the assignment keeps its
+    // identity: React sees the same key, the inputs are not remounted, and a
+    // caret sitting in one of them stays where it was. Handing out fresh ids
+    // for all of them would be simpler and would make an append flash the
+    // whole list.
+    const nextItems: number[] = []
+    for (let index = 0; index < count; index++) {
+      nextItems.push(itemsRef.current[index] ?? nextId.current++)
+    }
+
+    const nextValues = { ...currentValues }
+
+    // Assigning means the rows that were here are gone, and so are their
+    // values. Left behind, a value keyed by a stable id that comes round again
+    // would surface inside a row that never had it.
+    for (const stableId of itemsRef.current) {
+      for (const name of leafNames) {
+        delete nextValues[itemKey(field.name, stableId, name)]
+      }
+    }
+
+    nextItems.forEach((stableId, index) => {
+      const row = rows[index]
+      if (!row) {
+        return
+      }
+
+      for (const name of leafNames) {
+        const value = row[name]
+        if (value !== undefined) {
+          nextValues[itemKey(field.name, stableId, name)] = value
+        }
+      }
+    })
+
+    setValues(nextValues)
+    setItems(nextItems)
+    emitChange(nextItems, nextValues)
+  })
+
+  useEffect(() => {
+    if (!pendingRows) {
+      return
+    }
+
+    applyRows(pendingRows)
+    reportPendingRows(undefined)
+  }, [pendingRows, reportPendingRows])
 
   const canAdd = items.length < max
   const canRemove = items.length > min

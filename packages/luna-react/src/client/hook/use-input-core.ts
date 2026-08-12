@@ -2,6 +2,7 @@ import { fieldStateAtom } from '../lib/state-store'
 import { ListPathContext } from '../context/list-path-context'
 import { omitKey } from '../lib/store-helper'
 import { reportInputErrorAtom } from '../lib/error-store'
+import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
 import {
   appliedAutoFillAtom,
   pendingAutoFillAtom,
@@ -21,6 +22,7 @@ import {
   isClickable,
   isEmpty,
   isInput,
+  isObject,
   resolveTarget,
   translate,
   type AriaAttributes,
@@ -64,6 +66,16 @@ function isFieldFocused(name: string) {
   return document.activeElement?.getAttribute('name') === name
 }
 
+// A list's worth of rows -- the shape `ValueEvent.value` has always declared
+// it accepts alongside a scalar. Checked rather than assumed because the
+// target being a list does not oblige the definition to have aimed the right
+// thing at it.
+function isRows(
+  candidate: unknown
+): candidate is Array<Record<string, unknown>> {
+  return Array.isArray(candidate) && candidate.every(isObject)
+}
+
 export function useInputCore(
   props: InputCoreProps,
   deps: Readonly<{
@@ -99,6 +111,7 @@ export function useInputCore(
   const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
   const setAppliedAutoFill = useSetAtom(appliedAutoFillAtom)
   const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
+  const setPendingListRows = useSetAtom(pendingListRowsAtom)
 
   const schema = useInput(
     props.field,
@@ -276,6 +289,28 @@ export function useInputCore(
       // fills a field and hides it now paints the value first.
       handleValueEvent(selected, values, (target, candidate, options) => {
         const newTarget = resolveTarget(target, props.field.name)
+
+        // A list is written by handing its rows over, not by setting a value.
+        // It holds nothing under its own name -- its values are flat keys of
+        // the form `list.<id>.<leaf>` -- and how many rows it has is state
+        // inside the component that renders it, which is the only thing that
+        // can grow or shrink it. See `list-store`.
+        //
+        // Everything below is about a single value and does not carry over: a
+        // list has no `transform`, cannot hold the caret, and gives
+        // `onlyIfTargetEmpty` nothing to call empty. So this returns either
+        // way -- a candidate that is not a list's worth of rows is a
+        // definition pointing a list at the wrong shape, and there is no
+        // sensible second place to put it.
+        if (store.get(mountedListsAtom)[newTarget]) {
+          if (isRows(candidate)) {
+            setPendingListRows((previous) => ({
+              ...previous,
+              [newTarget]: candidate,
+            }))
+          }
+          return
+        }
 
         const transform = getTransform(newTarget)
         const transformed = transform
