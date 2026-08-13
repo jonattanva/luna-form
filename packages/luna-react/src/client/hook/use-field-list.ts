@@ -16,24 +16,18 @@ import {
   useRef,
   useState,
 } from 'react'
+import { composeListValue, itemKey } from '../lib/compose-list-value'
 import {
   ListPathContext,
   type TranslateListPath,
 } from '../context/list-path-context'
 import {
+  mountedListsAtom,
   reportMountedListAtom,
   reportPendingListRowsAtom,
 } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
-
-// Every key a list owns in the flat value atom: its name, the row's stable id,
-// the leaf's name. Built in four places in this file -- seeding, reading,
-// removing and assigning -- which is three too many for a template literal to
-// be retyped correctly each time.
-function itemKey(listName: string, stableId: number, leafName: string): string {
-  return `${listName}.${stableId}.${leafName}`
-}
 
 // Rows as the list would hold them: every leaf present, the ones the row left
 // out `undefined`.
@@ -203,28 +197,21 @@ export function useFieldList(
       currentItems: readonly number[],
       values: Record<string, unknown>
     ): Array<Record<string, unknown>> => {
-      const initial = initialValueRef.current
-
-      return currentItems.map((stableId) => {
-        const item: Record<string, unknown> = {}
-        for (const name of leafNames) {
-          const key = itemKey(field.name, stableId, name)
-          const fromStore = values[key]
-
-          // Edited and seeded values live in the atom keyed by stable id.
-          // Anything missing falls back to the initial snapshot by the same
-          // stable-id path — never the live (compacted) value prop.
-          item[name] =
-            fromStore !== undefined
-              ? fromStore
-              : initial
-                ? resolveValue(key, initial)
-                : undefined
+      // Where a leaf's value comes from, and why it is looked for in that
+      // order, is `composeListValue` — a list holding a list is the case that
+      // makes the order matter, and it can only be answered from the registry,
+      // which is why the reading lives outside this hook.
+      return composeListValue(
+        field.name,
+        { items: currentItems, leafNames },
+        {
+          mounted: store.get(mountedListsAtom),
+          values,
+          initial: initialValueRef.current,
         }
-        return item
-      })
+      )
     },
-    [field.name, leafNames]
+    [field.name, leafNames, store]
   )
 
   const emitChange = useCallback(
@@ -272,13 +259,48 @@ export function useFieldList(
     [emitChange, field.name, leafNames, min, setValues, store]
   )
 
-  // Says this list is on screen, so a `value` event aimed at it can be told
-  // apart from one aimed at an ordinary field. See `list-store`.
+  // Says this list is on screen and what it is holding, so a `value` event
+  // aimed at it can be told apart from one aimed at an ordinary field, and so
+  // a list above it can read this one back out. See `list-store`.
+  //
+  // Re-run on every change to `items` and not only on mount: the rows are the
+  // half of this that goes stale, and a parent asking after an inner add would
+  // otherwise be told about the rows the inner list had when it mounted.
+  //
+  // Withdrawing it is a second effect rather than this one's cleanup, so that
+  // a row added or removed here is one write to the registry instead of a
+  // withdrawal and a re-registration.
   const reportMounted = useSetAtom(reportMountedListAtom(field.name))
   useEffect(() => {
-    reportMounted(true)
-    return () => reportMounted(undefined)
-  }, [reportMounted])
+    reportMounted({ items, leafNames })
+  }, [items, leafNames, reportMounted])
+
+  // On the way out, leave what this list holds under its own name -- where a
+  // list above it already looks -- and only then stop answering.
+  //
+  // Being on screen and being able to answer are not the same thing. A
+  // collapsed row lives in <Activity mode="hidden">, which keeps its state but
+  // tears its effects down, so this list stops answering while the values it
+  // owns are still the live ones. Without the hand-off the list above falls
+  // back to the value the form was mounted with and re-emits that over
+  // everything typed since: the same loss this registry exists to prevent, one
+  // collapse later.
+  //
+  // Children unmount before their parent, so a list two deep has already
+  // handed its own value over by the time the list above reads it here.
+  useEffect(
+    () => () => {
+      const values = store.get(valueAtom)
+
+      setValues({
+        ...values,
+        [field.name]: computeListValue(itemsRef.current, values),
+      })
+
+      reportMounted(undefined)
+    },
+    [computeListValue, field.name, reportMounted, setValues, store]
+  )
 
   const [pendingRows, reportPendingRows] = useAtom(
     reportPendingListRowsAtom(field.name)
