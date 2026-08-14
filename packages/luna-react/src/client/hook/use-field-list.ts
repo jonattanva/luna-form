@@ -1,8 +1,10 @@
 import { deepEqual } from 'fast-equals'
 import {
   getInitialList,
-  isColumn,
+  getListLeafNames,
+  getNestedLists,
   isValidValue,
+  normalizeListRows,
   type List,
   type Nullable,
 } from '@luna-form/core'
@@ -23,39 +25,12 @@ import {
 } from '../context/list-path-context'
 import {
   mountedListsAtom,
+  pendingListRowsAtom,
   reportMountedListAtom,
   reportPendingListRowsAtom,
 } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
-
-// Rows as the list would hold them: every leaf present, the ones the row left
-// out `undefined`.
-//
-// That shape is the point. `computeListValue` reads a list back out with every
-// leaf spelled in, so an incoming row carrying only some of them would compare
-// unequal to an identical row already stored -- different for having been
-// written rather than read.
-function toListValue(
-  rows: Array<Record<string, unknown>>,
-  count: number,
-  leafNames: readonly string[]
-): Array<Record<string, unknown>> {
-  const value: Array<Record<string, unknown>> = []
-
-  for (let index = 0; index < count; index++) {
-    const row = rows[index]
-    const item: Record<string, unknown> = {}
-
-    for (const name of leafNames) {
-      item[name] = row?.[name]
-    }
-
-    value.push(item)
-  }
-
-  return value
-}
 
 export function useFieldList(
   field: List,
@@ -79,6 +54,7 @@ export function useFieldList(
 
   const store = useStore()
   const setValues = useSetAtom(valueAtom)
+  const setPendingListRows = useSetAtom(pendingListRowsAtom)
 
   // Same ref pattern as use-input-core.ts:111-125 — keeps addItem/handleRemove
   // stable in useCallback while always reading the latest consumer callback.
@@ -93,19 +69,7 @@ export function useFieldList(
   const initialValueRef = useRef(value)
 
   // Flat list of leaf field names (skipping columns), computed once per field.
-  const leafNames = useMemo(() => {
-    const names: string[] = []
-    for (const row of field.fields) {
-      if (isColumn(row)) {
-        for (const columnField of row.fields) {
-          names.push(columnField.name)
-        }
-      } else {
-        names.push(row.name)
-      }
-    }
-    return names
-  }, [field.fields])
+  const leafNames = useMemo(() => getListLeafNames(field), [field])
 
   const isTranslatePath = useCallback((segment: string, position: number) => {
     const id = Number(segment)
@@ -307,11 +271,12 @@ export function useFieldList(
   )
 
   const applyRows = useEffectEvent((rows: Array<Record<string, unknown>>) => {
-    // A list never shows fewer rows than `min`, so a shorter assignment leaves
-    // the remainder standing and empty -- the same thing `getInitialCount`
-    // does with a short `value` prop at mount. `max` is the ceiling `addItem`
-    // already respects.
-    const count = Math.min(Math.max(rows.length, min), max)
+    // What the assignment is worth once this list's own rules are applied:
+    // every leaf spelled in, the count clamped to `min`/`max`, and a leaf that
+    // is a list of its own carrying rows normalised against *its* fields. See
+    // `normalizeListRows` -- the recursion is what makes an assignment reach
+    // past the row into the lists the row holds.
+    const assigned = normalizeListRows(field, rows)
     const currentValues = store.get(valueAtom)
 
     // Assigning what is already there is not a change. Every other write path
@@ -321,10 +286,7 @@ export function useFieldList(
     // every row and tells the consumer, which downstream can mean persisting
     // a whole document again for nothing.
     if (
-      deepEqual(
-        computeListValue(itemsRef.current, currentValues),
-        toListValue(rows, count, leafNames)
-      )
+      deepEqual(computeListValue(itemsRef.current, currentValues), assigned)
     ) {
       return
     }
@@ -335,7 +297,7 @@ export function useFieldList(
     // for all of them would be simpler and would make an append flash the
     // whole list.
     const nextItems: number[] = []
-    for (let index = 0; index < count; index++) {
+    for (let index = 0; index < assigned.length; index++) {
       nextItems.push(itemsRef.current[index] ?? nextId.current++)
     }
 
@@ -350,23 +312,55 @@ export function useFieldList(
       }
     }
 
+    // Rows this assignment owes to the lists inside its rows, gathered so the
+    // whole tree is one write to the atom rather than one per inner list.
+    const nested = getNestedLists(field)
+    const deliveries: Record<string, Array<Record<string, unknown>>> = {}
+
     nextItems.forEach((stableId, index) => {
-      const row = rows[index]
-      if (!row) {
-        return
-      }
+      const row = assigned[index]
 
       for (const name of leafNames) {
         const value = row[name]
-        if (value !== undefined) {
-          nextValues[itemKey(field.name, stableId, name)] = value
+        if (value === undefined) {
+          continue
+        }
+
+        const key = itemKey(field.name, stableId, name)
+        nextValues[key] = value
+
+        // A leaf that is a list cannot be written by writing it: its values are
+        // keys one level deeper and its row count is state inside it, exactly
+        // as for this list. So it is handed the rows the same way this list was
+        // handed its own, and applies them itself -- which is also how a list
+        // three deep is reached, one level handing on to the next.
+        //
+        // The array is still left under the leaf's own key above, because that
+        // is where the inner list is read from while it is collapsed and its
+        // effects are torn down, and it is what the delivery falls back to if
+        // the inner list is not on screen to take it.
+        if (nested[name]) {
+          deliveries[key] = value as Array<Record<string, unknown>>
         }
       }
     })
 
     setValues(nextValues)
     setItems(nextItems)
-    emitChange(nextItems, nextValues)
+
+    if (Object.keys(deliveries).length > 0) {
+      setPendingListRows((previous) => ({ ...previous, ...deliveries }))
+    }
+
+    // The assignment rather than a read-back of what was just written. An inner
+    // list has not taken its delivery yet at this point -- it is still showing
+    // the rows it had -- so reading the store here would tell the consumer
+    // about a tree that is one commit out of date, which for a consumer that
+    // saves what it is handed means saving the old rows.
+    onValueChangeRef.current?.({
+      name: translatePath(field.name),
+      value: assigned,
+    })
   })
 
   useEffect(() => {

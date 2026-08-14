@@ -10,7 +10,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 - **`type`** _(string, required)_: Evaluates the type definition exactly to `"list"`.
 - **`label`** _(string, optional)_: The human-readable label (typically rendered as a fieldset legend).
 - **`description`** _(string | object, optional)_: Help text or extra context shown globally just under the legend. Supports **Markdown** (specifically links).
-- **`fields`** _(Array<Field | Column>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array.
+- **`fields`** _(Array<Field | Column | List>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array. A `list` among them is a list nested inside this one: each row gets its own, named by its path (`groups.0.checks`).
 
 ---
 
@@ -44,7 +44,9 @@ Previews can map seamlessly pointing out the desired child `name` simply as stri
 
 A `list` can be the target of a `value` change event. Aim one at the list's own name and give it an array of objects, and the list becomes exactly those rows — one object per row, each key matching a field name inside it.
 
-It assigns rather than adds: the rows you send are the rows that remain, `advanced.length` still bounds the result, and rows that survive are matched by position so they are not remounted. The full rules and a worked example are in [Targeting a list](../events/change.md#targeting-a-list).
+It assigns rather than adds: the rows you send are the rows that remain, `advanced.length` still bounds the result, and rows that survive are matched by position so they are not remounted.
+
+A row's key can name a nested `list` instead of a field, in which case its value is that list's rows and the whole tree is assigned in one event. The full rules and worked examples are in [Targeting a list](../events/change.md#targeting-a-list) and [Rows that hold rows](../events/change.md#rows-that-hold-rows).
 
 ---
 
