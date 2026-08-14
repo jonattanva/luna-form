@@ -26,6 +26,18 @@ export const pendingListRowsAtom = pendingRows.atom
 export const reportPendingListRowsAtom = pendingRows.report
 
 /**
+ * What a list on screen is holding: the stable ids of its live rows, in the
+ * order they are shown, and the name of every leaf a row owns.
+ *
+ * Enough to read the list back out of the flat value atom, which is the whole
+ * reason it is published. See `composeListValue`.
+ */
+export type MountedList = {
+  items: readonly number[]
+  leafNames: readonly string[]
+}
+
+/**
  * The lists currently on screen, by name.
  *
  * The sender has to know whether a target is a list before it can decide where
@@ -37,10 +49,19 @@ export const reportPendingListRowsAtom = pendingRows.report
  * unknown>>` reads like rows, but an empty array is equally a chips field
  * being cleared, and that write must still reach the chips field.
  *
+ * A list registers what it holds rather than a bare `true`, because a list
+ * nested inside another one is the only thing that can say what its row is
+ * worth. The parent sees the child's name among its own leaf names, but the
+ * atom holds nothing under that name: the child's values are flat keys one
+ * level deeper, and which of them are live, and in what order, is `useState`
+ * inside the child. A parent with no way to ask rebuilt every such row as
+ * `undefined` and handed that to the consumer to save -- which is how a
+ * configured row was lost the moment its list was added to or removed from.
+ *
  * Only ever read with `store.get` from inside an event handler, so registering
  * costs nothing at render time.
  */
-const mountedLists = createAtomStore<true>()
+const mountedLists = createAtomStore<MountedList>()
 
 export const mountedListsAtom = mountedLists.atom
 export const reportMountedListAtom = mountedLists.report
