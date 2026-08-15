@@ -85,7 +85,12 @@ export type List = {
     }
   }
   description?: string
-  fields: Array<AnyField | Column>
+  // A list among a row's fields is a list nested inside this one, which the
+  // renderer has always supported: `SlotList` renames it by its dotted path
+  // like any other leaf, and it registers and answers under that path. The
+  // type left it out, so nothing that walks a row's fields could tell one
+  // apart from a plain leaf without the compiler calling the branch dead.
+  fields: Array<AnyField | Column | List>
   label?: string
   name: string
   type: 'list' | (string & {})
@@ -139,7 +144,7 @@ export type Column = {
     cols?: number
   }
   description?: Description
-  fields: Array<AnyField>
+  fields: Array<AnyField | List>
   type: 'column' | (string & {})
 } & Base
 
@@ -184,9 +189,23 @@ export type SourceEvent = ActionEvent<'source'> & {
   target: string
 }
 
+/**
+ * One row of a list, as a `value` event assigns it.
+ *
+ * Recursive because a row's leaf can be a list of its own: assigning `groups`
+ * a row whose `checks` leaf is a list is assigning that list too, so the tree
+ * an event carries is as deep as the lists it is aimed at. That was always
+ * reachable through `Record<string, unknown>`, which typechecks a nested array
+ * without saying anything about it -- naming it is what makes the contract say
+ * out loud how far down an assignment goes.
+ */
+export type ValueRow = {
+  [leaf: string]: Value | ValueRow[] | null | undefined
+}
+
 export type ValueEvent = ActionEvent<'value'> & {
   onlyIfTargetEmpty?: boolean
-  value: Record<string, Value | Array<Record<string, unknown>>>
+  value: Record<string, Value | ValueRow[]>
 }
 
 export type StateEvent = ActionEvent<'state'> & {

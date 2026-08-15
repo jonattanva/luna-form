@@ -22,7 +22,7 @@ import {
   isClickable,
   isEmpty,
   isInput,
-  isObject,
+  isRows,
   resolveTarget,
   translate,
   type AriaAttributes,
@@ -64,16 +64,6 @@ export type InputCoreProps = Readonly<{
 // handler or an effect, neither of which runs while rendering on the server.
 function isFieldFocused(name: string) {
   return document.activeElement?.getAttribute('name') === name
-}
-
-// A list's worth of rows -- the shape `ValueEvent.value` has always declared
-// it accepts alongside a scalar. Checked rather than assumed because the
-// target being a list does not oblige the definition to have aimed the right
-// thing at it.
-function isRows(
-  candidate: unknown
-): candidate is Array<Record<string, unknown>> {
-  return Array.isArray(candidate) && candidate.every(isObject)
 }
 
 export function useInputCore(

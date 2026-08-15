@@ -379,4 +379,59 @@ test.describe('List field initial value', { tag: ['@e2e'] }, () => {
     await expect(inputs).toHaveCount(3)
     await expect(inputs.nth(0)).toHaveValue('only@example.com')
   })
+
+  test('should stop at the maximum when the initial value has more', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "emails": [
+            { "email": "first@example.com" },
+            { "email": "second@example.com" },
+            { "email": "third@example.com" },
+            { "email": "fourth@example.com" }
+          ]
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Email Addresses",
+                "name": "emails",
+                "type": "list",
+                "advanced": {
+                  "length": {
+                    "max": 2
+                  },
+                  "action": "Add email address"
+                },
+                "fields": [
+                  {
+                    "name": "email",
+                    "type": "input/email"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    // The same ceiling the add button and the submit schema enforce. Mounting
+    // above it opened a list that could not be added to and could not be
+    // submitted until the extra rows were deleted by hand.
+    const inputs = page.locator('input[name$="email"]')
+    await expect(inputs).toHaveCount(2)
+    await expect(inputs.nth(0)).toHaveValue('first@example.com')
+    await expect(inputs.nth(1)).toHaveValue('second@example.com')
+
+    await expect(
+      page.getByRole('button', { name: /Add email address/ })
+    ).toBeDisabled()
+  })
 })

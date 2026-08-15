@@ -225,6 +225,75 @@ const FORM_NESTED = JSON.stringify({
   ],
 })
 
+// A list whose rows hold a list of their own, assigned from outside in one
+// go: the whole tree arrives on the option and the event hands it to the outer
+// list.
+//
+// This is the writing half of the seam `list-nested-outer-clobber` covers in
+// the reading direction. The outer list owns rows; each row's `checks` leaf is
+// not a value but another list, with its own row count and its own keys one
+// level deeper. Writing the array under `groups.<id>.checks` puts it somewhere
+// the inner list never looks, so the rows were created and everything inside
+// them was dropped.
+//
+// `name` sits beside `checks` on purpose: an outer row mixes a plain leaf with
+// a nested list, and both have to land.
+const GROUP_FIRST = {
+  name: 'first',
+  checks: [ROW_ALPHA, ROW_BETA],
+}
+
+const GROUP_SECOND = {
+  name: 'second',
+  checks: [ROW_GAMMA],
+}
+
+const FORM_NESTED_ASSIGN = JSON.stringify({
+  sections: [
+    {
+      fields: [
+        {
+          label: 'Preset',
+          name: 'preset',
+          type: 'select',
+          advanced: { transient: true },
+          source: [
+            { label: 'None', value: 'none', preset_groups: [] },
+            { label: 'One', value: 'one', preset_groups: [GROUP_FIRST] },
+            {
+              label: 'Two',
+              value: 'two',
+              preset_groups: [GROUP_FIRST, GROUP_SECOND],
+            },
+          ],
+          event: {
+            change: [{ action: 'value', value: { groups: '{preset_groups}' } }],
+          },
+        },
+        {
+          label: 'Groups',
+          name: 'groups',
+          type: 'list',
+          advanced: { action: 'Add group', length: { min: 0 } },
+          fields: [
+            { label: 'Name', name: 'name', type: 'input/text' },
+            {
+              label: 'Checks',
+              name: 'checks',
+              type: 'list',
+              advanced: { action: 'Add check', length: { min: 0 } },
+              fields: [
+                { label: 'Key', name: 'key', type: 'input/text' },
+                { label: 'Amount', name: 'amount', type: 'input/text' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+})
+
 // On `/` rather than `/reactive` on purpose. That harness merges every change
 // into its value by name, so an edit to a row leaves a flat `rows.1.amount`
 // key sitting beside the `rows` array it also keeps, and hands both back. What
@@ -241,6 +310,10 @@ function keys(page: Page) {
 
 function amounts(page: Page) {
   return page.locator('input[name$=".amount"]')
+}
+
+function names(page: Page) {
+  return page.locator('input[name$=".name"]')
 }
 
 async function choose(page: Page, option: string, label = 'Preset') {
@@ -488,6 +561,108 @@ test.describe('List filled by a value event', { tag: ['@e2e'] }, () => {
 
     await expect(keys(page)).toHaveCount(1)
     await expect(keys(page).nth(0)).toHaveValue('alpha')
+  })
+
+  test('should fill the lists inside the rows it assigns', async ({ page }) => {
+    await inject(page, FORM_NESTED_ASSIGN)
+    const events = captureValueChanges(page)
+    await page.goto('')
+
+    await choose(page, 'Two')
+
+    await expect(names(page)).toHaveCount(2)
+    await expect(names(page).nth(0)).toHaveValue('first')
+    await expect(names(page).nth(1)).toHaveValue('second')
+
+    // Three inner rows across two outer rows: two in the first group, one in
+    // the second. The structure alone used to arrive -- rows created, every
+    // leaf inside them empty.
+    await expect(keys(page)).toHaveCount(3)
+    await expect(keys(page).nth(0)).toHaveValue('alpha')
+    await expect(keys(page).nth(1)).toHaveValue('beta')
+    await expect(keys(page).nth(2)).toHaveValue('gamma')
+    await expect(amounts(page).nth(2)).toHaveValue('3')
+
+    // Each inner list is reached by its rendered path, one per outer row, so
+    // the second group's rows are its own and not a copy of the first's.
+    await expect(keys(page).nth(2)).toHaveAttribute(
+      'name',
+      /^groups\.\d+\.checks\.\d+\.key$/
+    )
+
+    // And the tree the consumer is told about is the tree that was sent. One
+    // report for the list as a whole, nested rows and all: a consumer that
+    // saves what it is handed has to be handed the whole thing.
+    await expect
+      .poll(() => lastEventFor(events, 'groups')?.value)
+      .toEqual([GROUP_FIRST, GROUP_SECOND])
+  })
+
+  test('should replace a nested assignment without leaving the old rows', async ({
+    page,
+  }) => {
+    await inject(page, FORM_NESTED_ASSIGN)
+    const events = captureValueChanges(page)
+    await page.goto('')
+
+    await choose(page, 'Two')
+    await expect(keys(page)).toHaveCount(3)
+
+    await choose(page, 'One')
+
+    // The second group is gone and so are its rows. An inner list left holding
+    // what a dropped row gave it would surface `gamma` inside a group that
+    // never had it.
+    await expect(names(page)).toHaveCount(1)
+    await expect(keys(page)).toHaveCount(2)
+    await expect(keys(page).nth(0)).toHaveValue('alpha')
+    await expect(keys(page).nth(1)).toHaveValue('beta')
+
+    await expect
+      .poll(() => lastEventFor(events, 'groups')?.value)
+      .toEqual([GROUP_FIRST])
+  })
+
+  test('should grow a nested assignment onto the rows already there', async ({
+    page,
+  }) => {
+    await inject(page, FORM_NESTED_ASSIGN)
+    const events = captureValueChanges(page)
+    await page.goto('')
+
+    await choose(page, 'One')
+    await expect(keys(page)).toHaveCount(2)
+
+    // The first row is reused rather than rebuilt, so its inner list is a list
+    // that is already on screen taking a second delivery -- the case a
+    // brand-new row never exercises.
+    await choose(page, 'Two')
+
+    await expect(names(page)).toHaveCount(2)
+    await expect(keys(page)).toHaveCount(3)
+    await expect(keys(page).nth(0)).toHaveValue('alpha')
+    await expect(keys(page).nth(2)).toHaveValue('gamma')
+
+    await expect
+      .poll(() => lastEventFor(events, 'groups')?.value)
+      .toEqual([GROUP_FIRST, GROUP_SECOND])
+  })
+
+  test('should empty the nested lists along with the rows holding them', async ({
+    page,
+  }) => {
+    await inject(page, FORM_NESTED_ASSIGN)
+    const events = captureValueChanges(page)
+    await page.goto('')
+
+    await choose(page, 'Two')
+    await expect(keys(page)).toHaveCount(3)
+
+    await choose(page, 'None')
+
+    await expect(names(page)).toHaveCount(0)
+    await expect(keys(page)).toHaveCount(0)
+    await expect.poll(() => lastEventFor(events, 'groups')?.value).toEqual([])
   })
 
   test('should keep a surviving row mounted', async ({ page }) => {

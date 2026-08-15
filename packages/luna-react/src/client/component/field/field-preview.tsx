@@ -9,7 +9,7 @@ import { FieldPreviewItem } from './field-preview-item'
 import { resolveValue } from '../../lib/resolve-value'
 import { useLiveItemValue } from '../../hook/use-live-item-value'
 import { useMemo } from 'react'
-import type { Column, Field, PreviewItem } from '@luna-form/core'
+import type { Fields, PreviewItem } from '@luna-form/core'
 
 type NormalizedPreview = Exclude<PreviewItem, string>
 
@@ -40,7 +40,7 @@ export function FieldPreview({
   value,
 }: Readonly<{
   className?: string
-  fields?: Array<Field | Column>
+  fields?: Fields
   label?: string
   lang?: string
   name: string

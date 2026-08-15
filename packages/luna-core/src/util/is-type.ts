@@ -7,6 +7,17 @@ export function isObject<T>(value: unknown): value is Record<string, T> {
   )
 }
 
+// A list's worth of rows -- the shape `ValueEvent.value` has always declared
+// it accepts alongside a scalar. Checked rather than assumed because the target
+// being a list does not oblige the definition to have aimed the right thing at
+// it, and because a row's own leaf can be a list, which makes the same question
+// come up again one level down.
+export function isRows(
+  candidate: unknown
+): candidate is Array<Record<string, unknown>> {
+  return Array.isArray(candidate) && candidate.every(isObject)
+}
+
 export function isEmpty(value: unknown): boolean {
   return value === null || value === undefined || value === ''
 }
