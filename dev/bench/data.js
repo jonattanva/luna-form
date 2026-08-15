@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786713787508,
+  "lastUpdate": 1786821399045,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "5bb445faa4843d6236ea15ccbf93c2a1c3642e10",
-          "message": "chore: formatting and minor refactors in svelte-luna-editor and luna-svelte",
-          "timestamp": "2026-04-09T09:04:47-05:00",
-          "tree_id": "b7bd3a34c89bb81645b4067fe2feea4cc960582a",
-          "url": "https://github.com/jonattanva/luna-form/commit/5bb445faa4843d6236ea15ccbf93c2a1c3642e10"
-        },
-        "date": 1775743531646,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0020807300000000167,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0033998559999999997,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.041968650000000024,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0010201860000000806,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.002018854000000033,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.040092041999999994,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.031446075059999995,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6f6c04c4af4ba92599be2c483fc63fe02b1a8383",
+          "message": "Merge pull request #58 from jonattanva/fix/nested-list-value-assignment\n\nfix(list): assign the lists inside the rows, not just the rows",
+          "timestamp": "2026-08-15T14:15:38-05:00",
+          "tree_id": "fbbd53bd0947d5b0838e0f15b1d7630d10c65e40",
+          "url": "https://github.com/jonattanva/luna-form/commit/6f6c04c4af4ba92599be2c483fc63fe02b1a8383"
+        },
+        "date": 1786821397819,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00037954176000000017,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0011200427400000006,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.032753444640000004,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0004407843199999934,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006223824799999966,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.028938872840000004,
             "unit": "ms"
           }
         ]
