@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786821399045,
+  "lastUpdate": 1786821428150,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "9faa801d3d4c71fe2d2af720ad6ad7016f4f760b",
-          "message": "fix field description",
-          "timestamp": "2026-02-27T11:53:51-05:00",
-          "tree_id": "3afcb56bb70a09b322b43b89ea0baa58f02ec19c",
-          "url": "https://github.com/jonattanva/luna-form/commit/9faa801d3d4c71fe2d2af720ad6ad7016f4f760b"
-        },
-        "date": 1772211311609,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 219,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 174,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "97321f5c8c41bfd74bf7d766d364a3d8f0116835",
           "message": "fix error",
           "timestamp": "2026-03-01T22:32:43-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 614,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6f6c04c4af4ba92599be2c483fc63fe02b1a8383",
+          "message": "Merge pull request #58 from jonattanva/fix/nested-list-value-assignment\n\nfix(list): assign the lists inside the rows, not just the rows",
+          "timestamp": "2026-08-15T14:15:38-05:00",
+          "tree_id": "fbbd53bd0947d5b0838e0f15b1d7630d10c65e40",
+          "url": "https://github.com/jonattanva/luna-form/commit/6f6c04c4af4ba92599be2c483fc63fe02b1a8383"
+        },
+        "date": 1786821428107,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 270,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 221,
             "unit": "ms"
           }
         ]
