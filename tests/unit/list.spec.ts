@@ -3,8 +3,8 @@ import {
   flattenListFields,
   getAssignedCount,
   getInitialList,
-  getListLeafNames,
-  getNestedLists,
+  getListBounds,
+  getListLeaves,
   normalizeListRows,
 } from '@/packages/luna-core/src/util/list'
 import type { Column, Field, List } from '@/packages/luna-core/src/type'
@@ -122,88 +122,54 @@ describe('flattenListFields', () => {
   })
 })
 
-describe('getListLeafNames', () => {
-  test('names the fields of a row in the order they are declared', () => {
-    const list: List = {
-      name: 'rows',
-      type: 'list',
-      fields: [
-        { name: 'key', type: 'input/text' },
-        { name: 'amount', type: 'input/text' },
-      ],
-    }
+describe('getListLeaves', () => {
+  test('returns the fields of a row in the order they are declared', () => {
+    const key: Field = { name: 'key', type: 'input/text' }
+    const amount: Field = { name: 'amount', type: 'input/text' }
 
-    expect(getListLeafNames(list)).toEqual(['key', 'amount'])
+    expect(getListLeaves([key, amount])).toEqual([key, amount])
   })
 
-  test('walks through a column rather than naming it', () => {
-    const column: Column = {
-      type: 'column',
-      fields: [
-        { name: 'first', type: 'input/text' },
-        { name: 'second', type: 'input/text' },
-      ],
-    }
+  test('walks through a column rather than returning it', () => {
+    const first: Field = { name: 'first', type: 'input/text' }
+    const second: Field = { name: 'second', type: 'input/text' }
+    const third: Field = { name: 'third', type: 'input/text' }
+    const column: Column = { type: 'column', fields: [first, second] }
 
-    const list: List = {
-      name: 'rows',
-      type: 'list',
-      fields: [column, { name: 'third', type: 'input/text' }],
-    }
-
-    expect(getListLeafNames(list)).toEqual(['first', 'second', 'third'])
+    expect(getListLeaves([column, third])).toEqual([first, second, third])
   })
 
-  test('names a nested list, which is one of the row leaves', () => {
-    const list: List = {
-      name: 'groups',
-      type: 'list',
-      fields: [
-        { name: 'name', type: 'input/text' },
-        { name: 'checks', type: 'list', fields: [] },
-      ],
-    }
+  test('returns a nested list, which is one of the row leaves', () => {
+    const name: Field = { name: 'name', type: 'input/text' }
+    const checks: List = { name: 'checks', type: 'list', fields: [] }
 
-    expect(getListLeafNames(list)).toEqual(['name', 'checks'])
+    expect(getListLeaves([name, checks])).toEqual([name, checks])
+  })
+
+  test('returns a nested list declared inside a column', () => {
+    const checks: List = { name: 'checks', type: 'list', fields: [] }
+    const column: Column = { type: 'column', fields: [checks] }
+
+    expect(getListLeaves([column])).toEqual([checks])
   })
 })
 
-describe('getNestedLists', () => {
-  test('returns nothing for a flat list', () => {
+describe('getListBounds', () => {
+  test('defaults to one row and no ceiling', () => {
+    const list: List = { name: 'rows', type: 'list', fields: [] }
+
+    expect(getListBounds(list)).toEqual({ min: 1, max: Infinity })
+  })
+
+  test('takes what the list declares', () => {
     const list: List = {
       name: 'rows',
       type: 'list',
-      fields: [{ name: 'key', type: 'input/text' }],
+      fields: [],
+      advanced: { length: { min: 0, max: 3 } },
     }
 
-    expect(getNestedLists(list)).toEqual({})
-  })
-
-  test('keys a nested list by the name it answers to', () => {
-    const checks: List = { name: 'checks', type: 'list', fields: [] }
-    const list: List = {
-      name: 'groups',
-      type: 'list',
-      fields: [{ name: 'name', type: 'input/text' }, checks],
-    }
-
-    expect(getNestedLists(list)).toEqual({ checks })
-  })
-
-  test('finds a nested list inside a column', () => {
-    const checks: List = { name: 'checks', type: 'list', fields: [] }
-    const column: Column = {
-      type: 'column',
-      fields: [{ name: 'name', type: 'input/text' }, checks],
-    }
-
-    const list: List = {
-      name: 'groups',
-      type: 'list',
-      fields: [column],
-    }
-
-    expect(getNestedLists(list)).toEqual({ checks })
+    expect(getListBounds(list)).toEqual({ min: 0, max: 3 })
   })
 })
 

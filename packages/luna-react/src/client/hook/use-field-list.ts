@@ -1,8 +1,9 @@
 import { deepEqual } from 'fast-equals'
 import {
   getInitialList,
-  getListLeafNames,
-  getNestedLists,
+  getListBounds,
+  getListLeaves,
+  isList,
   isValidValue,
   normalizeListRows,
   type List,
@@ -37,8 +38,7 @@ export function useFieldList(
   value?: Nullable<Record<string, unknown>>,
   onValueChange?: (input: { name: string; value: unknown }) => void
 ) {
-  const min = field.advanced?.length?.min ?? 1
-  const max = field.advanced?.length?.max ?? Infinity
+  const { min, max } = getListBounds(field)
 
   const [items, setItems] = useState<number[]>(() =>
     getInitialList(field, value)
@@ -68,8 +68,15 @@ export function useFieldList(
   // serialization fallback.
   const initialValueRef = useRef(value)
 
-  // Flat list of leaf field names (skipping columns), computed once per field.
-  const leafNames = useMemo(() => getListLeafNames(field), [field])
+  // A row's leaves, columns walked through, computed once per field. Kept as
+  // the definitions rather than only the names because assigning has to tell a
+  // leaf that is a list from one that is a value, and the names alone cannot.
+  const leaves = useMemo(() => getListLeaves(field.fields), [field.fields])
+
+  // The keys a row owns in the flat value store, which is all seeding, reading
+  // and removing need, and what is published to the registry for a list above
+  // to read this one back out.
+  const leafNames = useMemo(() => leaves.map((leaf) => leaf.name), [leaves])
 
   const isTranslatePath = useCallback((segment: string, position: number) => {
     const id = Number(segment)
@@ -314,19 +321,18 @@ export function useFieldList(
 
     // Rows this assignment owes to the lists inside its rows, gathered so the
     // whole tree is one write to the atom rather than one per inner list.
-    const nested = getNestedLists(field)
     const deliveries: Record<string, Array<Record<string, unknown>>> = {}
 
     nextItems.forEach((stableId, index) => {
       const row = assigned[index]
 
-      for (const name of leafNames) {
-        const value = row[name]
+      for (const leaf of leaves) {
+        const value = row[leaf.name]
         if (value === undefined) {
           continue
         }
 
-        const key = itemKey(field.name, stableId, name)
+        const key = itemKey(field.name, stableId, leaf.name)
         nextValues[key] = value
 
         // A leaf that is a list cannot be written by writing it: its values are
@@ -339,7 +345,7 @@ export function useFieldList(
         // is where the inner list is read from while it is collapsed and its
         // effects are torn down, and it is what the delivery falls back to if
         // the inner list is not on screen to take it.
-        if (nested[name]) {
+        if (isList(leaf)) {
           deliveries[key] = value as Array<Record<string, unknown>>
         }
       }

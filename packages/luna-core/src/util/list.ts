@@ -2,13 +2,54 @@ import { COLUMN } from './constant'
 import { extract } from './extract'
 import { isColumn, isList } from './is-input'
 import { isRows } from './is-type'
-import type { Field, Fields, List, Nullable } from '../type'
+import type { AnyField, Field, Fields, List, Nullable } from '../type'
+
+/**
+ * How few and how many rows a list will show.
+ *
+ * The defaults are here rather than at each reading, because they are read at
+ * mount, on every add and remove, and on assignment -- four chances for one of
+ * them to say a list shows one row by default and another to say none.
+ */
+export function getListBounds(list: List): { min: number; max: number } {
+  return {
+    min: list.advanced?.length?.min ?? 1,
+    max: list.advanced?.length?.max ?? Infinity,
+  }
+}
+
+/**
+ * Every leaf of a row, in the order it is declared.
+ *
+ * A column is walked through rather than counted as one: it is a layout, so
+ * what it holds belongs to the row just as much as a field declared beside it.
+ * That rule is written down once here because three questions are asked of the
+ * same walk -- what a leaf's definition is, what names a row owns in the flat
+ * store, and which of those leaves are lists rather than values -- and three
+ * copies of it drift the moment one of them learns about a new kind of slot.
+ *
+ * A nested list is one of the leaves. It is not a value and is not stored like
+ * one, so a caller that only handles values has to say `isList` and skip it.
+ */
+export function getListLeaves(fields: Fields): Array<AnyField | List> {
+  const leaves: Array<AnyField | List> = []
+  for (const slot of fields) {
+    if (isColumn(slot)) {
+      for (const child of slot.fields) {
+        leaves.push(child)
+      }
+    } else {
+      leaves.push(slot)
+    }
+  }
+  return leaves
+}
 
 function getInitialCount(
   list: List,
   value?: Nullable<Record<string, unknown>>
 ): number {
-  const min = list.advanced?.length?.min ?? 1
+  const { min } = getListBounds(list)
 
   if (value) {
     const data = extract(value, list.name)
@@ -40,67 +81,12 @@ export function getLabel(list: List): string {
 
 // A nested list is left out on purpose: the one caller looks a leaf up to ask
 // what its options are for rendering a preview of it, and a list has none --
-// it is rows, not a value. `getNestedLists` is the lookup for the other
-// question.
+// it is rows, not a value.
 export function flattenListFields(fields: Fields): Record<string, Field> {
   const out: Record<string, Field> = {}
-  for (const row of fields) {
-    if (isColumn(row)) {
-      for (const child of row.fields) {
-        if (!isList(child)) {
-          out[child.name] = child
-        }
-      }
-    } else if (!isList(row)) {
-      out[row.name] = row
-    }
-  }
-  return out
-}
-
-/**
- * The names a row's leaves answer to, in the order they are declared.
- *
- * Columns are walked through rather than treated as a leaf: a column is a
- * layout, so what it holds belongs to the row just as much as a field declared
- * beside it. Same rule `flattenListFields` follows, which is where a leaf's
- * definition is looked up; this is the half that only needs the names, and it
- * is what keys a list's values in the flat store.
- */
-export function getListLeafNames(list: List): string[] {
-  const names: string[] = []
-  for (const slot of list.fields) {
-    if (isColumn(slot)) {
-      for (const child of slot.fields) {
-        names.push(child.name)
-      }
-    } else {
-      names.push(slot.name)
-    }
-  }
-  return names
-}
-
-/**
- * The leaves of a row that are lists in their own right, by the name they
- * answer to.
- *
- * A leaf like that is not a value and cannot be written like one: its values
- * live one level deeper and its row count is state inside the component that
- * renders it. So whoever assigns a row has to tell the two apart, and this is
- * the question they ask.
- */
-export function getNestedLists(list: List): Record<string, List> {
-  const out: Record<string, List> = {}
-  for (const slot of list.fields) {
-    if (isColumn(slot)) {
-      for (const child of slot.fields) {
-        if (isList(child)) {
-          out[child.name] = child
-        }
-      }
-    } else if (isList(slot)) {
-      out[slot.name] = slot
+  for (const leaf of getListLeaves(fields)) {
+    if (!isList(leaf)) {
+      out[leaf.name] = leaf
     }
   }
   return out
@@ -115,8 +101,7 @@ export function getNestedLists(list: List): Record<string, List> {
  * a row already respects.
  */
 export function getAssignedCount(list: List, length: number): number {
-  const min = list.advanced?.length?.min ?? 1
-  const max = list.advanced?.length?.max ?? Infinity
+  const { min, max } = getListBounds(list)
   return Math.min(Math.max(length, min), max)
 }
 
@@ -139,8 +124,7 @@ export function normalizeListRows(
   list: List,
   rows: Array<Record<string, unknown>>
 ): Array<Record<string, unknown>> {
-  const nested = getNestedLists(list)
-  const leafNames = getListLeafNames(list)
+  const leaves = getListLeaves(list.fields)
   const count = getAssignedCount(list, rows.length)
 
   const value: Array<Record<string, unknown>> = []
@@ -149,13 +133,12 @@ export function normalizeListRows(
     const row = rows[index]
     const item: Record<string, unknown> = {}
 
-    for (const name of leafNames) {
-      const inner = nested[name]
-      const leaf = row?.[name]
+    for (const leaf of leaves) {
+      const current = row?.[leaf.name]
 
-      item[name] = inner
-        ? normalizeListRows(inner, isRows(leaf) ? leaf : [])
-        : leaf
+      item[leaf.name] = isList(leaf)
+        ? normalizeListRows(leaf, isRows(current) ? current : [])
+        : current
     }
 
     value.push(item)
