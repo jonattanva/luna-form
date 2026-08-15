@@ -98,6 +98,40 @@ describe('List', () => {
 
     expect(getInitialList(list, value)).toEqual([0, 1, 2, 3])
   })
+
+  test('should stop at max when the value carries more rows', () => {
+    const list: List = {
+      name: 'items',
+      type: 'list',
+      fields: [],
+      advanced: {
+        length: {
+          max: 2,
+        },
+      },
+    }
+    const value = {
+      items: [{}, {}, {}, {}],
+    }
+
+    expect(getInitialList(list, value)).toEqual([0, 1])
+  })
+
+  test('should let max win over min when they disagree', () => {
+    const list: List = {
+      name: 'items',
+      type: 'list',
+      fields: [],
+      advanced: {
+        length: {
+          min: 4,
+          max: 2,
+        },
+      },
+    }
+
+    expect(getInitialList(list)).toEqual([0, 1])
+  })
 })
 
 describe('flattenListFields', () => {

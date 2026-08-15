@@ -125,7 +125,7 @@ A `list` is a valid target. Give it an array of objects and it becomes exactly t
 Points worth knowing:
 
 - **It assigns, it does not add.** The list ends up with the rows you gave it and nothing else; the values of the rows that went away are discarded. To append, send the current array plus the new element — the sender is the one that knows what is already there.
-- **`advanced.length` still applies.** A shorter array leaves the remainder standing and empty up to `min`, the same thing a short initial `value` does at mount; anything past `max` is dropped.
+- **`advanced.length` still applies.** A shorter array leaves the remainder standing and empty up to `min` and anything past `max` is dropped — the same clamp an initial `value` gets at mount, so a list holds the same rows however they arrived.
 - **Rows that survive keep their identity.** They are matched by position, so growing a list does not remount the rows already on screen, and a caret sitting in one of them stays put.
 - **A row that only carries some of the keys leaves the rest empty**, rather than keeping what the previous row in that position had.
 - **Assigning what is already there does nothing.** No rebuild, and no report to the consumer. Deduplication is still the sender's job, though: this only recognises an assignment that matches the list as a whole, and by the time it does the event has already been raised.

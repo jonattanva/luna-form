@@ -45,19 +45,24 @@ export function getListLeaves(fields: Fields): Array<AnyField | List> {
   return leaves
 }
 
+/**
+ * How many rows a list opens with.
+ *
+ * The `value` prop is an assignment like any other, so it is clamped like one.
+ * `max` used to be ignored here, which let a document open a list above the
+ * ceiling the same list enforces everywhere else: the add button is already
+ * disabled, the schema already refuses to submit, and an assignment of the same
+ * array would have stopped at `max`. Only mounting disagreed.
+ *
+ * A list with no rows in the value opens at `min`, which is what a length of
+ * zero clamps up to.
+ */
 function getInitialCount(
   list: List,
   value?: Nullable<Record<string, unknown>>
 ): number {
-  const { min } = getListBounds(list)
-
-  if (value) {
-    const data = extract(value, list.name)
-    if (Array.isArray(data)) {
-      return Math.max(data.length, min)
-    }
-  }
-  return Math.max(min, 0)
+  const data = value ? extract(value, list.name) : null
+  return getAssignedCount(list, Array.isArray(data) ? data.length : 0)
 }
 
 export function isMultiFieldList(list: List): boolean {
