@@ -134,8 +134,7 @@ en un `checkbox` marca la casilla**. `prepareDefaultValue` hace
 camino de `value` no tiene el problema; solo el atajo `defaultValue`. Parece un
 bug de la libreria, no de los docs — pendiente de decidir.
 
-Sin hacer todavia: la linea en el `AGENTS.md` del consumidor (Fase 2b) y que
-hacer con `data-table`, la constante sin consumidor.
+Sin hacer todavia: la linea en el `AGENTS.md` del consumidor (Fase 2b).
 
 ### Plan original
 
@@ -179,9 +178,13 @@ De los 22 tipos renderizables que declara `luna-core/src/util/constant.ts`:
 | `input/number`       | solo de pasada en `validation/overview.md`                    |
 | los otros 17         | cubiertos en la pagina de su familia                          |
 
-`data-table` es caso aparte: la constante existe en `luna-core` y **ningun
-archivo de `luna-react` la importa**. No es un hueco de documentacion sino una
-constante sin consumidor; decidir si se implementa o se borra.
+`data-table` era caso aparte, y se **borro** (2026-08-20). Una sola linea en
+todo el repo, introducida el 2026-02-18 en el mismo commit que `LIST` como
+hermano especulativo, sin implementacion en ningun momento de la historia y sin
+quedar expuesta por ninguna entrada del paquete. No era un hueco de
+documentacion: era un plan que nunca se ejecuto, y una constante sin
+implementacion es indistinguible de una funcionalidad sin documentar para
+cualquier auditoria futura.
 
 ### Eje 2: superficie de API
 
@@ -212,8 +215,8 @@ Un quinto entregable, y por valor va el segundo despues de `custom-inputs.md`:
    `env`), los cuatro puntos de entrada y cuando usar cada uno, `Form` cliente
    contra `Form` de servidor, y `withDeclaredFields`.
 
-Y dos menores: dar hogar a `textarea` y `checkbox` (ampliando
-`fields/input.md` o una pagina propia), y decidir que hacer con `data-table`.
+Y dos menores, ambos resueltos: `textarea` y `checkbox` tienen ahora seccion en
+`fields/input.md`, y `data-table` se borro (ver arriba).
 
 ## Fase 2 - Que los agentes los encuentren
 
