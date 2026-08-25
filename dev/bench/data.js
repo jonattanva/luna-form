@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787627366478,
+  "lastUpdate": 1787627398446,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "e28335eeaf8471672400de379507f787d48024ff",
-          "message": "refactor: simplify orientation logic to use boolean horizontal property",
-          "timestamp": "2026-03-09T20:06:17-05:00",
-          "tree_id": "071df2f9ec55d195e3b95d32a1d9d068b731f3ab",
-          "url": "https://github.com/jonattanva/luna-form/commit/e28335eeaf8471672400de379507f787d48024ff"
-        },
-        "date": 1773104860351,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 256,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 198,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "61fd3ffee0d7c31ae414046f821a1c810558dc19",
           "message": "chore: set rootDir in packages/luna-core/tsconfig.json",
           "timestamp": "2026-04-06T18:08:10-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 596,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "044fc116d72a3889e7ce6a58b6581c4ab0c04414",
+          "message": "Merge pull request #59 from jonattanva/docs/ship-docs-in-package\n\ndocs: ship the form documentation inside the package",
+          "timestamp": "2026-08-24T22:08:40-05:00",
+          "tree_id": "de74c26b8069c9eb5e3459a14ecc275d79cde50f",
+          "url": "https://github.com/jonattanva/luna-form/commit/044fc116d72a3889e7ce6a58b6581c4ab0c04414"
+        },
+        "date": 1787627398404,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 281,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 557,
             "unit": "ms"
           }
         ]
