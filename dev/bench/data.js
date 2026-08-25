@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787669862784,
+  "lastUpdate": 1787669889865,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "ae711b575565958d5409455f82716bd04166b7f5",
-          "message": "fix(luna-svelte): replace Orientation type with horizontal boolean\n\nRemoves the removed Orientation type and HORIZONTAL/VERTICAL constants\nfrom luna-core imports, aligning luna-svelte with the orientation refactor.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-06T18:33:00-05:00",
-          "tree_id": "7ad2424e138edb448814b2a6981cfaee60907f16",
-          "url": "https://github.com/jonattanva/luna-form/commit/ae711b575565958d5409455f82716bd04166b7f5"
-        },
-        "date": 1775518450954,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 265,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 668,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "498e8f2084db2c56eb8012bafa7161160775dc52",
           "message": "feat: add timezone select component and unit/e2e tests",
           "timestamp": "2026-04-09T09:01:53-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 143,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "ef8d8398826b4fa03f75162ff0f12bb5ffea963e",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-08-25T09:56:44-05:00",
+          "tree_id": "cfd938a239435b75e1e10817f6949f94f1a5381d",
+          "url": "https://github.com/jonattanva/luna-form/commit/ef8d8398826b4fa03f75162ff0f12bb5ffea963e"
+        },
+        "date": 1787669889834,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 272,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 558,
             "unit": "ms"
           }
         ]
