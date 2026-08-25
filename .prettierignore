@@ -2,10 +2,12 @@ examples
 
 apps/**/.next
 apps/**/.turbo
+apps/**/next-env.d.ts
 
 packages/**/.svelte-kit
 packages/**/.turbo
 packages/**/dist
 
+.claude/settings.local.json
 node_modules
 pnpm-lock.yaml

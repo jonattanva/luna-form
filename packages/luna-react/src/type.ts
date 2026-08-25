@@ -14,8 +14,7 @@ export type Slot = (props: {
 }) => React.ReactNode
 
 export type Control =
-  | ((props: { isPending?: boolean }) => React.ReactNode)
-  | React.ReactNode
+  ((props: { isPending?: boolean }) => React.ReactNode) | React.ReactNode
 
 export type Children = (props: {
   ariaAttributes?: AriaAttributes
