@@ -2,10 +2,11 @@ export const INPUT = 'input'
 export const INPUT_DATE = 'input/date'
 export const INPUT_EMAIL = 'input/email'
 export const INPUT_NUMBER = 'input/number'
-export const INPUT_PASSWORD = 'input/password'
-export const INPUT_TEL = 'input/tel'
-export const INPUT_TEXT = 'input/text'
 export const INPUT_TIME = 'input/time'
+
+const INPUT_PASSWORD = 'input/password'
+const INPUT_TEL = 'input/tel'
+const INPUT_TEXT = 'input/text'
 
 export const INPUTS = [
   INPUT,
@@ -73,13 +74,11 @@ export const MIN = 'min'
 export const MIN_LENGTH = 'minLength'
 
 export const $REF = '$ref'
-export const SET = 'set'
 export const SOURCE = 'source'
 export const STATE = 'state'
 
 export const COMMON_URL = 'http://luna.internal'
 
-export const HIDDEN = 'hidden'
 export const TYPE = 'type'
 
 export const TIMEZONE_REGIONS: Record<string, string> = {

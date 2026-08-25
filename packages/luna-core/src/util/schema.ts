@@ -109,10 +109,7 @@ export function getEmail(input: Input, translations?: Record<string, string>) {
     .nullable()
 }
 
-export function getBoolean(
-  input: Input,
-  translations?: Record<string, string>
-) {
+function getBoolean(input: Input, translations?: Record<string, string>) {
   let schema = z.preprocess((value) => {
     if (typeof value === 'string') {
       if (value === 'true') {
@@ -141,7 +138,7 @@ export function getBoolean(
   return schema.nullable()
 }
 
-export function getRadio(input: Input, translations?: Record<string, string>) {
+function getRadio(input: Input, translations?: Record<string, string>) {
   let schema = z.coerce.string()
   if (input.required) {
     schema = schema.min(1, getRequiredMessage(input, translations))
@@ -345,10 +342,7 @@ function getRequiredMessage(
     : undefined
 }
 
-export function getArraySchema(
-  input: Input,
-  translations?: Record<string, string>
-) {
+function getArraySchema(input: Input, translations?: Record<string, string>) {
   let baseSchema = z.array(z.string())
 
   if (input.required) {
@@ -523,7 +517,7 @@ type RuleIssue = { path: Array<string | number>; message?: string }
 
 // Generic over the schema type so it preserves ZodObject (Zod v4 `.superRefine`
 // keeps the type), letting `buildSchema` stay ZodObject-typed for the runtime.
-export function applyDeclarativeRules<T extends z.ZodType>(
+function applyDeclarativeRules<T extends z.ZodType>(
   schema: T,
   fields: Field[] = [],
   translations?: Record<string, string>

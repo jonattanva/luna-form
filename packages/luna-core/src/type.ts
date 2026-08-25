@@ -41,27 +41,22 @@ export type Source = {
 
 export type Definition = Record<string, unknown>
 
-export type Orderable = {
+type Orderable = {
   order?: number
 }
 
-export type Hideable = {
+type Hideable = {
   hidden?: boolean
 }
 
 export type Sections = Section[]
-export type Multiple = readonly (string | number | boolean)[]
+type Multiple = readonly (string | number | boolean)[]
 
 export type Value = string | number | boolean | Multiple
 export type Option = {
   description?: string
   label: string
   value: string
-}
-
-export type OptionGroup = {
-  items: Option[]
-  label: string
 }
 
 export type PreviewItem =
@@ -180,7 +175,7 @@ export type FieldState = {
   hidden?: boolean
 }
 
-export type ActionEvent<T> = {
+type ActionEvent<T> = {
   action: T
 }
 
@@ -199,7 +194,7 @@ export type SourceEvent = ActionEvent<'source'> & {
  * without saying anything about it -- naming it is what makes the contract say
  * out loud how far down an assignment goes.
  */
-export type ValueRow = {
+type ValueRow = {
   [leaf: string]: Value | ValueRow[] | null | undefined
 }
 
@@ -305,7 +300,7 @@ export type Field = CommonProps & {
   validation?: Validation
 } & Base
 
-export type Length<T> = {
+type Length<T> = {
   max?: T
   min?: T
 }

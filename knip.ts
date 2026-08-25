@@ -8,8 +8,17 @@ const config: KnipConfig = {
       // unreachable.
       entry: ['benchmark/*.ts'],
     },
-    // Resolves on its own: `main` and `types` point straight at `src/index.ts`.
-    'packages/luna-core': {},
+    'packages/luna-core': {
+      // Entry resolves on its own: `main` and `types` point straight at
+      // `src/index.ts`. That file is a barrel of `export *`, so by default
+      // every symbol in the package counts as an entry export and is exempt
+      // from the dead-code check -- which is how `DATA_TABLE` sat here unused
+      // and unreported. The package is private and its only consumer is
+      // `luna-react`, inside this repository, so an export nothing imports is
+      // dead code rather than published API. `luna-react` is the opposite case
+      // and keeps the default.
+      includeEntryExports: true,
+    },
     'packages/luna-react': {
       // The four bundles built by `esbuild.mjs`, which are also the four keys
       // of the package's `exports` map. They have to be spelled out because
