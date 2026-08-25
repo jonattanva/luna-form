@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787667337807,
+  "lastUpdate": 1787667369046,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "c0ffa2e9bfbdf4b0c634adfaba52a39fdc464a6f",
-          "message": "chore: updates and fixes",
-          "timestamp": "2026-04-06T18:14:47-05:00",
-          "tree_id": "cd861a58c51a7c14d8a25b1cfa1686f755e972bd",
-          "url": "https://github.com/jonattanva/luna-form/commit/c0ffa2e9bfbdf4b0c634adfaba52a39fdc464a6f"
-        },
-        "date": 1775517359139,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 250,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 649,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "ae711b575565958d5409455f82716bd04166b7f5",
           "message": "fix(luna-svelte): replace Orientation type with horizontal boolean\n\nRemoves the removed Orientation type and HORIZONTAL/VERTICAL constants\nfrom luna-core imports, aligning luna-svelte with the orientation refactor.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-06T18:33:00-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 166,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8873761e5e3b8ed7f3ae1eff3c065042bd531bbb",
+          "message": "Merge pull request #63 from jonattanva/chore/knip-entry-exports\n\nchore(core): let knip see luna-core, and clear what it found",
+          "timestamp": "2026-08-25T09:14:43-05:00",
+          "tree_id": "812b172f326a8c852015df79a8244fe62204a315",
+          "url": "https://github.com/jonattanva/luna-form/commit/8873761e5e3b8ed7f3ae1eff3c065042bd531bbb"
+        },
+        "date": 1787667369019,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 221,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 143,
             "unit": "ms"
           }
         ]
