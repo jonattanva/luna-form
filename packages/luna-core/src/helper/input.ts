@@ -360,8 +360,11 @@ export function prepareInputProps<T, K>(
 
 export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
   if (isCheckbox(field)) {
+    // A checkbox is a boolean, so what matters is whether the value is true —
+    // not whether there is one. `isValidValue` answers the second question, and
+    // `false` is a perfectly valid value.
     return {
-      checked: isValidValue(value) ? value : false,
+      checked: Boolean(value),
     }
   }
 
@@ -384,8 +387,11 @@ export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
 
 export function prepareDefaultValue<T>(field: Field, value?: Nullable<T>) {
   if (isCheckbox(field)) {
+    // Same rule as `prepareInputValue`, and the reason this is spelled out twice:
+    // asking `isValidValue` here rendered `defaultValue: false` as a checked box
+    // on the server while the client left it clear.
     return {
-      defaultChecked: isValidValue(value),
+      defaultChecked: Boolean(value),
     }
   }
   return { defaultValue: value }
