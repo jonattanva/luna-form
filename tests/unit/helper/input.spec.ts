@@ -8,6 +8,7 @@ import {
   getPreselectedValue,
   resolveSource,
   prepareInputProps,
+  prepareInputValue,
 } from '@/packages/luna-core/src/helper/input'
 import type { Field, Select, CommonProps } from '@/packages/luna-core/src/type'
 
@@ -22,6 +23,27 @@ describe('Input Helper', () => {
     expect(result).toEqual({ defaultChecked: true })
   })
 
+  test('leaves a checkbox clear when its default is false', () => {
+    // Regression: this asked `isValidValue`, which answers "is there a value",
+    // and `false` is one. The server rendered a checked box for a declaration
+    // that says the opposite, while the client rendered it clear.
+    const field: Field = { name: 'subscribe', type: 'checkbox' }
+    expect(prepareDefaultValue(field, false)).toEqual({ defaultChecked: false })
+    expect(prepareDefaultValue(field, 0)).toEqual({ defaultChecked: false })
+  })
+
+  test('reads a checkbox default the same way on both render paths', () => {
+    // The defect was never one wrong branch, it was the two disagreeing: the
+    // same declaration rendered differently depending on which Form drew it.
+    // Pinning them together is what stops that coming back.
+    const field: Field = { name: 'subscribe', type: 'checkbox' }
+
+    for (const value of [true, false, 0, 1, '', 'x', null, undefined]) {
+      const server = prepareDefaultValue(field, value)
+      const client = prepareInputValue(field, value)
+      expect(server.defaultChecked, String(value)).toBe(client.checked)
+    }
+  })
   test('should return defaultValue for non-checkbox fields', () => {
     const field: Field = {
       name: 'username',

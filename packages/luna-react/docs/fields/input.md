@@ -167,16 +167,9 @@ A single boolean. It is the one field family whose value is not carried by
 }
 ```
 
-A missing value reads as unchecked rather than as an error.
-
-**Do not use `defaultValue: false`.** A checkbox turns `defaultValue` into
-`defaultChecked` by asking whether the value is present, not whether it is true,
-and `false` is present. The box renders **checked**, which is the opposite of
-what the declaration says. Omit `defaultValue` for an unchecked box, and use
-`defaultValue: true` for a checked one.
-
-Passing `false` as part of the form’s `value` is fine; it is only the
-`defaultValue` shorthand that inverts.
+A checkbox reads its state by truthiness, not by presence. `defaultValue: true`
+starts it checked; `false`, an omitted value, `null` and `0` all start it clear.
+A value passed to the form is read the same way, and both render paths agree.
 
 For a group of options rather than a single flag, use `chips` or `radio` — see
 [select.md](select.md).

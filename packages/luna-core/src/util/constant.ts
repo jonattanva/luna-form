@@ -24,7 +24,6 @@ export const RADIO = 'radio'
 export const CHECKBOX = 'checkbox'
 
 export const LIST = 'list'
-export const DATA_TABLE = 'data-table'
 
 export const SELECT = 'select'
 export const SELECT_ACTIVE = 'select/active'
