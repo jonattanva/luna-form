@@ -129,15 +129,38 @@ Specialized selectors carry their own built-in labels and are not resolved again
 - **`type`** _(string, required)_: One of the supported select types.
 - **`label`** _(string, optional)_: Human-readable label.
 - **`defaultValue`** _(any, optional)_: The initial selected value. Matches the `value` of one of the options.
+  For `chips`, it must be an **array** — see below.
 - **`required`** _(boolean, optional)_: If `true`, a value must be selected.
 
 ---
 
 ## Advanced Configuration (`advanced` object)
 
-- **`multiple`** _(boolean, optional)_: (Available for `chips`) Allows selecting more than one option. The form value will be an array of selected values.
+- **`multiple`** _(boolean, optional)_: (Available for `chips`) Allows selecting more than one option. Defaults to `true`.
 - **`preselected`** _(boolean, optional)_: For specialized selectors like `select/month`, determines if the current value (e.g., current month) should be selected by default.
 - **`horizontal`** _(boolean, optional)_: Renders the options or selector horizontally.
+
+### A chips value is always an array
+
+Whatever `multiple` says, a `chips` field holds an array. The value is coerced
+on the way in: anything that is not an array becomes `[]`.
+
+The consequence is a scalar `defaultValue`. This looks reasonable and does
+nothing:
+
+```json
+{ "name": "method", "type": "chips", "defaultValue": "GET" }
+```
+
+`"GET"` is not an array, so the field mounts with nothing selected. Nothing
+throws and nothing warns. Write it as an array, single selection or not:
+
+```json
+{ "name": "method", "type": "chips", "defaultValue": ["GET"] }
+```
+
+Setting `advanced.multiple` to `false` limits what a user can pick. It does not
+change the shape of the value, so it does not make a scalar default work.
 
 ---
 

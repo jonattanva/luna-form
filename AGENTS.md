@@ -7,10 +7,9 @@
 
 ## Project architecture
 
-- **package/luna-core**: Core utilities and types
-- **package/luna-react**: React bindings (depends on luna-core)
-- **packages/luna-svelte**: Svelte bindings (depends on luna-core)
-- **luna-core** must build before **luna-react** and **luna-svelte**
+- **packages/luna-core**: Core utilities and types
+- **packages/luna-react**: React bindings (depends on luna-core)
+- **luna-core** must build before **luna-react**
 
 ## Setup commands
 
@@ -35,11 +34,22 @@
 
 ## Testing
 
-- Framework: Playwright (not Jest or Vitest)
-- Unit tests: **tests/unit/** -- tagged with `@unit`
-- E2E tests: **tests/e2e/** -- tagged with `@e2e`
+- Unit tests: **tests/unit/** -- Vitest. Collected by path (`vitest.config.ts`), not by tag
+- E2E tests: **tests/e2e/** -- Playwright, tagged with `@e2e` (`pnpm test:e2e` filters on it)
 - Test files follow the pattern **\*.spec.ts**
 - E2E tests run against Chromium, Firefox, and WebKit
+
+## Form documentation
+
+The JSON contract of a luna form is documented in
+**packages/luna-react/docs/**, starting at `docs/index.md`. Read the relevant
+page before writing or changing form JSON, a validation rule or a change event.
+
+These files ship inside the published package (`files: ["dist", "docs"]`), so a
+consumer finds them at `node_modules/react-luna-form/docs/`. That is
+deliberate: the documentation is versioned with the code it describes, and
+cannot drift from the installed build. Keep it in step when the contract
+changes.
 
 ## Documentation guidelines
 

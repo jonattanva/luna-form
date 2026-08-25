@@ -283,6 +283,28 @@ The `source` action dispatches a request to a remote data source to fetch and po
 
 ---
 
+## When a change event runs at mount
+
+A `change` event does not only fire when the user edits the field. A field that
+mounts already holding something — either a `value` passed to the form or its
+own `defaultValue` — runs its `change` events **once**, at mount.
+
+This is usually what you want: a form reopened on saved data arrives with the
+same fields revealed, the same targets cleared and the same sources fetched as
+when it was filled in. It is worth knowing about because it means the actions
+below run before the user has touched anything.
+
+Two details:
+
+- **It happens once.** Re-rendering does not fire it again.
+- **A select waits for its options.** For a field whose options come from a
+  `source`, the initial run is held until the data has loaded, so an action
+  keyed on the selected entity sees the entity rather than a bare value. Text
+  and date fields run as soon as the value is valid.
+
+A field that mounts empty and has no `defaultValue` does not run anything until
+it is edited.
+
 ## Sequencing Actions
 
 Because `change` takes an array, multiple different events can be sequenced together to build complex logic flows.

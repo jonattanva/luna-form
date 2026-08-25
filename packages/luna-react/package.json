@@ -24,7 +24,8 @@
     "validation"
   ],
   "files": [
-    "dist"
+    "dist",
+    "docs"
   ],
   "peerDependencies": {
     "date-fns": "^4.0.0",
