@@ -7,7 +7,7 @@ import {
 import { entries } from './prepare'
 import type { Field } from '../type'
 
-export function getPrefixedAttributes(
+function getPrefixedAttributes(
   prefix: string,
   record?: Record<string, string | number | boolean>
 ) {

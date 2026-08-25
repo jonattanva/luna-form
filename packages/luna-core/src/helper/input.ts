@@ -55,7 +55,7 @@ import type {
 
 const now = getCurrentYear()
 
-export function buildOptionChips(field: Field, localization?: Localization) {
+function buildOptionChips(field: Field, localization?: Localization) {
   if (isChips(field)) {
     // Only `lang` reaches the builder: chips have no authored copy of their
     // own, so the dictionary is deliberately withheld.
@@ -73,7 +73,7 @@ function defineOptionChips(field: Chips, lang?: string) {
   }
 }
 
-export function buildOptionSelect(field: Field, localization?: Localization) {
+function buildOptionSelect(field: Field, localization?: Localization) {
   if (isSelect(field)) {
     return defineOptionSelect(field, localization)
   }
