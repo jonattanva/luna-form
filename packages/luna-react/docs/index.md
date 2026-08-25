@@ -38,9 +38,10 @@ Read the relevant page before writing the field, not after debugging it.
   Passing `{ change: false }` also turns off `blur`, `submit` and
   `showError` — the form loses its error summary and nothing says why. Pass
   every key you still want.
-- **Reveal rules fire on a change, not on an initial value.** A field revealed
-  by `state` will not appear just because the value it depends on was seeded as
-  a default. See [events/change.md](events/change.md).
+- **A `change` event also runs at mount.** A field that arrives with a value or
+  a `defaultValue` fires its `change` events once, so anything they reveal,
+  clear or fetch happens before the user touches the form. See
+  [events/change.md](events/change.md).
 
 ## Entry points
 

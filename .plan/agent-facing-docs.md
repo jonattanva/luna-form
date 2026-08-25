@@ -97,7 +97,47 @@ contra `packages/luna-react/src/config/index.ts:52`, la trampa existe pero es de
 que pasar `validation` a `defineConfig` descarta los cuatro defaults
 (`blur`, `change`, `showError`, `submit`). El indice ya lo dice asi.
 
-## Fase 1 - Cerrar los huecos
+## Fase 1 - Cerrar los huecos - HECHA (2026-08-20)
+
+Los cinco entregables mas los dos menores. Lo escrito abajo es el plan original;
+lo que se hizo, y lo que cambio al bajar al codigo:
+
+- `fields/custom-inputs.md` y `setup.md`, nuevos.
+- `fields/select.md`: la coercion a array de `chips`, y dos lineas que eran
+  imprecisas — `defaultValue` no aclaraba el caso de chips, y `multiple` daba a
+  entender que el array depende de el. No: el valor de un `chips` es siempre un
+  array, y `multiple` por defecto es `true`.
+- `fields/input.md`: el tipo `input` pelado (que resuelve a `text`), mas
+  `textarea` y `checkbox`, que no tenian pagina.
+- `events/change.md`: los eventos `change` que corren al montar.
+- La trampa de `validation` acabo en `setup.md`, no en `validation/overview.md`:
+  al leer el codigo resulto ser del **config**, no del campo.
+- Releidos los cuatro "cubiertos". `requiredWhen` en campos `hidden` esta bien
+  explicado en `validation/overview.md:277`, con el matiz de que `pattern` si
+  dispara. La propagacion de listas anidadas **no es una trampa vigente**: eran
+  bugs, arreglados en 0.0.67 y 0.0.80, y documentarlos en unos docs que viajan
+  con 0.0.81 seria ruido.
+
+Dos correcciones a afirmaciones que se habian escrito de memoria, ambas falsas
+y ambas cazadas al ir al codigo:
+
+1. "Las reglas `state` solo disparan en un cambio real, no en el valor inicial."
+   **Falso.** `input-base.tsx` procesa los eventos `change` al montar cuando hay
+   `value` o `defaultValue`, una sola vez; en select espera a que carguen las
+   opciones. Es lo contrario de lo que decia el indice, ahora corregido.
+2. "Un tipo no registrado cae al input base." **Falso**, ya corregido antes: no
+   renderiza nada.
+
+Y un hallazgo del propio codigo, documentado como trampa: **`defaultValue: false`
+en un `checkbox` marca la casilla**. `prepareDefaultValue` hace
+`defaultChecked: isValidValue(value)`, e `isValidValue(false)` es `true`. El
+camino de `value` no tiene el problema; solo el atajo `defaultValue`. Parece un
+bug de la libreria, no de los docs — pendiente de decidir.
+
+Sin hacer todavia: la linea en el `AGENTS.md` del consumidor (Fase 2b) y que
+hacer con `data-table`, la constante sin consumidor.
+
+### Plan original
 
 Por orden de valor.
 

@@ -1,9 +1,10 @@
-# Input Fields (`input/*`)
+# Input Fields (`input/*`, `textarea`, `checkbox`)
 
 The `input/*` field types in Luna Form map to standard HTML `<input>` elements. These fields are used for capturing text, numbers, dates, times, and other generic data values from the user.
 
 ## Supported Types
 
+- `input`: Same as `input/text`. The rendered `type` is taken from the part after the last `/`, and a bare `input` falls back to `text`.
 - `input/text`: Standard text input (`<input type="text">`).
 - `input/email`: Email address input with built-in format validation (`<input type="email">`).
 - `input/password`: Password input with text masked (`<input type="password">`).
@@ -124,3 +125,58 @@ You can attach logic-rich cascading events seamlessly directly inside the field 
   }
 }
 ```
+
+---
+
+## `textarea`
+
+Multi-line text. It takes the same core properties as an `input/*` field, and
+two of the `advanced` options above apply to it: `length` and `autocomplete`.
+Everything else in `advanced` is ignored for this type.
+
+```json
+{
+  "name": "notes",
+  "type": "textarea",
+  "label": "Notes",
+  "advanced": {
+    "length": { "max": 500 }
+  }
+}
+```
+
+`length.min` and `length.max` are emitted as the `minLength` and `maxLength`
+attributes on the rendered element.
+
+Like the `input/*` family, a declared `change` event on a `textarea` is
+debounced: it fires 300 ms after the last keystroke, not on every one.
+
+---
+
+## `checkbox`
+
+A single boolean. It is the one field family whose value is not carried by
+`value`: the rendered element receives `checked` instead.
+
+```json
+{
+  "name": "accepted",
+  "type": "checkbox",
+  "label": "I accept the terms",
+  "required": true
+}
+```
+
+A missing value reads as unchecked rather than as an error.
+
+**Do not use `defaultValue: false`.** A checkbox turns `defaultValue` into
+`defaultChecked` by asking whether the value is present, not whether it is true,
+and `false` is present. The box renders **checked**, which is the opposite of
+what the declaration says. Omit `defaultValue` for an unchecked box, and use
+`defaultValue: true` for a checked one.
+
+Passing `false` as part of the form’s `value` is fine; it is only the
+`defaultValue` shorthand that inverts.
+
+For a group of options rather than a single flag, use `chips` or `radio` — see
+[select.md](select.md).
