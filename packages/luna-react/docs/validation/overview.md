@@ -92,7 +92,7 @@ Validates a string value against a regular expression.
 - **`regex`** _(string, required)_: The pattern source (compiled with `new RegExp`).
 - **`flags`** _(string, optional)_: Regex flags, e.g. `"i"`.
 - **`message`** _(string, optional)_: The error message.
-- **`allowInterpolation`** _(boolean, optional)_: When `true`, the check is **skipped** if the value is dynamic and only resolved at run time — either an interpolation template (contains `{...}`) or an [`input/expression`](../fields/input.md) reference (a value beginning with `@`, e.g. `@Trigger.url`). Use this for fields that accept dynamic values, e.g. a URL like `{step.url}` or `@step.url`.
+- **`allowInterpolation`** _(boolean, optional)_: When `true`, the check is **skipped** if the value is dynamic and only resolved at run time — either an interpolation template (contains `{...}`) or a reference beginning with `@` (e.g. `@Trigger.url`), the convention applications built on this library use for a value resolved elsewhere. Use this for fields that accept dynamic values, e.g. a URL like `{step.url}` or `@step.url`.
 
 ```json
 {
