@@ -15,7 +15,11 @@ export function Chips({
   multiple = true,
 }: {
   name?: string
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
+  // Reports an array, and says so. The runtime reads nothing off a change but
+  // `target.value` (`InputChangeEvent` in `input-strategies`), and its value is
+  // a `Value` -- an array included -- so there is nothing here to pretend is a
+  // `React.ChangeEvent<HTMLInputElement>`, whose `value` is a `string`.
+  onChange?: (event: { target: { value: string[] } }) => void
   options?: Option[]
   value?: string[]
   multiple?: boolean
@@ -30,9 +34,7 @@ export function Chips({
       next = value.includes(dayValue) ? [] : [dayValue]
     }
 
-    onChange?.({
-      target: { value: next as unknown as string },
-    } as React.ChangeEvent<HTMLInputElement>)
+    onChange?.({ target: { value: next } })
   }
 
   return (

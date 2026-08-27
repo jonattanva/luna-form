@@ -33,6 +33,7 @@ import {
   type Nullable,
   type Schema,
   type Schemas,
+  type Value,
   validateCustom,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
@@ -168,8 +169,13 @@ export function useInputCore(
   // this callback is invoked from onChange (an event handler), not from a
   // useEffect. The ref allows onChange to always read the latest props without
   // adding them as useCallback dependencies, avoiding unnecessary re-renders.
-  const onValueChangeRef = useRef<((value: unknown) => void) | null>(null)
-  onValueChangeRef.current = (value: unknown) => {
+  // `Value`, not `unknown`: what a field reports is what it holds, and for a
+  // multi-value field that is the array itself -- stored as an array and handed
+  // to the consumer as one. Nothing below narrows it back to text:
+  // `applyTransform` only runs for an `input/*` field, and only on a string
+  // even then, so an array reaches `setValue` exactly as it arrived.
+  const onValueChangeRef = useRef<((value: Value) => void) | null>(null)
+  onValueChangeRef.current = (value: Value) => {
     // A transient field acts and keeps nothing: neither its own stored value
     // nor a word to the consumer. Its change events still go out -- they are
     // the only reason it exists -- so this returns before the two writes and
@@ -342,8 +348,13 @@ export function useInputCore(
     })
   }
 
+  // `Value`, not `string`: a `chips` field validates the array it holds, and
+  // `getSchema` already builds it one that reads arrays (`getArraySchema`
+  // coerces each entry and counts them for `required`). Stringifying it here to
+  // fit a `string` parameter would hand that schema "email,sms" -- one item,
+  // never empty, so `required` could never fail.
   const validated = useCallback(
-    (value: string) => {
+    (value: Value) => {
       const results = schema.safeParse(value)
       const errors = results.error?.issues.map((issue) => issue.message) ?? []
 
