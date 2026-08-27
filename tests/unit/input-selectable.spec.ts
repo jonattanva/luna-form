@@ -24,4 +24,18 @@ describe('isEmptySelectChange', () => {
     expect(isEmptySelectChange(radio, '')).toBe(false)
     expect(isEmptySelectChange(input, '')).toBe(false)
   })
+
+  test('keeps an emptied chips value, which is a deselection and not remount noise', () => {
+    const field = { type: 'chips', name: 'channels' } as Field
+    expect(isEmptySelectChange(field, [])).toBe(false)
+    expect(isEmptySelectChange(field, ['sms'])).toBe(false)
+  })
+
+  test('keeps an emptied array even on a select field', () => {
+    // The guard is about the empty *string* a select trigger re-emits on
+    // remount. Nothing else reaches this shape, and reading `[]` as the same
+    // noise would swallow the one change a multi-value field cannot resend.
+    const field = { type: 'select', name: 'document_type' } as Field
+    expect(isEmptySelectChange(field, [])).toBe(false)
+  })
 })

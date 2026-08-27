@@ -3,6 +3,7 @@ import {
   isObject,
   isValue,
   isEmpty,
+  isMultiple,
   isString,
   isDataSource,
 } from '@/packages/luna-core/src/util/is-type'
@@ -26,6 +27,18 @@ describe('Is Type Utility', () => {
     expect(isValue(undefined)).toBe(false)
     expect(isValue({})).toBe(false)
     expect(isValue([])).toBe(false)
+  })
+
+  test('should identify multi-value selections correctly', () => {
+    expect(isMultiple(['a', 'b'])).toBe(true)
+    expect(isMultiple(['a'])).toBe(true)
+    expect(isMultiple([])).toBe(true)
+    expect(isMultiple([1, 2])).toBe(true)
+    expect(isMultiple('a')).toBe(false)
+    expect(isMultiple(null)).toBe(false)
+    expect(isMultiple(undefined)).toBe(false)
+    expect(isMultiple({})).toBe(false)
+    expect(isMultiple([{ value: 'a' }])).toBe(false)
   })
 
   test('should identify empty values correctly', () => {

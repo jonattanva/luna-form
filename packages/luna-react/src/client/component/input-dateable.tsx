@@ -8,6 +8,7 @@ import {
   getFormatProps,
   getTimeFormat,
   isDate,
+  isString,
   isTime,
   isValidValue,
 } from '@luna-form/core'
@@ -22,6 +23,16 @@ export const InputDateable = createInput({
 
   getValue: (event, field) => {
     const raw = event.target.value
+
+    // Both conversions below read the native control's text (`yyyy-MM-dd`,
+    // `HH:mm`) and parse it. A date or time field holds one moment and never a
+    // list, so anything that is not text is not a date this can reformat: hand
+    // it back untouched rather than let `String()` turn it into a date nobody
+    // entered.
+    if (!isString(raw)) {
+      return raw
+    }
+
     const timeFormat = isTime(field) ? getTimeFormat(field) : null
 
     if (timeFormat !== null) {
