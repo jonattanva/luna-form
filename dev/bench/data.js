@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787669889865,
+  "lastUpdate": 1787834226995,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "fd396505587bab78f3203eee3b4151b74171c5b9",
-          "message": "feat(chips): add advanced.multiple prop to chips fields\n\nAdd `advanced.multiple` boolean to chips field types to control single vs multi-select behavior. Defaults to true (existing behavior). When false, selecting a chip replaces any previous selection.\n\nAlso migrates unit tests from Playwright to Vitest and splits operator tests into individual files per operator.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-11T00:55:24-05:00",
-          "tree_id": "f66e8c95844ce36f1707ad5fe7a6cfb8ae687812",
-          "url": "https://github.com/jonattanva/luna-form/commit/fd396505587bab78f3203eee3b4151b74171c5b9"
-        },
-        "date": 1775886992641,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0027375319999999874,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.00373165199999994,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.03853132600000003,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0010999199999999973,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0019013499999999794,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.04363672999999994,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.027545735199999997,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb97e89c172e207b4e029637563d5bf9d2cd2181",
+          "message": "Merge pull request #64 from jonattanva/fix/chips-mount-change-events\n\nfix(chips): match a `when` against the array, not against its text",
+          "timestamp": "2026-08-27T07:36:11-05:00",
+          "tree_id": "b6125843c6c03f30c89478634c307e8bbf45ff02",
+          "url": "https://github.com/jonattanva/luna-form/commit/cb97e89c172e207b4e029637563d5bf9d2cd2181"
+        },
+        "date": 1787834226055,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0003558126399999998,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0011271815200000004,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03305283244,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0004231290199999967,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006051503199999933,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.028835043939999996,
             "unit": "ms"
           }
         ]
