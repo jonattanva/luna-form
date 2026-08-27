@@ -9,7 +9,7 @@ import {
   prepareInputProps,
   prepareInputValue,
 } from '@luna-form/core'
-import type { InputStrategies } from './input-strategies'
+import type { InputChangeEvent, InputStrategies } from './input-strategies'
 
 export function InputBase(
   props: InputCoreProps & {
@@ -108,7 +108,7 @@ export function InputBase(
   ])
 
   const onChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: InputChangeEvent) => {
       const inputValue = getValue(event, props.field)
 
       if (
