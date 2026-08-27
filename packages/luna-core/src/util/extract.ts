@@ -1,19 +1,30 @@
-import { isObject, isValue } from './is-type'
+import { isMultiple, isObject, isValue } from './is-type'
 import { DESCRIPTION, INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
 import type { Nullable, Option, Value } from '../type'
 
 const REGEX_NUMERIC = /^\d+$/
 
 export function getEntity<T>(
-  selected: string,
+  selected: Value,
   collection: Nullable<T[]> = [],
   entity = VALUE
 ) {
+  // A `chips` field holds an array whatever `multiple` says, and no single
+  // entry of the collection answers to it. Hand it over as it is, because the
+  // array is what `when` is written to read: `evaluateCondition` matches a
+  // string `when` against a lone selection and ORs an array one over every
+  // selection. Joining it into text instead ("email,sms") answers to no option
+  // and matches no condition -- silently, and only once more than one thing is
+  // selected.
+  if (isMultiple(selected)) {
+    return { value: selected }
+  }
+
   if (Array.isArray(collection)) {
     return (
       collection.find((item) => {
         const current = getCurrentValue(item, entity)
-        if (current !== undefined && `${current}` === selected) {
+        if (current !== undefined && `${current}` === `${selected}`) {
           return item
         }
       }) ?? { value: selected }
@@ -29,7 +40,7 @@ export function getCurrentValue<T>(
   entity = VALUE
 ): Value | undefined {
   if (value != null) {
-    if (Array.isArray(value) && value.every(isValue)) {
+    if (isMultiple(value)) {
       return value
     }
 

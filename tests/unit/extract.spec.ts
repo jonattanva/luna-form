@@ -197,6 +197,36 @@ describe('Extract', () => {
     expect(getEntity('1', collection)).toEqual({ value: '1' })
   })
 
+  test('should hand a multi-value selection over as the array it is', () => {
+    const collection = [
+      { label: 'Email', value: 'email' },
+      { label: 'SMS', value: 'sms' },
+    ]
+
+    // No single option answers to more than one selection, and joining them
+    // into "email,sms" would answer to none. `when` reads the array itself.
+    expect(getEntity(['email', 'sms'], collection)).toEqual({
+      value: ['email', 'sms'],
+    })
+  })
+
+  test('should keep a single selection an array rather than resolving its option', () => {
+    const collection = [
+      { label: 'Email', value: 'email' },
+      { label: 'SMS', value: 'sms' },
+    ]
+
+    // A `chips` value is an array whatever `multiple` says, so one selection is
+    // shaped like two. This is what a click already produces, and the
+    // mount-time replay has to produce the same thing.
+    expect(getEntity(['sms'], collection)).toEqual({ value: ['sms'] })
+  })
+
+  test('should hand an empty selection over as an empty array', () => {
+    const collection = [{ label: 'Email', value: 'email' }]
+    expect(getEntity([], collection)).toEqual({ value: [] })
+  })
+
   test('should convert data to options correctly', () => {
     const data = [
       { label: 'Option 1', value: 1 },

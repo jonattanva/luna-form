@@ -1,4 +1,4 @@
-import type { DataSource, Value } from '../type'
+import type { DataSource, Multiple, Value } from '../type'
 
 export function isObject<T>(value: unknown): value is Record<string, T> {
   return (
@@ -24,6 +24,13 @@ export function isEmpty(value: unknown): boolean {
 
 export function isValue(value: unknown): value is Value {
   return isString(value) || typeof value === 'number' || isBoolean(value)
+}
+
+// The shape a multi-value field holds. A `chips` field holds one whatever
+// `multiple` says, so this is what tells its value apart from the scalar every
+// other selectable field carries.
+export function isMultiple(value: unknown): value is Multiple {
+  return Array.isArray(value) && value.every(isValue)
 }
 
 export function isString(value: unknown): value is string {

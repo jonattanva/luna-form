@@ -50,7 +50,7 @@ type Hideable = {
 }
 
 export type Sections = Section[]
-type Multiple = readonly (string | number | boolean)[]
+export type Multiple = readonly (string | number | boolean)[]
 
 export type Value = string | number | boolean | Multiple
 export type Option = {

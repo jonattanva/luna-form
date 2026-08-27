@@ -195,6 +195,25 @@ The `state` action modifies the interactive state or visibility of other fields 
   - If an **array of strings** is provided, it performs an **OR match** (the state is applied if the field's new value matches _any_ string in the array).
   - If a **Condition object** is provided, it evaluates complex logic.
 
+#### What `when` compares against for a `chips` field
+
+A `chips` field [holds an array](../fields/select.md#a-chips-value-is-always-an-array),
+and that array is what `when` reads -- whether the change came from a click or
+from a form reopened on saved data. The two string forms are written for it:
+
+- A **string** matches when the array holds exactly that one thing. `"sms"`
+  matches `["sms"]` and does not match `["email", "sms"]`. It is the plain
+  reading of "the value is `sms`", and it is what lets a single-selection chips
+  (`advanced.multiple: false`) be keyed on like any other field.
+- An **array of strings** matches when _any_ selection is in it. `["sms"]`
+  matches `["email", "sms"]`. This is the form to reach for on a field that can
+  hold more than one thing at a time.
+
+A `Condition` object compares against the array as a whole, so neither `eq` nor
+`in` is a way to ask "is among the selections". `in` is the trap: it appears to
+work while exactly one thing is selected and stops matching the moment a second
+one is picked. Use the two forms above.
+
 **Example:**
 
 ```json
@@ -301,6 +320,11 @@ Two details:
   `source`, the initial run is held until the data has loaded, so an action
   keyed on the selected entity sees the entity rather than a bare value. Text
   and date fields run as soon as the value is valid.
+- **A `chips` field carries its array, not an entity.** No single option answers
+  to a value that can hold several, so a `chips` change carries the array
+  itself, at mount and on a click alike: `{value}` is that array, and there is
+  no `{label}` to interpolate. See
+  [What `when` compares against for a `chips` field](#what-when-compares-against-for-a-chips-field).
 
 A field that mounts empty and has no `defaultValue` does not run anything until
 it is edited.
