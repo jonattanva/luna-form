@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787834226995,
+  "lastUpdate": 1787834266696,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "498e8f2084db2c56eb8012bafa7161160775dc52",
-          "message": "feat: add timezone select component and unit/e2e tests",
-          "timestamp": "2026-04-09T09:01:53-05:00",
-          "tree_id": "ffad86786a48c87ae549ea9975e2a7e8acf9cb74",
-          "url": "https://github.com/jonattanva/luna-form/commit/498e8f2084db2c56eb8012bafa7161160775dc52"
-        },
-        "date": 1775743404707,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 259,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 573,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "5bb445faa4843d6236ea15ccbf93c2a1c3642e10",
           "message": "chore: formatting and minor refactors in svelte-luna-editor and luna-svelte",
           "timestamp": "2026-04-09T09:04:47-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 558,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb97e89c172e207b4e029637563d5bf9d2cd2181",
+          "message": "Merge pull request #64 from jonattanva/fix/chips-mount-change-events\n\nfix(chips): match a `when` against the array, not against its text",
+          "timestamp": "2026-08-27T07:36:11-05:00",
+          "tree_id": "b6125843c6c03f30c89478634c307e8bbf45ff02",
+          "url": "https://github.com/jonattanva/luna-form/commit/cb97e89c172e207b4e029637563d5bf9d2cd2181"
+        },
+        "date": 1787834266651,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 279,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 191,
             "unit": "ms"
           }
         ]
