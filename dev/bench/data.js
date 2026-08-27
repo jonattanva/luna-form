@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787857731536,
+  "lastUpdate": 1787857765764,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "5bb445faa4843d6236ea15ccbf93c2a1c3642e10",
-          "message": "chore: formatting and minor refactors in svelte-luna-editor and luna-svelte",
-          "timestamp": "2026-04-09T09:04:47-05:00",
-          "tree_id": "b7bd3a34c89bb81645b4067fe2feea4cc960582a",
-          "url": "https://github.com/jonattanva/luna-form/commit/5bb445faa4843d6236ea15ccbf93c2a1c3642e10"
-        },
-        "date": 1775743561339,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 258,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 627,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "60abfa64a4ecccd0cd73cdb50e7b8d798896d16d",
           "message": "fix(luna-core): always include Suggested group in getTimezones\n\nCreate the detected timezone item before the loop so the Suggested group\nis always prepended, even when the detected timezone is not found in\nIntl.supportedValuesOf('timeZone') (e.g. UTC on GitHub Actions runners).\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-09T09:33:08-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 191,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "0cfb801099bf2d5d0aed5251220d2c0783497a45",
+          "message": "upgrade dependencie",
+          "timestamp": "2026-08-27T14:07:47-05:00",
+          "tree_id": "5532013d41ce7b3ab1bf8c9747e446237ae5d523",
+          "url": "https://github.com/jonattanva/luna-form/commit/0cfb801099bf2d5d0aed5251220d2c0783497a45"
+        },
+        "date": 1787857765719,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 296,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 652,
             "unit": "ms"
           }
         ]
