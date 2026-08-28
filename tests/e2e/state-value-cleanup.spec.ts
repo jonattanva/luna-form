@@ -137,3 +137,111 @@ test.describe('State event value cleanup', { tag: ['@e2e'] }, () => {
     await expect(settings).toHaveValue('preset-A')
   })
 })
+
+// The same cleanup seen from outside. `/reactive` holds the form's values in
+// its own state and feeds them back through `value`, which is the only place
+// the difference shows: a clear the host is never told about is still in the
+// host, and comes back the moment the target is shown again.
+const revealable = (value: string) => `{
+  "value": ${value},
+  "sections": [
+    {
+      "fields": [
+        {
+          "label": "Data type",
+          "name": "data_type",
+          "type": "chips",
+          "advanced": { "multiple": false },
+          "source": [
+            { "label": "None", "value": "none" },
+            { "label": "Custom JSON", "value": "advanced" }
+          ],
+          "event": {
+            "change": [
+              {
+                "action": "state",
+                "target": ["advanced_body"],
+                "state": { "hidden": true },
+                "when": "none"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Advanced body",
+          "name": "advanced_body",
+          "type": "input/text"
+        }
+      ]
+    }
+  ]
+}`
+
+const SAVED = `{ "data_type": ["advanced"], "advanced_body": "{ \\"a\\": 1 }" }`
+
+test.describe(
+  'State event value cleanup on a controlled host',
+  { tag: ['@e2e'] },
+  () => {
+    const advancedBody = (page: Page) =>
+      page.locator('input[name="advanced_body"]')
+
+    test('does not put a hidden target back when it is shown again', async ({
+      page,
+    }) => {
+      await inject(page, revealable(SAVED))
+      await page.goto('/reactive')
+
+      await expect(advancedBody(page)).toHaveValue('{ "a": 1 }')
+
+      await page.getByRole('button', { name: 'None' }).click()
+      await expect(advancedBody(page)).toHaveCount(0)
+
+      await page.getByRole('button', { name: 'Custom JSON' }).click()
+      await expect(advancedBody(page)).toBeVisible()
+      await expect(advancedBody(page)).toHaveValue('')
+    })
+
+    test('leaves the cleared target out of what is submitted after it is shown again', async ({
+      page,
+    }) => {
+      await inject(page, revealable(SAVED))
+      await page.goto('/reactive')
+
+      await expect(advancedBody(page)).toHaveValue('{ "a": 1 }')
+
+      await page.getByRole('button', { name: 'None' }).click()
+      await expect(advancedBody(page)).toHaveCount(0)
+
+      await page.getByRole('button', { name: 'Custom JSON' }).click()
+      await expect(advancedBody(page)).toHaveValue('')
+
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      await expect(page.locator('pre code')).not.toContainText('"a": 1')
+    })
+
+    test('keeps what is typed into the target after it is shown again', async ({
+      page,
+    }) => {
+      await inject(page, revealable(SAVED))
+      await page.goto('/reactive')
+
+      await expect(advancedBody(page)).toHaveValue('{ "a": 1 }')
+
+      await page.getByRole('button', { name: 'None' }).click()
+      await expect(advancedBody(page)).toHaveCount(0)
+
+      await page.getByRole('button', { name: 'Custom JSON' }).click()
+      await advancedBody(page).fill('second-body')
+
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+      const payload = page.locator('pre code')
+      await expect(payload).toContainText('"advanced_body"')
+      await expect(payload).toContainText('second-body')
+    })
+  }
+)
