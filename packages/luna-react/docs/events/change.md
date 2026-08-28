@@ -188,12 +188,47 @@ The `state` action modifies the interactive state or visibility of other fields 
 - `target` (string | array of strings): The field name, or an array of field names, that the state modifications should be applied to.
 - `state` (object): An object containing the new state to apply. Properties are independent of field names — the form may safely contain a field whose `name` is `"description"`, `"disabled"` or `"hidden"`; `target` identifies the field, the keys inside `state` configure it.
   - `disabled` (boolean, optional): Whether the field should be disabled.
-  - `hidden` (boolean, optional): Whether the field should be hidden from view. **Note:** When a field becomes hidden (`hidden: true`), its current value is automatically cleared from the form state to ensure no non-applicable data is submitted.
+  - `hidden` (boolean, optional): Whether the field should be hidden from view. **Note:** When a field becomes hidden (`hidden: true`), its current value is automatically cleared from the form state to ensure no non-applicable data is submitted. See [What clearing a hidden target means](#what-clearing-a-hidden-target-means).
   - `description` (string | object, optional): A new description to render for the target field. Supports interpolation, format filters, and **Markdown** (specifically links). e.g. `"Check our [terms](https://example.com) for details."`.
 - `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied.
   - If a **string** is provided, it matches exactly against the field's new value.
   - If an **array of strings** is provided, it performs an **OR match** (the state is applied if the field's new value matches _any_ string in the array).
   - If a **Condition object** is provided, it evaluates complex logic.
+
+#### What clearing a hidden target means
+
+The clear is reported, not only applied. Every field the clear empties is
+announced through `onValueChange` with `value: undefined`, the same way a
+`value` action announces what it writes.
+
+That is what makes the clear stick on a **controlled** form — one that holds
+the values in its own state and feeds them back through the `value` prop.
+Hiding a field unmounts it, so the form's own copy goes away with it; if the
+host were not told, its copy would remain, and the next time the target was
+shown the field would read the host's `value` and put the old data straight
+back. The value would be gone from the form and still be in the consumer,
+which is the one place it could return from.
+
+So the rule reads the same from both sides: once a `state` action hides a
+field, the value is gone. Showing the field again gives an empty field, never
+the old data, and a host that mirrors `onValueChange` into its own state stays
+in step without doing anything special.
+
+```json
+{
+  "action": "state",
+  "target": ["advanced_body"],
+  "state": { "hidden": true },
+  "when": "none"
+}
+```
+
+Selecting `none` hides `advanced_body`, drops its value, and reports
+`advanced_body` as `undefined`. Selecting anything else shows the field empty.
+
+A target that holds nothing is not announced — there is nothing to clear —
+and a target that keeps its own values under compound names (a `group`, a
+`list`) has each of those cleared and reported in its own right.
 
 #### What `when` compares against for a `chips` field
 

@@ -165,6 +165,57 @@ export function useInputCore(
     }
   }
 
+  // Takes a hidden target's value out of the form and tells the consumer it is
+  // gone. The two halves are one act, not two: on a form driven from outside,
+  // the values live in the host, and a key the host still carries is a value
+  // that is not gone. Hiding a field unmounts it, its entry goes with it, and
+  // the moment the target is shown again `useValue` reads the host's copy and
+  // puts it straight back -- so a clear the consumer was never told about
+  // undoes itself. Reporting it is what makes it real, for the same reason
+  // `applyAutoFill` reports what it writes.
+  //
+  // Read from the store rather than from inside the updater because the report
+  // has to name what was actually there: a target holding nothing is nothing
+  // to announce.
+  function clearTargets(targets: string[]) {
+    const previous = store.get(valueAtom) as Record<string, unknown>
+
+    // A target takes everything under it with it. A group or a list keeps
+    // nothing under its own name -- its values are flat `target.<leaf>` keys --
+    // so the prefix is the only way to reach them.
+    const cleared = Object.keys(previous).filter((key) => {
+      return targets.some((target) => {
+        return key === target || key.startsWith(`${target}.`)
+      })
+    })
+
+    if (cleared.length === 0) {
+      return
+    }
+
+    setValues((previous) => {
+      return cleared.reduce((next, key) => omitKey(next, key), previous)
+    })
+
+    if (!props.onValueChange) {
+      return
+    }
+
+    for (const key of cleared) {
+      // Named by the field it belongs to, which is also where its `type` comes
+      // from. A key whose field has already gone is left alone: there is
+      // nothing left to name it by, and its unmount has cleared it anyway.
+      const field = getField(key)
+      if (field) {
+        props.onValueChange({
+          name: translateListPath(key),
+          type: field.type,
+          value: undefined,
+        })
+      }
+    }
+  }
+
   // Ref pattern is intentional here. useEffectEvent cannot be used because
   // this callback is invoked from onChange (an event handler), not from a
   // useEffect. The ref allows onChange to always read the latest props without
@@ -251,21 +302,7 @@ export function useInputCore(
                 : []
 
           if (targetsToClear.length > 0) {
-            setValues((previous) => {
-              let changed = false
-              const next = { ...previous }
-              for (const key of Object.keys(previous)) {
-                if (
-                  targetsToClear.some((target) => {
-                    return key === target || key.startsWith(`${target}.`)
-                  })
-                ) {
-                  delete next[key]
-                  changed = true
-                }
-              }
-              return changed ? next : previous
-            })
+            clearTargets(targetsToClear)
           }
         })
       })
