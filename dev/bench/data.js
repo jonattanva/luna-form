@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787857765764,
+  "lastUpdate": 1787889367980,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "6575fc019b4158edd644c7ee9be4c7d088968e4b",
-          "message": "feat(chips): add chips/month type and fix isChipsMonths checker\n\n- Add CHIPS_MONTHS constant and fix isChipsMonths to use it instead of CHIPS\n- Register chips/month in defineChips config\n- Inline defineSelect into buildCommon, removing one-line wrapper\n- Add store-helper unit tests for nested atoms, omitKey, clearAll, bulkReport\n- Upgrade turbo to 2.9.6\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-11T14:19:53-05:00",
-          "tree_id": "0bc3d987c446b8c755e5b2b8b0a3cd38312cec12",
-          "url": "https://github.com/jonattanva/luna-form/commit/6575fc019b4158edd644c7ee9be4c7d088968e4b"
-        },
-        "date": 1775935239219,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0022689060000000154,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.003870679999999993,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.03986375200000009,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.001077156000000059,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0019155020000000604,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.037983703999999986,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.02868887826,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "55b221c0be7944122d99922e956d0e0f5ea8092f",
+          "message": "Merge pull request #66 from jonattanva/fix/state-hidden-clear-reported\n\nfix(state): report the clear when a state action hides a field",
+          "timestamp": "2026-08-27T22:55:10-05:00",
+          "tree_id": "1f27e65a8dc14732d1cfeb02f3ecb3e5ca71be2f",
+          "url": "https://github.com/jonattanva/luna-form/commit/55b221c0be7944122d99922e956d0e0f5ea8092f"
+        },
+        "date": 1787889366871,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0003510022600000002,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0010949367999999998,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.036549544239999995,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.000417651620000006,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0006036718199999996,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.03119695716,
             "unit": "ms"
           }
         ]
