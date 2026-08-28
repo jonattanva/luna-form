@@ -82,6 +82,10 @@ jobs:
           echo "Bundle size ${total_kb} kB is within the ${LIMIT_KB} kB limit"
       - name: Comment on PR
         if: github.event_name == 'pull_request'
+        # The size gate is the step above, which exits non-zero on its own.
+        # This one only publishes the report, so a failed API write must not
+        # turn a passing build red: the comment is a courtesy, not a check.
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
