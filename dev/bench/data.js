@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787889735018,
+  "lastUpdate": 1787889769409,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "83d3e11c96191091e6df064b5025ba0695ae8ef7",
-          "message": "fix(tests): fix timezone e2e test failures across browsers\n\nUse getByRole('combobox', { name: /Timezone/ }) to avoid strict mode\nviolation in WebKit where both the input and the trigger button resolve\nto role=\"combobox\". Replace toContainText on the form with toHaveValue\non the combobox input, since input values are not part of textContent.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-09T10:33:54-05:00",
-          "tree_id": "5abf32d6bd96d95370dc8e400c082a6f2e7319a3",
-          "url": "https://github.com/jonattanva/luna-form/commit/83d3e11c96191091e6df064b5025ba0695ae8ef7"
-        },
-        "date": 1775749679273,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 281,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 681,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "07296fe78e440be2ddd9bb965f2c18c11685e189",
           "message": "feat: add time input format support and column description\n\n- Add TimeFormat type, Time type, INPUT_TIME constant, and isTime type guard to luna-core\n- Implement toNativeTime and fromNativeTime utilities using date-fns for format conversion\n- Add getTimeFormat helper and wire fromNativeTime into input onChange via getValue callback\n- Add step attribute (60 or 1) to time inputs based on format precision\n- Support description field on Column type and render it below the grid in the React component\n- Add unit tests for toNativeTime, fromNativeTime, and getWeekDays\n- Add e2e tests for time field format rendering, initial values, and form submission\n- Add e2e tests for column description rendering and positioning\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-09T17:56:51-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 630,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ca352b013e8c17115e0139026780e8e5f7cd7da4",
+          "message": "Merge pull request #68 from jonattanva/chore/bundle-size-comment-non-fatal\n\nci: let a failed bundle-size comment stop failing the build",
+          "timestamp": "2026-08-27T23:01:43-05:00",
+          "tree_id": "2e4fd4bad0d2b0c27bc9c964a2dde72c9dbe5082",
+          "url": "https://github.com/jonattanva/luna-form/commit/ca352b013e8c17115e0139026780e8e5f7cd7da4"
+        },
+        "date": 1787889769382,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 201,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 283,
             "unit": "ms"
           }
         ]
