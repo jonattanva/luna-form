@@ -48,6 +48,8 @@ export function InputBase(
     valueRef,
   } = useInputCore(props, { setValue, shouldSkipOnChange, value, setSource })
 
+  const { getSchema } = props
+
   const extraProps = useExtraProps?.(props.field)
 
   const initialEventsProcessedRef = useRef(false)
@@ -96,12 +98,43 @@ export function InputBase(
     initialEventsProcessedRef.current = true
 
     const selected = buildInitialSelected(hydratedValue, data, entity)
-    applyChangeEventsRef.current?.(selected)
+
+    // Handed to a microtask instead of run here, because what these events
+    // write is addressed to *other* fields and this effect runs while those
+    // are still mounting. Two things go wrong when it runs too early, and
+    // only for the actions that write somewhere -- `value` and `source`,
+    // which is why a `state` reveal looks fine while the field beside it
+    // comes up empty:
+    //
+    // - the target is not in the schema yet, so `applyAutoFill` finds no
+    //   field to name it by and the consumer is never told what was written.
+    //   A controlled form then holds a value its host does not have, and the
+    //   next value it is fed takes it away again.
+    // - whatever was written into a target that mounts later is cleared by
+    //   that target's own unmount (a row toggling, a step left behind,
+    //   React's double-invoke in development) and nothing replays it: this
+    //   effect has already marked itself done.
+    //
+    // A microtask runs once the commit has flushed every effect, so the form
+    // is whole by the time the events go out -- and still before the browser
+    // paints, so nothing is visible in between.
+    queueMicrotask(() => {
+      // Gone before the microtask ran. `onUnmount` took the field out of the
+      // schema and its value with it, and an event sent on its behalf now
+      // would write into a form that no longer has it.
+      const [, fields] = getSchema()
+      if (!fields.some((field) => field.name === props.field.name)) {
+        return
+      }
+
+      applyChangeEventsRef.current?.(selected)
+    })
   }, [
     applyChangeEventsRef,
     buildInitialSelected,
     data,
     entity,
+    getSchema,
     isInitialReady,
     props.field,
     props.value,

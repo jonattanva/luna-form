@@ -351,6 +351,12 @@ below run before the user has touched anything.
 Two details:
 
 - **It happens once.** Re-rendering does not fire it again.
+- **It waits for the whole form.** What a `value` or a `source` action writes is
+  addressed to another field, and a field declared after the one carrying the
+  event has not mounted when that field does. So the run is held until the form
+  is complete, and only then are the targets filled and the sources fetched.
+  This is still before anything is painted: nothing flashes in between, and
+  target order in the definition does not change what happens.
 - **A select waits for its options.** For a field whose options come from a
   `source`, the initial run is held until the data has loaded, so an action
   keyed on the selected entity sees the entity rather than a bare value. Text
