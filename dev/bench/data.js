@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787890293239,
+  "lastUpdate": 1787890343379,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "07296fe78e440be2ddd9bb965f2c18c11685e189",
-          "message": "feat: add time input format support and column description\n\n- Add TimeFormat type, Time type, INPUT_TIME constant, and isTime type guard to luna-core\n- Implement toNativeTime and fromNativeTime utilities using date-fns for format conversion\n- Add getTimeFormat helper and wire fromNativeTime into input onChange via getValue callback\n- Add step attribute (60 or 1) to time inputs based on format precision\n- Support description field on Column type and render it below the grid in the React component\n- Add unit tests for toNativeTime, fromNativeTime, and getWeekDays\n- Add e2e tests for time field format rendering, initial values, and form submission\n- Add e2e tests for column description rendering and positioning\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-09T17:56:51-05:00",
-          "tree_id": "65129a74ee80e14db6999b00b6b22da56f1c4540",
-          "url": "https://github.com/jonattanva/luna-form/commit/07296fe78e440be2ddd9bb965f2c18c11685e189"
-        },
-        "date": 1775775496203,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 282,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 663,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "acff75220cf1cc91ea0c068a7eb67212106c1781",
           "message": "upgrade dependencies",
           "timestamp": "2026-04-09T18:10:14-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 283,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5adcdf6e86bd7dc85f378a275623ee2feffe745f",
+          "message": "Merge pull request #67 from jonattanva/fix/mount-change-event-replay\n\nfix(input): run a mount change event once the form is whole, not while it mounts",
+          "timestamp": "2026-08-27T23:10:30-05:00",
+          "tree_id": "b6cf38d5d50d78d83f1e018f72a1233c7e46cb5c",
+          "url": "https://github.com/jonattanva/luna-form/commit/5adcdf6e86bd7dc85f378a275623ee2feffe745f"
+        },
+        "date": 1787890343334,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 284,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 638,
             "unit": "ms"
           }
         ]
