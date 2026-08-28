@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787889367980,
+  "lastUpdate": 1787889404630,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "60abfa64a4ecccd0cd73cdb50e7b8d798896d16d",
-          "message": "fix(luna-core): always include Suggested group in getTimezones\n\nCreate the detected timezone item before the loop so the Suggested group\nis always prepended, even when the detected timezone is not found in\nIntl.supportedValuesOf('timeZone') (e.g. UTC on GitHub Actions runners).\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-09T09:33:08-05:00",
-          "tree_id": "d9e7e243a582e609c5df8a23d45fc59ad1ea7221",
-          "url": "https://github.com/jonattanva/luna-form/commit/60abfa64a4ecccd0cd73cdb50e7b8d798896d16d"
-        },
-        "date": 1775745286986,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 264,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 606,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "83d3e11c96191091e6df064b5025ba0695ae8ef7",
           "message": "fix(tests): fix timezone e2e test failures across browsers\n\nUse getByRole('combobox', { name: /Timezone/ }) to avoid strict mode\nviolation in WebKit where both the input and the trigger button resolve\nto role=\"combobox\". Replace toContainText on the form with toHaveValue\non the combobox input, since input values are not part of textContent.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-09T10:33:54-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 652,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "55b221c0be7944122d99922e956d0e0f5ea8092f",
+          "message": "Merge pull request #66 from jonattanva/fix/state-hidden-clear-reported\n\nfix(state): report the clear when a state action hides a field",
+          "timestamp": "2026-08-27T22:55:10-05:00",
+          "tree_id": "1f27e65a8dc14732d1cfeb02f3ecb3e5ca71be2f",
+          "url": "https://github.com/jonattanva/luna-form/commit/55b221c0be7944122d99922e956d0e0f5ea8092f"
+        },
+        "date": 1787889404587,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 284,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 630,
             "unit": "ms"
           }
         ]
