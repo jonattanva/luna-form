@@ -26,7 +26,11 @@ export function Field(props: FieldProps) {
   const cols = props.field.advanced?.cols
   const errors = props.field.name ? props.errors?.[props.field.name] : undefined
 
-  const { horizontal } = mergeStyle(props.style, {
+  // Defaulted here rather than in `buildOrientation`, which has to be able to
+  // say nothing for the form-wide style to be reachable. What is passed down
+  // stays a boolean: `InputGroup` tells a vertical field apart from an
+  // unanswered one by comparing against `false`.
+  const { horizontal = false } = mergeStyle(props.style, {
     horizontal: buildOrientation(props.field),
   })
 

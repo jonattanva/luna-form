@@ -118,8 +118,19 @@ describe('Build', () => {
       expect(buildOrientation(field)).toBe(true)
     })
 
-    test('should return false for other fields by default', () => {
+    test('should say nothing for other fields by default', () => {
+      // Not `false`: an answer here overrules `config.style.horizontal`, and a
+      // field that declares nothing has no opinion to overrule it with.
       const field = { type: 'text', name: 'test' } as Field
+      expect(buildOrientation(field)).toBeUndefined()
+    })
+
+    test('should return false when the field opts out explicitly', () => {
+      const field = {
+        type: 'text',
+        name: 'test',
+        advanced: { horizontal: false },
+      } as Field
       expect(buildOrientation(field)).toBe(false)
     })
 

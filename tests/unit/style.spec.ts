@@ -25,6 +25,23 @@ describe('Style Helper', () => {
     })
   })
 
+  test('should keep the global value when the local one is undefined', () => {
+    // The key is present and unanswered, which is what a section that declares
+    // no `compact` of its own hands over. A spread would drop the global here.
+    const globalStyle = { compact: true, horizontal: true }
+    const localStyle = { compact: undefined, horizontal: undefined }
+    expect(mergeStyle(globalStyle, localStyle)).toEqual({
+      compact: true,
+      horizontal: true,
+    })
+  })
+
+  test('should let an explicit false override the global style', () => {
+    const globalStyle = { horizontal: true }
+    const localStyle = { horizontal: false }
+    expect(mergeStyle(globalStyle, localStyle)).toEqual({ horizontal: false })
+  })
+
   test('should prioritize local style over global style', () => {
     const globalStyle = { compact: true, horizontal: false }
     const localStyle = { compact: false }
