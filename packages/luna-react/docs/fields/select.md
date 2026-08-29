@@ -36,7 +36,7 @@ Each option consists of:
 
 ### 2. Remote Data Source
 
-You can fetch options from a remote API by providing a `DataSource` configuration.
+You can fetch options from a remote API by providing a `DataSource` configuration. Its full shape, and when a request is and is not made, are in [data-source.md](data-source.md).
 
 ```json
 "source": {
@@ -78,6 +78,52 @@ Inside `advanced.options`, you can map:
 - **`description`** _(optional)_: The key to use for additional help text (e.g., `"age"`).
 
 ---
+
+### `advanced.entity`
+
+`advanced.options` decides what the user sees and what the field submits.
+`advanced.entity` decides how a value is matched **back** to the row it came
+from, and it defaults to `value`.
+
+That default is right for options shaped `{ label, value }` and wrong for
+everything else, which is why it belongs next to `options`: whenever
+`options.value` names a key other than `value`, `entity` has to name the same
+key.
+
+```json
+{
+  "name": "user_selection",
+  "type": "select",
+  "source": { "url": "/api/users" },
+  "advanced": {
+    "entity": "id",
+    "options": { "value": "id", "label": "name" }
+  },
+  "event": {
+    "change": [{ "action": "value", "value": { "contact_email": "{email}" } }]
+  }
+}
+```
+
+It does two things, both of them a lookup by that key:
+
+- **A change event gets the whole row.** The library finds the source row whose
+  `entity` key equals the current selection and hands that object to the
+  event, which is what makes `{email}` — a key that is neither the label nor
+  the value — resolvable. Without `entity` the lookup matches nothing, the
+  event falls back to `{ value }`, and every other placeholder is left literal.
+  See [Event payloads](../interpolation/overview.md#event-payloads).
+- **An object value is read through it.** A form whose value for this field is
+  the whole record rather than the id — `{ "id": 101, "name": "John" }` — shows
+  the right option, because `entity` says which key of that object is the
+  value. Without it the field looks for a `value` key, finds none, and mounts
+  empty.
+
+The comparison is made on the text of both sides, so a numeric `id` in the
+source matches the string the select reports.
+
+`entity` is not read for `chips`: an array selection answers to no single row,
+so a `chips` change carries the array itself.
 
 ## Translating Options
 
@@ -139,6 +185,8 @@ Specialized selectors carry their own built-in labels and are not resolved again
 - **`multiple`** _(boolean, optional)_: (Available for `chips`) Allows selecting more than one option. Defaults to `true`.
 - **`preselected`** _(boolean, optional)_: For specialized selectors like `select/month`, determines if the current value (e.g., current month) should be selected by default.
 - **`horizontal`** _(boolean, optional)_: Renders the options or selector horizontally.
+- **`entity`** _(string, optional)_: The key that identifies an option row, defaulting to `value`. Set it whenever `options.value` names a different key — see [`advanced.entity`](#advancedentity).
+- **`options`** _({ label, value, description }, optional)_: Maps the keys of a remote row onto the option shape — see [Property Mapping Reference](#property-mapping-reference).
 
 ### A chips value is always an array
 

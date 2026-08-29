@@ -44,7 +44,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 - **`autocomplete`** _(string)_: Standard HTML autocomplete attribute (e.g., `"username"`, `"off"`).
 - **`cols`** _(number)_: Layout column span for CSS grid alignment.
 - **`horizontal`** _(boolean)_: Overrides configuration layout to render label and input horizontally.
-- **`reverse`** _(boolean)_: If `true`, reverses the flex direction.
+- **`reverse`** _(boolean)_: `checkbox` only, and it exists to turn a default **off**. A checkbox renders its box first and its label after it; `reverse: false` swaps them, `true` changes nothing, and on any other field type the key is not read. See [Layout](../structure/layout.md#advancedreverse-checkbox-only).
 - **`aria`** _(object)_: Map of specific ARIA attributes for screen readers (e.g., `{ "aria-label": "Custom label" }`).
 - **`data`** _(object)_: Map of specific HTML data attributes (e.g., `{ "data-test-id": "my-field" }`).
 - **`transient`** _(boolean)_: If `true`, the field fires its change events and keeps nothing of its own — it is neither stored nor reported to the consumer. For a control whose whole job is to write to _another_ field. See [Transient controls](../events/change.md#transient-controls).

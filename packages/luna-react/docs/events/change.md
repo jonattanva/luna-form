@@ -10,6 +10,8 @@ In many actions (like `value`, `source`, and `state`), you may want to use the v
 
 Placeholders also support format filters with pipe syntax (`{value | filter:arg}`) for locale-aware formatting of currency, dates, percentages, and durations. See [Format Filters](../interpolation/format-filters.md) for the full reference.
 
+What a placeholder can reach in an event payload is the selected option and only that; the rules, and the different set a label or a description resolves against, are in [Interpolation](../interpolation/overview.md).
+
 ### Passing a structure rather than text
 
 A placeholder is normally replaced _inside_ a string, so what comes out is text. When the template is **nothing but one placeholder** and the value behind it is an object or an array, the `value` action hands that value over untouched instead:
@@ -419,7 +421,7 @@ In the `state` action (and potentially other areas), the `when` property can be 
   - `"lt"`: Less than
   - `"lte"`: Less than or equal
 - `value` (string | number | array): The target value to compare against the field's current value.
-- `field` (string, optional): If specified, the condition evaluates the value of _another_ field instead of the field that triggered the change event.
+- `field` (string, optional): Reads a different key of the **selected option** instead of its value. It is not a reference to another field in the form: a change event carries the option behind the selection and nothing else, so `field` reaches `{ "value": "cl", "dial": "+56" }`'s `dial`, not a sibling input. On a text or date field, whose event carries only `{ value }`, any other key resolves to nothing and the condition fails. See [Event payloads](../interpolation/overview.md#event-payloads).
 
 ### Examples of Conditions
 

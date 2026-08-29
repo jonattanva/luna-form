@@ -251,7 +251,7 @@ if (!result.success) {
 }
 ```
 
-- **`buildFormSchema(sections, translations?, definition?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` resolves `$ref` sources.
+- **`buildFormSchema(sections, translations?, definition?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` resolves [`$ref` entries](../structure/definition.md), and has to be the same one the form renders with.
 - **`collectIssues(error)`** — flattens a `ZodError` into `{ path, message }` entries with **dotted paths** (e.g. `rules.0.value`), including nested list issues.
 
 ### What each path validates

@@ -2,6 +2,8 @@
 
 Format filters transform interpolated values into locale-aware strings using a pipe syntax inspired by Vue and Angular.
 
+This page is the filter reference. What a placeholder resolves against in the first place — and it is not the same set everywhere — is [Interpolation](overview.md).
+
 ## Where filters can be used
 
 Filters work in any string passed through Luna Form's interpolation engine, including:
@@ -26,6 +28,8 @@ Multiple filters can be chained; the output of the previous filter becomes the i
 ## Locale resolution
 
 Locale-aware filters read the locale from `config.env.locale`. If not set, filters fall back to the runtime default (typically the browser's locale).
+
+It applies wherever a filter is written — a label, a description, a `value` payload — so one setting keeps them consistent. See [Interpolation](overview.md#the-locale-filters-use).
 
 ```ts
 const config = {

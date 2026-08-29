@@ -4,6 +4,55 @@ How a form is configured and rendered. The pages under `fields/`,
 `validation/` and `events/` describe the JSON; this one describes the code
 around it.
 
+## Installing
+
+```bash
+pnpm add react-luna-form
+```
+
+The package carries no dependencies of its own: everything it needs is a peer
+dependency, so your application resolves one copy of React, Zod and the rest.
+
+| Peer                    | Version             | Used for                                    |
+| ----------------------- | ------------------- | ------------------------------------------- |
+| `react`, `react-dom`    | `^19.0.0`           | rendering, and `useActionState` on submit   |
+| `zod`                   | `^4.0.0`            | the schema derived from `sections`          |
+| `jotai`, `jotai-family` | `^2.0.0` / `^1.0.0` | the value, error and source stores          |
+| `swr`                   | `^2.0.0`            | fetching a field's remote `source`          |
+| `date-fns`              | `^4.0.0`            | date and time formatting, `duration` filter |
+| `fast-equals`           | `^6.0.0`            | change detection in the stores              |
+| `tailwind-merge`        | `^3.5.0`            | merging the classes the components render   |
+
+None of them is optional, and none is bundled. A package manager that installs
+peers automatically (npm 7+, or pnpm with `auto-install-peers=true`) brings
+them in for you; anywhere else, install them alongside the library. A missing
+peer surfaces as a module resolution error at import time, not as a form that
+renders badly.
+
+## Styling
+
+The components render Tailwind utility classes and **the build ships no CSS**.
+With [Tailwind CSS v4](https://tailwindcss.com) installed, point it at the
+package so the classes inside the published bundle are generated:
+
+```css
+@import 'tailwindcss';
+
+@source '../node_modules/react-luna-form';
+```
+
+Without that `@source` line every class the library renders is scanned out as
+unused: the markup is correct, the labels and inputs are all there, and none of
+the layout is — which reads as a broken build rather than a missing line of
+CSS.
+
+Every element also carries a `data-slot` attribute — `field`, `field-label`,
+`field-control`, `field-set`, `field-set-content`, `field-content`,
+`field-group`, `field-separator`, `column`, `list-item-card` — so a design
+system can restyle the structure without patching the library. The components
+you register yourself are yours to style; these slots cover the scaffolding
+around them.
+
 ## Entry points
 
 | Import                   | Contains                                                                                  |
@@ -57,7 +106,7 @@ Pass every key you still want.
 
 ### `fetcher.remotePatterns`
 
-Which hosts a field's remote `source` may call. The rules:
+Which hosts a field's remote `source` may call — the source itself is documented in [fields/data-source.md](fields/data-source.md). The rules:
 
 | Value   | Effect                               |
 | ------- | ------------------------------------ |
@@ -95,19 +144,21 @@ Check the console when a remote source comes back empty.
 The client form. It owns its own state, so it is the one to use for anything
 interactive.
 
-| Prop                                      | Purpose                                                                |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| `sections`                                | the field descriptors — the form itself                                |
-| `config`                                  | the result of `defineConfig`                                           |
-| `value`                                   | the current values                                                     |
-| `action`                                  | server action invoked on submit, receives the form data and the schema |
-| `onSuccess`                               | called with the parsed data after `action` succeeds                    |
-| `onValueChange`                           | called with `{ name, value }` on every change                          |
-| `readOnly`                                | renders every field disabled                                           |
-| `translations`                            | per-locale strings for labels, options and messages                    |
-| `lang`                                    | the locale to resolve `translations` against                           |
-| `context`                                 | arbitrary values available to interpolation                            |
-| `definition`, `advanced.step`, `children` | multi-step and custom controls                                         |
+| Prop            | Purpose                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| `sections`      | the field descriptors — the form itself                                                                         |
+| `config`        | the result of `defineConfig`                                                                                    |
+| `value`         | the current values                                                                                              |
+| `action`        | server action invoked on submit, receives the form data and the schema — see [forms/submit.md](forms/submit.md) |
+| `onSuccess`     | called with the parsed data after `action` succeeds                                                             |
+| `onValueChange` | called with `{ name, value }` on every change                                                                   |
+| `readOnly`      | renders every field disabled                                                                                    |
+| `translations`  | per-locale strings for labels, options and messages                                                             |
+| `lang`          | the locale to resolve `translations` against                                                                    |
+| `context`       | arbitrary values available to interpolation                                                                     |
+| `definition`    | the JSON that [`$ref`](structure/definition.md) entries resolve against                                         |
+| `advanced.step` | numbers the [sections](structure/sections.md#advancedstep-numbers-the-sections)                                 |
+| `children`      | the form's control area — see [forms/submit.md](forms/submit.md#nothing-submits-without-a-control)              |
 
 ### `Form` from `react-luna-form/server`
 
