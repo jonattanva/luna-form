@@ -20,6 +20,20 @@ export function ReactiveFormPreview() {
 
   const form = convertCodeToForm(code)
 
+  // `env` and `style` live on the config, not on the form, so a definition
+  // alone cannot reach them. The harness lifts them out of the injected JSON to
+  // let a test set one -- `env.locale` is what the format filters read and
+  // `style` is the form-wide layout default, and nothing else here can vary
+  // either.
+  const formConfig =
+    form.env || form.style
+      ? {
+          ...config,
+          ...(form.env ? { env: form.env } : {}),
+          ...(form.style ? { style: form.style } : {}),
+        }
+      : config
+
   const [values, setValues] = useState<Record<string, unknown>>(
     () => (form.value as Record<string, unknown>) ?? {}
   )
@@ -61,7 +75,7 @@ export function ReactiveFormPreview() {
       <Form
         {...form}
         value={values}
-        config={config}
+        config={formConfig}
         action={action}
         onSuccess={handleSuccess}
         onValueChange={handleValueChange}
