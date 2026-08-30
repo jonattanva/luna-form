@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788068448448,
+  "lastUpdate": 1788068473827,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "acff75220cf1cc91ea0c068a7eb67212106c1781",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-04-09T18:10:14-05:00",
-          "tree_id": "c8807c2beb7bb37edc3ad8e33cb202bc37df0c2e",
-          "url": "https://github.com/jonattanva/luna-form/commit/acff75220cf1cc91ea0c068a7eb67212106c1781"
-        },
-        "date": 1775776288745,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 277,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 664,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "2743f272aa547eebf6e4cf1ce6108c82e360044a",
           "message": "feat: add select/day field type support with e2e tests\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-10T12:06:16-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 638,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ddfd39bee89554e8a2fb274a922199123b16373f",
+          "message": "Merge pull request #69 from jonattanva/docs/form-contract-and-style-fixes\n\ndocs: document the form contract around the fields, and fix two config keys it exposed",
+          "timestamp": "2026-08-30T00:39:52-05:00",
+          "tree_id": "d2d6e26e04acaef29dadd3493ccd591dcfa760bf",
+          "url": "https://github.com/jonattanva/luna-form/commit/ddfd39bee89554e8a2fb274a922199123b16373f"
+        },
+        "date": 1788068473784,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 271,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 613,
             "unit": "ms"
           }
         ]
