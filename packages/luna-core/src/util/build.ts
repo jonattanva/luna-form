@@ -15,11 +15,16 @@ export function buildOptions(
   }
 }
 
+// A radio and a checkbox are horizontal whatever the schema says: the control
+// belongs beside its label. Every other field answers with what it declares,
+// and with `undefined` when it declares nothing -- that is what lets
+// `config.style.horizontal` decide instead. Returning `false` here made the
+// field overrule the form-wide default in every form that never mentioned it.
 export function buildOrientation(field: Field) {
   if (isRadio(field) || isCheckbox(field)) {
     return true
   }
-  return field.advanced?.horizontal ?? false
+  return field.advanced?.horizontal
 }
 
 export function buildReverse(field: Field): boolean {

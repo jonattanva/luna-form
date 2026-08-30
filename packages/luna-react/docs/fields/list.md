@@ -18,6 +18,9 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 
 The `advanced` property customizes structural interaction rules and layout rendering for the collection container.
 
+- **`title`** _(string)_: Names one item of the collection. The header of the second row then reads `Contact 2` and its controls announce `Collapse Contact 2` and `Remove Contact 2`.
+  It falls back to the list's `label`, and then to its `name`, so a list called `contacts` with neither captions its rows `contacts 1`. A [`preview.label`](#collapsed-previews-preview-object) replaces the caption where it resolves; this stays the fallback for the rows where it does not.
+  Like `action`, it is copy the form declares, so it is translated through the dictionary — see [Localization](#localization).
 - **`action`** _(string)_: A custom label applied strictly to the generic "Add item" button rendering at the end of the collection (e.g. `"Add email address"`).
   A custom label has to be translated by the form; the built-in `Add item` default is already translated by the library — see [Localization](#localization).
 - **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles. The matching error messages are declared under the list's `validation.length` — see the [Validation reference](../validation/overview.md#list-length).
@@ -65,7 +68,7 @@ For example, if you want a field inside the list to update another field **in th
     {
       "name": "role",
       "type": "select",
-      "options": [
+      "source": [
         { "value": "admin", "label": "Admin" },
         { "value": "user", "label": "User" }
       ],
@@ -215,7 +218,7 @@ Left untranslated, the template fills in to the same English text it replaced.
     {
       "name": "status",
       "type": "select",
-      "options": [
+      "source": [
         { "value": "active", "label": "Currently Employed" },
         { "value": "past", "label": "Past Job" }
       ]

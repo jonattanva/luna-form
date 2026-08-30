@@ -17,7 +17,15 @@ export function InputLabel(
     env: props.config?.env,
   }
 
-  const label = interpolateIfNeeded(props.field.label, interpolateOpts)
+  // The same locale `FormattedDescription` formats with. Without it a filter in
+  // a label falls back to whatever locale is running the code -- the browser on
+  // the client, the process on the server -- so the same placeholder rendered
+  // one number in a label and another in a description.
+  const locale = props.config?.env?.locale as string | undefined
+
+  const label = interpolateIfNeeded(props.field.label, interpolateOpts, {
+    locale,
+  })
 
   return (
     <div

@@ -9,21 +9,27 @@ field descriptors is the single source for what renders **and** for the Zod
 schema that validates it. Most mistakes come from assuming otherwise.
 
 Start at [setup.md](setup.md) if you are wiring the form up for the first
-time: entry points, `defineConfig`, and the difference between the client and
-server `Form`.
+time: installing, styling, entry points, `defineConfig`, and the difference
+between the client and server `Form`.
 
 ## Where to look
 
 | You are                                                                      | Read                                                               |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Grouping fields into a titled, collapsible or numbered section               | [structure/sections.md](structure/sections.md)                     |
+| Putting fields side by side, or a label beside its control                   | [structure/layout.md](structure/layout.md)                         |
+| Reusing one piece of JSON across the form                                    | [structure/definition.md](structure/definition.md)                 |
 | Declaring a text, number, date or password field                             | [fields/input.md](fields/input.md)                                 |
 | Declaring a `select`, `radio` or `chips` field, or filling one from a source | [fields/select.md](fields/select.md)                               |
 | Declaring a repeatable group of fields                                       | [fields/list.md](fields/list.md)                                   |
 | Looking for a date range, a color or another ready-made picker               | [fields/specialized-selectors.md](fields/specialized-selectors.md) |
 | Implementing a field type this library does not ship                         | [fields/custom-inputs.md](fields/custom-inputs.md)                 |
+| Filling a `select` from an API                                               | [fields/data-source.md](fields/data-source.md)                     |
 | Making a field required, or validating against another field                 | [validation/overview.md](validation/overview.md)                   |
+| Handling the submit, a server action or the error summary                    | [forms/submit.md](forms/submit.md)                                 |
 | Showing, hiding, clearing or filling a field when another one changes        | [events/change.md](events/change.md)                               |
-| Formatting an interpolated value inside a label or a message                 | [interpolation/format-filters.md](interpolation/format-filters.md) |
+| Writing a `{placeholder}` in a label, a description or an event              | [interpolation/overview.md](interpolation/overview.md)             |
+| Formatting an interpolated value as currency, a date or a duration           | [interpolation/format-filters.md](interpolation/format-filters.md) |
 
 ## Three things that surprise people
 

@@ -6,6 +6,7 @@ import {
   CHIPS,
   CHIPS_DAYS,
   CHIPS_MONTHS,
+  COLUMN,
   INPUTS,
   LIST,
   RADIO,
@@ -41,6 +42,7 @@ const RENDERABLE = [
   CHECKBOX,
   TEXTAREA,
   LIST,
+  COLUMN,
 ]
 
 function markdownFiles(directory: string): string[] {
