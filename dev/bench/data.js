@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788147724865,
+  "lastUpdate": 1788147752018,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "2743f272aa547eebf6e4cf1ce6108c82e360044a",
-          "message": "feat: add select/day field type support with e2e tests\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-10T12:06:16-05:00",
-          "tree_id": "125fe2f0dd5cbc780db7b360636fa44ccfef0a65",
-          "url": "https://github.com/jonattanva/luna-form/commit/2743f272aa547eebf6e4cf1ce6108c82e360044a"
-        },
-        "date": 1775841572549,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 275,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 633,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "fd396505587bab78f3203eee3b4151b74171c5b9",
           "message": "feat(chips): add advanced.multiple prop to chips fields\n\nAdd `advanced.multiple` boolean to chips field types to control single vs multi-select behavior. Defaults to true (existing behavior). When false, selecting a chip replaces any previous selection.\n\nAlso migrates unit tests from Playwright to Vitest and splits operator tests into individual files per operator.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
           "timestamp": "2026-04-11T00:55:24-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 613,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "40e58d9a0389feab7fd84094390c933064b5cca1",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-08-30T22:41:12-05:00",
+          "tree_id": "4daef4062bfa1d34cb627e6afb7ff1976ee17df0",
+          "url": "https://github.com/jonattanva/luna-form/commit/40e58d9a0389feab7fd84094390c933064b5cca1"
+        },
+        "date": 1788147751974,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 288,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 634,
             "unit": "ms"
           }
         ]
