@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788147786075,
+  "lastUpdate": 1788791433975,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "62f7045eead4e08d68647113679cf63042af7e6e",
-          "message": "feat: default date format to MMMM d, yyyy and improved input handling",
-          "timestamp": "2026-04-14T23:01:22-05:00",
-          "tree_id": "c2dc5e0581e3bf72a43012d5900709c071356a6f",
-          "url": "https://github.com/jonattanva/luna-form/commit/62f7045eead4e08d68647113679cf63042af7e6e"
-        },
-        "date": 1776225741036,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00223965000000004,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0033511199999999805,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.043441534000000046,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0011457540000000108,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.001805494000000067,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.04226866199999995,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.029356570279999997,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "bb094e4bf656d405a251c483e16155de5050109c",
+          "message": "chore(deps): upgrade dependencies\n\nTwo of these are worth calling out.\n\n`vitest` goes from 4.1.11 to 5.0.0, a major, and the 700 unit tests pass on it\nunchanged.\n\n`@playwright/test` goes from 1.62.1 to 1.63.0, which pins new browser\nrevisions -- chromium 1243, firefox 1543, webkit 2359. A checkout that skips\n`pnpm exec playwright install` fails every e2e at launch with `Executable\ndoesn't exist`, which reads like a broken suite rather than a missing\ndownload.\n\nThe rest are patch or minor: next and eslint-config-next to 16.3.4,\n@base-ui/react to 1.8.0, typescript-eslint to 8.69.0, plus knip, lint-staged,\nglobals and the @types packages.\n\nVerified on the upgraded tree: 700 unit, 1566 e2e across chromium, firefox and\nwebkit, typescript, eslint and prettier.",
+          "timestamp": "2026-09-07T09:29:26-05:00",
+          "tree_id": "c43b252743b149165227f27b6c43ab109ac4f185",
+          "url": "https://github.com/jonattanva/luna-form/commit/bb094e4bf656d405a251c483e16155de5050109c"
+        },
+        "date": 1788791433331,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00027945694,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0008837179600000002,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.025061821260000002,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00032852015999999823,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00046746487999999774,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.021994824519999998,
             "unit": "ms"
           }
         ]
