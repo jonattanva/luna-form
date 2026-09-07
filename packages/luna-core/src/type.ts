@@ -1,6 +1,10 @@
 import type { core, z, ZodObject } from 'zod'
 
-export type Schema = z.ZodTypeAny
+// `z.ZodType` without generics, which is what `z.ZodTypeAny` was an alias for
+// -- both default all three parameters to the same thing. Zod 4 keeps the old
+// name only in its `compat` layer and marks it deprecated, so this is a rename
+// and not a change of type.
+export type Schema = z.ZodType
 export type Schemas = Record<string, Schema>
 export type ZodSchema = ZodObject<{ [x: string]: Schema }, core.$strip>
 
