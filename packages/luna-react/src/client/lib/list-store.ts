@@ -35,6 +35,21 @@ export const reportPendingListRowsAtom = pendingRows.report
 export type MountedList = {
   items: readonly number[]
   leafNames: readonly string[]
+  /**
+   * The list's own `hidden`, as its definition declares it.
+   *
+   * Here rather than looked up, because there is nowhere to look it up: the
+   * schema registry `getSchema` answers from is filled by `onMount` on the
+   * input path, and a container never goes through it. That gap is what let a
+   * list keep its values through a hide -- the branch that clears a target
+   * reverting to its static hidden asked only that registry, found nothing,
+   * and skipped the list, while an explicit `hidden: true` cleared it. Same
+   * declaration, two outcomes. See `tests/e2e/hidden-clear.spec.ts`.
+   *
+   * A list that is not on screen has no entry, and that is the right answer
+   * rather than a gap: the only target worth clearing is one that was showing.
+   */
+  hidden?: boolean
 }
 
 /**

@@ -243,8 +243,8 @@ export function useFieldList(
   // withdrawal and a re-registration.
   const reportMounted = useSetAtom(reportMountedListAtom(field.name))
   useEffect(() => {
-    reportMounted({ items, leafNames })
-  }, [items, leafNames, reportMounted])
+    reportMounted({ items, leafNames, hidden: field.hidden === true })
+  }, [field.hidden, items, leafNames, reportMounted])
 
   // On the way out, leave what this list holds under its own name -- where a
   // list above it already looks -- and only then stop answering.

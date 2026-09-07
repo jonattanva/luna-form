@@ -232,6 +232,11 @@ A target that holds nothing is not announced — there is nothing to clear —
 and a target that keeps its own values under compound names (a `group`, a
 `list`) has each of those cleared and reported in its own right.
 
+It does not matter how the form phrases the hiding. A rule whose state is
+`hidden: true`, and a rule that reveals with `hidden: false` and stops matching
+so the field falls back to its own `hidden`, are the same act and clear the
+same values -- containers included.
+
 #### What `when` compares against for a `chips` field
 
 A `chips` field [holds an array](../fields/select.md#a-chips-value-is-always-an-array),

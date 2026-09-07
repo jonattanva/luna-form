@@ -126,6 +126,27 @@ export function useInputCore(
     return fields.find((field) => field.name === target)
   }
 
+  // What a target declared about being hidden, wherever it is declared.
+  //
+  // Two registries, because a target can be either kind and neither knows
+  // about the other: `getSchema` is filled by `onMount` from the input path
+  // and never sees a container, and `mountedListsAtom` is what a list
+  // publishes about itself. Asking only the first is what let a list keep its
+  // values through a hide while an input beside it lost them -- the same
+  // declaration reading two ways depending on how the form phrased the hiding.
+  //
+  // A target neither registry knows is `undefined`, and every question below
+  // then answers the safe way: do not clear. The cost of a wrong `true` is the
+  // user's data.
+  function getDeclaration(target: string): { hidden?: boolean } | undefined {
+    return getField(target) ?? store.get(mountedListsAtom)[target]
+  }
+
+  /** Whether a target goes back to being hidden once its state is removed. */
+  function revertsToHidden(target: string) {
+    return getDeclaration(target)?.hidden === true
+  }
+
   function getTransform(target: string) {
     const current = getField(target)
     if (current && isInput(current)) {
@@ -296,9 +317,7 @@ export function useInputCore(
             state?.hidden === true
               ? newTargets
               : state === undefined
-                ? newTargets.filter(
-                    (target) => getField(target)?.hidden === true
-                  )
+                ? newTargets.filter(revertsToHidden)
                 : []
 
           if (targetsToClear.length > 0) {
