@@ -1,6 +1,10 @@
 import type { core, z, ZodObject } from 'zod'
 
-export type Schema = z.ZodTypeAny
+// `z.ZodType` without generics, which is what `z.ZodTypeAny` was an alias for
+// -- both default all three parameters to the same thing. Zod 4 keeps the old
+// name only in its `compat` layer and marks it deprecated, so this is a rename
+// and not a change of type.
+export type Schema = z.ZodType
 export type Schemas = Record<string, Schema>
 export type ZodSchema = ZodObject<{ [x: string]: Schema }, core.$strip>
 
@@ -47,6 +51,22 @@ type Orderable = {
 
 type Hideable = {
   hidden?: boolean
+  /**
+   * Whether hiding this field leaves its value behind instead of taking it.
+   *
+   * Hiding a field normally clears what it held, and says so, because on a
+   * controlled form a value the host still carries comes back the moment the
+   * field is shown again -- so a clear nobody was told about undoes itself.
+   * That is the right default: a field nobody can see is usually a field whose
+   * data no longer applies.
+   *
+   * It is the wrong default for a field that is put away rather than dropped --
+   * two views of the same thing, where hiding one is a change of scenery and
+   * not a change of mind. Declared on the FIELD and not on the rule that hides
+   * it: a field either survives being put away or it does not, and which of
+   * several rules happened to hide it this time says nothing about that.
+   */
+  keepValue?: boolean
 }
 
 export type Sections = Section[]
