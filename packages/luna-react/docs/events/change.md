@@ -237,6 +237,33 @@ It does not matter how the form phrases the hiding. A rule whose state is
 so the field falls back to its own `hidden`, are the same act and clear the
 same values -- containers included.
 
+#### Keeping a value through a hide
+
+A field that declares `keepValue: true` is put away rather than dropped: hiding
+it leaves what it held, showing it again gives it back, and the consumer is
+told nothing because nothing was taken.
+
+```json
+{
+  "label": "Raw text",
+  "name": "raw",
+  "type": "textarea",
+  "hidden": true,
+  "keepValue": true
+}
+```
+
+It is declared on the FIELD and not on the rule, for the same reason the clear
+does not care how the hiding was phrased: a field either survives being put
+away or it does not, and which of several rules happened to hide it this time
+says nothing about that. A `list` may declare it too, and then it covers every
+value its rows hold.
+
+Reach for it where two fields are two views of the same thing and the form
+swaps between them -- there, hiding one is a change of scenery, not a change of
+mind. Leave it off everywhere else: a value the user cannot see and cannot
+correct is one that still gets submitted.
+
 #### What `when` compares against for a `chips` field
 
 A `chips` field [holds an array](../fields/select.md#a-chips-value-is-always-an-array),

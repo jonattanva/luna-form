@@ -138,13 +138,20 @@ export function useInputCore(
   // A target neither registry knows is `undefined`, and every question below
   // then answers the safe way: do not clear. The cost of a wrong `true` is the
   // user's data.
-  function getDeclaration(target: string): { hidden?: boolean } | undefined {
+  function getDeclaration(
+    target: string
+  ): { hidden?: boolean; keepValue?: boolean } | undefined {
     return getField(target) ?? store.get(mountedListsAtom)[target]
   }
 
   /** Whether a target goes back to being hidden once its state is removed. */
   function revertsToHidden(target: string) {
     return getDeclaration(target)?.hidden === true
+  }
+
+  /** Whether hiding a target leaves its value behind instead of taking it. */
+  function keepsValue(target: string) {
+    return getDeclaration(target)?.keepValue === true
   }
 
   function getTransform(target: string) {
@@ -313,12 +320,17 @@ export function useInputCore(
             }, previous)
           })
 
-          const targetsToClear =
+          // `keepValue` filters the result of both branches rather than
+          // either one: a field that survives being put away survives it
+          // however the form phrased the hiding, which is the whole point of
+          // declaring it on the field.
+          const targetsToClear = (
             state?.hidden === true
               ? newTargets
               : state === undefined
                 ? newTargets.filter(revertsToHidden)
                 : []
+          ).filter((target) => !keepsValue(target))
 
           if (targetsToClear.length > 0) {
             clearTargets(targetsToClear)

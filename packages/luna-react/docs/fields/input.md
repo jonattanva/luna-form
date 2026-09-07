@@ -31,6 +31,7 @@ Luna Form's input fields inherit the standard logical properties available to al
 - **`disabled`** _(boolean, optional)_: If `true`, the field is non-interactive and blocked from events.
 - **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user.
 - **`hidden`** _(boolean, optional)_: If `true`, the field is hidden from the user interface.
+- **`keepValue`** _(boolean, optional)_: If `true`, hiding the field leaves its value behind instead of taking it. See [What clearing a hidden target means](../events/change.md#what-clearing-a-hidden-target-means).
 - **`order`** _(number, optional)_: A numeric order determining the field's position relative to adjacent fields.
 
 ---

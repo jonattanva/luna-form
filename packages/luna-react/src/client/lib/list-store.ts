@@ -50,6 +50,8 @@ export type MountedList = {
    * rather than a gap: the only target worth clearing is one that was showing.
    */
   hidden?: boolean
+  /** The list's own `keepValue`, published for the same reason as `hidden`. */
+  keepValue?: boolean
 }
 
 /**

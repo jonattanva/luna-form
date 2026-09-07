@@ -8,23 +8,28 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
   // that keeps nothing, re-showing a field would come up empty either way and
   // the assertions below would pass without meaning anything.
   //
+  // Two things vary, and both halves of the matrix matter.
+  //
   // HOW the form says "hide":
   //   explicit  a rule whose state is `hidden: true` fires on "hide"
   //   revert    a rule whose state is `hidden: false` fires on "show", and
   //             hiding is what happens when it stops matching and the field
   //             falls back to its static `hidden: true`
   //
+  // WHETHER the field survives it: `keepValue`.
+  //
   // The two phrasings are the same act -- "once a `state` action hides a
   // field, the value is gone" (docs/events/change.md) -- so every case here
   // has a twin that must agree with it. A case passing alone means nothing.
-  const definition = (mode: 'explicit' | 'revert') => {
+  const definition = (mode: 'explicit' | 'revert', keep: boolean) => {
     const rule =
       mode === 'explicit'
         ? `{ "action": "state", "target": ["note", "items"], "state": { "hidden": true }, "when": "hide" }`
         : `{ "action": "state", "target": ["note", "items"], "state": { "hidden": false }, "when": "show" }`
 
-    // Written with a LEADING comma so it can sit last in either object.
+    // Written with LEADING commas so they can sit last in either object.
     const hidden = mode === 'revert' ? `,\n            "hidden": true` : ''
+    const keepValue = keep ? `,\n            "keepValue": true` : ''
 
     return `{
       "sections": [{
@@ -42,14 +47,14 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
           {
             "label": "Note",
             "name": "note",
-            "type": "input/text"${hidden}
+            "type": "input/text"${hidden}${keepValue}
           },
           {
             "label": "Items",
             "name": "items",
             "type": "list",
             "advanced": { "length": { "min": 1 } },
-            "fields": [{ "label": "Value", "name": "value", "type": "input/text" }]${hidden}
+            "fields": [{ "label": "Value", "name": "value", "type": "input/text" }]${hidden}${keepValue}
           }
         ]
       }]
@@ -81,9 +86,14 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
    * Returns with the fields back on screen, so what the caller asserts is what
    * showing a hidden field again gives you.
    */
-  const fillHideShow = async (page: Page, mode: 'explicit' | 'revert') => {
-    await inject(page, definition(mode))
-    await page.goto('/reactive')
+  const fillHideShow = async (
+    page: Page,
+    mode: 'explicit' | 'revert',
+    keep = false,
+    path = '/reactive'
+  ) => {
+    await inject(page, definition(mode, keep))
+    await page.goto(path)
 
     if (mode === 'revert') {
       await choose(page, 'Show')
@@ -131,5 +141,77 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
   test('clears a list reverted to its static hidden', async ({ page }) => {
     await fillHideShow(page, 'revert')
     await expect(item(page)).toHaveValue('')
+  })
+
+  // The same four, for a field that declares it is put away rather than
+  // dropped. `keepValue` is read off the FIELD, so it has to hold under both
+  // phrasings -- which is exactly what the four above stopped taking for
+  // granted.
+
+  test('keeps an input hidden by an explicit rule that declares keepValue', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', true)
+    await expect(note(page)).toHaveValue(NOTE)
+  })
+
+  test('keeps a list hidden by an explicit rule that declares keepValue', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', true)
+    await expect(item(page)).toHaveValue(ITEM)
+  })
+
+  test('keeps an input reverted to its static hidden that declares keepValue', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'revert', true)
+    await expect(note(page)).toHaveValue(NOTE)
+  })
+
+  test('keeps a list reverted to its static hidden that declares keepValue', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'revert', true)
+    await expect(item(page)).toHaveValue(ITEM)
+  })
+
+  // Everything above runs on a CONTROLLED form, and there the state action is
+  // the only clear that shows: hiding a field unmounts it and empties the
+  // form's own copy too, but that half is never reported, so the host still
+  // has the value and hands it back. Which means a `keepValue` that only
+  // reached the reported clear would pass every case above and still lose the
+  // value on a form that holds its own -- the same half-working flag this file
+  // was opened to catch, one layer down.
+  //
+  // `/` is that form: it renders `<Form>` with an `onValueChange` and no
+  // `value`, so the copy the field unmounts with is the only one there is.
+
+  test('drops what an input held when the form holds its own values', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', false, '')
+    await expect(note(page)).toHaveValue('')
+  })
+
+  test('drops what a list held when the form holds its own values', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', false, '')
+    await expect(item(page)).toHaveValue('')
+  })
+
+  test('keeps what an input held when the form holds its own values', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', true, '')
+    await expect(note(page)).toHaveValue(NOTE)
+  })
+
+  test('keeps what a list held when the form holds its own values', async ({
+    page,
+  }) => {
+    await fillHideShow(page, 'explicit', true, '')
+    await expect(item(page)).toHaveValue(ITEM)
   })
 })
