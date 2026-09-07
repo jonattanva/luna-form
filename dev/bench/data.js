@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788795334896,
+  "lastUpdate": 1788795365204,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "6575fc019b4158edd644c7ee9be4c7d088968e4b",
-          "message": "feat(chips): add chips/month type and fix isChipsMonths checker\n\n- Add CHIPS_MONTHS constant and fix isChipsMonths to use it instead of CHIPS\n- Register chips/month in defineChips config\n- Inline defineSelect into buildCommon, removing one-line wrapper\n- Add store-helper unit tests for nested atoms, omitKey, clearAll, bulkReport\n- Upgrade turbo to 2.9.6\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>",
-          "timestamp": "2026-04-11T14:19:53-05:00",
-          "tree_id": "0bc3d987c446b8c755e5b2b8b0a3cd38312cec12",
-          "url": "https://github.com/jonattanva/luna-form/commit/6575fc019b4158edd644c7ee9be4c7d088968e4b"
-        },
-        "date": 1775935269087,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 277,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 610,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "71bc6fb95b6d73f52ebd4e97b502c3fae0156a93",
           "message": "upgrade dev dependencies",
           "timestamp": "2026-04-11T14:28:15-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 124,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a82b6a075e670a4269fd610555cad377d7c2be15",
+          "message": "Merge pull request #70 from jonattanva/fix/state-hidden-clear-containers\n\nfix(state): clear a container the same way whichever rule hides it, and let a field opt out",
+          "timestamp": "2026-09-07T10:34:33-05:00",
+          "tree_id": "d020ea5195f7d6c4cd9c735909877e41538fd3dd",
+          "url": "https://github.com/jonattanva/luna-form/commit/a82b6a075e670a4269fd610555cad377d7c2be15"
+        },
+        "date": 1788795365163,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 311,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 609,
             "unit": "ms"
           }
         ]
