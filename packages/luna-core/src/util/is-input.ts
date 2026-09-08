@@ -102,6 +102,22 @@ export function isTextable(field: Field): boolean {
   return isInput(field) || isTextArea(field)
 }
 
+/**
+ * Whether hiding this slot leaves its value behind instead of taking it.
+ *
+ * Four places ask the question -- the two clears, the list that hands the
+ * answer to its leaves, and the registry a list publishes itself into -- and
+ * they used to ask it by reaching for the key themselves. One of them reaching
+ * a level too high is a `false` that typechecks and quietly drops the user's
+ * data, so the reach lives here once instead.
+ *
+ * `Field | List` and not `Column`: those are the two the runtime reads it off,
+ * and a signature wider than the implementation is a promise nothing keeps.
+ */
+export function keepsValue(slot: Field | List): boolean {
+  return slot.advanced?.keepValue === true
+}
+
 export function isValidValue<T>(value?: Nullable<T>): boolean {
   return value !== undefined && value !== null && value !== ''
 }

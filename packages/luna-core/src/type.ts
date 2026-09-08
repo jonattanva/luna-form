@@ -51,22 +51,6 @@ type Orderable = {
 
 type Hideable = {
   hidden?: boolean
-  /**
-   * Whether hiding this field leaves its value behind instead of taking it.
-   *
-   * Hiding a field normally clears what it held, and says so, because on a
-   * controlled form a value the host still carries comes back the moment the
-   * field is shown again -- so a clear nobody was told about undoes itself.
-   * That is the right default: a field nobody can see is usually a field whose
-   * data no longer applies.
-   *
-   * It is the wrong default for a field that is put away rather than dropped --
-   * two views of the same thing, where hiding one is a change of scenery and
-   * not a change of mind. Declared on the FIELD and not on the rule that hides
-   * it: a field either survives being put away or it does not, and which of
-   * several rules happened to hide it this time says nothing about that.
-   */
-  keepValue?: boolean
 }
 
 export type Sections = Section[]
@@ -92,6 +76,13 @@ export type List = {
     title?: string
     action?: string
     collapsed?: boolean
+    /**
+     * Whether hiding this list leaves the values behind instead of taking
+     * them. See `Field`'s, which this one is a statement about: a list holds
+     * nothing under its own name, so declaring it here covers every value its
+     * rows hold.
+     */
+    keepValue?: boolean
     length?: Length<number>
     preview?: {
       label?: PreviewItem
@@ -283,6 +274,27 @@ export type Field = CommonProps & {
     data?: DataAttributes
     entity?: string
     horizontal?: boolean
+    /**
+     * Whether hiding this field leaves its value behind instead of taking it.
+     *
+     * Hiding a field normally clears what it held, and says so, because on a
+     * controlled form a value the host still carries comes back the moment the
+     * field is shown again -- so a clear nobody was told about undoes itself.
+     * That is the right default: a field nobody can see is usually a field
+     * whose data no longer applies.
+     *
+     * It is the wrong default for a field that is put away rather than dropped
+     * -- two views of the same thing, where hiding one is a change of scenery
+     * and not a change of mind. Declared on the FIELD and not on the rule that
+     * hides it: a field either survives being put away or it does not, and
+     * which of several rules happened to hide it this time says nothing about
+     * that.
+     *
+     * Alongside `transient`, which also decides what ends up stored, rather
+     * than beside `hidden`: the two read as a pair, but `hidden` is what the
+     * form does and this is what the field is.
+     */
+    keepValue?: boolean
     reverse?: boolean
     /**
      * Marks a field that fires its change events and keeps nothing of its own:

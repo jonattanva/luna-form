@@ -1,5 +1,6 @@
 import { FieldList } from '../field/field-list'
 import { KeepValueContext } from '../../context/keep-value-context'
+import { keepsValue } from '@luna-form/core'
 import { List } from '../../../component/list'
 import { VisibilityGuard } from './visibility-guard'
 import type { ListProps } from '../../../component/field/field-list'
@@ -32,7 +33,7 @@ export function ListGuard({
   // inside a collapsible goes on inheriting the `true` it already had.
   return (
     <VisibilityGuard container={field} fields={field.fields}>
-      {field.keepValue ? (
+      {keepsValue(field) ? (
         <KeepValueContext value={true}>{content}</KeepValueContext>
       ) : (
         content

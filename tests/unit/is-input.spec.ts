@@ -8,7 +8,9 @@ import {
   isSelectYear,
   isText,
   isTextArea,
+  keepsValue,
 } from '@/packages/luna-core/src/util/is-input'
+import type { Field, List } from '@/packages/luna-core/src/type'
 
 describe('Is Input Utility', () => {
   test('should identify select month inputs correctly', () => {
@@ -178,5 +180,71 @@ describe('Is Input Utility', () => {
         type: 'text/',
       })
     ).toBe(false)
+  })
+})
+
+describe('Keeps Value Utility', () => {
+  test('should read the flag from advanced', () => {
+    expect(
+      keepsValue({
+        name: 'raw',
+        type: 'textarea',
+        advanced: { keepValue: true },
+      })
+    ).toBe(true)
+  })
+
+  test('should not keep a field that says so explicitly', () => {
+    expect(
+      keepsValue({
+        name: 'raw',
+        type: 'textarea',
+        advanced: { keepValue: false },
+      })
+    ).toBe(false)
+  })
+
+  test('should not keep a field whose advanced says nothing about it', () => {
+    expect(
+      keepsValue({
+        name: 'raw',
+        type: 'textarea',
+        advanced: { transient: true },
+      })
+    ).toBe(false)
+  })
+
+  test('should not keep a field with no advanced at all', () => {
+    expect(
+      keepsValue({
+        name: 'raw',
+        type: 'textarea',
+      })
+    ).toBe(false)
+  })
+
+  test('should read the flag off a list, alongside its other advanced keys', () => {
+    const list: List = {
+      name: 'items',
+      type: 'list',
+      fields: [{ name: 'value', type: 'input/text' }],
+      advanced: { length: { min: 1 }, keepValue: true },
+    }
+
+    expect(keepsValue(list)).toBe(true)
+  })
+
+  // The property used to sit at the top level, beside `hidden`. Nothing reads
+  // it there any more, and every key of a field is optional -- so a definition
+  // written the old way is not a type error, it is a value quietly dropped.
+  // This is the test that says so out loud.
+  test('should ignore the flag written at the top level', () => {
+    const field = {
+      name: 'raw',
+      type: 'textarea',
+      keepValue: true,
+    } as Field
+
+    expect(keepsValue(field)).toBe(false)
   })
 })

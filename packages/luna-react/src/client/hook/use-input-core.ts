@@ -23,6 +23,7 @@ import {
   isEmpty,
   isInput,
   isRows,
+  keepsValue,
   resolveTarget,
   translate,
   type AriaAttributes,
@@ -141,7 +142,19 @@ export function useInputCore(
   function getDeclaration(
     target: string
   ): { hidden?: boolean; keepValue?: boolean } | undefined {
-    return getField(target) ?? store.get(mountedListsAtom)[target]
+    // Normalized rather than handed back whole, and that is the point of the
+    // branch: a field declares `keepValue` inside `advanced` while a list
+    // publishes it flat, so the two shapes have to be made one here. A field
+    // returned as-is would still satisfy this return type -- every key on it
+    // is optional -- and the flag would read `undefined` for every input
+    // without a word from the compiler. The cost of that silence is the
+    // user's data.
+    const field = getField(target)
+    if (field) {
+      return { hidden: field.hidden, keepValue: keepsValue(field) }
+    }
+
+    return store.get(mountedListsAtom)[target]
   }
 
   /** Whether a target goes back to being hidden once its state is removed. */
@@ -150,7 +163,7 @@ export function useInputCore(
   }
 
   /** Whether hiding a target leaves its value behind instead of taking it. */
-  function keepsValue(target: string) {
+  function targetKeepsValue(target: string) {
     return getDeclaration(target)?.keepValue === true
   }
 
@@ -330,7 +343,7 @@ export function useInputCore(
               : state === undefined
                 ? newTargets.filter(revertsToHidden)
                 : []
-          ).filter((target) => !keepsValue(target))
+          ).filter((target) => !targetKeepsValue(target))
 
           if (targetsToClear.length > 0) {
             clearTargets(targetsToClear)

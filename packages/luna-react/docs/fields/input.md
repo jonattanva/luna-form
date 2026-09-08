@@ -31,7 +31,6 @@ Luna Form's input fields inherit the standard logical properties available to al
 - **`disabled`** _(boolean, optional)_: If `true`, the field is non-interactive and blocked from events.
 - **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user.
 - **`hidden`** _(boolean, optional)_: If `true`, the field is hidden from the user interface.
-- **`keepValue`** _(boolean, optional)_: If `true`, hiding the field leaves its value behind instead of taking it. See [What clearing a hidden target means](../events/change.md#what-clearing-a-hidden-target-means).
 - **`order`** _(number, optional)_: A numeric order determining the field's position relative to adjacent fields.
 
 ---
@@ -48,6 +47,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 - **`reverse`** _(boolean)_: `checkbox` only, and it exists to turn a default **off**. A checkbox renders its box first and its label after it; `reverse: false` swaps them, `true` changes nothing, and on any other field type the key is not read. See [Layout](../structure/layout.md#advancedreverse-checkbox-only).
 - **`aria`** _(object)_: Map of specific ARIA attributes for screen readers (e.g., `{ "aria-label": "Custom label" }`).
 - **`data`** _(object)_: Map of specific HTML data attributes (e.g., `{ "data-test-id": "my-field" }`).
+- **`keepValue`** _(boolean)_: If `true`, hiding the field leaves its value behind instead of taking it — the field is put away rather than dropped. See [Keeping a value through a hide](../events/change.md#keeping-a-value-through-a-hide).
 - **`transient`** _(boolean)_: If `true`, the field fires its change events and keeps nothing of its own — it is neither stored nor reported to the consumer. For a control whose whole job is to write to _another_ field. See [Transient controls](../events/change.md#transient-controls).
 
 ### Text & Numeric Options (`input/text`, `input/email`, `input/tel`, `input/password`, `input/number`)

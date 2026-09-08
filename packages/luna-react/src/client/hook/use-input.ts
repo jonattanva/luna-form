@@ -1,5 +1,5 @@
 import { KeepValueContext } from '../context/keep-value-context'
-import { getSchema } from '@luna-form/core'
+import { getSchema, keepsValue } from '@luna-form/core'
 import { use, useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
@@ -25,7 +25,7 @@ export function useInput(
   // flag looks unnecessary. On a form that holds its own values it is the only
   // clear there is.
   const inherited = use(KeepValueContext)
-  const keepValue = inherited || field.keepValue === true
+  const keepValue = inherited || keepsValue(field)
 
   const onMountHandler = useEffectEvent((name: string) => {
     if (name) {

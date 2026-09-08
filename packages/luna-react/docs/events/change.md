@@ -239,9 +239,9 @@ same values -- containers included.
 
 #### Keeping a value through a hide
 
-A field that declares `keepValue: true` is put away rather than dropped: hiding
-it leaves what it held, showing it again gives it back, and the consumer is
-told nothing because nothing was taken.
+A field that declares `advanced.keepValue: true` is put away rather than
+dropped: hiding it leaves what it held, showing it again gives it back, and the
+consumer is told nothing because nothing was taken.
 
 ```json
 {
@@ -249,15 +249,21 @@ told nothing because nothing was taken.
   "name": "raw",
   "type": "textarea",
   "hidden": true,
-  "keepValue": true
+  "advanced": { "keepValue": true }
 }
 ```
+
+It sits in `advanced` beside [`transient`](#transient-controls), which is the
+other key that decides what ends up stored, rather than beside `hidden`: the
+two read as a pair, but `hidden` is what the form does to the field and this is
+what the field is.
 
 It is declared on the FIELD and not on the rule, for the same reason the clear
 does not care how the hiding was phrased: a field either survives being put
 away or it does not, and which of several rules happened to hide it this time
-says nothing about that. A `list` may declare it too, and then it covers every
-value its rows hold.
+says nothing about that. A
+[`list`](../fields/list.md#advanced-configuration-advanced-object) may declare
+it too, and then it covers every value its rows hold.
 
 Reach for it where two fields are two views of the same thing and the form
 swaps between them -- there, hiding one is a change of scenery, not a change of
