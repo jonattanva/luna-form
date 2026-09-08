@@ -39,8 +39,12 @@ export function InputBase(
   // test it directly. A field that never declared one and a resolved `false`
   // are the same field to every reader.
   //
-  // No `useMemo` on purpose: `server/component/form` reaches this component
-  // through `Slot` and `Field`, and a hook here would not survive that.
+  // A comparison rather than a `useMemo`, which the previous commit justified
+  // by claiming a hook could not run here. That was wrong: `component/form`
+  // renders `VisibilityGuard`, which reads an atom, and the server entry
+  // renders that same tree -- it is server-side rendering, not RSC, and hooks
+  // are fine. The comparison stays because it is the cheaper answer, not the
+  // only one: no dependency array to keep honest, and nothing retained.
   //
   // On its own this changes nothing measurable -- the identity chain has a
   // second break, in whatever hands `sections` to the form -- and the two have
