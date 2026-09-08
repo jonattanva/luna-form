@@ -33,6 +33,56 @@ function toStoredValue(field: Field, rawValue: unknown) {
     : rawValue
 }
 
+/**
+ * Which value a field takes from what it was handed, and on whose authority.
+ *
+ * The precedence is the same wherever it is asked -- the seeding effect and the
+ * first render both read it here -- and that is the point of it being one
+ * function. It was written twice before, once in each place, and the two copies
+ * are exactly how a `defaultValue` came to be transformed on one path and
+ * handed over raw on the other.
+ *
+ * `source` is what the callers need to tell the cases apart without knowing the
+ * rule: only a `defaultValue` is seeded silently, because it is the form's own
+ * declaration rather than something the consumer said, and reporting it back as
+ * a change would put words in the consumer's mouth.
+ *
+ * - `value`: the object named this field and held something in it.
+ * - `default`: it did not, and the field declares a `defaultValue`.
+ * - `empty`: it named the field and held nothing, which is a statement and not
+ *   a gap -- the field is meant to be empty. Only reachable once the two above
+ *   have declined, so a caller passing a partial object still leaves untouched
+ *   fields, and any `defaultValue`, exactly where they were. Without it a field
+ *   could be filled from the outside but never cleared from the outside, since
+ *   neither `undefined`, `null` nor `''` is a value worth re-feeding by the
+ *   measure above. `withDeclaredFields` is how a caller says it on purpose.
+ * - `none`: nothing names it and it declares nothing. There is no value here to
+ *   speak of, and the callers leave the field alone.
+ */
+function selectValue(
+  field: Field,
+  currentValue: Nullable<Record<string, unknown>> | undefined,
+  translatedName: string
+) {
+  const { found, value } = currentValue
+    ? resolveEntry(translatedName, currentValue)
+    : { found: false, value: undefined }
+
+  if (isValidValue(value)) {
+    return { source: 'value', value } as const
+  }
+
+  if (isValidValue(field.defaultValue)) {
+    return { source: 'default', value: field.defaultValue } as const
+  }
+
+  if (found) {
+    return { source: 'empty', value } as const
+  }
+
+  return { source: 'none', value: undefined } as const
+}
+
 export function useValue(
   field: Field,
   currentValue?: Nullable<Record<string, unknown>>
@@ -79,23 +129,18 @@ export function useValue(
   // away -- a hidden target cleared, a form reset -- and putting it back is the
   // bug this must not become.
   const [initialValue] = useState(() => {
-    const { value: newValue } = currentValue
-      ? resolveEntry(translateListPath(name), currentValue)
-      : { value: undefined }
+    const selected = selectValue(field, currentValue, translateListPath(name))
 
-    // The prop first and the `defaultValue` behind it, which is the order the
-    // effect below reads them in. `getInputValue` already falls back to the
-    // `defaultValue` on its own, but it does so with the raw one: a field
-    // declaring both a `defaultValue` and a `transform` was painted with the
-    // value as written and repainted with the transformed one a commit later.
-    const rawValue = isValidValue(newValue) ? newValue : field.defaultValue
+    // Only the two that carry something. `empty` and `none` both leave the
+    // field showing nothing, which is already what no stand-in at all does.
+    if (selected.source !== 'value' && selected.source !== 'default') {
+      return undefined
+    }
 
     // `?? undefined` mirrors what the atom's own reader does to everything it
     // hands back, so the stand-in and the store have the same type and no
     // caller can tell which of the two it was given.
-    return isValidValue(rawValue)
-      ? (toStoredValue(field, rawValue) ?? undefined)
-      : undefined
+    return toStoredValue(field, selected.value) ?? undefined
   })
 
   const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
@@ -108,50 +153,19 @@ export function useValue(
     setValue(transformedValue)
   })
 
-  const onCurrentValueChange = useEffectEvent(
-    (currentValue: Record<string, unknown>) => {
-      const { found, value: newValue } = resolveEntry(
-        translateListPath(name),
-        currentValue
-      )
+  const seed = useEffectEvent(() => {
+    const selected = selectValue(field, currentValue, translateListPath(name))
 
-      if (isValidValue(newValue)) {
-        applyValue(newValue)
-        return
-      }
-
-      if (isValidValue(field.defaultValue)) {
-        applyValue(field.defaultValue, true)
-        return
-      }
-
-      // The value names this field and holds nothing in it, which is a
-      // statement and not a gap: the field is meant to be empty. Only reachable
-      // once the two branches above have declined, so a caller passing a
-      // partial object still leaves untouched fields — and any `defaultValue` —
-      // exactly where they were.
-      //
-      // Without this a field could be filled from the outside but never cleared
-      // from the outside, because neither `undefined`, `null` nor `''` is a
-      // value worth re-feeding by the measure above. `withDeclaredFields` is
-      // how a caller says it on purpose.
-      if (found) {
-        applyValue(newValue)
-      }
-    }
-  )
-
-  useEffect(() => {
-    seededRef.current = true
-
-    if (currentValue) {
-      onCurrentValueChange(currentValue)
+    if (selected.source === 'none') {
       return
     }
 
-    if (isValidValue(field.defaultValue)) {
-      applyValue(field.defaultValue, true)
-    }
+    applyValue(selected.value, selected.source === 'default')
+  })
+
+  useEffect(() => {
+    seededRef.current = true
+    seed()
   }, [currentValue, field.defaultValue])
 
   const shouldSkipOnChange = useCallback(() => {
