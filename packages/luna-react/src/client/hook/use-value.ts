@@ -10,7 +10,28 @@ import { ListPathContext } from '../context/list-path-context'
 import { reportValueAtom } from '../lib/value-store'
 import { resolveEntry } from '../lib/resolve-value'
 import { useAtom } from 'jotai'
-import { use, useCallback, useEffect, useRef, useEffectEvent } from 'react'
+import {
+  use,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useEffectEvent,
+} from 'react'
+
+/**
+ * What the store holds for a field, given what it was handed.
+ *
+ * Shared by the seeding below and by {@link useValue}'s first render so the two
+ * cannot disagree: a field carrying a `transform` would otherwise be painted
+ * with the raw value and rewritten with the transformed one a commit later,
+ * trading one flash for another.
+ */
+function toStoredValue(field: Field, rawValue: unknown) {
+  return isInput(field)
+    ? applyTransform(rawValue, field.advanced?.transform)
+    : rawValue
+}
 
 export function useValue(
   field: Field,
@@ -31,10 +52,54 @@ export function useValue(
   // and consuming it never triggers re-renders (the context value is stable).
   const translateListPath = use(ListPathContext)
 
+  // Whether the effect below has seeded this field yet. Written from the
+  // effect and only read while rendering, where it flips false to true exactly
+  // once -- and by then the store already holds what the fallback was standing
+  // in for, so no render ever disagrees with the one before it.
+  const seededRef = useRef(false)
+
+  // What the field holds until that first seeding commits.
+  //
+  // The store is seeded from an effect, so an input is otherwise painted --
+  // mounted, focusable and empty -- one commit before it is given the value it
+  // was fed. `getInputValue` already closes exactly this gap for a
+  // `defaultValue`, by falling back to it while the store is empty; a value
+  // that arrived through the `value` prop had no such fallback, which is why it
+  // was the only one of the two that flashed.
+  //
+  // That flash is not cosmetic. A field that is empty and interactive is a
+  // field the user can reach first: what they type is overwritten by the
+  // seeding commit, and emptying it does nothing at all -- the input is already
+  // empty, so the browser reports no change and the form tells its consumer
+  // nothing.
+  //
+  // Read once at mount, and gated on `seededRef` so it applies strictly
+  // before that first seeding and never after. Once the store owns the field an
+  // absent entry is not a gap to fill but a value that was deliberately taken
+  // away -- a hidden target cleared, a form reset -- and putting it back is the
+  // bug this must not become.
+  const [initialValue] = useState(() => {
+    const { value: newValue } = currentValue
+      ? resolveEntry(translateListPath(name), currentValue)
+      : { value: undefined }
+
+    // The prop first and the `defaultValue` behind it, which is the order the
+    // effect below reads them in. `getInputValue` already falls back to the
+    // `defaultValue` on its own, but it does so with the raw one: a field
+    // declaring both a `defaultValue` and a `transform` was painted with the
+    // value as written and repainted with the transformed one a commit later.
+    const rawValue = isValidValue(newValue) ? newValue : field.defaultValue
+
+    // `?? undefined` mirrors what the atom's own reader does to everything it
+    // hands back, so the stand-in and the store have the same type and no
+    // caller can tell which of the two it was given.
+    return isValidValue(rawValue)
+      ? (toStoredValue(field, rawValue) ?? undefined)
+      : undefined
+  })
+
   const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
-    const transformedValue = isInput(field)
-      ? applyTransform(rawValue, field.advanced?.transform)
-      : rawValue
+    const transformedValue = toStoredValue(field, rawValue)
 
     if (!silent && !deepEqual(value, transformedValue)) {
       skipNextOnChangeRef.current = true
@@ -77,6 +142,8 @@ export function useValue(
   )
 
   useEffect(() => {
+    seededRef.current = true
+
     if (currentValue) {
       onCurrentValueChange(currentValue)
       return
@@ -98,6 +165,9 @@ export function useValue(
   return {
     setValue,
     shouldSkipOnChange,
-    value,
+    // `??` rather than a plain swap: a `value` change event can auto-fill this
+    // field before it mounts, and what the store already holds outranks the
+    // prop it was fed.
+    value: seededRef.current ? value : (value ?? initialValue),
   } as const
 }

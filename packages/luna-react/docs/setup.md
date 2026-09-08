@@ -160,6 +160,16 @@ interactive.
 | `advanced.step` | numbers the [sections](structure/sections.md#advancedstep-numbers-the-sections)                                 |
 | `children`      | the form's control area — see [forms/submit.md](forms/submit.md#nothing-submits-without-a-control)              |
 
+A field named by `value` holds it from its first render. It is not painted empty
+to be given the value a commit later, so it never sits mounted, focusable and
+blank while the form settles — a window in which anything typed was overwritten,
+and in which emptying the field was not a change the browser reported to anyone.
+
+The same holds for a field carrying a `defaultValue`, and for either of them
+under an `advanced.transform` — see [fields/input.md](fields/input.md). The
+value is transformed before it is first painted rather than after, so it is
+never shown as written and then rewritten.
+
 ### `Form` from `react-luna-form/server`
 
 The same descriptors rendered without client state. It accepts the same props
