@@ -46,7 +46,7 @@ export function InputBase(
     setTimeoutRef,
     validated,
     valueRef,
-  } = useInputCore(props, { setValue, shouldSkipOnChange, value, setSource })
+  } = useInputCore(props, { setValue, value, setSource })
 
   const { getSchema } = props
 
