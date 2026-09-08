@@ -8,7 +8,7 @@ import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { useAtomValue } from 'jotai'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 export function ReactiveFormPreview() {
   const code = useAtomValue(codeAtom)
@@ -18,7 +18,11 @@ export function ReactiveFormPreview() {
     form: Record<string, unknown>
   } | null>(null)
 
-  const form = convertCodeToForm(code)
+  // Memoized because the identity of what comes out of here is the identity
+  // the form hands every field, and `useInput` memoizes each field's Zod
+  // schema on it. Re-parsing on every render -- and `handleValueChange` sets
+  // state on every keystroke -- rebuilt every schema on every keystroke.
+  const form = useMemo(() => convertCodeToForm(code), [code])
 
   // `env` and `style` live on the config, not on the form, so a definition
   // alone cannot reach them. The harness lifts them out of the injected JSON to
