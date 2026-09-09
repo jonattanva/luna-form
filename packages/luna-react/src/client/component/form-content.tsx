@@ -4,8 +4,10 @@ import { Slot } from './slot/slot'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { resolveDictionary } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { hostValueAtom } from '../lib/host-value-store'
 import { useSchema } from '../hook/use-schema'
+import { useSetAtom } from 'jotai'
 import type { Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 
@@ -49,6 +51,27 @@ export function FormContent<
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
   const value = state.data ?? props.value
+
+  // The value the host holds enters the store here, once, so a field can read
+  // its own entry instead of being handed the whole record. See `useValue`.
+  //
+  // In an effect rather than during render, because writing a store while
+  // rendering is not a thing React lets a component do honestly.
+  //
+  // That costs a commit, and the cost is worth knowing about. A field reacting
+  // to this write reacts one commit later than it did to a prop, so anything
+  // that reads the host's value once and latches sees nothing the first time
+  // and never looks again. `useValue` is fine -- it re-applies whenever its
+  // entry changes -- but the initial change events in `input-base` are not,
+  // which is why they still take the record as a prop. Moving them here needs
+  // that latch dealt with first, and no ordering of effects is enough: their
+  // effect belongs to the first commit and reads what that render captured,
+  // whatever a layout effect writes in between. `initial-value-nested-state-
+  // event` is the case that proves it.
+  const setHostValue = useSetAtom(hostValueAtom)
+  useEffect(() => {
+    setHostValue(value ?? null)
+  }, [setHostValue, value])
 
   return (
     <>
