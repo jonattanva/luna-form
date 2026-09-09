@@ -71,6 +71,39 @@ function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   })
 }
 
+/**
+ * Forgets the cached atoms a family built for these names.
+ *
+ * `atomFamily` caches one atom per name and never lets go on its own, so a
+ * list the user adds to and removes from grows the cache without bound: the
+ * row ids only ever go up, and even removing a row registers the ones that
+ * shift down behind it. Nothing on screen accounts for the total.
+ *
+ * Safe to call while something is still subscribed. The atoms a family builds
+ * here hold no state of their own -- they read and write `baseAtom[name]` --
+ * so a subscriber that keeps the forgotten atom and a caller that gets a fresh
+ * one are two views of the same record, and they agree. Clearing the value is
+ * a separate act, which is why this is a separate atom: a field that declares
+ * `keepValue` releases its cached view and keeps its data.
+ *
+ * Where it is NOT safe, and the reason this is spelled out: releasing a name
+ * whose atom identity feeds the dependency array of the effect doing the
+ * releasing. `family(name)` returns a fresh atom once the entry is gone, so
+ * `useSetAtom(family(name))` hands back a new setter, the dependency changes,
+ * the effect re-runs, its cleanup releases again -- an effect whose cleanup
+ * destroys the cache entry its own dependency is derived from. Measured at
+ * ~6000 create/remove pairs a second, idle, with no mount or unmount in
+ * between. Release from `onUnmount`, which no dependency array watches; never
+ * from a cleanup that depends on the setter it is about to invalidate.
+ */
+function createReleaseAtom(family: { remove: (name: string) => void }) {
+  return atom(null, (_get, _set, names: string[]) => {
+    for (const name of names) {
+      family.remove(name)
+    }
+  })
+}
+
 function createBulkReportAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, newValue: Record<string, T>) => {
     const current = get(baseAtom)
@@ -136,6 +169,12 @@ export function createNestedRecordAtomFamily<
   )
 }
 
+export function createNestedReleaseAtom(family: {
+  remove: (name: string) => void
+}) {
+  return createReleaseAtom(family)
+}
+
 export function createNestedClearAtom<TInner>(
   baseAtom: PrimitiveAtom<Record<string, Record<string, TInner>>>
 ) {
@@ -180,12 +219,14 @@ export function createNestedClearAtom<TInner>(
 
 export function createAtomStore<T>(initialValue: Record<string, T> = {}) {
   const baseAtom = atom<Record<string, T>>(initialValue)
+  const report = createRecordAtomFamily(baseAtom)
 
   return {
     atom: baseAtom,
     clearAll: createClearAllAtom(baseAtom),
     clear: createClearAtom(baseAtom),
     bulkReport: createBulkReportAtom(baseAtom),
-    report: createRecordAtomFamily(baseAtom),
+    release: createReleaseAtom(report),
+    report,
   }
 }

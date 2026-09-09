@@ -3,6 +3,7 @@ import { mergeSource, type DataSource } from '@luna-form/core'
 import {
   createNestedClearAtom,
   createNestedRecordAtomFamily,
+  createNestedReleaseAtom,
 } from './store-helper'
 
 const merge = (values: DataSource[]) => {
@@ -26,3 +27,4 @@ export const reportSourceAtom = createNestedRecordAtomFamily<DataSource>(
 )
 
 export const clearInputSourceAtom = createNestedClearAtom(sourceAtom)
+export const releaseInputSourceAtom = createNestedReleaseAtom(reportSourceAtom)

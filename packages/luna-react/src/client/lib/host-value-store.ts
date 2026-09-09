@@ -38,6 +38,14 @@ export const MISSING = Symbol('host-value-missing')
  * subscribes. That translation lives in a React context, which an atom cannot
  * read; doing it at the call site is what keeps this correct where a memo
  * comparator could not be. See `ListPathContext`.
+ *
+ * Not released the way the per-name families in `store-helper` are, and it does
+ * not need to be for the same reason it is keyed this way: a position is reused
+ * where a stable id only ever climbs, so the keys here are bounded by the
+ * widest the form has ever been rather than by every row it has ever held.
+ * Measured going 1 -> 20 -> 14 -> 20 rows: the released families fall back to
+ * 23 and this one stays at 29, its high-water mark. Worth knowing before
+ * someone reads the absence of a release as an oversight.
  */
 export const hostEntryAtom = atomFamily((name: string) =>
   atom((get) => {
