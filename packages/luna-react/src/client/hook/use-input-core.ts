@@ -31,6 +31,7 @@ import {
   type DataAttributes,
   type DataSource,
   type Field,
+  type FieldState,
   type Schema,
   type Schemas,
   type Value,
@@ -219,7 +220,10 @@ export function useInputCore(
   // Read from the store rather than from inside the updater because the report
   // has to name what was actually there: a target holding nothing is nothing
   // to announce.
-  function clearTargets(targets: string[]) {
+  //
+  // Returns the keys it emptied: what those fields asserted about others through
+  // their own `state` rules stops holding with them. See `withdrawStates`.
+  function clearTargets(targets: string[]): string[] {
     const previous = store.get(valueAtom) as Record<string, unknown>
 
     // A target takes everything under it with it. A group or a list keeps
@@ -232,7 +236,7 @@ export function useInputCore(
     })
 
     if (cleared.length === 0) {
-      return
+      return cleared
     }
 
     setValues((previous) => {
@@ -240,11 +244,112 @@ export function useInputCore(
     })
 
     if (!props.onValueChange) {
-      return
+      return cleared
     }
 
     for (const key of cleared) {
       reportTarget(key, undefined)
+    }
+
+    return cleared
+  }
+
+  // What one `state` rule decided, applied to its targets. `from` is the field
+  // whose rule it is: a `list/field` target names a sibling in that field's
+  // row, so it has to be resolved against that field and no other.
+  function applyState(
+    from: string,
+    targets: string[],
+    state: FieldState | undefined,
+    visited: Set<string>
+  ) {
+    const newTargets = targets.map((target) => resolveTarget(target, from))
+
+    setFieldStates((previous) => {
+      if (state) {
+        return newTargets.reduce(
+          (previous, target) => ({
+            ...previous,
+            [target]: state,
+          }),
+          previous
+        )
+      }
+
+      return newTargets.reduce((previous, target) => {
+        return omitKey(previous, target)
+      }, previous)
+    })
+
+    // One pass, and one `getDeclaration` per target. Asking twice --
+    // once for `hidden`, once for `keepValue` -- meant two walks of the
+    // schema registry for the same answer, and the registry is a linear
+    // scan.
+    //
+    // The three cases, in the order they are decided:
+    //
+    //   state.hidden !== true  a rule that sets anything other than a
+    //                          hide clears nothing.
+    //   keepValue              a field that survives being put away
+    //                          survives it however the form phrased the
+    //                          hiding, so this outranks both branches
+    //                          below rather than filtering one of them.
+    //   otherwise              an explicit hide takes every target; a
+    //                          target whose state is being removed is
+    //                          taken only if it reverts to its own
+    //                          static `hidden`.
+    const targetsToClear = newTargets.filter((target) => {
+      if (state !== undefined && state.hidden !== true) {
+        return false
+      }
+
+      const declaration = getDeclaration(target)
+      if (declaration?.keepValue === true) {
+        return false
+      }
+
+      return state?.hidden === true || declaration?.hidden === true
+    })
+
+    if (targetsToClear.length > 0) {
+      withdrawStates(clearTargets(targetsToClear), visited)
+    }
+  }
+
+  // A field whose value is gone takes its `state` rules with it. What they
+  // decided -- a sibling revealed, disabled, described -- hung on that value,
+  // and the value is what a hide removes: "once a `state` action hides a
+  // field, the value is gone". Leaving the decisions standing is what kept a
+  // field on screen under a question nobody had answered.
+  //
+  // So each emptied field's rules are run again as if it held nothing, which
+  // it now does. That can hide and empty further fields, whose rules go the
+  // same way, as far down as the chain reaches. `visited` counts each field
+  // once, so a chain that loops back on itself still ends; the field whose own
+  // change started it is in there from the start, because its rules are the
+  // ones being applied.
+  //
+  // Only for what a hide emptied. A field that keeps its value through a hide
+  // keeps what its rules decided, and one that held nothing had nothing
+  // standing to withdraw.
+  function withdrawStates(names: string[], visited: Set<string>) {
+    for (const name of names) {
+      if (visited.has(name)) {
+        continue
+      }
+
+      visited.add(name)
+
+      const events = getField(name)?.event?.change
+      if (!events) {
+        continue
+      }
+
+      handleProxyEvent(events, ({ states }) => {
+        handleStateEvent(null, states, (targets, state) => {
+          applyState(name, targets, state, visited)
+        })
+      })
     }
   }
 
@@ -304,59 +409,12 @@ export function useInputCore(
         })
 
         handleStateEvent(selected, states, (targets, state) => {
-          const newTargets = targets.map((target) =>
-            resolveTarget(target, props.field.name)
+          applyState(
+            props.field.name,
+            targets,
+            state,
+            new Set([props.field.name])
           )
-
-          setFieldStates((previous) => {
-            if (state) {
-              return newTargets.reduce(
-                (previous, target) => ({
-                  ...previous,
-                  [target]: state,
-                }),
-                previous
-              )
-            }
-
-            return newTargets.reduce((previous, target) => {
-              return omitKey(previous, target)
-            }, previous)
-          })
-
-          // One pass, and one `getDeclaration` per target. Asking twice --
-          // once for `hidden`, once for `keepValue` -- meant two walks of the
-          // schema registry for the same answer, and the registry is a linear
-          // scan.
-          //
-          // The three cases, in the order they are decided:
-          //
-          //   state.hidden !== true  a rule that sets anything other than a
-          //                          hide clears nothing.
-          //   keepValue              a field that survives being put away
-          //                          survives it however the form phrased the
-          //                          hiding, so this outranks both branches
-          //                          below rather than filtering one of them.
-          //   otherwise              an explicit hide takes every target; a
-          //                          target whose state is being removed is
-          //                          taken only if it reverts to its own
-          //                          static `hidden`.
-          const targetsToClear = newTargets.filter((target) => {
-            if (state !== undefined && state.hidden !== true) {
-              return false
-            }
-
-            const declaration = getDeclaration(target)
-            if (declaration?.keepValue === true) {
-              return false
-            }
-
-            return state?.hidden === true || declaration?.hidden === true
-          })
-
-          if (targetsToClear.length > 0) {
-            clearTargets(targetsToClear)
-          }
         })
       })
 
