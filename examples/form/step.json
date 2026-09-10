@@ -225,7 +225,7 @@
                   ]
                 },
                 {
-                  "advanced": { "transform": ["remove-space", "lowercase", "remove-accents"] },
+                  "advanced": { "transform": ["remove-space", "lowercase", "remove-accent"] },
                   "label": "Technical key",
                   "name": "name",
                   "type": "input/text",
@@ -254,7 +254,7 @@
               ]
             },
             {
-              "advanced": { "transform": ["remove-space", "lowercase", "remove-accents"] },
+              "advanced": { "transform": ["remove-space", "lowercase", "remove-accent"] },
               "label": "Technical key",
               "name": "name",
               "type": "input/text",
