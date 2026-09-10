@@ -5,11 +5,10 @@ import {
   isValidValue,
   type Field,
 } from '@luna-form/core'
-import { ListPathContext } from '../context/list-path-context'
-import { MISSING, hostEntryAtom } from '../lib/host-value-store'
 import { reportValueAtom } from '../lib/value-store'
-import { useAtom, useAtomValue } from 'jotai'
-import { use, useCallback, useEffect, useRef, useEffectEvent } from 'react'
+import { useAtom } from 'jotai'
+import { useCallback, useEffect, useRef, useEffectEvent } from 'react'
+import { useHostEntry } from './use-host-entry'
 
 export function useValue(field: Field) {
   const { name } = field
@@ -17,29 +16,15 @@ export function useValue(field: Field) {
   const skipNextOnChangeRef = useRef(false)
   const [value, setValue] = useAtom(reportValueAtom(name))
 
-  // Translate the leaf's stable-id name to its current array position before
-  // resolving against the value the host holds. The atom is keyed by stable id
-  // (field.<id>.<leaf>), but what the host carries is a positional array; after
-  // a non-tail removal the two diverge, so a stable-id lookup against the
-  // compacted record misses and (for fields with a defaultValue) clobbers the
-  // seeded value. Mirror of the positional emit translation in use-input-core.
-  // Identity outside a list (context default), so non-list fields are
-  // unaffected and consuming it never triggers re-renders (the context value is
-  // stable).
-  const translateListPath = use(ListPathContext)
-
   // This field's entry, and nothing else.
   //
   // The whole record used to arrive as a prop, which made this hook's effect a
   // function of every field's value: one keystroke anywhere re-ran it for every
   // field on the form. Subscribing to the one entry is what makes it a function
-  // of this field's own value instead.
-  //
-  // Translated here on purpose. The name that reaches the record has to be the
-  // positional one, and the translation is a React context -- which is why an
-  // atom cannot do this on its own, and why answering the same question inside
-  // a `memo` comparator got it wrong twice.
-  const entry = useAtomValue(hostEntryAtom(translateListPath(name)))
+  // of this field's own value instead. The reactive reader is the right one
+  // here: this hook re-applies whenever the entry moves, so it does not care
+  // that a store arrives a commit after a prop would have. See `useHostEntry`.
+  const { found, value: hostValue } = useHostEntry(name)
 
   const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
     const transformedValue = isInput(field)
@@ -53,15 +38,7 @@ export function useValue(field: Field) {
     setValue(transformedValue)
   })
 
-  const onEntryChange = useEffectEvent((current: unknown) => {
-    // `MISSING` is the host not naming this field at all, which covers both of
-    // the cases the record used to separate: no record at all, and a record
-    // that never mentions this field. They took different branches before and
-    // arrived at the same place -- the silent `defaultValue` below -- so
-    // collapsing them changes the route and not the destination.
-    const found = current !== MISSING
-    const newValue = found ? current : undefined
-
+  const onEntryChange = useEffectEvent((found: boolean, newValue: unknown) => {
     if (isValidValue(newValue)) {
       applyValue(newValue)
       return
@@ -88,8 +65,8 @@ export function useValue(field: Field) {
   })
 
   useEffect(() => {
-    onEntryChange(entry)
-  }, [entry, field.defaultValue])
+    onEntryChange(found, hostValue)
+  }, [found, hostValue, field.defaultValue])
 
   const shouldSkipOnChange = useCallback(() => {
     if (skipNextOnChangeRef.current) {

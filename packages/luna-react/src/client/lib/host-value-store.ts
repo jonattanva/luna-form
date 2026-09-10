@@ -27,7 +27,7 @@ export const hostValueAtom = hostValue
  * would re-render exactly as it does today. What a subscriber gets back has to
  * be something `Object.is` can settle, or jotai has nothing to bail out on.
  */
-export const MISSING = Symbol('host-value-missing')
+const MISSING = Symbol('host-value-missing')
 
 /**
  * One field's entry in that record.
@@ -47,6 +47,19 @@ export const MISSING = Symbol('host-value-missing')
  * 23 and this one stays at 29, its high-water mark. Worth knowing before
  * someone reads the absence of a release as an oversight.
  */
+/** What the host says about one field, with the sentinel already read. */
+export type HostEntry = {
+  /** The host names this field. A field it does not name reads `undefined`. */
+  found: boolean
+  value: unknown
+}
+
+export function readHostEntry(entry: unknown): HostEntry {
+  return entry === MISSING
+    ? { found: false, value: undefined }
+    : { found: true, value: entry }
+}
+
 export const hostEntryAtom = atomFamily((name: string) =>
   atom((get) => {
     const current = get(hostValue)

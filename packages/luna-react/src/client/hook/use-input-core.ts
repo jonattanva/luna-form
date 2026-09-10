@@ -31,7 +31,6 @@ import {
   type DataAttributes,
   type DataSource,
   type Field,
-  type Nullable,
   type Schema,
   type Schemas,
   type Value,
@@ -52,7 +51,6 @@ export type InputCoreProps = Readonly<{
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   translations?: Record<string, string>
-  value?: Nullable<Record<string, unknown>>
 }>
 
 // Whether the user's caret is in this field right now.
