@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788795365204,
+  "lastUpdate": 1789159244403,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "a84486da9d1dc571a2976d7b215c9e9dec2f836f",
-          "message": "feat: add timezone utilities and refactor input components\n\nIntroduce timezone data loading/compute utilities in luna-core and a\ntimezone input in luna-react. Split the input component into focused\nbase/create/dateable/selectable/textable modules with shared strategies\nand hooks. Fix e2e description locator to avoid strict-mode collision\nwith the code editor.\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
-          "timestamp": "2026-04-17T21:46:55-05:00",
-          "tree_id": "f7fbbe304d9587b00546b496c6e62fa8e1162436",
-          "url": "https://github.com/jonattanva/luna-form/commit/a84486da9d1dc571a2976d7b215c9e9dec2f836f"
-        },
-        "date": 1776480621713,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00244222400000001,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.003783525999999938,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.04067722200000003,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0010602999999999839,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0019016900000000305,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.038837186000000086,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.03114692868,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "61612320fe3229f627320a94882d4c16d1214d38",
+          "message": "Merge pull request #80 from jonattanva/dependabot/npm_and_yarn/examples/with-next-vanilla/next-16.3.3\n\nchore(deps): bump next from 16.2.12 to 16.3.3 in /examples/with-next-vanilla",
+          "timestamp": "2026-09-11T15:39:52-05:00",
+          "tree_id": "76af1bf25c2fb0d35d32e8704cd5e8c40d04d47c",
+          "url": "https://github.com/jonattanva/luna-form/commit/61612320fe3229f627320a94882d4c16d1214d38"
+        },
+        "date": 1789159243540,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00036936486000000004,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0011756533399999995,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.03588463542,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0004037367600000016,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0005955525200000011,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.03147675052,
             "unit": "ms"
           }
         ]
