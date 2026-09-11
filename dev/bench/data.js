@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789159355874,
+  "lastUpdate": 1789159384631,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "5e09c57057cdad6e075f9181a5debe56ce4af40e",
-          "message": "fix(ci): allow esbuild, sharp, unrs-resolver build scripts via pnpm onlyBuiltDependencies",
-          "timestamp": "2026-04-11T16:44:05-05:00",
-          "tree_id": "69df350ad435bc30adf68178a0f1143e2ed163b5",
-          "url": "https://github.com/jonattanva/luna-form/commit/5e09c57057cdad6e075f9181a5debe56ce4af40e"
-        },
-        "date": 1775943909747,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 274,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 225,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "f1605010274e04c1bde857f5cd72b08f1806404b",
           "message": "fix(ci): allow esbuild, sharp, unrs-resolver build scripts via pnpm onlyBuiltDependencies",
           "timestamp": "2026-04-11T17:10:52-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 525,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "69b2eadbbcdb018d2890b7563210ec74f6b4f708",
+          "message": "Merge pull request #77 from jonattanva/chore/render-instrument\n\nchore(benchmark): keep the instrument that measured the render work",
+          "timestamp": "2026-09-11T15:41:39-05:00",
+          "tree_id": "8c3ce980edac440f9105f86ef43f6135eb7034ac",
+          "url": "https://github.com/jonattanva/luna-form/commit/69b2eadbbcdb018d2890b7563210ec74f6b4f708"
+        },
+        "date": 1789159384591,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 290,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 588,
             "unit": "ms"
           }
         ]
