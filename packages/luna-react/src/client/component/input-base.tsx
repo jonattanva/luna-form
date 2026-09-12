@@ -26,10 +26,7 @@ export function InputBase(
     isInitialReady,
   } = props.strategies
 
-  const { setValue, shouldSkipOnChange, value } = useValue(
-    props.field,
-    props.value
-  )
+  const { setValue, shouldSkipOnChange, value } = useValue(props.field)
   const { data, setSource, isStaticSource } = useSource(
     props.field,
     props.config,
