@@ -5,6 +5,7 @@ import {
   getListLeaves,
   isList,
   isValidValue,
+  keepsValue,
   normalizeListRows,
   type List,
   type Nullable,
@@ -242,14 +243,15 @@ export function useFieldList(
   // a row added or removed here is one write to the registry instead of a
   // withdrawal and a re-registration.
   const reportMounted = useSetAtom(reportMountedListAtom(field.name))
+  const keepValue = keepsValue(field)
   useEffect(() => {
     reportMounted({
       items,
       leafNames,
       hidden: field.hidden === true,
-      keepValue: field.keepValue === true,
+      keepValue,
     })
-  }, [field.hidden, field.keepValue, items, leafNames, reportMounted])
+  }, [field.hidden, keepValue, items, leafNames, reportMounted])
 
   // On the way out, leave what this list holds under its own name -- where a
   // list above it already looks -- and only then stop answering.

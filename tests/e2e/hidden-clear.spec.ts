@@ -16,7 +16,7 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
   //             hiding is what happens when it stops matching and the field
   //             falls back to its static `hidden: true`
   //
-  // WHETHER the field survives it: `keepValue`.
+  // WHETHER the field survives it: `advanced.keepValue`.
   //
   // The two phrasings are the same act -- "once a `state` action hides a
   // field, the value is gone" (docs/events/change.md) -- so every case here
@@ -29,7 +29,16 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
 
     // Written with LEADING commas so they can sit last in either object.
     const hidden = mode === 'revert' ? `,\n            "hidden": true` : ''
-    const keepValue = keep ? `,\n            "keepValue": true` : ''
+
+    // `keepValue` lives inside `advanced`, so it cannot be one fragment shared
+    // by both fields the way `hidden` is: the note has no `advanced` to join
+    // and the list already has one of its own.
+    const noteKeep = keep
+      ? `,\n            "advanced": { "keepValue": true }`
+      : ''
+    const listAdvanced = keep
+      ? `"advanced": { "length": { "min": 1 }, "keepValue": true }`
+      : `"advanced": { "length": { "min": 1 } }`
 
     return `{
       "sections": [{
@@ -47,14 +56,14 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
           {
             "label": "Note",
             "name": "note",
-            "type": "input/text"${hidden}${keepValue}
+            "type": "input/text"${hidden}${noteKeep}
           },
           {
             "label": "Items",
             "name": "items",
             "type": "list",
-            "advanced": { "length": { "min": 1 } },
-            "fields": [{ "label": "Value", "name": "value", "type": "input/text" }]${hidden}${keepValue}
+            ${listAdvanced},
+            "fields": [{ "label": "Value", "name": "value", "type": "input/text" }]${hidden}
           }
         ]
       }]
@@ -144,9 +153,9 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
   })
 
   // The same four, for a field that declares it is put away rather than
-  // dropped. `keepValue` is read off the FIELD, so it has to hold under both
-  // phrasings -- which is exactly what the four above stopped taking for
-  // granted.
+  // dropped. `advanced.keepValue` is read off the FIELD, so it has to hold
+  // under both phrasings -- which is exactly what the four above stopped
+  // taking for granted.
 
   test('keeps an input hidden by an explicit rule that declares keepValue', async ({
     page,

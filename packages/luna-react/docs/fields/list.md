@@ -26,6 +26,7 @@ The `advanced` property customizes structural interaction rules and layout rende
 - **`length`** _({ min?: number, max?: number })_: Configures restrictions on how many items can be generated. Enforces boundary conditions where minimum instances ensure permanent default items and maximum instances automatically disable insertion toggles. The matching error messages are declared under the list's `validation.length` — see the [Validation reference](../validation/overview.md#list-length).
   Both bounds apply to the rows a list opens with, not only to the ones added by hand: an initial `value` shorter than `min` leaves the remainder standing and empty, and one longer than `max` stops at `max`. A [`value` event](../events/change.md#targeting-a-list) assigning rows is clamped the same way.
 - **`collapsed`** _(boolean)_: When enabled, list items default to a visually collapsed representation upon mounting or adding.
+- **`keepValue`** _(boolean)_: If `true`, hiding the list leaves the values behind instead of taking them. A list holds nothing under its own name, so declaring it here is a statement about the rows: it covers every value they hold. See [Keeping a value through a hide](../events/change.md#keeping-a-value-through-a-hide).
 
 ### Collapsed Previews (`preview` object)
 

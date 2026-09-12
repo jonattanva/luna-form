@@ -23,6 +23,7 @@ import {
   isEmpty,
   isInput,
   isRows,
+  keepsValue,
   resolveTarget,
   translate,
   type AriaAttributes,
@@ -72,7 +73,6 @@ export function useInputCore(
   deps: Readonly<{
     setSource: (target: string, source?: DataSource) => void
     setValue: (value: unknown) => void
-    shouldSkipOnChange: () => boolean
     value: unknown
   }>
 ) {
@@ -87,7 +87,7 @@ export function useInputCore(
   // context value has a stable identity, so this never triggers re-renders.
   const translateListPath = use(ListPathContext)
 
-  const { setValue, shouldSkipOnChange, value, setSource } = deps
+  const { setValue, value, setSource } = deps
 
   const valueRef = useRef(value)
   valueRef.current = value
@@ -141,17 +141,19 @@ export function useInputCore(
   function getDeclaration(
     target: string
   ): { hidden?: boolean; keepValue?: boolean } | undefined {
-    return getField(target) ?? store.get(mountedListsAtom)[target]
-  }
+    // Normalized rather than handed back whole, and that is the point of the
+    // branch: a field declares `keepValue` inside `advanced` while a list
+    // publishes it flat, so the two shapes have to be made one here. A field
+    // returned as-is would still satisfy this return type -- every key on it
+    // is optional -- and the flag would read `undefined` for every input
+    // without a word from the compiler. The cost of that silence is the
+    // user's data.
+    const field = getField(target)
+    if (field) {
+      return { hidden: field.hidden, keepValue: keepsValue(field) }
+    }
 
-  /** Whether a target goes back to being hidden once its state is removed. */
-  function revertsToHidden(target: string) {
-    return getDeclaration(target)?.hidden === true
-  }
-
-  /** Whether hiding a target leaves its value behind instead of taking it. */
-  function keepsValue(target: string) {
-    return getDeclaration(target)?.keepValue === true
+    return store.get(mountedListsAtom)[target]
   }
 
   function getTransform(target: string) {
@@ -161,6 +163,29 @@ export function useInputCore(
       if (transform) {
         return transform
       }
+    }
+  }
+
+  // Names a target's new value for the consumer.
+  //
+  // A target the schema does not know is passed over rather than reported:
+  // there is nothing left to name it by -- the report carries the field's
+  // `type` -- and a key whose field has already gone was cleared by its own
+  // unmount anyway. `translateListPath` is what turns a list's stable id back
+  // into the position the consumer addresses rows by, and forgetting it is the
+  // reason this lives in one place instead of at each call.
+  function reportTarget(target: string, value: unknown) {
+    if (!props.onValueChange) {
+      return
+    }
+
+    const field = getField(target)
+    if (field) {
+      props.onValueChange({
+        name: translateListPath(target),
+        type: field.type,
+        value,
+      })
     }
   }
 
@@ -181,16 +206,7 @@ export function useInputCore(
     // never learns about the target's new value, so on reload (or any
     // re-render that drops the internal atom in favor of the value
     // prop) the auto-filled data is lost (Bug B).
-    if (props.onValueChange) {
-      const targetField = getField(target)
-      if (targetField) {
-        props.onValueChange({
-          name: translateListPath(target),
-          type: targetField.type,
-          value,
-        })
-      }
-    }
+    reportTarget(target, value)
   }
 
   // Takes a hidden target's value out of the form and tells the consumer it is
@@ -230,17 +246,7 @@ export function useInputCore(
     }
 
     for (const key of cleared) {
-      // Named by the field it belongs to, which is also where its `type` comes
-      // from. A key whose field has already gone is left alone: there is
-      // nothing left to name it by, and its unmount has cleared it anyway.
-      const field = getField(key)
-      if (field) {
-        props.onValueChange({
-          name: translateListPath(key),
-          type: field.type,
-          value: undefined,
-        })
-      }
+      reportTarget(key, undefined)
     }
   }
 
@@ -320,17 +326,35 @@ export function useInputCore(
             }, previous)
           })
 
-          // `keepValue` filters the result of both branches rather than
-          // either one: a field that survives being put away survives it
-          // however the form phrased the hiding, which is the whole point of
-          // declaring it on the field.
-          const targetsToClear = (
-            state?.hidden === true
-              ? newTargets
-              : state === undefined
-                ? newTargets.filter(revertsToHidden)
-                : []
-          ).filter((target) => !keepsValue(target))
+          // One pass, and one `getDeclaration` per target. Asking twice --
+          // once for `hidden`, once for `keepValue` -- meant two walks of the
+          // schema registry for the same answer, and the registry is a linear
+          // scan.
+          //
+          // The three cases, in the order they are decided:
+          //
+          //   state.hidden !== true  a rule that sets anything other than a
+          //                          hide clears nothing.
+          //   keepValue              a field that survives being put away
+          //                          survives it however the form phrased the
+          //                          hiding, so this outranks both branches
+          //                          below rather than filtering one of them.
+          //   otherwise              an explicit hide takes every target; a
+          //                          target whose state is being removed is
+          //                          taken only if it reverts to its own
+          //                          static `hidden`.
+          const targetsToClear = newTargets.filter((target) => {
+            if (state !== undefined && state.hidden !== true) {
+              return false
+            }
+
+            const declaration = getDeclaration(target)
+            if (declaration?.keepValue === true) {
+              return false
+            }
+
+            return state?.hidden === true || declaration?.hidden === true
+          })
 
           if (targetsToClear.length > 0) {
             clearTargets(targetsToClear)
@@ -482,7 +506,6 @@ export function useInputCore(
     onBlur,
     onValueChangeRef,
     setTimeoutRef,
-    shouldSkipOnChange,
     validated,
     valueRef,
   } as const

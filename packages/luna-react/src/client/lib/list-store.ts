@@ -50,7 +50,11 @@ export type MountedList = {
    * rather than a gap: the only target worth clearing is one that was showing.
    */
   hidden?: boolean
-  /** The list's own `keepValue`, published for the same reason as `hidden`. */
+  /**
+   * The list's own `advanced.keepValue`, published for the same reason as
+   * `hidden` and flattened on the way in: this registry answers about a list
+   * that is on screen, not about the JSON that declared it.
+   */
   keepValue?: boolean
 }
 
