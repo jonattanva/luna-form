@@ -1,7 +1,7 @@
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
-import { resolveValue } from '../lib/resolve-value'
 import { useCallback, useEffect, useRef } from 'react'
+import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import {
@@ -26,10 +26,7 @@ export function InputBase(
     isInitialReady,
   } = props.strategies
 
-  const { setValue, shouldSkipOnChange, value } = useValue(
-    props.field,
-    props.value
-  )
+  const { setValue, shouldSkipOnChange, value } = useValue(props.field)
   const { data, setSource, isStaticSource } = useSource(
     props.field,
     props.config,
@@ -54,6 +51,11 @@ export function InputBase(
 
   const initialEventsProcessedRef = useRef(false)
 
+  // Subscribed only to know when to look again: `found` flips once the host's
+  // record names this field, and that is what re-runs the effect below.
+  const { found: hostFound } = useHostEntry(props.field.name)
+  const readHostEntry = useHostEntryReader(props.field.name)
+
   // Withheld when a `source` change event swapped the schema's array for a
   // remote DataSource: the fetched labels are data, not authored copy.
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
@@ -67,58 +69,55 @@ export function InputBase(
   const inputProps = prepareInputValue(props.field, defaultValue)
 
   useEffect(() => {
-    const hasInitialSource =
-      !!props.value || isValidValue(props.field.defaultValue)
-
-    if (initialEventsProcessedRef.current || !hasInitialSource) {
+    if (initialEventsProcessedRef.current) {
       return
     }
 
-    if (!props.field.event?.change) {
-      initialEventsProcessedRef.current = true
-      return
-    }
-
-    const resolvedValue = props.value
-      ? resolveValue(props.field.name, props.value)
-      : undefined
-
-    const hydratedValue = isValidValue(resolvedValue)
-      ? resolvedValue
-      : props.field.defaultValue
-
-    if (!isValidValue(hydratedValue)) {
-      return
-    }
-
-    if (!isInitialReady(props.field, hydratedValue, data)) {
-      return
-    }
-
-    initialEventsProcessedRef.current = true
-
-    const selected = buildInitialSelected(hydratedValue, data, entity)
-
-    // Handed to a microtask instead of run here, because what these events
-    // write is addressed to *other* fields and this effect runs while those
-    // are still mounting. Two things go wrong when it runs too early, and
-    // only for the actions that write somewhere -- `value` and `source`,
-    // which is why a `state` reveal looks fine while the field beside it
-    // comes up empty:
+    // The whole decision runs in the microtask, not here, and that is the point
+    // rather than a detail. This reader latches: it decides once and marks
+    // itself done. The form writes the host's record from its own effect, and a
+    // parent's effects run after its children's, so anything read at this line
+    // is what the previous commit left -- and a decision made on it is made
+    // against a value the host has already replaced. By the time the microtask
+    // runs, every effect in this commit has run, the form's write included.
     //
-    // - the target is not in the schema yet, so `applyAutoFill` finds no
-    //   field to name it by and the consumer is never told what was written.
-    //   A controlled form then holds a value its host does not have, and the
-    //   next value it is fed takes it away again.
-    // - whatever was written into a target that mounts later is cleared by
-    //   that target's own unmount (a row toggling, a step left behind,
-    //   React's double-invoke in development) and nothing replays it: this
-    //   effect has already marked itself done.
-    //
-    // A microtask runs once the commit has flushed every effect, so the form
-    // is whole by the time the events go out -- and still before the browser
-    // paints, so nothing is visible in between.
+    // It also runs once the commit has flushed, which is what the events
+    // themselves need: what they write is addressed to other fields, and those
+    // are still mounting while this effect runs. Both reasons want the same
+    // place, so there is one hop, not two.
     queueMicrotask(() => {
+      if (initialEventsProcessedRef.current) {
+        return
+      }
+
+      const { found, value: hostValue } = readHostEntry()
+
+      const hasInitialSource = found || isValidValue(props.field.defaultValue)
+      if (!hasInitialSource) {
+        return
+      }
+
+      if (!props.field.event?.change) {
+        initialEventsProcessedRef.current = true
+        return
+      }
+
+      const resolvedValue = found ? hostValue : undefined
+
+      const hydratedValue = isValidValue(resolvedValue)
+        ? resolvedValue
+        : props.field.defaultValue
+
+      if (!isValidValue(hydratedValue)) {
+        return
+      }
+
+      if (!isInitialReady(props.field, hydratedValue, data)) {
+        return
+      }
+
+      initialEventsProcessedRef.current = true
+
       // Gone before the microtask ran. `onUnmount` took the field out of the
       // schema and its value with it, and an event sent on its behalf now
       // would write into a form that no longer has it.
@@ -127,7 +126,9 @@ export function InputBase(
         return
       }
 
-      applyChangeEventsRef.current?.(selected)
+      applyChangeEventsRef.current?.(
+        buildInitialSelected(hydratedValue, data, entity)
+      )
     })
   }, [
     applyChangeEventsRef,
@@ -135,9 +136,10 @@ export function InputBase(
     data,
     entity,
     getSchema,
+    hostFound,
     isInitialReady,
     props.field,
-    props.value,
+    readHostEntry,
   ])
 
   const onChange = useCallback(
