@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789224983876,
+  "lastUpdate": 1789225014637,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "1624020ddd8ab3bcbf8e76c9c4837657f9617415",
-          "message": "new input/date",
-          "timestamp": "2026-04-13T19:02:07-05:00",
-          "tree_id": "144bdca0b2dc60b89fd6db8e201e629ec0816824",
-          "url": "https://github.com/jonattanva/luna-form/commit/1624020ddd8ab3bcbf8e76c9c4837657f9617415"
-        },
-        "date": 1776125024927,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 269,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 205,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "62f7045eead4e08d68647113679cf63042af7e6e",
           "message": "feat: default date format to MMMM d, yyyy and improved input handling",
           "timestamp": "2026-04-14T23:01:22-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 513,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f1b8163db278d86c43844f02baaa85b8d50202e3",
+          "message": "Merge pull request #73 from jonattanva/refactor/keep-value-advanced\n\nrefactor(field): keepValue into advanced, plus input-core cleanups and the schema-per-render fix",
+          "timestamp": "2026-09-12T09:55:16-05:00",
+          "tree_id": "8f0758d28353b92dd4ab437abd27ca88c825cea0",
+          "url": "https://github.com/jonattanva/luna-form/commit/f1b8163db278d86c43844f02baaa85b8d50202e3"
+        },
+        "date": 1789225014593,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 289,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 556,
             "unit": "ms"
           }
         ]
