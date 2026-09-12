@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789224920907,
+  "lastUpdate": 1789224947376,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "f1605010274e04c1bde857f5cd72b08f1806404b",
-          "message": "fix(ci): allow esbuild, sharp, unrs-resolver build scripts via pnpm onlyBuiltDependencies",
-          "timestamp": "2026-04-11T17:10:52-05:00",
-          "tree_id": "fbd84e430cb26941983ff270522fb1e97073191a",
-          "url": "https://github.com/jonattanva/luna-form/commit/f1605010274e04c1bde857f5cd72b08f1806404b"
-        },
-        "date": 1775945511872,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 302,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 671,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "1624020ddd8ab3bcbf8e76c9c4837657f9617415",
           "message": "new input/date",
           "timestamp": "2026-04-13T19:02:07-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 588,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d57fe7eab473232acfe031354fa66eabfa771b19",
+          "message": "Merge pull request #72 from jonattanva/fix/event-spec-flake\n\ntest(event): make the source and dismissal waits deterministic",
+          "timestamp": "2026-09-12T09:54:48-05:00",
+          "tree_id": "dd1e6bde5f91e182a91256cfffa89384f1fbb9e8",
+          "url": "https://github.com/jonattanva/luna-form/commit/d57fe7eab473232acfe031354fa66eabfa771b19"
+        },
+        "date": 1789224947345,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 257,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 513,
             "unit": "ms"
           }
         ]
