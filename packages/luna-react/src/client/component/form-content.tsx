@@ -4,11 +4,11 @@ import { Slot } from './slot/slot'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { resolveDictionary } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useSchema } from '../hook/use-schema'
 import { useSetAtom } from 'jotai'
-import type { Config, Control } from '../../type'
+import type { Children, Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 
 export function FormContent<
@@ -52,22 +52,68 @@ export function FormContent<
     props.config.validation.showError && !state.success && state.error
   const value = state.data ?? props.value
 
+  // The host's callback, held steady. A host that declares `onValueChange`
+  // inline -- the ordinary way to write it -- hands us a new function on every
+  // one of its renders, and that alone gives every field new props on every
+  // keystroke. The library should not need the host to memoize anything to
+  // behave well.
+  //
+  // Still `undefined` when the host passed nothing, because that is a question
+  // the rest of the code asks: `reportTarget` skips a lookup entirely when
+  // there is no one to report to, and a wrapper that is always defined would
+  // quietly take that away.
+  const onValueChangeRef = useRef(props.onValueChange)
+  onValueChangeRef.current = props.onValueChange
+
+  const hasValueChange = !!props.onValueChange
+  const onValueChange = useMemo(
+    () =>
+      hasValueChange
+        ? (input: { name: string; value: unknown }) =>
+            onValueChangeRef.current?.(input)
+        : undefined,
+    [hasValueChange]
+  )
+
+  // The `children` every field is handed, and what a field is memoized on.
+  // Everything it closes over is steady now: the value the host holds reaches a
+  // field through the store and the context, so this is not rebuilt when that
+  // changes.
+  const renderInput = useCallback<Children>(
+    (internal) => (
+      <Input
+        {...internal}
+        config={props.config}
+        context={props.context}
+        getSchema={getSchema}
+        onMount={onMount}
+        onUnmount={onUnmount}
+        onValueChange={onValueChange}
+        translations={translations}
+      />
+    ),
+    [
+      getSchema,
+      onMount,
+      onUnmount,
+      onValueChange,
+      props.config,
+      props.context,
+      translations,
+    ]
+  )
+
   // The value the host holds enters the store here, once, so a field can read
   // its own entry instead of being handed the whole record. See `useValue`.
   //
   // In an effect rather than during render, because writing a store while
   // rendering is not a thing React lets a component do honestly.
   //
-  // That costs a commit, and the cost is worth knowing about. A field reacting
-  // to this write reacts one commit later than it did to a prop, so anything
-  // that reads the host's value once and latches sees nothing the first time
-  // and never looks again. `useValue` is fine -- it re-applies whenever its
-  // entry changes -- but the initial change events in `input-base` are not,
-  // which is why they still take the record as a prop. Moving them here needs
-  // that latch dealt with first, and no ordering of effects is enough: their
-  // effect belongs to the first commit and reads what that render captured,
-  // whatever a layout effect writes in between. `initial-value-nested-state-
-  // event` is the case that proves it.
+  // That costs a commit, and a child's effects run before this one, so nothing
+  // in a child may decide anything final from its own effect. `useValue`
+  // re-applies whenever its entry moves and does not care. The initial change
+  // events do decide once, which is why they ask from the microtask after the
+  // commit rather than from their effect. See `useHostEntryReader`.
   const setHostValue = useSetAtom(hostValueAtom)
   useEffect(() => {
     setHostValue(value ?? null)
@@ -104,24 +150,12 @@ export function FormContent<
             disabled={disabled}
             fields={fields}
             lang={props.lang}
-            onValueChange={props.onValueChange}
+            onValueChange={onValueChange}
             style={props.config.style}
             translations={translations}
             value={value}
           >
-            {(internal) => (
-              <Input
-                {...internal}
-                config={props.config}
-                context={props.context}
-                getSchema={getSchema}
-                onMount={onMount}
-                onUnmount={onUnmount}
-                onValueChange={props.onValueChange}
-                translations={translations}
-                value={value}
-              />
-            )}
+            {renderInput}
           </Slot>
         )}
       </Body>
