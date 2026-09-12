@@ -10,7 +10,76 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
       .first()
   }
 
+  // pokeapi.co is a live third-party service, and the four cases below are the
+  // only e2e tests that leave the machine. Under the full parallel suite --
+  // three browsers pointed at one public API -- it is slow often enough to
+  // outlast the test timeout, and the failure wears the costume of a product
+  // bug: the dependent select opens on an empty option list and the option
+  // under test never arrives. Serve the two shapes these tests actually read
+  // so what they assert stays the source event, not the network.
+  const pokemonIndex = {
+    results: [
+      { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' },
+      { name: 'ivysaur', url: 'https://pokeapi.co/api/v2/pokemon/2/' },
+      { name: 'venusaur', url: 'https://pokeapi.co/api/v2/pokemon/3/' },
+      { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' },
+      { name: 'charmeleon', url: 'https://pokeapi.co/api/v2/pokemon/5/' },
+      { name: 'charizard', url: 'https://pokeapi.co/api/v2/pokemon/6/' },
+      { name: 'pikachu', url: 'https://pokeapi.co/api/v2/pokemon/25/' },
+    ],
+  }
+
+  const ability = (name: string) => ({ ability: { name } })
+  const version = (name: string) => ({ version: { name } })
+
+  // Keyed the way the schemas ask for a pokemon: by id where the url comes off
+  // the index, by name where the form interpolates what the user typed.
+  const pokemonDetail: Record<string, Record<string, unknown>> = {
+    '1': { abilities: [ability('overgrow'), ability('chlorophyll')] },
+    '25': {
+      game_indices: [
+        version('red'),
+        version('blue'),
+        version('yellow'),
+        version('gold'),
+        version('silver'),
+        version('crystal'),
+      ],
+      abilities: [ability('static'), ability('lightning-rod')],
+    },
+    charmander: { abilities: [ability('blaze'), ability('solar-power')] },
+  }
+
+  const routePokeapi = (page: Page) => {
+    return page.route(
+      (url) => url.hostname === 'pokeapi.co',
+      async (route) => {
+        const { pathname } = new URL(route.request().url())
+        const id = pathname.replace('/api/v2/pokemon', '').replace(/\//g, '')
+        const body = id ? pokemonDetail[id] : pokemonIndex
+
+        if (!body) {
+          // Loud on purpose: an unmocked url should read as a missing fixture,
+          // not as the slow network these mocks exist to remove.
+          await route.fulfill({
+            status: 404,
+            contentType: 'application/json',
+            body: JSON.stringify({ detail: `No fixture for ${pathname}` }),
+          })
+          return
+        }
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(body),
+        })
+      }
+    )
+  }
+
   test('should set new source on event trigger', async ({ page }) => {
+    await routePokeapi(page)
     await inject(
       page,
       `{
@@ -83,11 +152,18 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const pokemon = getField(page, 'Pokemon')
     await pokemon.click()
 
+    // Both change events refetch off the selected pokemon's own url. Wait for
+    // that to land before opening a dependent select: a listbox that mounts
+    // populated is positioned once and stays put, where one opened empty has to
+    // re-place itself as the options arrive underneath the click.
+    const refetched = page.waitForResponse((response) =>
+      response.url().startsWith('https://pokeapi.co/api/v2/pokemon/25')
+    )
+
     const option = page.getByRole('option', { name: 'pikachu' })
     await option.click()
 
-    // close the listbox
-    await page.keyboard.press('Escape')
+    await refetched
     await expect(page.getByRole('listbox')).toBeHidden()
 
     const indexes = getField(page, 'Game Indexes')
@@ -95,10 +171,9 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await indexes.click()
 
     const yellow = page.getByRole('option', { name: 'yellow' })
+    await expect(yellow).toBeVisible()
     await yellow.click()
 
-    // close the listbox
-    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     const abilities = getField(page, 'Abilities')
@@ -106,6 +181,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await abilities.click()
 
     const lightningRod = page.getByRole('option', { name: 'lightning-rod' })
+    await expect(lightningRod).toBeVisible()
     await lightningRod.click()
 
     const form = page.locator('form')
@@ -115,6 +191,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
   })
 
   test('should set new source with body placeholder', async ({ page }) => {
+    await routePokeapi(page)
     await inject(
       page,
       `{
@@ -280,6 +357,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
   })
 
   test('should set new source from input text', async ({ page }) => {
+    await routePokeapi(page)
     await inject(
       page,
       `{
@@ -373,6 +451,7 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
   })
 
   test('should set new value with selected placeholder', async ({ page }) => {
+    await routePokeapi(page)
     await inject(
       page,
       `{
@@ -548,8 +627,11 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const passport = page.getByRole('option', { name: 'Passport' })
     await passport.click()
 
-    // unfocus to close the listbox
-    await page.mouse.click(10, 10)
+    // Escape rather than a click at a fixed coordinate: Radix routes the key
+    // through a document listener it registers synchronously, where dismissing
+    // by an outside click has to survive hit-testing plus the deferred
+    // pointerdown/click handshake, and under load it sometimes does not.
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     // VALUE: document_label populated with interpolated value
@@ -567,16 +649,16 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     const spain = page.getByRole('option', { name: 'Spain' })
     await expect(spain).toBeVisible()
 
-    // Verify state reverts when selecting a different option - unfocus to close the listbox
-    await page.mouse.click(10, 10)
+    // Verify state reverts when selecting a different option - close the listbox
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     await documentType.click()
     const dni = page.getByRole('option', { name: 'DNI' })
     await dni.click()
 
-    // unfocus to close the listbox
-    await page.mouse.click(10, 10)
+    // close the listbox
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toBeHidden()
 
     await expect(documentLabel).toHaveValue('DNI selected')
