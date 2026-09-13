@@ -22,6 +22,7 @@
     "test:e2e": "pnpm playwright test --grep '@e2e'",
     "test:e2e:ui": "pnpm playwright test --grep '@e2e' --ui",
     "test:perf": "pnpm playwright test --grep '@perf' --project=chromium",
+    "test:render": "pnpm playwright test --grep '@render' --project=chromium",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "typescript": "turbo run typescript"
