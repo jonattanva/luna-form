@@ -237,6 +237,14 @@ It does not matter how the form phrases the hiding. A rule whose state is
 so the field falls back to its own `hidden`, are the same act and clear the
 same values -- containers included.
 
+What the cleared target decided goes with it. A target with `state` rules of its
+own asserted them on the strength of its value, and that value is gone, so its
+rules are undone as if it held nothing: a field it revealed is hidden again --
+and cleared, if it too falls back to `hidden` -- and so on down the chain.
+Showing the first target again brings it back empty, and nothing it had revealed
+comes back with it. A target that keeps its value through the hide keeps what
+its rules decided as well; see below.
+
 #### Keeping a value through a hide
 
 A field that declares `advanced.keepValue: true` is put away rather than
