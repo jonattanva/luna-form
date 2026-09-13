@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789276228101,
+  "lastUpdate": 1789276253619,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "bc0392f58d506228bcf245c5622375bb8cad40a6",
-          "message": "upgrade dev dependencies",
-          "timestamp": "2026-04-15T11:54:00-05:00",
-          "tree_id": "feddd7b97bb2cbdbcf665712d9a2f63f288faa8c",
-          "url": "https://github.com/jonattanva/luna-form/commit/bc0392f58d506228bcf245c5622375bb8cad40a6"
-        },
-        "date": 1776272120380,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 272,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 589,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "a84486da9d1dc571a2976d7b215c9e9dec2f836f",
           "message": "feat: add timezone utilities and refactor input components\n\nIntroduce timezone data loading/compute utilities in luna-core and a\ntimezone input in luna-react. Split the input component into focused\nbase/create/dateable/selectable/textable modules with shared strategies\nand hooks. Fix e2e description locator to avoid strict-mode collision\nwith the code editor.\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
           "timestamp": "2026-04-17T21:46:55-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 566,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "14a90c28d2f7df96411187c845809c8121da5296",
+          "message": "Merge pull request #79 from jonattanva/fix/chained-state-reveal\n\nfix(state): take back what a hidden field's own rules revealed",
+          "timestamp": "2026-09-13T00:09:39-05:00",
+          "tree_id": "e4196a07881f5ea6a47e87f583c0aee78a73cd36",
+          "url": "https://github.com/jonattanva/luna-form/commit/14a90c28d2f7df96411187c845809c8121da5296"
+        },
+        "date": 1789276253574,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 272,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 570,
             "unit": "ms"
           }
         ]
