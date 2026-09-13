@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789328777942,
+  "lastUpdate": 1789328808561,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "a84486da9d1dc571a2976d7b215c9e9dec2f836f",
-          "message": "feat: add timezone utilities and refactor input components\n\nIntroduce timezone data loading/compute utilities in luna-core and a\ntimezone input in luna-react. Split the input component into focused\nbase/create/dateable/selectable/textable modules with shared strategies\nand hooks. Fix e2e description locator to avoid strict-mode collision\nwith the code editor.\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
-          "timestamp": "2026-04-17T21:46:55-05:00",
-          "tree_id": "f7fbbe304d9587b00546b496c6e62fa8e1162436",
-          "url": "https://github.com/jonattanva/luna-form/commit/a84486da9d1dc571a2976d7b215c9e9dec2f836f"
-        },
-        "date": 1776480654799,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 283,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 626,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "bc0392f58d506228bcf245c5622375bb8cad40a6",
           "message": "upgrade dev dependencies",
           "timestamp": "2026-04-15T11:54:00-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 570,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d375271f777908cf4d3cd3c170f4d9a576a2b8b0",
+          "message": "Merge pull request #81 from jonattanva/test/render-budgets\n\ntest(render): count what a keystroke costs, in CI",
+          "timestamp": "2026-09-13T14:45:20-05:00",
+          "tree_id": "de582c0b91def5544523df38d8cdcbafc83bb18b",
+          "url": "https://github.com/jonattanva/luna-form/commit/d375271f777908cf4d3cd3c170f4d9a576a2b8b0"
+        },
+        "date": 1789328808516,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 316,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 632,
             "unit": "ms"
           }
         ]
