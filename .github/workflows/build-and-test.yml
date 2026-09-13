@@ -241,3 +241,58 @@ jobs:
           name: playwright-report-e2e
           path: playwright-report/
           retention-days: 1
+  render-budget:
+    name: render-budget
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          cache: true
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      # The budgets read what the probes write, so the probes go in before the
+      # build. `--strict` stops here when an anchor has moved, instead of
+      # letting a budget pass on a zero that measured nothing.
+      - name: Apply render probes
+        run: pnpm benchmark:probes --strict
+      - name: Build project
+        run: pnpm build
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+      # Production, not `pnpm serve`: development StrictMode doubles the
+      # render and schema counts the budgets are written in.
+      - name: Start production server
+        run: |
+          pnpm start &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:3000 > /dev/null && exit 0
+            sleep 1
+          done
+          echo "The production server did not answer on port 3000" >&2
+          exit 1
+      - name: Run render budgets
+        run: pnpm test:render
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-render
+          path: playwright-report/
+          retention-days: 1

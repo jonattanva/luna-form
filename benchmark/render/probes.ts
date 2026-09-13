@@ -6,15 +6,18 @@ import { join } from 'path'
  * source of whatever commit is checked out.
  *
  *   pnpm benchmark:probes
+ *   pnpm benchmark:probes --strict
  *
  * Then build, serve, and read them from the page with the harness in this
- * folder's README. Revert with `git checkout -- packages`.
+ * folder's README, or run the budgets in `tests/e2e/render-budget.spec.ts`
+ * (`pnpm test:render`). Revert with `git checkout -- packages`.
  *
  * Every probe patches one anchor and is skipped when that anchor is not in the
  * commit, so the same script measures any commit in the history and a counter
  * means the same thing on every commit it applies to. Read what it prints: a
  * skipped probe counts nothing, and the zero it leaves behind is not a
- * measurement.
+ * measurement. `--strict` is for CI, where the commit is the current one: it
+ * fails unless every probe that is not a legacy anchor applied.
  *
  * Nothing here changes behaviour. The counters are writes to `globalThis`, and
  * the family wrapper hands back the family it was given.
@@ -23,11 +26,15 @@ import { join } from 'path'
 type Probe = Readonly<{
   anchor: string
   file: string
+  // An anchor only older commits have, kept so the script still measures the
+  // whole history. `--strict` does not ask for it.
+  legacy?: true
   name: string
   replacement: string
 }>
 
 const LIB = 'packages/luna-react/src'
+const CORE = 'packages/luna-core/src'
 
 const COUNTERS =
   'globalThis as typeof globalThis & { __luna?: Record<string, number> }'
@@ -72,6 +79,7 @@ const PROBES: Probe[] = [
     name: 'effect (record prop)',
     file: `${LIB}/client/hook/use-value.ts`,
     anchor: '  useEffect(() => {\n    if (currentValue) {',
+    legacy: true,
     replacement: `  useEffect(() => {\n    ${bump('effect')}\n    if (currentValue) {`,
   },
   {
@@ -98,19 +106,71 @@ const PROBES: Probe[] = [
     anchor: FAMILY_IMPORT,
     replacement: FAMILY_WRAP,
   },
+  // The work a keystroke does around the fields rather than in them, added
+  // with the budgets in tests/e2e/render-budget.spec.ts.
+  //
+  // `withState` and `withError`, the two wrappers around every field.
+  {
+    name: 'wrapper',
+    file: `${LIB}/client/component/field/field-with-state.tsx`,
+    anchor: '    const WithField = (props: Readonly<P>) => {',
+    replacement: `    const WithField = (props: Readonly<P>) => {\n      ${bump('wrapper')}`,
+  },
+  {
+    name: 'guard',
+    file: `${LIB}/client/component/guard/visibility-guard.tsx`,
+    anchor: '  const states = useAtomValue(fieldStateAtom)',
+    replacement: `  ${bump('guard')}\n  const states = useAtomValue(fieldStateAtom)`,
+  },
+  // A list row, whether or not the list shows a preview.
+  {
+    name: 'rowPreview',
+    file: `${LIB}/client/component/field/field-list-preview-item.tsx`,
+    anchor: '  const name = `${field.name}.${itemKey}`',
+    replacement: `  ${bump('rowPreview')}\n  const name = \`\${field.name}.\${itemKey}\``,
+  },
+  // A row rescanning the whole value record for its own keys.
+  {
+    name: 'liveScan',
+    file: `${LIB}/client/hook/use-live-item-value.ts`,
+    anchor: '  return useMemo(() => {\n    const prefix = `${name}.`',
+    replacement: `  return useMemo(() => {\n    ${bump('liveScan')}\n    const prefix = \`\${name}.\``,
+  },
+  // A list handing its value over as if it were unmounting.
+  {
+    name: 'handoff',
+    file: `${LIB}/client/hook/use-field-list.ts`,
+    anchor: '    () => () => {\n      const values = store.get(valueAtom)',
+    replacement: `    () => () => {\n      ${bump('handoff')}\n      const values = store.get(valueAtom)`,
+  },
+  {
+    name: 'prepare',
+    file: `${LIB}/component/form.tsx`,
+    anchor: '  const sections = prepare(props.sections, props.definition)',
+    replacement: `  ${bump('prepare')}\n  const sections = prepare(props.sections, props.definition)`,
+  },
+  // A build of the timezone option list, not a call for it: the anchor is the
+  // start of the work, so a cache in front of it stops the count.
+  {
+    name: 'tz',
+    file: `${CORE}/util/date.ts`,
+    anchor: '  const detectedTimezone = getUserTimezone()',
+    replacement: `  ${bump('tz')}\n  const detectedTimezone = getUserTimezone()`,
+  },
 ]
 
 if (!existsSync(join(process.cwd(), LIB))) {
   throw new Error(`run from the repository root: no ${LIB} here`)
 }
 
+const strict = process.argv.includes('--strict')
 const applied: string[] = []
-const skipped: string[] = []
+const skipped: Array<{ probe: Probe; reason: string }> = []
 
 for (const probe of PROBES) {
   const path = join(process.cwd(), probe.file)
   if (!existsSync(path)) {
-    skipped.push(`${probe.name} (no such file in this commit)`)
+    skipped.push({ probe, reason: 'no such file in this commit' })
     continue
   }
 
@@ -122,7 +182,7 @@ for (const probe of PROBES) {
 
   const matches = source.split(probe.anchor).length - 1
   if (matches === 0) {
-    skipped.push(`${probe.name} (anchor not in this commit)`)
+    skipped.push({ probe, reason: 'anchor not in this commit' })
     continue
   }
 
@@ -138,4 +198,18 @@ for (const probe of PROBES) {
 }
 
 console.log(`applied: ${applied.join(', ') || 'none'}`)
-console.log(`skipped: ${skipped.join(', ') || 'none'}`)
+console.log(
+  `skipped: ${skipped.map(({ probe, reason }) => `${probe.name} (${reason})`).join(', ') || 'none'}`
+)
+
+// On the current commit a skipped probe is a budget that would pass on a zero
+// it never measured. Legacy anchors belong to older commits and are not asked
+// for.
+const missing = skipped.filter(({ probe }) => !probe.legacy)
+if (strict && missing.length > 0) {
+  console.error(
+    `--strict: ${missing.map(({ probe }) => probe.name).join(', ')} did not apply. ` +
+      'An anchor moved: move the probe with the code it counts.'
+  )
+  process.exit(1)
+}

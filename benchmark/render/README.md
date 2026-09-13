@@ -15,12 +15,19 @@ Two halves:
 
 ## What it counts
 
-| counter  | incremented when                                                     |
-| -------- | -------------------------------------------------------------------- |
-| `render` | the inner `Field` component renders                                  |
-| `schema` | a field's Zod schema is built -- the `useMemo` factory in `useInput` |
-| `effect` | `useValue`'s value effect runs                                       |
-| `lookup` | `useInputCore`'s `getField` is called                                |
+| counter      | incremented when                                                          |
+| ------------ | ------------------------------------------------------------------------- |
+| `render`     | the inner `Field` component renders                                       |
+| `schema`     | a field's Zod schema is built -- the `useMemo` factory in `useInput`      |
+| `effect`     | `useValue`'s value effect runs                                            |
+| `lookup`     | `useInputCore`'s `getField` is called                                     |
+| `wrapper`    | one of the two wrappers around a field (`withState`, `withError`) renders |
+| `guard`      | a `VisibilityGuard` renders                                               |
+| `rowPreview` | a list row (`FieldListPreviewItem`) renders, preview or not               |
+| `liveScan`   | a row rescans the value record for its own keys (`useLiveItemValue`)      |
+| `handoff`    | a list hands its value over as if it were unmounting                      |
+| `prepare`    | the form body calls `prepare`                                             |
+| `tz`         | the timezone option list is built -- a build, not a call                  |
 
 It also registers every `atomFamily` as it is created, so the harness can count
 what each one has cached.
@@ -28,7 +35,30 @@ what each one has cached.
 Every probe patches one anchor and is skipped when that anchor is not in the
 commit. That is what lets one script measure any commit in the history, and it
 is also the thing to watch: a skipped probe counts nothing, and the zero it
-leaves is not a measurement. The script prints both lists.
+leaves is not a measurement. The script prints both lists. With `--strict` it
+also exits non-zero when a probe did not apply, other than an anchor only older
+commits have -- which is how CI finds out that a change moved an anchor. Move
+the probe with the code it counts.
+
+## Budgets
+
+`tests/e2e/render-budget.spec.ts` turns the counters into assertions. It is
+tagged `@render`, and the `render-budget` job in CI runs it on a probed
+production build. Locally, the same four steps, then revert as below:
+
+```bash
+pnpm benchmark:probes --strict
+pnpm run build
+pnpm start
+pnpm test:render
+```
+
+Each budget records the counts the current code produces and fails when they
+move either way. Up is a regression. Down is an improvement that has to be
+written down: the PR that makes something cheaper lowers the numbers in the
+same change, so the budget fails until the fix is in. Its first test refuses a
+build that is not a probed production one -- `render` on mount has to equal the
+field count, which reads 0 with no probes and double in development.
 
 ## Measuring
 
