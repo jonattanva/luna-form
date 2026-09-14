@@ -103,8 +103,11 @@ If the values have to survive, hold them outside the form: mirror
 people, which is that a key you stop sending is not the same as a key you send
 empty.
 
-A **failed** validation is the opposite: the submitted values are handed back to
-the form, so the user's typing is still on screen next to the errors.
+A **failed** submit is the opposite: nothing is cleared or reset, so what the
+user entered stays on screen next to the errors — typed text, ticked boxes and
+picked options alike. The form does not take over `value` either. What you pass
+is still what the fields read, so you can change it, or put it back, while the
+errors are showing.
 
 ## Turning submit validation off
 

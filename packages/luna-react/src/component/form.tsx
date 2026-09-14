@@ -5,6 +5,7 @@ import { Separator } from './separator'
 import { VisibilityGuard } from '../client/component/guard/visibility-guard'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Control, Slot } from '../type'
+import type { FormEvent } from 'react'
 
 export function Form(
   props: Readonly<{
@@ -18,6 +19,7 @@ export function Form(
     definition?: Definition
     isPending?: boolean
     noValidate?: boolean
+    onSubmit?: (event: FormEvent<HTMLFormElement>) => void
     readOnly?: boolean
     sections: Sections
     translations?: Record<string, string>
@@ -25,9 +27,18 @@ export function Form(
 ) {
   const sections = prepare(props.sections, props.definition)
 
+  // The client form submits through `onSubmit`, which dispatches the action
+  // itself so that React resets nothing after a failed submit. See
+  // `useFormState`. `action` stays in the markup all the same: a form submitted
+  // before hydration then throws, instead of navigating to its own URL with
+  // every field in the query string.
   return (
     <div className="h-full w-full">
-      <form noValidate={props.noValidate} action={props.action}>
+      <form
+        noValidate={props.noValidate}
+        action={props.action}
+        onSubmit={props.onSubmit}
+      >
         <Group>
           {sections.map((section, index) => (
             <VisibilityGuard
