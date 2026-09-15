@@ -8,6 +8,8 @@ import {
   isValidValue,
   prepareInputProps,
   prepareInputValue,
+  type Nullable,
+  type Value,
 } from '@luna-form/core'
 import type { InputChangeEvent, InputStrategies } from './input-strategies'
 
@@ -191,23 +193,75 @@ export function InputBase(
     ]
   )
 
+  // A read-only field is locked the one way every control understands, by
+  // being disabled, and a disabled control sends nothing. Its value is still
+  // the form's, so the form sends it: the control goes without a name, and
+  // what the field holds travels in hidden inputs instead. Nothing the control
+  // renders is sent, so no control can send it twice.
+  const controlProps = props.readOnly
+    ? { ...commonPropsWithOptions, name: undefined }
+    : commonPropsWithOptions
+
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
-    <InputGroup
-      config={props.config}
-      context={props.context}
-      field={props.field}
-      horizontal={props.horizontal}
-      translations={props.translations}
-    >
-      <Component
-        {...commonPropsWithOptions}
-        {...props.ariaAttributes}
-        {...props.dataAttributes}
-        {...extraProps}
-        {...inputProps}
-        onBlur={onBlur}
-        onChange={onChange}
-      />
-    </InputGroup>
+    <>
+      <InputGroup
+        config={props.config}
+        context={props.context}
+        field={props.field}
+        horizontal={props.horizontal}
+        translations={props.translations}
+      >
+        <Component
+          {...controlProps}
+          {...props.ariaAttributes}
+          {...props.dataAttributes}
+          {...extraProps}
+          {...inputProps}
+          onBlur={onBlur}
+          onChange={onChange}
+        />
+      </InputGroup>
+      {props.readOnly && (
+        <SubmittedValue name={props.field.name} {...inputProps} />
+      )}
+    </>
   ))
+}
+
+// What a read-only field submits: its value from the field's state, in the
+// shape the control itself would have sent. That shape is `prepareInputValue`,
+// the same one the control is handed: a checkbox as "true" or "false", chips as
+// one entry each, and a date the way it is displayed, which is the way the
+// submit reads it back.
+function SubmittedValue(
+  props: Readonly<{
+    checked?: boolean
+    name: string
+    value?: Nullable<Value>
+  }>
+) {
+  if (props.checked !== undefined) {
+    return (
+      <input name={props.name} type="hidden" value={String(props.checked)} />
+    )
+  }
+
+  if (Array.isArray(props.value)) {
+    return props.value.map((entry, index) => (
+      <input
+        key={index}
+        name={props.name}
+        type="hidden"
+        value={String(entry)}
+      />
+    ))
+  }
+
+  return (
+    <input
+      name={props.name}
+      type="hidden"
+      value={props.value == null ? '' : String(props.value)}
+    />
+  )
 }

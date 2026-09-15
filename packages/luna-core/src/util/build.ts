@@ -39,6 +39,14 @@ export function buildDisabled(field: Field, disabled?: boolean) {
   return disabled ? disabled : readonly
 }
 
+// Locked the way a disabled field is, but still the form's: a read-only field
+// is submitted, where a disabled one is not. `buildDisabled` answers whether it
+// can be edited; this answers whether its value still travels. Disabled wins
+// when a field is both, as it does in HTML.
+export function buildReadOnly(field: Field, disabled?: boolean) {
+  return Boolean(field.readonly) && !disabled && !field.disabled
+}
+
 export function buildSource(field: Field) {
   if (isValid(field)) {
     const source = field.source

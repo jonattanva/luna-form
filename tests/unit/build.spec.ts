@@ -4,6 +4,7 @@ import {
   buildSource,
   buildOrientation,
   buildDisabled,
+  buildReadOnly,
   isArraySource,
 } from '@/packages/luna-core/src/util/build'
 import type { Field } from '@/packages/luna-core/src/type'
@@ -163,6 +164,33 @@ describe('Build', () => {
     test('should return false if field is not readonly and no disabled param', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildDisabled(field)).toBe(false)
+    })
+  })
+
+  describe('buildReadOnly', () => {
+    test('should submit a read-only field', () => {
+      const field = { type: 'text', name: 'test', readonly: true } as Field
+      expect(buildReadOnly(field)).toBe(true)
+    })
+
+    test('should not submit a read-only field the form disables', () => {
+      const field = { type: 'text', name: 'test', readonly: true } as Field
+      expect(buildReadOnly(field, true)).toBe(false)
+    })
+
+    test('should not submit a read-only field that also declares disabled', () => {
+      const field = {
+        type: 'text',
+        name: 'test',
+        readonly: true,
+        disabled: true,
+      } as Field
+      expect(buildReadOnly(field)).toBe(false)
+    })
+
+    test('should say nothing about a field that is not read-only', () => {
+      const field = { type: 'text', name: 'test' } as Field
+      expect(buildReadOnly(field)).toBe(false)
     })
   })
 

@@ -22,6 +22,7 @@ export type Children = (props: {
   dataAttributes?: DataAttributes
   field: Field
   horizontal?: boolean
+  readOnly?: boolean
 }) => React.ReactNode
 
 export type InputConfig<T extends React.ElementType> = {

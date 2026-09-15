@@ -51,6 +51,7 @@ export type InputCoreProps = Readonly<{
   onMount: (name: string, schema: Schema, field: Field) => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
+  readOnly?: boolean
   translations?: Record<string, string>
 }>
 
