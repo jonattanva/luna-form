@@ -250,12 +250,16 @@ test.describe(
       }]
     }`
 
+      // A collapsed row keeps its select mounted, and the select's own options
+      // carry the same text as the badge: only the badge is on screen.
       test('required:true (boolean) resolves to "Yes" in badge', async ({
         page,
       }) => {
         await inject(page, REQUIRED_FIXTURE_TRUE)
         await page.goto('')
-        const badge = page.getByText('Yes', { exact: true })
+        const badge = page
+          .getByText('Yes', { exact: true })
+          .filter({ visible: true })
         await expect(badge).toBeVisible()
         await expect(badge).toHaveClass(/bg-primary/)
       })
@@ -265,7 +269,9 @@ test.describe(
       }) => {
         await inject(page, REQUIRED_FIXTURE_FALSE)
         await page.goto('')
-        const badge = page.getByText('No', { exact: true })
+        const badge = page
+          .getByText('No', { exact: true })
+          .filter({ visible: true })
         await expect(badge).toBeVisible()
         await expect(badge).toHaveClass(/bg-primary/)
       })
@@ -280,8 +286,12 @@ test.describe(
           page.getByRole('button', { name: /Expand field 1/ })
         ).toBeVisible()
         // No badge text should be shown.
-        await expect(page.getByText('Yes', { exact: true })).toHaveCount(0)
-        await expect(page.getByText('No', { exact: true })).toHaveCount(0)
+        await expect(
+          page.getByText('Yes', { exact: true }).filter({ visible: true })
+        ).toHaveCount(0)
+        await expect(
+          page.getByText('No', { exact: true }).filter({ visible: true })
+        ).toHaveCount(0)
       })
     })
 
@@ -368,7 +378,10 @@ test.describe(
         page,
       }) => {
         const card = page.locator('[data-slot="list-item-card"]').first()
-        const badge = card.getByText('Yes', { exact: true })
+        // The card also holds the row's select, whose options say "Yes" too.
+        const badge = card
+          .getByText('Yes', { exact: true })
+          .filter({ visible: true })
         await expect(badge).toBeVisible()
         await expect(badge).toHaveClass(/bg-primary/)
       })

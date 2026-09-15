@@ -8,7 +8,7 @@ import {
   type Description as DescriptionType,
 } from '@luna-form/core'
 import { ChevronIcon } from './chevron-icon'
-import { useState } from 'react'
+import { useDisclosure } from '../client/hook/use-disclosure'
 import type { Config } from '../type'
 
 export function FormattedDescription(
@@ -29,14 +29,12 @@ export function FormattedDescription(
   const locale = props.config?.env?.locale as string | undefined
   const formatOptions = { locale }
 
-  const [isExpanded, setIsExpanded] = useState(() => {
+  const [isExpanded, toggle] = useDisclosure(() => {
     if (isObject(props.text) && 'collapsed' in props.text) {
       return !props.text.collapsed
     }
     return true
   })
-
-  const handleExpandToggle = () => setIsExpanded((previous) => !previous)
 
   const title =
     isObject(props.text) && isString(props.text.title)
@@ -69,7 +67,7 @@ export function FormattedDescription(
         {title && (
           <button
             className="flex items-center gap-1 text-left text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-            onClick={handleExpandToggle}
+            onClick={toggle}
             type="button"
           >
             {title}

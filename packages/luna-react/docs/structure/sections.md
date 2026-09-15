@@ -95,7 +95,7 @@ Renders the section closed, with its title as the toggle:
 }
 ```
 
-Three things to know before using it:
+Four things to know before using it:
 
 - **It always starts closed.** There is no key that opens it, and reopening the
   form does not remember that the user had expanded it.
@@ -103,6 +103,8 @@ Three things to know before using it:
   them. They keep their values, they still validate, and they are still
   submitted. That is the opposite of what a [`state` action](../events/change.md#what-clearing-a-hidden-target-means)
   does when it hides a field, which unmounts it and clears the value.
+- **A failed submit opens it.** When a field inside fails validation, the
+  section opens so the error can be seen, and it stays open.
 - **The description moves inside.** It renders with the fields rather than under
   the title, so it is not visible while the section is closed.
 

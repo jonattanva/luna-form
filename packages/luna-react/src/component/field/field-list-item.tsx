@@ -3,7 +3,7 @@ import { Collapsible } from '../collapsible'
 import { Group } from '../group'
 import { interpolate, translateBuiltIn, type BuiltInKey } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
-import { useState } from 'react'
+import { useDisclosure } from '../../client/hook/use-disclosure'
 
 export function FieldListItem(
   props: Readonly<{
@@ -21,16 +21,14 @@ export function FieldListItem(
   }>
 ) {
   const isCollapsible = props.isMultiField || props.collapsed != null
-  const [isOpen, setIsOpen] = useState(isCollapsible ? !props.collapsed : true)
+  const [isOpen, toggle, reveal] = useDisclosure(
+    isCollapsible ? !props.collapsed : true
+  )
 
   function handleRemove() {
     if (props.canRemove && props.onRemove) {
       props.onRemove(props.index)
     }
-  }
-
-  function handleToggle() {
-    setIsOpen((previous) => !previous)
   }
 
   // The whole accessible name is one dictionary key, placeholders included, so
@@ -97,7 +95,7 @@ export function FieldListItem(
               'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',
               'dark:text-zinc-500'
             )}
-            onClick={handleToggle}
+            onClick={toggle}
             type="button"
           >
             <ChevronIcon expanded={isOpen} />
@@ -121,7 +119,7 @@ export function FieldListItem(
         className="box-border w-full min-w-0 rounded-lg border border-zinc-100 p-4 dark:border-zinc-900"
       >
         {header}
-        <Collapsible visible={isOpen}>
+        <Collapsible onReveal={reveal} visible={isOpen}>
           <Group>{props.children}</Group>
         </Collapsible>
       </div>
@@ -132,7 +130,7 @@ export function FieldListItem(
     return (
       <div className="box-border flex w-full min-w-0 flex-col gap-2">
         {header}
-        <Collapsible visible={isOpen}>
+        <Collapsible onReveal={reveal} visible={isOpen}>
           <Group>{props.children}</Group>
         </Collapsible>
       </div>

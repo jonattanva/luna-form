@@ -105,9 +105,11 @@ empty.
 
 A **failed** submit is the opposite: nothing is cleared or reset, so what the
 user entered stays on screen next to the errors — typed text, ticked boxes and
-picked options alike. The form does not take over `value` either. What you pass
-is still what the fields read, so you can change it, or put it back, while the
-errors are showing.
+picked options alike. An error inside a collapsed
+[section](../structure/sections.md#advancedcollapsible) or list row is brought
+on screen too: the section or row holding it opens. The form does not take over
+`value` either. What you pass is still what the fields read, so you can change
+it, or put it back, while the errors are showing.
 
 ## Turning submit validation off
 
