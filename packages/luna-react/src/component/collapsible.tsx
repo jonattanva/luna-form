@@ -1,10 +1,6 @@
 import { KeepValueContext } from '../client/context/keep-value-context'
-import { useEffect, useEffectEvent, useRef } from 'react'
-
-// Asks the collapsed containers around an element to open. Dispatched from the
-// element itself, it bubbles, so every container on the way up hears it: a row
-// inside a section opens along with the section.
-export const REVEAL_EVENT = 'luna-form:reveal'
+import { RevealContext } from '../client/context/reveal-context'
+import { use, useCallback } from 'react'
 
 // Hides what it holds without taking it out of the form.
 //
@@ -15,9 +11,8 @@ export const REVEAL_EVENT = 'luna-form:reveal'
 // `<Activity mode="hidden">` keeps the state and the DOM but tears the effects
 // down, and every field inside would drop out of the submit with them.
 //
-// Nothing here can tell that something inside has to be seen, so whatever
-// knows asks, with `REVEAL_EVENT`, and `onReveal` is where the owner of the
-// open state hears it.
+// What is inside asks to be seen through `RevealContext`: this one opens, with
+// `onReveal`, and passes the request on to the container around it.
 export function Collapsible({
   children,
   onReveal,
@@ -27,28 +22,20 @@ export function Collapsible({
   onReveal?: () => void
   visible?: boolean
 }>) {
-  const ref = useRef<HTMLDivElement>(null)
+  const revealAround = use(RevealContext)
 
-  const reveal = useEffectEvent(() => {
+  // As steady as `onReveal`, which is its owner's to keep steady: a new
+  // function here would render again everything inside that reads it.
+  const reveal = useCallback(() => {
     onReveal?.()
-  })
-
-  useEffect(() => {
-    const node = ref.current
-    if (!node) {
-      return
-    }
-
-    const listener = () => reveal()
-    node.addEventListener(REVEAL_EVENT, listener)
-    return () => {
-      node.removeEventListener(REVEAL_EVENT, listener)
-    }
-  }, [])
+    revealAround()
+  }, [onReveal, revealAround])
 
   return (
-    <div data-slot="collapsible-content" hidden={!visible} ref={ref}>
-      <KeepValueContext value={true}>{children}</KeepValueContext>
+    <div data-slot="collapsible-content" hidden={!visible}>
+      <RevealContext value={reveal}>
+        <KeepValueContext value={true}>{children}</KeepValueContext>
+      </RevealContext>
     </div>
   )
 }

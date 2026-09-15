@@ -3,7 +3,7 @@ import { Collapsible } from '../collapsible'
 import { Group } from '../group'
 import { interpolate, translateBuiltIn, type BuiltInKey } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export function FieldListItem(
   props: Readonly<{
@@ -33,9 +33,8 @@ export function FieldListItem(
     setIsOpen((previous) => !previous)
   }
 
-  function handleReveal() {
-    setIsOpen(true)
-  }
+  // Steady, because `Collapsible` hands it on through a context.
+  const handleReveal = useCallback(() => setIsOpen(true), [])
 
   // The whole accessible name is one dictionary key, placeholders included, so
   // a translation can reorder the parts instead of only renaming them. Left

@@ -1,3 +1,4 @@
+import { FailedSubmitContext } from '../context/failed-submit-context'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot/slot'
@@ -54,6 +55,11 @@ export function FormContent<
 
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
+
+  // The submit that failed, while it is the last one. A field holding an error
+  // reads it to bring that error into view through whatever collapsed section
+  // or row keeps it off the screen. See `FieldError`.
+  const failed = !state.success && state.error ? state : null
 
   // The host's callback, held steady. A host that declares `onValueChange`
   // inline -- the ordinary way to write it -- hands us a new function on every
@@ -143,35 +149,37 @@ export function FormContent<
             />
           </div>
         ))}
-      <Body
-        action={action}
-        advanced={props.advanced}
-        config={props.config}
-        control={props.children}
-        definition={props.definition}
-        isPending={isPending}
-        noValidate
-        onSubmit={onSubmit}
-        readOnly={props.readOnly}
-        sections={props.sections}
-        translations={translations}
-      >
-        {({ disabled, fields }) => (
-          <Slot
-            config={props.config}
-            context={props.context}
-            disabled={disabled}
-            fields={fields}
-            lang={props.lang}
-            onValueChange={onValueChange}
-            style={props.config.style}
-            translations={translations}
-            value={props.value}
-          >
-            {renderInput}
-          </Slot>
-        )}
-      </Body>
+      <FailedSubmitContext value={failed}>
+        <Body
+          action={action}
+          advanced={props.advanced}
+          config={props.config}
+          control={props.children}
+          definition={props.definition}
+          isPending={isPending}
+          noValidate
+          onSubmit={onSubmit}
+          readOnly={props.readOnly}
+          sections={props.sections}
+          translations={translations}
+        >
+          {({ disabled, fields }) => (
+            <Slot
+              config={props.config}
+              context={props.context}
+              disabled={disabled}
+              fields={fields}
+              lang={props.lang}
+              onValueChange={onValueChange}
+              style={props.config.style}
+              translations={translations}
+              value={props.value}
+            >
+              {renderInput}
+            </Slot>
+          )}
+        </Body>
+      </FailedSubmitContext>
     </>
   )
 }
