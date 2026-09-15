@@ -4,7 +4,6 @@ import {
   getListBounds,
   getListLeaves,
   isList,
-  isObject,
   isValidValue,
   keepsValue,
   normalizeListRows,
@@ -21,7 +20,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import { composeListValue, itemKey } from '../lib/compose-list-value'
+import {
+  composeListValue,
+  itemKey,
+  positionalEntries,
+  type ListRows,
+} from '../lib/compose-list-value'
 import {
   ListPathContext,
   type TranslateListPath,
@@ -34,39 +38,6 @@ import {
 } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
-
-type ListRows = Array<Record<string, unknown>>
-
-// A row's values under the names they have inside the row, a list inside it
-// spelled out down to its own leaves: `checks`, `checks.0.v`. The same names the
-// leaves use when they report, less the list's own prefix.
-function flattenRow(
-  row: Record<string, unknown> | undefined,
-  prefix = ''
-): Record<string, unknown> {
-  const flat: Record<string, unknown> = {}
-  if (!row) {
-    return flat
-  }
-
-  for (const [key, value] of Object.entries(row)) {
-    const name = `${prefix}${key}`
-    flat[name] = value
-
-    if (Array.isArray(value)) {
-      value.forEach((item, index) => {
-        if (isObject(item)) {
-          Object.assign(
-            flat,
-            flattenRow(item as Record<string, unknown>, `${name}.${index}.`)
-          )
-        }
-      })
-    }
-  }
-
-  return flat
-}
 
 export function useFieldList(
   field: List,
@@ -212,7 +183,7 @@ export function useFieldList(
           values,
           initial: initialValueRef.current,
         }
-      ) as ListRows
+      )
     },
     [field.name, leafNames, store]
   )
@@ -227,41 +198,30 @@ export function useFieldList(
     [field.name, translatePath]
   )
 
-  // Every position from `from` on, said again under the name a consumer
-  // addresses it by.
+  // Everything a rewrite of existing rows tells the consumer, in one place: the
+  // list's array under its own name, then every positional name from `from` on
+  // with what it holds now. Which names those are, and why the array alone is
+  // not enough, is `positionalEntries`.
   //
-  // A consumer that keeps each report in one record -- the way the docs suggest
-  // keeping values -- holds a row's leaves there twice: inside the list's
-  // array, and under their own positional names, `items.0.value`, from the
-  // reports the leaves made as they were typed in. A row that goes moves every
-  // row after it up one position. The array is reported again; the names were
-  // not, and went on holding what the rows used to hold. `resolveEntry` tries a
-  // flat name before the path into the array, so each survivor read back the
-  // entry of the row that sat at its new position before it.
-  //
-  // So each name from `from` on is reported with what its position holds now,
-  // and with nothing where no row is left. Whether or not it differs from the
-  // last report: what the consumer holds is not necessarily what this list last
-  // said.
-  const emitShift = useCallback(
+  // Removing and assigning both go through here rather than each reporting on
+  // its own, so a way of rewriting rows added later reports the whole of it by
+  // construction. Adding a row rewrites nothing that was there, and keeps to the
+  // array.
+  const emitRows = useCallback(
     (from: number, previous: ListRows, next: ListRows) => {
+      emitChange(next)
+
       const report = onValueChangeRef.current
       if (!report) {
         return
       }
 
       const base = translatePath(field.name)
-      for (let position = from; position < previous.length; position++) {
-        const before = flattenRow(previous[position])
-        const after = flattenRow(next[position])
-        const names = new Set([...Object.keys(before), ...Object.keys(after)])
-
-        for (const name of names) {
-          report({ name: `${base}.${position}.${name}`, value: after[name] })
-        }
+      for (const entry of positionalEntries(base, from, previous, next)) {
+        report(entry)
       }
     },
-    [field.name, translatePath]
+    [emitChange, field.name, translatePath]
   )
 
   const addItem = useCallback(() => {
@@ -297,19 +257,9 @@ export function useFieldList(
 
       setItems(nextItems)
       setValues(nextValues)
-      emitChange(nextRows)
-      emitShift(index, previousRows, nextRows)
+      emitRows(index, previousRows, nextRows)
     },
-    [
-      computeListValue,
-      emitChange,
-      emitShift,
-      field.name,
-      leafNames,
-      min,
-      setValues,
-      store,
-    ]
+    [computeListValue, emitRows, field.name, leafNames, min, setValues, store]
   )
 
   // Says this list is on screen and what it is holding, so a `value` event
@@ -373,6 +323,7 @@ export function useFieldList(
     // past the row into the lists the row holds.
     const assigned = normalizeListRows(field, rows)
     const currentValues = store.get(valueAtom)
+    const previousRows = computeListValue(itemsRef.current, currentValues)
 
     // Assigning what is already there is not a change. Every other write path
     // in the library says so before it writes -- `createRecordAtomFamily`,
@@ -380,9 +331,7 @@ export function useFieldList(
     // list is the most expensive one to get wrong: without this it rebuilds
     // every row and tells the consumer, which downstream can mean persisting
     // a whole document again for nothing.
-    if (
-      deepEqual(computeListValue(itemsRef.current, currentValues), assigned)
-    ) {
+    if (deepEqual(previousRows, assigned)) {
       return
     }
 
@@ -450,11 +399,9 @@ export function useFieldList(
     // list has not taken its delivery yet at this point -- it is still showing
     // the rows it had -- so reading the store here would tell the consumer
     // about a tree that is one commit out of date, which for a consumer that
-    // saves what it is handed means saving the old rows.
-    onValueChangeRef.current?.({
-      name: translatePath(field.name),
-      value: assigned,
-    })
+    // saves what it is handed means saving the old rows. Every position is
+    // reported from the first, since an assignment can rewrite all of them.
+    emitRows(0, previousRows, assigned)
   })
 
   useEffect(() => {
