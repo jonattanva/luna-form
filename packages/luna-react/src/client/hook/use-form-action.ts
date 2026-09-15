@@ -1,7 +1,14 @@
 import { useSetAtom } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
 import { clearAllValueAtom } from '../lib/value-store'
-import { startTransition, useActionState } from 'react'
+import { requestFormReset } from 'react-dom'
+import {
+  startTransition,
+  useActionState,
+  useCallback,
+  useRef,
+  type FormEvent,
+} from 'react'
 import {
   buildSchema,
   flatten,
@@ -46,6 +53,9 @@ export function useFormState<T, F = Record<string, unknown>>(
 
   const setError = useSetAtom(reportErrorAtom)
   const clearValues = useSetAtom(clearAllValueAtom)
+
+  // The form being submitted, so that a success can reset it. See `onSubmit`.
+  const formRef = useRef<HTMLFormElement | null>(null)
 
   const initialState: FormState<T> = {
     data: null,
@@ -104,8 +114,12 @@ export function useFormState<T, F = Record<string, unknown>>(
 
           onSuccess?.(result.data as T)
           if (!preserveValues) {
+            const submitted = formRef.current
             startTransition(() => {
               clearValues()
+              if (submitted) {
+                requestFormReset(submitted)
+              }
             })
           }
 
@@ -127,7 +141,34 @@ export function useFormState<T, F = Record<string, unknown>>(
     initialState
   )
 
-  return [formAction, state, isPending] as const
+  // The submit, dispatched from the form's `onSubmit` rather than left to its
+  // `action`.
+  //
+  // React resets a form after every action it runs itself, whatever the action
+  // returned. An input the store controls comes through that unchanged, but a
+  // control that restores itself on reset -- a checkbox, a switch, a radio
+  // group, a select -- drops what the user picked, and a select goes on showing
+  // one option while the native select behind it submits another. After a
+  // failed submit there is nothing to reset.
+  //
+  // With the default prevented and a transition started here, React runs no
+  // action of its own and resets nothing; it only shows the form as pending. A
+  // success still resets, above, where it clears the values.
+  const onSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const form = event.currentTarget
+      formRef.current = form
+      const submitter = (event.nativeEvent as SubmitEvent).submitter
+      const formData = new FormData(form, submitter)
+      startTransition(() => {
+        formAction(formData)
+      })
+    },
+    [formAction]
+  )
+
+  return [formAction, state, isPending, onSubmit] as const
 }
 
 function buildError(error: unknown, translations?: Record<string, string>) {

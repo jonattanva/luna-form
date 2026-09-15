@@ -42,15 +42,18 @@ export function FormContent<
   )
 
   const [getSchema, onMount, onUnmount] = useSchema()
-  const [action, state, isPending] = useFormState(getSchema, props.action, {
-    onSuccess: props.onSuccess,
-    validation: props.config.validation.submit,
-    translations,
-  })
+  const [action, state, isPending, onSubmit] = useFormState(
+    getSchema,
+    props.action,
+    {
+      onSuccess: props.onSuccess,
+      validation: props.config.validation.submit,
+      translations,
+    }
+  )
 
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
-  const value = state.data ?? props.value
 
   // The host's callback, held steady. A host that declares `onValueChange`
   // inline -- the ordinary way to write it -- hands us a new function on every
@@ -106,6 +109,15 @@ export function FormContent<
   // The value the host holds enters the store here, once, so a field can read
   // its own entry instead of being handed the whole record. See `useValue`.
   //
+  // The host's value and nothing else. A failed submit used to hand its
+  // FormData back through here as if the host had passed it -- flat, keyed by
+  // the stable ids of list rows, with a scalar where a field keeps an array --
+  // and the form held on to it until a submit succeeded: a row read the entry
+  // of the row beside it, a chips field with one selection came back empty, and
+  // the host could not put its own value back. The values need no help to
+  // survive a failure. They are in the store already, a failure clears nothing,
+  // and nothing resets the form after one; see `useFormState`.
+  //
   // In an effect rather than during render, because writing a store while
   // rendering is not a thing React lets a component do honestly.
   //
@@ -116,8 +128,8 @@ export function FormContent<
   // commit rather than from their effect. See `useHostEntryReader`.
   const setHostValue = useSetAtom(hostValueAtom)
   useEffect(() => {
-    setHostValue(value ?? null)
-  }, [setHostValue, value])
+    setHostValue(props.value ?? null)
+  }, [setHostValue, props.value])
 
   return (
     <>
@@ -139,6 +151,7 @@ export function FormContent<
         definition={props.definition}
         isPending={isPending}
         noValidate
+        onSubmit={onSubmit}
         readOnly={props.readOnly}
         sections={props.sections}
         translations={translations}
@@ -153,7 +166,7 @@ export function FormContent<
             onValueChange={onValueChange}
             style={props.config.style}
             translations={translations}
-            value={value}
+            value={props.value}
           >
             {renderInput}
           </Slot>
