@@ -1,15 +1,18 @@
 import { useSetAtom } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
 import { clearAllValueAtom } from '../lib/value-store'
+import { REVEAL_EVENT } from '../../component/collapsible'
 import { requestFormReset } from 'react-dom'
 import {
   startTransition,
   useActionState,
   useCallback,
+  useEffect,
   useRef,
   type FormEvent,
 } from 'react'
 import {
+  ARIA_INVALID,
   buildSchema,
   flatten,
   getDateFormat,
@@ -167,6 +170,27 @@ export function useFormState<T, F = Record<string, unknown>>(
     },
     [formAction]
   )
+
+  // A submit held back by a field nobody can see does not say where to look.
+  // Once a failed submit's errors are on screen, every control they mark as
+  // invalid asks the collapsed containers around it to open. The errors are
+  // reported inside the action, in its transition, so they commit with `state`
+  // and are in the DOM by the time this runs.
+  //
+  // The form does not know which containers there are, and a container does not
+  // know about errors: the event is all that passes between them. See
+  // `Collapsible`.
+  useEffect(() => {
+    const form = formRef.current
+    if (!form || state.success || !state.error) {
+      return
+    }
+
+    const invalid = form.querySelectorAll(`[${ARIA_INVALID}="true"]`)
+    for (const control of invalid) {
+      control.dispatchEvent(new Event(REVEAL_EVENT, { bubbles: true }))
+    }
+  }, [state])
 
   return [formAction, state, isPending, onSubmit] as const
 }

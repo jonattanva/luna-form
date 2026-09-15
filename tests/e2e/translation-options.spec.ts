@@ -285,7 +285,11 @@ test.describe('Option translation with array source', { tag: ['@e2e'] }, () => {
 
     await page.goto('')
 
-    await expect(page.getByText('Activo', { exact: true })).toBeVisible()
+    // The collapsed row keeps its select mounted, showing the same label while
+    // hidden: the preview is the one on screen.
+    await expect(
+      page.getByText('Activo', { exact: true }).filter({ visible: true })
+    ).toBeVisible()
     await expect(page.getByText('status_active', { exact: true })).toHaveCount(
       0
     )

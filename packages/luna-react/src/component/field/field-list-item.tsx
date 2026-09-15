@@ -33,6 +33,10 @@ export function FieldListItem(
     setIsOpen((previous) => !previous)
   }
 
+  function handleReveal() {
+    setIsOpen(true)
+  }
+
   // The whole accessible name is one dictionary key, placeholders included, so
   // a translation can reorder the parts instead of only renaming them. Left
   // untranslated the template fills in to the English text it replaced.
@@ -121,7 +125,7 @@ export function FieldListItem(
         className="box-border w-full min-w-0 rounded-lg border border-zinc-100 p-4 dark:border-zinc-900"
       >
         {header}
-        <Collapsible visible={isOpen}>
+        <Collapsible onReveal={handleReveal} visible={isOpen}>
           <Group>{props.children}</Group>
         </Collapsible>
       </div>
@@ -132,7 +136,7 @@ export function FieldListItem(
     return (
       <div className="box-border flex w-full min-w-0 flex-col gap-2">
         {header}
-        <Collapsible visible={isOpen}>
+        <Collapsible onReveal={handleReveal} visible={isOpen}>
           <Group>{props.children}</Group>
         </Collapsible>
       </div>

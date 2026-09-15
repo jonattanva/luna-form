@@ -17,6 +17,7 @@ export function FieldSetAdvanced(
   const [isOpen, setIsOpen] = useState(false)
 
   const handleOpen = useCallback(() => setIsOpen((previous) => !previous), [])
+  const handleReveal = useCallback(() => setIsOpen(true), [])
 
   return (
     <fieldset
@@ -37,7 +38,7 @@ export function FieldSetAdvanced(
           <span>{formatMarkdown(props.title)}</span>
         </button>
       </legend>
-      <Collapsible visible={isOpen}>
+      <Collapsible onReveal={handleReveal} visible={isOpen}>
         <div
           className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-zinc-300 pl-4 dark:border-zinc-600"
           data-slot="field-set-content"
