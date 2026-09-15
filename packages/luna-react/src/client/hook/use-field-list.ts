@@ -4,6 +4,7 @@ import {
   getListBounds,
   getListLeaves,
   isList,
+  isObject,
   isValidValue,
   keepsValue,
   normalizeListRows,
@@ -33,6 +34,39 @@ import {
 } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
 import { valueAtom } from '../lib/value-store'
+
+type ListRows = Array<Record<string, unknown>>
+
+// A row's values under the names they have inside the row, a list inside it
+// spelled out down to its own leaves: `checks`, `checks.0.v`. The same names the
+// leaves use when they report, less the list's own prefix.
+function flattenRow(
+  row: Record<string, unknown> | undefined,
+  prefix = ''
+): Record<string, unknown> {
+  const flat: Record<string, unknown> = {}
+  if (!row) {
+    return flat
+  }
+
+  for (const [key, value] of Object.entries(row)) {
+    const name = `${prefix}${key}`
+    flat[name] = value
+
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (isObject(item)) {
+          Object.assign(
+            flat,
+            flattenRow(item as Record<string, unknown>, `${name}.${index}.`)
+          )
+        }
+      })
+    }
+  }
+
+  return flat
+}
 
 export function useFieldList(
   field: List,
@@ -165,10 +199,7 @@ export function useFieldList(
   }, [])
 
   const computeListValue = useCallback(
-    (
-      currentItems: readonly number[],
-      values: Record<string, unknown>
-    ): Array<Record<string, unknown>> => {
+    (currentItems: readonly number[], values: Record<string, unknown>) => {
       // Where a leaf's value comes from, and why it is looked for in that
       // order, is `composeListValue` — a list holding a list is the case that
       // makes the order matter, and it can only be answered from the registry,
@@ -181,19 +212,56 @@ export function useFieldList(
           values,
           initial: initialValueRef.current,
         }
-      )
+      ) as ListRows
     },
     [field.name, leafNames, store]
   )
 
   const emitChange = useCallback(
-    (currentItems: readonly number[], values: Record<string, unknown>) => {
+    (rows: ListRows) => {
       onValueChangeRef.current?.({
         name: translatePath(field.name),
-        value: computeListValue(currentItems, values),
+        value: rows,
       })
     },
-    [computeListValue, field.name, translatePath]
+    [field.name, translatePath]
+  )
+
+  // Every position from `from` on, said again under the name a consumer
+  // addresses it by.
+  //
+  // A consumer that keeps each report in one record -- the way the docs suggest
+  // keeping values -- holds a row's leaves there twice: inside the list's
+  // array, and under their own positional names, `items.0.value`, from the
+  // reports the leaves made as they were typed in. A row that goes moves every
+  // row after it up one position. The array is reported again; the names were
+  // not, and went on holding what the rows used to hold. `resolveEntry` tries a
+  // flat name before the path into the array, so each survivor read back the
+  // entry of the row that sat at its new position before it.
+  //
+  // So each name from `from` on is reported with what its position holds now,
+  // and with nothing where no row is left. Whether or not it differs from the
+  // last report: what the consumer holds is not necessarily what this list last
+  // said.
+  const emitShift = useCallback(
+    (from: number, previous: ListRows, next: ListRows) => {
+      const report = onValueChangeRef.current
+      if (!report) {
+        return
+      }
+
+      const base = translatePath(field.name)
+      for (let position = from; position < previous.length; position++) {
+        const before = flattenRow(previous[position])
+        const after = flattenRow(next[position])
+        const names = new Set([...Object.keys(before), ...Object.keys(after)])
+
+        for (const name of names) {
+          report({ name: `${base}.${position}.${name}`, value: after[name] })
+        }
+      }
+    },
+    [field.name, translatePath]
   )
 
   const addItem = useCallback(() => {
@@ -205,8 +273,8 @@ export function useFieldList(
     const nextItems = [...itemsRef.current, id]
 
     setItems(nextItems)
-    emitChange(nextItems, store.get(valueAtom))
-  }, [emitChange, max, store])
+    emitChange(computeListValue(nextItems, store.get(valueAtom)))
+  }, [computeListValue, emitChange, max, store])
 
   const handleRemove = useCallback(
     (index: number) => {
@@ -224,11 +292,24 @@ export function useFieldList(
         delete nextValues[itemKey(field.name, stableId, name)]
       }
 
+      const previousRows = computeListValue(itemsRef.current, currentValues)
+      const nextRows = computeListValue(nextItems, nextValues)
+
       setItems(nextItems)
       setValues(nextValues)
-      emitChange(nextItems, nextValues)
+      emitChange(nextRows)
+      emitShift(index, previousRows, nextRows)
     },
-    [emitChange, field.name, leafNames, min, setValues, store]
+    [
+      computeListValue,
+      emitChange,
+      emitShift,
+      field.name,
+      leafNames,
+      min,
+      setValues,
+      store,
+    ]
   )
 
   // Says this list is on screen and what it is holding, so a `value` event
