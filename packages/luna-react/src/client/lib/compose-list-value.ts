@@ -1,6 +1,9 @@
+import { isObject, type Nullable } from '@luna-form/core'
 import { resolveValue } from './resolve-value'
 import type { MountedList } from './list-store'
-import type { Nullable } from '@luna-form/core'
+
+/** A list's rows as a consumer is given them, in order. */
+export type ListRows = Array<Record<string, unknown>>
 
 // Every key a list owns in the flat value atom: its name, the row's stable id,
 // the leaf's name. Built in seeding, reading, removing and assigning, which is
@@ -102,7 +105,7 @@ export function composeListValue(
   listName: string,
   { items, leafNames }: MountedList,
   sources: ValueSources
-): Array<Record<string, unknown>> {
+): ListRows {
   return items.map((stableId) => {
     const item: Record<string, unknown> = {}
 
@@ -112,4 +115,78 @@ export function composeListValue(
 
     return item
   })
+}
+
+// A row's values under the names they have inside the row, a list inside it
+// spelled out down to its own leaves: `checks`, `checks.0.v`. The same names
+// the leaves use when they report, less the list's own prefix.
+function flattenRow(
+  row: Record<string, unknown> | undefined,
+  prefix = ''
+): Record<string, unknown> {
+  const flat: Record<string, unknown> = {}
+  if (!row) {
+    return flat
+  }
+
+  for (const [key, value] of Object.entries(row)) {
+    const name = `${prefix}${key}`
+    flat[name] = value
+
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (isObject(item)) {
+          Object.assign(
+            flat,
+            flattenRow(item as Record<string, unknown>, `${name}.${index}.`)
+          )
+        }
+      })
+    }
+  }
+
+  return flat
+}
+
+/**
+ * Every positional name a change to a list's rows can have left out of date,
+ * each with what it holds now.
+ *
+ * A consumer that keeps each report in one record -- the way the docs suggest
+ * keeping values -- holds a row's leaves there twice: inside the list's array,
+ * and under their own positional names, `items.0.value`, from the reports the
+ * leaves made as they were typed in. Removing a row moves every row after it
+ * up one position; assigning rows rewrites what every position holds. The
+ * array is reported again either way, but the names would go on holding what
+ * the rows used to hold, and `resolveEntry` tries a flat name before the path
+ * into the array: the next row to read one of them gets a row that is gone.
+ *
+ * So every name from `from` to the end of the longer of the two lists comes
+ * back, with what its position holds now, or `undefined` where no row is left
+ * -- whether or not that differs from before, because what the consumer holds
+ * is not necessarily what the list last said.
+ *
+ * @param base - The list's positional name, as the consumer addresses it.
+ * @param from - The first position the change can have touched.
+ */
+export function positionalEntries(
+  base: string,
+  from: number,
+  previous: ListRows,
+  next: ListRows
+): Array<{ name: string; value: unknown }> {
+  const entries: Array<{ name: string; value: unknown }> = []
+  const length = Math.max(previous.length, next.length)
+
+  for (let position = from; position < length; position++) {
+    const before = flattenRow(previous[position])
+    const after = flattenRow(next[position])
+    const names = new Set([...Object.keys(before), ...Object.keys(after)])
+
+    for (const name of names) {
+      entries.push({ name: `${base}.${position}.${name}`, value: after[name] })
+    }
+  }
+
+  return entries
 }

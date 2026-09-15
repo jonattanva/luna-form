@@ -159,7 +159,7 @@ A row's key can name a field that is itself a `list`, in which case its value is
 Every rule above holds one level down as well: an inner list assigns rather than adds, honours its own `advanced.length`, and keeps the identity of the rows that survive. Two more only come up here:
 
 - **A row that names an inner list without giving it rows empties it.** `"checks": []`, a `checks` key holding something that is not rows, and no `checks` key at all all mean the same thing — none — rather than leaving behind what the row in that position had.
-- **The consumer is told once for the whole tree**, under the outer list's name, with the inner rows already in it. The inner lists then report their own paths (`groups.0.checks`) as they take their rows, the same way they do when a row is added or removed by hand.
+- **The consumer is told the whole tree at once**, under the outer list's name, with the inner rows already in it, and then every positional name the assignment rewrote (`groups.0.label`, `groups.1.checks.0.v`) with what that position holds now, or nothing where no row is left. A consumer that keeps each report in one record would otherwise go on holding the values of the rows that went away under those names. The inner lists then report their own paths (`groups.0.checks`) as they take their rows, the same way they do when a row is added or removed by hand.
 
 This is what the relative syntax cannot do. `"groups/checks"` reaches the inner list of the row the sender is sitting in, and `"groups.0.checks"` reaches the first one; neither can say "every group", so a control that appends a group has to assign the outer list and carry the inner rows along with it.
 
