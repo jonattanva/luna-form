@@ -24,8 +24,9 @@ export function Collapsible({
 }>) {
   const revealAround = use(RevealContext)
 
-  // As steady as `onReveal`, which is its owner's to keep steady: a new
-  // function here would render again everything inside that reads it.
+  // As steady as `onReveal`, and `useDisclosure` hands every owner a steady
+  // one: a new function here would render again everything inside that reads
+  // it.
   const reveal = useCallback(() => {
     onReveal?.()
     revealAround()
