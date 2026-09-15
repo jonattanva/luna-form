@@ -19,6 +19,30 @@ const TOKEN = { label: 'Secret Token', name: 'token', type: 'input/text' }
 const A = { label: 'A', name: 'a', type: 'input/text' }
 const B = { label: 'B', name: 'b', type: 'input/text' }
 
+const COLORS = [
+  { label: 'Red', value: 'red' },
+  { label: 'Blue', value: 'blue' },
+]
+
+// Every kind of field the editor registers. Some are the host's own
+// components, and nothing obliges one of those to pass a given attribute on to
+// the DOM, so an error has to come into view whatever renders the control. The
+// kinds that need options are given two; the rest bring their own or need none.
+const KINDS = [
+  'input/text',
+  'input/number',
+  'input/date',
+  'textarea',
+  'select',
+  'select/timezone',
+  'chips',
+  'chips/day',
+  'radio',
+  'checkbox',
+  'checkbox/switch',
+]
+const WITH_OPTIONS = new Set(['select', 'chips', 'radio'])
+
 /** A plain section, then a collapsible one holding `field`. */
 function advancedSection(field: object): string {
   return JSON.stringify({
@@ -192,5 +216,94 @@ test.describe('Collapsed content', { tag: ['@e2e'] }, () => {
     await submitAndFail(page)
 
     await expect(page.getByText('B is required', { exact: true })).toBeVisible()
+  })
+
+  test('should open a collapsed row and the closed section around it', async ({
+    page,
+  }) => {
+    await open(
+      page,
+      JSON.stringify({
+        value: { items: [{ a: 'one' }] },
+        sections: [
+          {
+            title: 'Advanced Options',
+            advanced: { collapsible: true },
+            fields: [
+              {
+                type: 'list',
+                name: 'items',
+                label: 'Items',
+                advanced: { collapsed: true },
+                fields: [
+                  A,
+                  {
+                    ...B,
+                    required: true,
+                    validation: { required: 'B is required' },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+      'Advanced Options'
+    )
+
+    await submitAndFail(page)
+
+    await expect(page.getByText('B is required', { exact: true })).toBeVisible()
+  })
+
+  // Every failed submit, and not only the first: a user who closes the section
+  // again and submits again is still held back by the same field.
+  test('should open a section again on the next failed submit', async ({
+    page,
+  }) => {
+    await open(
+      page,
+      advancedSection({
+        ...TOKEN,
+        required: true,
+        validation: { required: 'Secret Token is required' },
+      }),
+      'Advanced Options'
+    )
+    const error = page.getByText('Secret Token is required', { exact: true })
+
+    await submitAndFail(page)
+    await expect(error).toBeVisible()
+
+    await page.getByRole('button', { name: 'Advanced Options' }).click()
+    await expect(error).toBeHidden()
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(error).toBeVisible()
+  })
+
+  test.describe('a required field of every kind in a closed section', () => {
+    for (const kind of KINDS) {
+      test(`should bring its error into view: ${kind}`, async ({ page }) => {
+        await open(
+          page,
+          advancedSection({
+            label: 'Target',
+            name: 'target',
+            type: kind,
+            required: true,
+            validation: { required: 'Target is required' },
+            ...(WITH_OPTIONS.has(kind) ? { source: COLORS } : {}),
+          }),
+          'Advanced Options'
+        )
+
+        await submitAndFail(page)
+
+        await expect(
+          page.getByText('Target is required', { exact: true })
+        ).toBeVisible()
+      })
+    }
   })
 })
