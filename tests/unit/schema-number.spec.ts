@@ -7,8 +7,12 @@ import type { Input } from '@/packages/luna-core/src/type'
 // otherwise, and a year or month select nobody picked sends "". Required means
 // present, not "at least 1", and a number nobody gave is absent, not 0.
 describe('number values', () => {
-  const parse = (input: Input, value?: string) =>
-    buildSchema({ [input.name]: getSchema(input) }).safeParse(
+  const parse = (
+    input: Input,
+    value?: string,
+    translations?: Record<string, string>
+  ) =>
+    buildSchema({ [input.name]: getSchema(input, translations) }).safeParse(
       value === undefined ? {} : { [input.name]: value }
     )
 
@@ -185,6 +189,46 @@ describe('number values', () => {
 
       expect(parse(input, '15').success).toBe(true)
       expect(parse(input, '12').success).toBe(false)
+    })
+
+    // What a number off its step says is the form's to declare, as `required`
+    // and `length` are, and the form's dictionary translates it. One message
+    // covers both steps a number can have: the one it declares, and the whole
+    // number it keeps when it declares none.
+    describe('message', () => {
+      const cents = 'Enter the amount in cents'
+      const priced = (advanced?: Record<string, unknown>) =>
+        ({ ...amount(advanced), validation: { step: cents } }) as Input
+
+      test('should say the declared message for a value off its step', () => {
+        const parsed = parse(priced({ step: 0.01 }), '19.999')
+
+        expect(parsed.error?.issues[0].message).toBe(cents)
+      })
+
+      test('should say the declared message for a decimal on a whole number', () => {
+        const parsed = parse(priced(), '2.5')
+
+        expect(parsed.error?.issues[0].message).toBe(cents)
+      })
+
+      test('should say the declared message in the language of the form', () => {
+        const parsed = parse(priced({ step: 0.01 }), '19.999', {
+          [cents]: 'Introduce el importe en centavos',
+        })
+
+        expect(parsed.error?.issues[0].message).toBe(
+          'Introduce el importe en centavos'
+        )
+      })
+
+      test('should say which step a value is off when none is declared', () => {
+        const parsed = parse(amount({ step: 0.01 }), '19.999')
+
+        expect(parsed.error?.issues[0].message).toBe(
+          'Invalid number: must be a multiple of 0.01'
+        )
+      })
     })
   })
 })
