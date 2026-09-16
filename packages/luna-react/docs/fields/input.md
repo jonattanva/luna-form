@@ -80,6 +80,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`length`** _({ min?: string, max?: string })_: Specific string messages shown when input lengths are breached.
+- **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:
   - `field`: Optional target reference string.
   - `operator`: Logical evaluation operations (e.g., `eq`, `neq`, `gt`, `lt`).

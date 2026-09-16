@@ -170,7 +170,7 @@ export function getText(input: Input, translations?: Record<string, string>) {
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
   const schema = applyMinAndMax(z.coerce.number(), input, translations)
-  return numberLeaf(applyStep(schema, input), input, translations)
+  return numberLeaf(applyStep(schema, input, translations), input, translations)
 }
 
 export function getYearSchema(
@@ -223,19 +223,26 @@ function numberLeaf(
 // Whole unless the number declares a step, which is the browser's own default
 // of 1. The step is read by `buildNumberStep`, the same reading
 // `defineNumberStep` renders on the input, and it counts from `length.min` when
-// there is one, as the input's arrows do.
-function applyStep(schema: z.ZodCoercedNumber, input: Input) {
+// there is one, as the input's arrows do. `validation.step` is what a value off
+// it says, whichever of the two steps it is off.
+function applyStep(
+  schema: z.ZodCoercedNumber,
+  input: Input,
+  translations?: Record<string, string>
+) {
+  const message = translateOptional(input.validation?.step, translations)
   const step = buildNumberStep(input)
   if (step === undefined) {
-    return schema.int()
+    return schema.int(message)
   }
 
   const base = input.advanced?.length?.min ?? 0
   return schema.refine((value) => isOnStep(value, step, base), {
     message:
-      base === 0
+      message ??
+      (base === 0
         ? `Invalid number: must be a multiple of ${step}`
-        : `Invalid number: must be ${base} plus a multiple of ${step}`,
+        : `Invalid number: must be ${base} plus a multiple of ${step}`),
   })
 }
 

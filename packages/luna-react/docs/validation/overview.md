@@ -18,6 +18,7 @@ This page documents every key of the `validation` object plus the shared operato
 - **`required`** _(string)_: Message shown when a field marked `required: true` is empty.
 - **`email`** _(string)_: Message for an invalid email format (`input/email`).
 - **`length`** _({ min?: string, max?: string })_: Messages when the value's length breaches `advanced.length`.
+- **`step`** _(string)_: Message when an `input/number` is off its step: a decimal on a whole number, or a value off `advanced.step`. See [Input](../fields/input.md).
 - **`custom`** _(CustomValidation | CustomValidation[])_: Cross-field comparison. See [Custom (cross-field)](#custom-cross-field).
 - **`requiredWhen`** _(WhenRule | WhenRule[])_: Conditionally required. See [requiredWhen](#requiredwhen).
 - **`pattern`** _(PatternRule)_: Regex/format check. See [pattern](#pattern).
@@ -258,7 +259,7 @@ if (!result.success) {
 
 | Rule                                          | Rendered `<Form>` submit | `buildFormSchema` (headless) |
 | --------------------------------------------- | ------------------------ | ---------------------------- |
-| `required`, `email`, `length` (field)         | ✅                       | ✅                           |
+| `required`, `email`, `length`, `step` (field) | ✅                       | ✅                           |
 | `custom`                                      | ✅                       | ✅                           |
 | `requiredWhen` (top-level)                    | ✅                       | ✅                           |
 | `pattern`                                     | ✅                       | ✅                           |
