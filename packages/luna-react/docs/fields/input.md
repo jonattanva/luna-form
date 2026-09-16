@@ -55,11 +55,14 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 These basic field types support extra manipulation properties inside the `advanced` block:
 
 - **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type).
+- **`step`** _(number | "any")_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `"any"` for every decimal.
 - **`transform`** _(string | string[])_: Safely intercepts user inputs and manipulates content dynamically. Options include:
   - `"lowercase"`
   - `"uppercase"`
   - `"remove-space"`
   - `"remove-accent"`
+
+A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
 
 ### Temporal Options (`input/date`, `input/time`)
 

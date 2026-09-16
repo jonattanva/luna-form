@@ -171,9 +171,21 @@ function defineInput(input: Input) {
     ...defineTime(input),
     ...defineAutoComplete(input),
     ...defineNumberLimits(copy),
+    ...defineNumberStep(copy),
     ...(isText(copy) ? defineLength(copy) : {}),
     type,
   }
+}
+
+// A number is whole unless it declares a step, which is the browser's own
+// default of 1. What it declares is rendered here and validated in
+// `getNumber`, so the input's arrows and the schema move by the same step.
+function defineNumberStep(input: Input) {
+  const step = input.advanced?.step
+  if (isNumber(input) && step !== undefined) {
+    return { step }
+  }
+  return {}
 }
 
 function defineWithOptions<T>(options: T | undefined) {
