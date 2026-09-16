@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789566585311,
+  "lastUpdate": 1789566614047,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "f644b339170a34d2a8347f175c1259cb3466f157",
-          "message": "upgrade dependecies",
-          "timestamp": "2026-04-30T18:27:55-05:00",
-          "tree_id": "e0b4bc9cc10f77b811b2025ffca2bea381dc1012",
-          "url": "https://github.com/jonattanva/luna-form/commit/f644b339170a34d2a8347f175c1259cb3466f157"
-        },
-        "date": 1777591761337,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 275,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 602,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "7d7e1a714fb95f33f74a01b063dba9efb229cfe7",
           "message": "feat: add collapsible and collapsed support to list items",
           "timestamp": "2026-05-01T16:38:59-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 142,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eb2aca7b0a66e6aaf0561b1d71d2e416f7f213c4",
+          "message": "Merge pull request #87 from jonattanva/fix/unflatten-prototype\n\nfix(extract): a dotted name addresses own properties, not the prototype",
+          "timestamp": "2026-09-16T08:48:47-05:00",
+          "tree_id": "dea5aa1a5dc9aa1a181de52b55509b33f2f51dd2",
+          "url": "https://github.com/jonattanva/luna-form/commit/eb2aca7b0a66e6aaf0561b1d71d2e416f7f213c4"
+        },
+        "date": 1789566614000,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 299,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 635,
             "unit": "ms"
           }
         ]
