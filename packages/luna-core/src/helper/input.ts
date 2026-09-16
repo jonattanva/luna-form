@@ -1,5 +1,10 @@
 import { MAX, MAX_LENGTH, MIN, MIN_LENGTH, OPTIONS } from '../util/constant'
-import { buildOptions, buildSource, isArraySource } from '../util/build'
+import {
+  buildNumberStep,
+  buildOptions,
+  buildSource,
+  isArraySource,
+} from '../util/build'
 import {
   fromNativeDate,
   getConvert,
@@ -171,9 +176,22 @@ function defineInput(input: Input) {
     ...defineTime(input),
     ...defineAutoComplete(input),
     ...defineNumberLimits(copy),
+    ...defineNumberStep(copy),
     ...(isText(copy) ? defineLength(copy) : {}),
     type,
   }
+}
+
+// A number is whole unless it declares a step, which is the browser's own
+// default of 1. `buildNumberStep` reads it once for both halves: it is rendered
+// here and validated in `getNumber`, so the input's arrows and the schema move
+// by the same step.
+function defineNumberStep(input: Input) {
+  const step = buildNumberStep(input)
+  if (isNumber(input) && step !== undefined) {
+    return { step }
+  }
+  return {}
 }
 
 function defineWithOptions<T>(options: T | undefined) {

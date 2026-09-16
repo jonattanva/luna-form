@@ -1,4 +1,5 @@
 import { MAX, MIN } from './constant'
+import { buildNumberStep } from './build'
 import {
   isCheckbox,
   isColumn,
@@ -168,29 +169,15 @@ export function getText(input: Input, translations?: Record<string, string>) {
 }
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
-  let schema = z.coerce.number().int()
-  schema = applyMinAndMax(schema, input, translations)
-
-  if (input.required) {
-    schema = applyRequired(schema, input, translations)
-    return z.preprocess((value) => (value === null ? undefined : value), schema)
-  }
-  return optionalLeaf(schema)
+  const schema = applyMinAndMax(z.coerce.number(), input, translations)
+  return numberLeaf(applyStep(schema, input, translations), input, translations)
 }
 
 export function getYearSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
-  if (input.required) {
-    return z.preprocess(
-      normalize,
-      z.coerce
-        .number({ message: getRequiredMessage(input, translations) })
-        .int()
-    )
-  }
-  return optionalLeaf(z.coerce.number().int())
+  return numberLeaf(z.coerce.number().int(), input, translations)
 }
 
 export function getMonthSchema(
@@ -200,11 +187,77 @@ export function getMonthSchema(
   const message = getRequiredMessage(input, translations)
   const schema = z.coerce.number().int().min(1, message).max(12, message)
 
-  return input.required ? schema : optionalLeaf(schema)
+  return numberLeaf(schema, input, translations)
 }
 
 function normalize(value: unknown) {
   return value === null || value === '' ? undefined : value
+}
+
+// A number arrives as text, and as "" when nobody gave one: absent until it is
+// a value, never 0. "Required" means present, not "at least 1", so 0 and every
+// negative number pass it, and the bounds and the step only ever look at a
+// value that is there. A number, a year and a month read that text the same
+// way, so they share this.
+function numberLeaf(
+  schema: z.ZodType<number>,
+  input: Input,
+  translations?: Record<string, string>
+) {
+  if (!input.required) {
+    return z.preprocess(normalize, optionalLeaf(schema))
+  }
+
+  const message = getRequiredMessage(input, translations)
+  return z.preprocess(
+    normalize,
+    z
+      .unknown()
+      // `boolean`, not the predicate TypeScript would infer: narrowing the
+      // output to `{} | null` would no longer pipe into a number schema.
+      .refine((value): boolean => value !== undefined, { message })
+      .pipe(schema)
+  )
+}
+
+// Whole unless the number declares a step, which is the browser's own default
+// of 1. The step is read by `buildNumberStep`, the same reading
+// `defineNumberStep` renders on the input, and it counts from `length.min` when
+// there is one, as the input's arrows do. `validation.step` is what a value off
+// it says, whichever of the two steps it is off.
+function applyStep(
+  schema: z.ZodCoercedNumber,
+  input: Input,
+  translations?: Record<string, string>
+) {
+  const message = translateOptional(input.validation?.step, translations)
+  const step = buildNumberStep(input)
+  if (step === undefined) {
+    return schema.int(message)
+  }
+
+  const base = input.advanced?.length?.min ?? 0
+  return schema.refine((value) => isOnStep(value, step, base), {
+    message:
+      message ??
+      (base === 0
+        ? `Invalid number: must be a multiple of ${step}`
+        : `Invalid number: must be ${base} plus a multiple of ${step}`),
+  })
+}
+
+// Compared in whole units of the finest precision among the three, so 19.99 is
+// on a step of 0.01 whatever floating point makes of 19.99 * 100.
+function isOnStep(value: number, step: number, base: number): boolean {
+  const scale =
+    10 ** Math.max(decimalsOf(value), decimalsOf(step), decimalsOf(base))
+  return Math.round((value - base) * scale) % Math.round(step * scale) === 0
+}
+
+function decimalsOf(value: number): number {
+  const [mantissa, exponent = '0'] = String(value).split('e')
+  const fraction = mantissa.split('.')[1]?.length ?? 0
+  return Math.max(0, fraction - Number(exponent))
 }
 
 function applyEmail(input: Input, translations?: Record<string, string>) {

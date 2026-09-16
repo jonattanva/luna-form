@@ -55,11 +55,16 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 These basic field types support extra manipulation properties inside the `advanced` block:
 
 - **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type).
+- **`step`** _(number)_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `0.001` for three decimals. A step has to be a number above 0. The browser ignores 0 and below, and so does the form; text such as `"any"` is no step either, and it is never rendered. Either way the number stays whole.
 - **`transform`** _(string | string[])_: Safely intercepts user inputs and manipulates content dynamically. Options include:
   - `"lowercase"`
   - `"uppercase"`
   - `"remove-space"`
   - `"remove-accent"`
+
+### Empty and required numbers
+
+A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
 
 ### Temporal Options (`input/date`, `input/time`)
 
@@ -77,6 +82,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`length`** _({ min?: string, max?: string })_: Specific string messages shown when input lengths are breached.
+- **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:
   - `field`: Optional target reference string.
   - `operator`: Logical evaluation operations (e.g., `eq`, `neq`, `gt`, `lt`).

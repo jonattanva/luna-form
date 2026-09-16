@@ -5,9 +5,10 @@ import {
   buildOrientation,
   buildDisabled,
   buildReadOnly,
+  buildNumberStep,
   isArraySource,
 } from '@/packages/luna-core/src/util/build'
-import type { Field } from '@/packages/luna-core/src/type'
+import type { Field, Input } from '@/packages/luna-core/src/type'
 
 describe('Build', () => {
   test('should build source for radio fields', () => {
@@ -191,6 +192,28 @@ describe('Build', () => {
     test('should say nothing about a field that is not read-only', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildReadOnly(field)).toBe(false)
+    })
+  })
+
+  describe('buildNumberStep', () => {
+    const price = (step: unknown) =>
+      ({ type: 'input/number', name: 'price', advanced: { step } }) as Input
+
+    test('should read a step above 0', () => {
+      expect(buildNumberStep(price(0.01))).toBe(0.01)
+    })
+
+    test.each([0, -0.5, Infinity, NaN, undefined])(
+      'should read a step of %s as no step, as the browser does',
+      (step) => {
+        expect(buildNumberStep(price(step))).toBeUndefined()
+      }
+    )
+
+    // A browser takes "any" as every decimal. The form reads no step there,
+    // because a step is a number, and never renders it.
+    test('should read text as no step, "any" included', () => {
+      expect(buildNumberStep(price('any'))).toBeUndefined()
     })
   })
 

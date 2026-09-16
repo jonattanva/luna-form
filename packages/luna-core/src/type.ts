@@ -264,6 +264,9 @@ export type Validation = {
   pattern?: PatternRule
   // Escape-hatch-in-JSON: a general list of gated assertions (see AssertRule).
   rules?: Array<AssertRule>
+  // An `input/number` off its step: a decimal on a whole number, or a value off
+  // the `advanced.step` it declares.
+  step?: string
 }
 
 export type Field = CommonProps & {
@@ -343,6 +346,7 @@ export type Transform =
 export type Input = Field & {
   advanced?: {
     length?: Length<number>
+    step?: number
     transform?: Transform | Transform[]
   }
 }

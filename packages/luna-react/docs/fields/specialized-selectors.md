@@ -17,6 +17,8 @@ Renders a dropdown with the 12 months of the year.
 }
 ```
 
+An optional month nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
+
 ### 2. Year Selector (`select/year`)
 
 Renders a dropdown with a range of years.
@@ -37,6 +39,8 @@ Renders a dropdown with a range of years.
   }
 }
 ```
+
+An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
 
 ### 3. Day Selector (`select/day`)
 
