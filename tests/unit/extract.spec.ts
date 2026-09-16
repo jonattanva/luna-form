@@ -12,6 +12,48 @@ import {
 } from '@/packages/luna-core/src/util/extract'
 
 describe('Extract', () => {
+  // `unflatten` walks the dotted segments of a field name into nested objects.
+  // `__proto__`, `constructor` and `prototype` are not paths into the result:
+  // walking them writes into `Object.prototype`, where every object on the page
+  // reads it afterwards. The names come from the definition, so a form one
+  // person writes and another fills in is enough to carry it.
+  test('should not let a field name reach Object.prototype', () => {
+    const prototype = Object.prototype as Record<string, unknown>
+
+    try {
+      unflatten({ '__proto__.polluted': 'yes' })
+      unflatten({ 'constructor.prototype.polluted2': 'yes' })
+
+      const probe = {} as Record<string, unknown>
+      expect(probe.polluted).toBeUndefined()
+      expect(probe.polluted2).toBeUndefined()
+    } finally {
+      // A failing run pollutes for real: leave the prototype as it was found,
+      // or every test after this one inherits the keys.
+      delete prototype.polluted
+      delete prototype.polluted2
+    }
+  })
+
+  test('should still nest an ordinary dotted name', () => {
+    expect(unflatten({ 'basicAuth.username': 'ada' })).toEqual({
+      basicAuth: { username: 'ada' },
+    })
+  })
+
+  test('should still build an array from numeric segments', () => {
+    expect(unflatten({ 'items.0.value': 'a', 'items.1.value': 'b' })).toEqual({
+      items: [{ value: 'a' }, { value: 'b' }],
+    })
+  })
+
+  // The same mistake on the way in: `key in value` is true for what an object
+  // inherits, so a namespace nobody declared answers with an internal.
+  test('should not read an inherited member as a value', () => {
+    expect(extract({ a: 1 }, '__proto__')).toBeNull()
+    expect(extract({ a: 1 }, 'constructor')).toBeNull()
+  })
+
   test('should extract values correctly', () => {
     const data = {
       user: {
