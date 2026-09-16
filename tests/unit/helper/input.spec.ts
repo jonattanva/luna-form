@@ -467,4 +467,39 @@ describe('Input Helper', () => {
       expect(result.options[0].label).toBe('January')
     })
   })
+
+  // `advanced.step` is rendered on the input, so its arrows move by the same
+  // step the validation accepts. A number that declares none keeps the
+  // browser's default of 1.
+  describe('number step', () => {
+    test('should render the step a number declares', () => {
+      const field = {
+        name: 'price',
+        type: 'input/number',
+        advanced: { step: 0.01, length: { min: 0 } },
+      } as Field
+
+      expect(buildCommon(field)).toEqual(
+        expect.objectContaining({ min: 0, step: 0.01 })
+      )
+    })
+
+    test('should render a step of any', () => {
+      const field = {
+        name: 'price',
+        type: 'input/number',
+        advanced: { step: 'any' },
+      } as Field
+
+      expect(buildCommon(field)).toEqual(
+        expect.objectContaining({ step: 'any' })
+      )
+    })
+
+    test('should render no step for a number that declares none', () => {
+      const field: Field = { name: 'boxes', type: 'input/number' }
+
+      expect(buildCommon(field)).not.toHaveProperty('step')
+    })
+  })
 })

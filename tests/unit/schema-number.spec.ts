@@ -124,4 +124,50 @@ describe('number values', () => {
     expect(parsed.success).toBe(false)
     expect(parsed.error?.issues[0].message).toBe('Month is required')
   })
+
+  // A number is whole unless its definition declares a `step`. The same `step`
+  // is rendered on the input, so its arrows and the validation agree: a numeric
+  // step counts from `min` when there is one, as the browser does, and "any"
+  // takes every decimal.
+  describe('step', () => {
+    const amount = (advanced?: Record<string, unknown>) =>
+      ({
+        name: 'amount',
+        type: 'input/number',
+        ...(advanced ? { advanced } : {}),
+      }) as Input
+
+    test('should still hold a decimal when the number declares no step', () => {
+      expect(parse(amount(), '19.99').success).toBe(false)
+    })
+
+    test('should accept a decimal on its step', () => {
+      const parsed = parse(amount({ step: 0.01 }), '19.99')
+
+      expect(parsed.success).toBe(true)
+      expect(parsed.data?.amount).toBe(19.99)
+    })
+
+    test('should hold a decimal off its step', () => {
+      expect(parse(amount({ step: 0.01 }), '19.999').success).toBe(false)
+    })
+
+    test('should accept any decimal when the step is any', () => {
+      expect(parse(amount({ step: 'any' }), '19.999').success).toBe(true)
+    })
+
+    test('should count the step from the minimum, as the browser does', () => {
+      const input = amount({ step: 0.5, length: { min: 0.25 } })
+
+      expect(parse(input, '1.25').success).toBe(true)
+      expect(parse(input, '1.5').success).toBe(false)
+    })
+
+    test('should hold a whole number off a whole step', () => {
+      const input = amount({ step: 5 })
+
+      expect(parse(input, '15').success).toBe(true)
+      expect(parse(input, '12').success).toBe(false)
+    })
+  })
 })
