@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789600948465,
+  "lastUpdate": 1789600978577,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "7d7e1a714fb95f33f74a01b063dba9efb229cfe7",
-          "message": "feat: add collapsible and collapsed support to list items",
-          "timestamp": "2026-05-01T16:38:59-05:00",
-          "tree_id": "04884fddfb1d17e19dd8f2c3c5e8aa5a2de0ebaa",
-          "url": "https://github.com/jonattanva/luna-form/commit/7d7e1a714fb95f33f74a01b063dba9efb229cfe7"
-        },
-        "date": 1777671619117,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 276,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 634,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "a045de4a92d3f4d0e382a2beab62f36fbcfbebd5",
           "message": "chore: update pnpm-lock.yaml with tool updates",
           "timestamp": "2026-05-02T14:36:20-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 635,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7299bd99e1f6494371901546bb050b68a69a83a6",
+          "message": "Merge pull request #88 from jonattanva/fix/number-values\n\nfix(schema): a number is absent until given, required means present, and a step says what it accepts",
+          "timestamp": "2026-09-16T18:21:24-05:00",
+          "tree_id": "e48b403a4a08501a03fdc8b1261c0b52865a159f",
+          "url": "https://github.com/jonattanva/luna-form/commit/7299bd99e1f6494371901546bb050b68a69a83a6"
+        },
+        "date": 1789600978535,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 282,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 594,
             "unit": "ms"
           }
         ]
