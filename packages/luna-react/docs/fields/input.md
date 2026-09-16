@@ -62,6 +62,8 @@ These basic field types support extra manipulation properties inside the `advanc
   - `"remove-space"`
   - `"remove-accent"`
 
+### Empty and required numbers
+
 A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
 
 ### Temporal Options (`input/date`, `input/time`)
