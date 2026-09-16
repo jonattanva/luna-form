@@ -126,9 +126,10 @@ describe('number values', () => {
   })
 
   // A number is whole unless its definition declares a `step`. The same `step`
-  // is rendered on the input, so its arrows and the validation agree: a numeric
-  // step counts from `min` when there is one, as the browser does, and "any"
-  // takes every decimal.
+  // is rendered on the input, so its arrows and the validation agree: it counts
+  // from `min` when there is one, as the browser does. A step is a number above
+  // 0, and anything else is no step at all -- the browser ignores 0 and below,
+  // and the input never renders what the schema would not read.
   describe('step', () => {
     const amount = (advanced?: Record<string, unknown>) =>
       ({
@@ -152,9 +153,25 @@ describe('number values', () => {
       expect(parse(amount({ step: 0.01 }), '19.999').success).toBe(false)
     })
 
-    test('should accept any decimal when the step is any', () => {
-      expect(parse(amount({ step: 'any' }), '19.999').success).toBe(true)
-    })
+    test.each([0, -0.5])(
+      'should read a step of %j as no step, as the browser does',
+      (step) => {
+        const input = amount({ step })
+
+        expect(parse(input, '5').success).toBe(true)
+        expect(parse(input, '5.5').success).toBe(false)
+      }
+    )
+
+    test.each(['any', '0.01'])(
+      'should read a step of %j, which is not a number, as no step',
+      (step) => {
+        const input = amount({ step })
+
+        expect(parse(input, '5').success).toBe(true)
+        expect(parse(input, '5.5').success).toBe(false)
+      }
+    )
 
     test('should count the step from the minimum, as the browser does', () => {
       const input = amount({ step: 0.5, length: { min: 0.25 } })

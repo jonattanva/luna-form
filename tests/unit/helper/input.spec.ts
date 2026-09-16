@@ -470,7 +470,7 @@ describe('Input Helper', () => {
 
   // `advanced.step` is rendered on the input, so its arrows move by the same
   // step the validation accepts. A number that declares none keeps the
-  // browser's default of 1.
+  // browser's default of 1, and so does one whose step is not a number above 0.
   describe('number step', () => {
     test('should render the step a number declares', () => {
       const field = {
@@ -484,22 +484,23 @@ describe('Input Helper', () => {
       )
     })
 
-    test('should render a step of any', () => {
-      const field = {
-        name: 'price',
-        type: 'input/number',
-        advanced: { step: 'any' },
-      } as Field
-
-      expect(buildCommon(field)).toEqual(
-        expect.objectContaining({ step: 'any' })
-      )
-    })
-
     test('should render no step for a number that declares none', () => {
       const field: Field = { name: 'boxes', type: 'input/number' }
 
       expect(buildCommon(field)).not.toHaveProperty('step')
     })
+
+    test.each([0, -0.5, 'any'])(
+      'should render no step for a step of %j',
+      (step) => {
+        const field = {
+          name: 'price',
+          type: 'input/number',
+          advanced: { step },
+        } as Field
+
+        expect(buildCommon(field)).not.toHaveProperty('step')
+      }
+    )
   })
 })
