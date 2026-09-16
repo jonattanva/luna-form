@@ -91,6 +91,16 @@ export function getSchema(input: Input, translations?: Record<string, string>) {
   return getText(input, translations)
 }
 
+// An optional leaf takes, besides its own values, `null` and nothing at all. A
+// browser leaves out what it does not send -- a disabled control, a radio
+// nobody picked -- and a missing key must neither fail the object nor come
+// back coerced into the text "undefined". What the browser did send, even an
+// empty string, still goes through the leaf's own schema. The checkbox and the
+// chips read a missing key as unchecked and as nothing picked, and keep to it.
+function optionalLeaf<T extends z.ZodType>(schema: T) {
+  return schema.nullable().optional()
+}
+
 export function getEmail(input: Input, translations?: Record<string, string>) {
   const baseSchema = z.string().trim()
 
@@ -103,10 +113,9 @@ export function getEmail(input: Input, translations?: Record<string, string>) {
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
 
-  return baseSchema
-    .pipe(applyEmail(input, translations))
-    .or(z.literal(''))
-    .nullable()
+  return optionalLeaf(
+    baseSchema.pipe(applyEmail(input, translations)).or(z.literal(''))
+  )
 }
 
 function getBoolean(input: Input, translations?: Record<string, string>) {
@@ -144,7 +153,7 @@ function getRadio(input: Input, translations?: Record<string, string>) {
     schema = schema.min(1, getRequiredMessage(input, translations))
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
-  return schema.or(z.literal('')).nullable()
+  return optionalLeaf(schema.or(z.literal('')))
 }
 
 export function getText(input: Input, translations?: Record<string, string>) {
@@ -155,7 +164,7 @@ export function getText(input: Input, translations?: Record<string, string>) {
     schema = applyRequired(schema, input, translations)
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
-  return schema.nullable()
+  return optionalLeaf(schema)
 }
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
@@ -166,7 +175,7 @@ export function getNumber(input: Input, translations?: Record<string, string>) {
     schema = applyRequired(schema, input, translations)
     return z.preprocess((value) => (value === null ? undefined : value), schema)
   }
-  return schema.nullable()
+  return optionalLeaf(schema)
 }
 
 export function getYearSchema(
@@ -181,7 +190,7 @@ export function getYearSchema(
         .int()
     )
   }
-  return z.coerce.number().int().nullable()
+  return optionalLeaf(z.coerce.number().int())
 }
 
 export function getMonthSchema(
@@ -191,7 +200,7 @@ export function getMonthSchema(
   const message = getRequiredMessage(input, translations)
   const schema = z.coerce.number().int().min(1, message).max(12, message)
 
-  return !input.required ? schema.nullable() : schema
+  return input.required ? schema : optionalLeaf(schema)
 }
 
 function normalize(value: unknown) {

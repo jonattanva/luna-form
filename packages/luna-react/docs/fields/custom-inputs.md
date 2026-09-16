@@ -60,6 +60,10 @@ its own handlers must call the ones it received, or the form never learns the
 value changed: validation will not run, and neither will any `change` event the
 field declares.
 
+A `readonly` field arrives `disabled` and without a `name`. Its value is still
+submitted, but by the form, in hidden inputs of its own: nothing your component
+renders for it is sent, so it is sent once, whatever your component renders.
+
 ## Forwarding `id` is what gives the field its name
 
 The label is rendered by this library, outside your component, as

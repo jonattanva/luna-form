@@ -28,8 +28,8 @@ Luna Form's input fields inherit the standard logical properties available to al
   - Or an object payload: `{ title: string, message: string, collapsed?: boolean }`.
 - **`placeholder`** _(string, optional)_: The temporary placeholder text shown when the input is empty.
 - **`required`** _(boolean, optional)_: If `true`, standard browser/HTML5 validation makes the field mandatory.
-- **`disabled`** _(boolean, optional)_: If `true`, the field is non-interactive and blocked from events.
-- **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user.
+- **`disabled`** _(boolean, optional)_: If `true`, the field is non-interactive and blocked from events, and its value is not submitted.
+- **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user, but it is still submitted. The control renders disabled, the one lock every input component understands, and the form sends the value itself. A field that is both `readonly` and `disabled` is not submitted.
 - **`hidden`** _(boolean, optional)_: If `true`, the field is hidden from the user interface.
 - **`order`** _(number, optional)_: A numeric order determining the field's position relative to adjacent fields.
 

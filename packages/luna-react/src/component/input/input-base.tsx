@@ -14,6 +14,7 @@ export function InputBase(
     field: Field
     horizontal?: boolean
     lang?: string
+    readOnly?: boolean
     translations?: Record<string, string>
   }>
 ) {
@@ -63,5 +64,6 @@ export function InputBase(
     dataAttributes,
     field,
     horizontal: props.horizontal,
+    readOnly: props.readOnly,
   })
 }

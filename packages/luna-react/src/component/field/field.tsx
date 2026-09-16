@@ -4,6 +4,7 @@ import { InputBase } from '../input/input-base'
 import {
   buildDisabled,
   buildOrientation,
+  buildReadOnly,
   getSpan,
   mergeStyle,
   type Field,
@@ -34,7 +35,10 @@ export function Field(props: FieldProps) {
     horizontal: buildOrientation(props.field),
   })
 
+  // Both from the `disabled` the field was handed, before a read-only field is
+  // folded into it: past this point the two can no longer be told apart.
   const disabled = buildDisabled(props.field, props.disabled)
+  const readOnly = buildReadOnly(props.field, props.disabled)
 
   return (
     <div className={twMerge('flex flex-col gap-3', getSpan(cols))}>
@@ -50,6 +54,7 @@ export function Field(props: FieldProps) {
           field={props.field}
           horizontal={horizontal}
           lang={props.lang}
+          readOnly={readOnly}
           translations={props.translations}
         >
           {props.children}
