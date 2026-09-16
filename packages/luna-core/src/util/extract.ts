@@ -1,8 +1,27 @@
 import { isMultiple, isObject, isValue } from './is-type'
 import { DESCRIPTION, INPUT, LABEL, TYPE_TEXT, VALUE } from './constant'
+import { logger } from './logger'
 import type { Nullable, Option, Value } from '../type'
 
 const REGEX_NUMERIC = /^\d+$/
+
+// A dotted name addresses the data's own properties, and these three segments
+// never do: they reach the prototype every object shares. Writing one leaves a
+// key there for every object on the page; reading one hands an internal back as
+// if it were a value. Field names come from the definition, so a form one
+// person writes and another fills in is enough to carry it.
+const UNSAFE_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype'])
+
+function isUnsafePath(name: string): boolean {
+  return name.split('.').some((segment) => UNSAFE_SEGMENTS.has(segment))
+}
+
+// `in` is true for whatever an object inherits -- `toString`, `constructor`,
+// and anything a polluted prototype carries -- and an inherited member is not
+// data. Every walk over a dotted name asks this instead.
+export function hasOwn(value: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key)
+}
 
 export function getEntity<T>(
   selected: Value,
@@ -102,7 +121,7 @@ export function extract<T>(
   // null (isObject is false for arrays) and nested lists never hydrate.
   let result: unknown = value
   for (const key of keys) {
-    if (isObject(result) && key in result) {
+    if (isObject(result) && hasOwn(result, key)) {
       result = (result as Record<string, unknown>)[key]
     } else if (Array.isArray(result)) {
       const index = Number(key)
@@ -169,6 +188,19 @@ export function unflatten(
   const result: Record<string, unknown> = {}
 
   for (const key of Object.keys(data)) {
+    // Dropped whole rather than sanitized: a name like `__proto__.isAdmin` is
+    // not a path into the payload, and rewriting it would invent a key the
+    // definition never declared. A single segment is dropped for the same
+    // reason -- `result.__proto__ = value` walks into the prototype through
+    // the setter, key or no key. The warning is for whoever wrote the name,
+    // because that field is not going to travel.
+    if (isUnsafePath(key)) {
+      logger.warn(
+        `A field name reaches a prototype and is not submitted: ${key}`
+      )
+      continue
+    }
+
     const parts = key.split('.')
     if (parts.length === 1) {
       result[key] = data[key]
@@ -181,7 +213,7 @@ export function unflatten(
       const next = parts[i + 1]
 
       const isNextIndex = REGEX_NUMERIC.test(next)
-      if (!(part in current)) {
+      if (!hasOwn(current, part)) {
         current[part] = isNextIndex ? [] : {}
       }
 

@@ -1,4 +1,4 @@
-import { isObject } from '@luna-form/core'
+import { hasOwn, isObject } from '@luna-form/core'
 
 // What a lookup found. `found` answers whether the path exists at all, which is
 // a different question from what sits there: a caller is free to hold an empty
@@ -18,7 +18,7 @@ export function resolveEntry(
   name: string,
   currentValue: Record<string, unknown> | unknown[]
 ): Entry {
-  if (!Array.isArray(currentValue) && name in currentValue) {
+  if (!Array.isArray(currentValue) && hasOwn(currentValue, name)) {
     return { found: true, value: currentValue[name] }
   }
 
@@ -36,12 +36,12 @@ export function resolveEntry(
 
     if (Array.isArray(result)) {
       const index = Number(key)
-      if (!Number.isInteger(index) || !(index in result)) {
+      if (!Number.isInteger(index) || !hasOwn(result, key)) {
         return MISSING
       }
       result = result[index]
     } else if (isObject(result)) {
-      if (!(key in result)) {
+      if (!hasOwn(result, key)) {
         return MISSING
       }
       result = result[key]

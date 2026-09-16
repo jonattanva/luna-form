@@ -47,6 +47,13 @@ describe('Extract', () => {
     })
   })
 
+  // The same mistake on the way in: `key in value` is true for what an object
+  // inherits, so a namespace nobody declared answers with an internal.
+  test('should not read an inherited member as a value', () => {
+    expect(extract({ a: 1 }, '__proto__')).toBeNull()
+    expect(extract({ a: 1 }, 'constructor')).toBeNull()
+  })
+
   test('should extract values correctly', () => {
     const data = {
       user: {

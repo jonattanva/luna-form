@@ -23,6 +23,21 @@ describe('resolve value', () => {
     })
   })
 
+  // `in` is true for what an object inherits, so a field named `toString` or
+  // `__proto__` read as one the host names, and `useValue` took an internal for
+  // its value. Only what the tree owns is data.
+  test('should not find a member the value tree only inherits', () => {
+    expect(resolveEntry('toString', { label: 'Send invoice' })).toEqual({
+      found: false,
+      value: undefined,
+    })
+
+    expect(resolveEntry('__proto__', { label: 'Send invoice' })).toEqual({
+      found: false,
+      value: undefined,
+    })
+  })
+
   test('should find a key held as undefined', () => {
     expect(resolveEntry('description', { description: undefined })).toEqual({
       found: true,
