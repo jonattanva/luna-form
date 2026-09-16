@@ -203,12 +203,18 @@ describe('Build', () => {
       expect(buildNumberStep(price(0.01))).toBe(0.01)
     })
 
-    test.each([0, -0.5, Infinity, NaN, 'any', undefined])(
+    test.each([0, -0.5, Infinity, NaN, undefined])(
       'should read a step of %s as no step, as the browser does',
       (step) => {
         expect(buildNumberStep(price(step))).toBeUndefined()
       }
     )
+
+    // A browser takes "any" as every decimal. The form reads no step there,
+    // because a step is a number, and never renders it.
+    test('should read text as no step, "any" included', () => {
+      expect(buildNumberStep(price('any'))).toBeUndefined()
+    })
   })
 
   describe('isArraySource', () => {

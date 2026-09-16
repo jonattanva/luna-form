@@ -55,7 +55,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 These basic field types support extra manipulation properties inside the `advanced` block:
 
 - **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type).
-- **`step`** _(number)_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `0.001` for three decimals. A step has to be a number above 0; anything else is ignored, as the browser ignores it, and the number stays whole.
+- **`step`** _(number)_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `0.001` for three decimals. A step has to be a number above 0. The browser ignores 0 and below, and so does the form; text such as `"any"` is no step either, and it is never rendered. Either way the number stays whole.
 - **`transform`** _(string | string[])_: Safely intercepts user inputs and manipulates content dynamically. Options include:
   - `"lowercase"`
   - `"uppercase"`
