@@ -343,7 +343,7 @@ export type Transform =
 export type Input = Field & {
   advanced?: {
     length?: Length<number>
-    step?: number | 'any'
+    step?: number
     transform?: Transform | Transform[]
   }
 }

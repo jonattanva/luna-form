@@ -1,7 +1,7 @@
 import { $REF } from './constant'
 import { isObject } from './is-type'
 import { isCheckbox, isChips, isRadio, isSelect } from './is-input'
-import type { Field, Nullable } from '../type'
+import type { Field, Input, Nullable } from '../type'
 
 export function buildOptions(
   field: Field,
@@ -45,6 +45,18 @@ export function buildDisabled(field: Field, disabled?: boolean) {
 // when a field is both, as it does in HTML.
 export function buildReadOnly(field: Field, disabled?: boolean) {
   return Boolean(field.readonly) && !disabled && !field.disabled
+}
+
+// The step a number moves by, read the way the browser reads it: a number above
+// 0. Anything else -- 0, a negative, text, no step at all -- is the browser's
+// default of 1, a whole number. The input renders this and the schema validates
+// it, so its arrows and what it accepts never disagree.
+export function buildNumberStep(input: Input) {
+  const step = input.advanced?.step
+  if (typeof step === 'number' && Number.isFinite(step) && step > 0) {
+    return step
+  }
+  return undefined
 }
 
 export function buildSource(field: Field) {

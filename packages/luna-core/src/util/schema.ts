@@ -1,4 +1,5 @@
 import { MAX, MIN } from './constant'
+import { buildNumberStep } from './build'
 import {
   isCheckbox,
   isColumn,
@@ -220,15 +221,11 @@ function numberLeaf(
 }
 
 // Whole unless the number declares a step, which is the browser's own default
-// of 1. A numeric step counts from `length.min` when there is one, as the
-// input's arrows do, and "any" takes every decimal. The same step is rendered
-// on the input by `defineNumberStep`.
+// of 1. The step is read by `buildNumberStep`, the same reading
+// `defineNumberStep` renders on the input, and it counts from `length.min` when
+// there is one, as the input's arrows do.
 function applyStep(schema: z.ZodCoercedNumber, input: Input) {
-  const step = input.advanced?.step
-  if (step === 'any') {
-    return schema
-  }
-
+  const step = buildNumberStep(input)
   if (step === undefined) {
     return schema.int()
   }
