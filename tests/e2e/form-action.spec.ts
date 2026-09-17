@@ -161,6 +161,42 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     ).toBeVisible()
   })
 
+  // The schema registry answered `name in {}`, which is true for whatever a
+  // plain object inherits: a field named after one of those members was never
+  // registered, so it was neither validated nor submitted.
+  test('should validate and submit a field named after an object member', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                name: 'toString',
+                label: 'Summary',
+                type: 'input/text',
+                required: true,
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.locator('[id="toString-error"]')).toBeVisible()
+
+    await page.locator('input[name="toString"]').fill('Quarterly report')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"toString": "Quarterly report"'
+    )
+  })
+
   test('should submit form with select fields', async ({ page }) => {
     await inject(
       page,
