@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789663522544,
+  "lastUpdate": 1789663550567,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "b3d0c151456d0db8f86b19002e74e2f47816adb1",
-          "message": "feat: implement generic Chips component and update luna-core types",
-          "timestamp": "2026-05-04T12:18:58-05:00",
-          "tree_id": "a4a21177912239d12136fc47e2a16978c7020cc1",
-          "url": "https://github.com/jonattanva/luna-form/commit/b3d0c151456d0db8f86b19002e74e2f47816adb1"
-        },
-        "date": 1777915229644,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 274,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 603,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "c451835cb7e100cc3e1518934f4cf832ce3e65be",
           "message": "upgrade dependecies",
           "timestamp": "2026-05-04T12:51:33-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 648,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "de56beef76cf395c5f5b7ae775da76e172656722",
+          "message": "Merge pull request #91 from jonattanva/docs/pattern-authored\n\ndocs(validation): a pattern runs as written, so its author keeps it from backtracking",
+          "timestamp": "2026-09-17T11:44:28-05:00",
+          "tree_id": "e1340d5d4419799388a4f02714bdfd961bfbfa65",
+          "url": "https://github.com/jonattanva/luna-form/commit/de56beef76cf395c5f5b7ae775da76e172656722"
+        },
+        "date": 1789663550526,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 297,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 204,
             "unit": "ms"
           }
         ]
