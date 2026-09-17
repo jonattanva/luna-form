@@ -113,6 +113,12 @@ Validates a string value against a regular expression.
 
 A `regex` or `flags` that does not compile is a mistake in the definition, not in the value. The rule then holds back every value it checks with its `message`, as it does a value that does not match, and the form keeps working. The same goes for a `pattern` among [`rules`](#rules).
 
+A `regex` that compiles runs as written, on what the user types: in the browser when the form is submitted, and on the server when it validates with `buildFormSchema`. Nothing inspects it first, so it is part of the code the form ships with. Accept one only from someone you would let write that code.
+
+The shape to avoid is a pattern that can split the same text between its repetitions in more than one way, such as `^(a+)+$`, `^(\w+\s?)+$` or `^(a|a)+$`. On a value that almost matches, it backtracks exponentially, and about thirty characters can hold the page, or the server, for seconds. A repetition that opens with a separator the one before cannot close with is not ambiguous and runs in linear time, as in `^[a-z]+(-[a-z]+)*$` or `^\d+(,\d+)*$`.
+
+If definitions reach you from other people, check their patterns with a ReDoS analyzer before you accept them.
+
 ---
 
 ## `rules`
