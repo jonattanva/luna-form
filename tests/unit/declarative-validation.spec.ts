@@ -2,8 +2,16 @@ import {
   buildFormSchema,
   collectIssues,
 } from '@/packages/luna-core/src/util/schema'
-import { describe, expect, test } from 'vitest'
-import type { Sections } from '@/packages/luna-core/src/type'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockInstance,
+} from 'vitest'
+import type { Sections, Validation } from '@/packages/luna-core/src/type'
 
 describe('declarative validation vocabulary', () => {
   test('requiredWhen makes a field required only when the condition holds', () => {
@@ -459,5 +467,102 @@ describe('declarative validation vocabulary', () => {
     // `@`-references are resolved at run time, so the scheme check is skipped.
     expect(schema.safeParse({ url: '@Trigger.url' }).success).toBe(true)
     expect(schema.safeParse({ url: 'example.com' }).success).toBe(false)
+  })
+
+  // A pattern reads each value afresh: `y` anchors the match at the start, and
+  // `g` carries no position from one value to the next.
+  test('pattern flags read each value as a new expression does', () => {
+    const schemaWith = (flags: string) =>
+      buildFormSchema([
+        {
+          fields: [
+            {
+              name: 'code',
+              type: 'input/text',
+              validation: {
+                pattern: { regex: 'abc', flags, message: 'Invalid code' },
+              },
+            },
+          ],
+        },
+      ])
+
+    const sticky = schemaWith('y')
+    expect(sticky.safeParse({ code: 'abcx' }).success).toBe(true)
+    expect(sticky.safeParse({ code: 'xabc' }).success).toBe(false)
+
+    const global = schemaWith('g')
+    expect(global.safeParse({ code: 'abc' }).success).toBe(true)
+    expect(global.safeParse({ code: 'abc' }).success).toBe(true)
+  })
+
+  // A pattern that does not compile is a bug in the definition, not in the
+  // value. It has to hold the value back with the rule's own message, as a
+  // mismatch does, rather than throw out of `safeParse`: on a rendered form
+  // that exception escaped the submit and unmounted the whole form.
+  describe('a pattern that does not compile', () => {
+    let consoleError: MockInstance<typeof console.error>
+
+    beforeEach(() => {
+      consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      consoleError.mockRestore()
+    })
+
+    const issuesFor = (validation: Validation, code: string) => {
+      const result = buildFormSchema([
+        { fields: [{ name: 'code', type: 'input/text', validation }] },
+      ]).safeParse({ code })
+
+      return result.success ? [] : collectIssues(result.error)
+    }
+
+    test('should hold a value back with its message instead of throwing', () => {
+      const validation = { pattern: { regex: '(', message: 'Invalid code' } }
+
+      expect(issuesFor(validation, 'abc')).toEqual([
+        { path: 'code', message: 'Invalid code' },
+      ])
+    })
+
+    test('should hold a value back when its flags do not compile', () => {
+      const validation = {
+        pattern: { regex: '^a', flags: 'zz', message: 'Invalid code' },
+      }
+
+      expect(issuesFor(validation, 'abc')).toEqual([
+        { path: 'code', message: 'Invalid code' },
+      ])
+    })
+
+    test('should hold a value back for a pattern among the rules', () => {
+      const validation: Validation = {
+        rules: [
+          { assert: 'pattern', value: { regex: '(' }, message: 'Invalid code' },
+        ],
+      }
+
+      expect(issuesFor(validation, 'abc')).toEqual([
+        { path: 'code', message: 'Invalid code' },
+      ])
+    })
+
+    test('should still leave an empty value to required', () => {
+      const validation = { pattern: { regex: '(', message: 'Invalid code' } }
+
+      expect(issuesFor(validation, '')).toEqual([])
+    })
+
+    test('should tell whoever wrote it which pattern does not compile', () => {
+      issuesFor({ pattern: { regex: '^(abc', message: 'Invalid code' } }, 'abc')
+
+      expect(consoleError).toHaveBeenCalledWith(
+        '[Luna Form]',
+        expect.stringContaining('^(abc'),
+        expect.anything()
+      )
+    })
   })
 })

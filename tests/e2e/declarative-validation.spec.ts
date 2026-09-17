@@ -206,4 +206,48 @@ test.describe('Declarative validation', { tag: ['@e2e'] }, () => {
     })
     await expect(message).toHaveCount(0)
   })
+
+  // A pattern that does not compile threw out of the submit, and React took
+  // the whole form down with it. It holds the value back with its message now.
+  test('a pattern that does not compile shows its message and keeps the form', async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Code",
+                "name": "code",
+                "type": "input/text",
+                "validation": {
+                  "pattern": {
+                    "regex": "(",
+                    "message": "Code has an invalid format"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await page.locator('input[name="code"]').fill('abc')
+    await page.locator('button[type="submit"]').click()
+
+    const message = page.getByText('Code has an invalid format', {
+      exact: true,
+    })
+    await expect(message).toBeVisible()
+    await expect(page.locator('input[name="code"]')).toHaveValue('abc')
+    expect(errors).toEqual([])
+  })
 })
