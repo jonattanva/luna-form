@@ -17,6 +17,7 @@ import {
 import { isEmpty, isObject, isString } from './is-type'
 import { extract } from './extract'
 import { isInterpolated } from './string'
+import { logger } from './logger'
 import { operators } from './operator'
 import { resolveRefs } from './prepare'
 import { z } from 'zod'
@@ -738,7 +739,27 @@ function matchesPattern(pattern: PatternRule, value: unknown): boolean {
   ) {
     return true
   }
-  return new RegExp(pattern.regex, pattern.flags).test(value)
+  const expression = compilePattern(pattern)
+  return expression !== null && expression.test(value)
+}
+
+// A pattern is written by whoever defines the form, and one that does not
+// compile is a bug in that definition, not in the value. It is reported for the
+// author and read as a mismatch, so the rule holds the value back with its own
+// message instead of throwing out of `safeParse`, which on a rendered form
+// escaped the submit and unmounted the form. Compiled on every check, as it
+// always was: a cached expression would carry `lastIndex` from one value to the
+// next under `g` and `y`.
+function compilePattern({ regex, flags }: PatternRule): RegExp | null {
+  try {
+    return new RegExp(regex, flags)
+  } catch (error) {
+    logger.error(
+      `A validation pattern does not compile, so it holds back every value: /${regex}/${flags ?? ''}`,
+      error
+    )
+    return null
+  }
 }
 
 // `input/expression` fields let users insert a dynamic reference with a leading

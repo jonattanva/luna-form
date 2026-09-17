@@ -111,6 +111,8 @@ Validates a string value against a regular expression.
 
 `pattern` never fires on an empty value — pair it with `required`/`requiredWhen` when the field is mandatory.
 
+A `regex` or `flags` that does not compile is a mistake in the definition, not in the value. The rule then holds back every value it checks with its `message`, as it does a value that does not match, and the form keeps working. The same goes for a `pattern` among [`rules`](#rules).
+
 ---
 
 ## `rules`
