@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789617980341,
+  "lastUpdate": 1789618005815,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "a045de4a92d3f4d0e382a2beab62f36fbcfbebd5",
-          "message": "chore: update pnpm-lock.yaml with tool updates",
-          "timestamp": "2026-05-02T14:36:20-05:00",
-          "tree_id": "ebd265db3dfd0c93331c14a7ba5027c1e809d941",
-          "url": "https://github.com/jonattanva/luna-form/commit/a045de4a92d3f4d0e382a2beab62f36fbcfbebd5"
-        },
-        "date": 1777750654478,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 271,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 202,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "804fe6b53d31c0962b4c2c67b20bc651aff67707",
           "message": "ci: increase e2e-test timeout to 30 minutes",
           "timestamp": "2026-05-02T21:59:40-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 594,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c3c532b114f95b781e98328d8b277cd2bb09c160",
+          "message": "Merge pull request #89 from jonattanva/fix/invalid-pattern\n\nfix(schema): a pattern that does not compile holds the value back instead of taking the form down",
+          "timestamp": "2026-09-16T23:05:36-05:00",
+          "tree_id": "0106eb3bd106a1d382733b62fd9233854022b8d7",
+          "url": "https://github.com/jonattanva/luna-form/commit/c3c532b114f95b781e98328d8b277cd2bb09c160"
+        },
+        "date": 1789618005792,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 276,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 387,
             "unit": "ms"
           }
         ]
