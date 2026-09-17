@@ -12,7 +12,7 @@ export const InputTextable = createInput({
 
   dispatchChange: ({ applyChangeEventsRef, inputValue, setTimeoutRef }) => {
     setTimeoutRef(() => {
-      applyChangeEventsRef.current?.({ value: inputValue })
+      applyChangeEventsRef.current({ value: inputValue })
     }, 300)
   },
 

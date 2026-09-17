@@ -37,6 +37,7 @@ import {
   reportPendingListRowsAtom,
 } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
+import { useLatest } from './use-latest'
 import { valueAtom } from '../lib/value-store'
 
 export function useFieldList(
@@ -50,22 +51,26 @@ export function useFieldList(
     getInitialList(field, value)
   )
 
-  const itemsRef = useRef(items)
+  // The rows the last commit left, written from a layout effect rather than
+  // while rendering: a render React throws away never becomes this list's idea
+  // of what it is holding. See `useLatest`.
+  //
+  // Everything that reads it runs after that commit -- the handlers that add
+  // and remove, the Effect Event that applies an assignment, and the hand-off
+  // on the way out. That last one is why the mirror exists at all: it must read
+  // the rows without depending on them, or its effect would run on every row
+  // added instead of only on the way out.
+  const itemsRef = useLatest(items)
   const nextId = useRef(items.length)
-
-  // Render-phase mirror of `items` (same pattern as onValueChangeRef below):
-  // callbacks and path translation read the latest committed items without a
-  // layout effect, and it stays fresh during the commit phase.
-  itemsRef.current = items
 
   const store = useStore()
   const setValues = useSetAtom(valueAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
 
-  // Same ref pattern as use-input-core.ts:111-125 — keeps addItem/handleRemove
-  // stable in useCallback while always reading the latest consumer callback.
-  const onValueChangeRef = useRef(onValueChange)
-  onValueChangeRef.current = onValueChange
+  // The consumer's callback as the last commit left it, so `addItem` and
+  // `handleRemove` keep their identity while still reporting to whoever is
+  // listening now.
+  const onValueChangeRef = useLatest(onValueChange)
 
   // Snapshot of the value prop captured once at mount. The parent compacts the
   // emitted array on every change, so the live prop can no longer be indexed by
@@ -100,9 +105,13 @@ export function useFieldList(
   // (atom keys, DOM names) stays keyed by stable id — only the name emitted to
   // the consumer is positional, matching the positional value array.
   //
-  // Identity is stable (deps don't include `items`; live data is read from
-  // `itemsRef`), so the context value never changes and consuming it never
-  // triggers re-renders.
+  // `items` itself and not the mirror, because this one is read while
+  // rendering: `useHostEntry` translates a leaf's name to ask the host's record
+  // about it, and a translation one commit old asks about the row beside it --
+  // which is the way two earlier attempts at this failed. So the identity
+  // changes when the positions do, which is exactly when a consumer has to
+  // render again, and holds still for everything else: a keystroke inside a row
+  // never touches it.
   const parentTranslate = use(ListPathContext)
   const translatePath = useCallback<TranslateListPath>(
     (name) => {
@@ -113,7 +122,7 @@ export function useFieldList(
         const segment = dot === -1 ? rest : rest.slice(0, dot)
 
         const id = Number(segment)
-        const position = itemsRef.current.indexOf(id)
+        const position = items.indexOf(id)
 
         if (isTranslatePath(segment, position)) {
           name = `${prefix}${position}${dot === -1 ? '' : rest.slice(dot)}`
@@ -121,7 +130,7 @@ export function useFieldList(
       }
       return parentTranslate(name)
     },
-    [field.name, isTranslatePath, parentTranslate]
+    [field.name, isTranslatePath, items, parentTranslate]
   )
 
   // Hydrate the flat value atom up front, keyed by stable id, from the initial
@@ -195,7 +204,7 @@ export function useFieldList(
         value: rows,
       })
     },
-    [field.name, translatePath]
+    [field.name, onValueChangeRef, translatePath]
   )
 
   // Everything a rewrite of existing rows tells the consumer, in one place: the
@@ -221,7 +230,7 @@ export function useFieldList(
         report(entry)
       }
     },
-    [emitChange, field.name, translatePath]
+    [emitChange, field.name, onValueChangeRef, translatePath]
   )
 
   const addItem = useCallback(() => {
@@ -234,7 +243,7 @@ export function useFieldList(
 
     setItems(nextItems)
     emitChange(computeListValue(nextItems, store.get(valueAtom)))
-  }, [computeListValue, emitChange, max, store])
+  }, [computeListValue, emitChange, itemsRef, max, store])
 
   const handleRemove = useCallback(
     (index: number) => {
@@ -259,7 +268,16 @@ export function useFieldList(
       setValues(nextValues)
       emitRows(index, previousRows, nextRows)
     },
-    [computeListValue, emitRows, field.name, leafNames, min, setValues, store]
+    [
+      computeListValue,
+      emitRows,
+      field.name,
+      itemsRef,
+      leafNames,
+      min,
+      setValues,
+      store,
+    ]
   )
 
   // Says this list is on screen and what it is holding, so a `value` event
@@ -308,7 +326,7 @@ export function useFieldList(
 
       reportMounted(undefined)
     },
-    [computeListValue, field.name, reportMounted, setValues, store]
+    [computeListValue, field.name, itemsRef, reportMounted, setValues, store]
   )
 
   const [pendingRows, reportPendingRows] = useAtom(
