@@ -84,6 +84,29 @@ test.describe('Definition swap', { tag: ['@e2e'] }, () => {
     await expect(page.getByText('Form submitted successfully')).toBeVisible()
   })
 
+  // A new definition registers the field again, and that is all it does: what
+  // takes a field out, and its value with it, is the field going, not its
+  // definition changing.
+  test('should keep what was typed through a swap', async ({ page }) => {
+    await open(page, form([email({ placeholder: 'Initial' })]), 'email')
+    await page.locator('input[name="email"]').fill('kept@example.com')
+
+    await swapTo(
+      page,
+      form([email({ required: true, placeholder: 'Swapped' })]),
+      'email'
+    )
+    await expect(page.locator('input[name="email"]')).toHaveValue(
+      'kept@example.com'
+    )
+
+    await submit(page)
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"email": "kept@example.com"'
+    )
+  })
+
   test('should validate a field that becomes an email in place as one', async ({
     page,
   }) => {

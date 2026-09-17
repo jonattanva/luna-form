@@ -47,7 +47,7 @@ export function InputBase(
     valueRef,
   } = useInputCore(props, { setValue, value, setSource })
 
-  const { getSchema } = props
+  const { getField } = props
 
   const extraProps = useExtraProps?.(props.field)
 
@@ -123,8 +123,7 @@ export function InputBase(
       // Gone before the microtask ran. `onUnmount` took the field out of the
       // schema and its value with it, and an event sent on its behalf now
       // would write into a form that no longer has it.
-      const [, fields] = getSchema()
-      if (!fields.some((field) => field.name === props.field.name)) {
+      if (!getField(props.field.name)) {
         return
       }
 
@@ -137,7 +136,7 @@ export function InputBase(
     buildInitialSelected,
     data,
     entity,
-    getSchema,
+    getField,
     hostFound,
     isInitialReady,
     props.field,

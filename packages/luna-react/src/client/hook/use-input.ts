@@ -5,7 +5,7 @@ import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
   field: Field,
-  onMount: (name: string, schema: Schema, field: Field) => void,
+  onRegister: (name: string, schema: Schema, field: Field) => void,
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void,
   translations?: Record<string, string>
 ) {
@@ -27,11 +27,15 @@ export function useInput(
   const inherited = use(KeepValueContext)
   const keepValue = inherited || keepsValue(field)
 
-  const onMountHandler = useEffectEvent((name: string) => {
+  // Registered again whenever the definition changes, not only when the field
+  // mounts. A definition replaced without a remount -- the editor swapping its
+  // JSON, a host changing `sections` -- has to be the one the submit validates
+  // and the events read, and registering once per name kept the first.
+  useEffect(() => {
     if (name) {
-      onMount(name, schema, field)
+      onRegister(name, schema, field)
     }
-  })
+  }, [name, schema, field, onRegister])
 
   const onUnmountHandler = useEffectEvent((name: string) => {
     if (name) {
@@ -41,8 +45,10 @@ export function useInput(
     }
   })
 
+  // Taken out only when the field goes: unmounted, or renamed, which is the old
+  // name going. A new definition under the same name is the effect above, and
+  // it clears no value.
   useEffect(() => {
-    onMountHandler(name)
     return () => {
       onUnmountHandler(name)
     }

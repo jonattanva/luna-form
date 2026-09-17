@@ -39,7 +39,7 @@ export type MountedList = {
    * The list's own `hidden`, as its definition declares it.
    *
    * Here rather than looked up, because there is nowhere to look it up: the
-   * schema registry `getSchema` answers from is filled by `onMount` on the
+   * schema registry `getField` answers from is filled by `onRegister` on the
    * input path, and a container never goes through it. That gap is what let a
    * list keep its values through a hide -- the branch that clears a target
    * reverting to its static hidden asked only that registry, found nothing,
@@ -62,9 +62,9 @@ export type MountedList = {
  * The lists currently on screen, by name.
  *
  * The sender has to know whether a target is a list before it can decide where
- * to put the value, and it cannot ask the schema: `onMount` is called from the
- * input path, so `getSchema` only ever knew about inputs -- a list is not in
- * there, only its leaves are.
+ * to put the value, and it cannot ask the schema: `onRegister` is called from
+ * the input path, so the schema registry only ever knows about inputs -- a list
+ * is not in there, only its leaves are.
  *
  * Guessing from the value instead does not work either. `Array<Record<string,
  * unknown>>` reads like rows, but an empty array is equally a chips field

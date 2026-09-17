@@ -33,7 +33,6 @@ import {
   type Field,
   type FieldState,
   type Schema,
-  type Schemas,
   type Value,
   validateCustom,
 } from '@luna-form/core'
@@ -46,9 +45,9 @@ export type InputCoreProps = Readonly<{
   context?: Record<string, unknown>
   dataAttributes?: DataAttributes
   field: Field
-  getSchema: () => readonly [Schemas, Field[]]
+  getField: (name: string) => Field | undefined
   horizontal?: boolean
-  onMount: (name: string, schema: Schema, field: Field) => void
+  onRegister: (name: string, schema: Schema, field: Field) => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean
@@ -106,7 +105,7 @@ export function useInputCore(
 
   const schema = useInput(
     props.field,
-    props.onMount,
+    props.onRegister,
     props.onUnmount,
     props.translations
   )
@@ -121,18 +120,13 @@ export function useInputCore(
     placeholder,
   }
 
-  function getField(target: string) {
-    const [, fields] = props.getSchema()
-    return fields.find((field) => field.name === target)
-  }
-
   // What a target declared about being hidden, wherever it is declared.
   //
   // Two registries, because a target can be either kind and neither knows
-  // about the other: `getSchema` is filled by `onMount` from the input path
-  // and never sees a container, and `mountedListsAtom` is what a list
-  // publishes about itself. Asking only the first is what let a list keep its
-  // values through a hide while an input beside it lost them -- the same
+  // about the other: `getField` answers from what `onRegister` fills on the
+  // input path and never sees a container, and `mountedListsAtom` is what a
+  // list publishes about itself. Asking only the first is what let a list keep
+  // its values through a hide while an input beside it lost them -- the same
   // declaration reading two ways depending on how the form phrased the hiding.
   //
   // A target neither registry knows is `undefined`, and every question below
@@ -148,7 +142,7 @@ export function useInputCore(
     // is optional -- and the flag would read `undefined` for every input
     // without a word from the compiler. The cost of that silence is the
     // user's data.
-    const field = getField(target)
+    const field = props.getField(target)
     if (field) {
       return { hidden: field.hidden, keepValue: keepsValue(field) }
     }
@@ -157,7 +151,7 @@ export function useInputCore(
   }
 
   function getTransform(target: string) {
-    const current = getField(target)
+    const current = props.getField(target)
     if (current && isInput(current)) {
       const transform = current.advanced?.transform
       if (transform) {
@@ -179,7 +173,7 @@ export function useInputCore(
       return
     }
 
-    const field = getField(target)
+    const field = props.getField(target)
     if (field) {
       props.onValueChange({
         name: translateListPath(target),
@@ -341,7 +335,7 @@ export function useInputCore(
 
       visited.add(name)
 
-      const events = getField(name)?.event?.change
+      const events = props.getField(name)?.event?.change
       if (!events) {
         continue
       }

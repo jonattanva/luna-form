@@ -1,28 +1,32 @@
 import { useCallback, useRef } from 'react'
 import { useStore } from './use-store'
-import type { Field, Schema, Schemas } from '@luna-form/core'
+import type { Field, Schema } from '@luna-form/core'
+
+type Registration = Readonly<{ field: Field; schema: Schema }>
 
 export function useSchema() {
   const clear = useStore()
 
-  const schemaRef = useRef<Schemas>({})
-  const fieldsRef = useRef<Field[]>([])
+  // Keyed by name in a `Map`. A plain object was asked `name in`, which is true
+  // for whatever it inherits: a field named `toString` read as registered
+  // already, and was never validated or submitted.
+  const registry = useRef(new Map<string, Registration>())
 
-  const onMount = useCallback((name: string, schema: Schema, field: Field) => {
-    if (!(name in schemaRef.current)) {
-      schemaRef.current[name] = schema
-      fieldsRef.current.push(field)
-    }
-  }, [])
+  // An upsert, and called again whenever a field's definition changes without
+  // a remount -- the editor swapping its JSON, a host changing `sections`. The
+  // latest schema and field are the ones the submit validates and the events
+  // read. A name registered before keeps its place: `Map` updates it where it
+  // stands.
+  const onRegister = useCallback(
+    (name: string, schema: Schema, field: Field) => {
+      registry.current.set(name, { field, schema })
+    },
+    []
+  )
 
   const onUnmount = useCallback(
     (name: string, options?: { keepValue?: boolean }) => {
-      if (schemaRef.current[name]) {
-        delete schemaRef.current[name]
-        fieldsRef.current = fieldsRef.current.filter((field) => {
-          return field.name !== name
-        })
-
+      if (registry.current.delete(name)) {
         clear([name], {
           keepValue: options?.keepValue,
         })
@@ -31,9 +35,24 @@ export function useSchema() {
     [clear]
   )
 
+  // What the submit validates: every schema by name, and the fields whose
+  // declarative rules apply. `Object.fromEntries` makes each name a property of
+  // its own, where an assignment named `__proto__` would reach a setter.
   const getSchema = useCallback(() => {
-    return [schemaRef.current, fieldsRef.current] as const
+    const registrations = [...registry.current]
+    return [
+      Object.fromEntries(
+        registrations.map(([name, { schema }]) => [name, schema])
+      ),
+      registrations.map(([, { field }]) => field),
+    ] as const
   }, [])
 
-  return [getSchema, onMount, onUnmount] as const
+  // What a field asks about another one by name, without walking them all.
+  const getField = useCallback(
+    (name: string) => registry.current.get(name)?.field,
+    []
+  )
+
+  return [getSchema, getField, onRegister, onUnmount] as const
 }

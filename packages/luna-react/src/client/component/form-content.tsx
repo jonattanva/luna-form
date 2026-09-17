@@ -42,7 +42,7 @@ export function FormContent<
     [props.lang, props.translations]
   )
 
-  const [getSchema, onMount, onUnmount] = useSchema()
+  const [getSchema, getField, onRegister, onUnmount] = useSchema()
   const [action, state, isPending, onSubmit] = useFormState(
     getSchema,
     props.action,
@@ -94,16 +94,16 @@ export function FormContent<
         {...internal}
         config={props.config}
         context={props.context}
-        getSchema={getSchema}
-        onMount={onMount}
+        getField={getField}
+        onRegister={onRegister}
         onUnmount={onUnmount}
         onValueChange={onValueChange}
         translations={translations}
       />
     ),
     [
-      getSchema,
-      onMount,
+      getField,
+      onRegister,
       onUnmount,
       onValueChange,
       props.config,
