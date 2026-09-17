@@ -88,11 +88,22 @@ const PROBES: Probe[] = [
     anchor: '  useEffect(() => {\n    onEntryChange(',
     replacement: `  useEffect(() => {\n    ${bump('effect')}\n    onEntryChange(`,
   },
+  // A field looked another one up by walking every registered field, in
+  // `useInputCore`, until the registry became a `Map` that answers by name. The
+  // second anchor counts every question that registry answers, the check
+  // `InputBase` makes before its first events included.
   {
-    name: 'lookup',
+    name: 'lookup (walk)',
     file: `${LIB}/client/hook/use-input-core.ts`,
     anchor: '  function getField(target: string) {',
+    legacy: true,
     replacement: `  function getField(target: string) {\n    ${bump('lookup')}`,
+  },
+  {
+    name: 'lookup (registry)',
+    file: `${LIB}/client/hook/use-schema.ts`,
+    anchor: '(name: string) => registry.current.get(name)?.field,',
+    replacement: `(name: string) => { ${bump('lookup')}; return registry.current.get(name)?.field },`,
   },
   {
     name: 'families: store-helper',

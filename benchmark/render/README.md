@@ -20,7 +20,7 @@ Two halves:
 | `render`     | the inner `Field` component renders                                       |
 | `schema`     | a field's Zod schema is built -- the `useMemo` factory in `useInput`      |
 | `effect`     | `useValue`'s value effect runs                                            |
-| `lookup`     | `useInputCore`'s `getField` is called                                     |
+| `lookup`     | a field is looked up by name in the schema registry (`getField`)          |
 | `wrapper`    | one of the two wrappers around a field (`withState`, `withError`) renders |
 | `guard`      | a `VisibilityGuard` renders                                               |
 | `rowPreview` | a list row (`FieldListPreviewItem`) renders, preview or not               |
