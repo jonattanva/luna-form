@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789658398704,
+  "lastUpdate": 1789658426263,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "804fe6b53d31c0962b4c2c67b20bc651aff67707",
-          "message": "ci: increase e2e-test timeout to 30 minutes",
-          "timestamp": "2026-05-02T21:59:40-05:00",
-          "tree_id": "02d4c92d32a61e39e965194fd2250044880e7dab",
-          "url": "https://github.com/jonattanva/luna-form/commit/804fe6b53d31c0962b4c2c67b20bc651aff67707"
-        },
-        "date": 1777777258241,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 279,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 640,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "b3d0c151456d0db8f86b19002e74e2f47816adb1",
           "message": "feat: implement generic Chips component and update luna-core types",
           "timestamp": "2026-05-04T12:18:58-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 387,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b4689422a65edde22b5f5b7bdebf954d5e120f8b",
+          "message": "Merge pull request #90 from jonattanva/fix/definition-swap\n\nfix(schema): a field registers again when its definition changes, in a registry keyed by name",
+          "timestamp": "2026-09-17T10:18:57-05:00",
+          "tree_id": "cb1fabfad595543faf1ee04dfcaa6b5dde2606c9",
+          "url": "https://github.com/jonattanva/luna-form/commit/b4689422a65edde22b5f5b7bdebf954d5e120f8b"
+        },
+        "date": 1789658426219,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 305,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 648,
             "unit": "ms"
           }
         ]
