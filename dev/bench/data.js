@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789739151299,
+  "lastUpdate": 1789739175790,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "8d3189b47da2fa029090cf66192ea18c1f3c0555",
-          "message": "refactor: optimize collapsible list headers and enhance list add button UI\n\n- Extract resolveValue into a shared utility to fix preview issues in collapsed items.\n- Enhance FieldList and FieldListItem styling (dashed borders, centered add button, space-between counter).\n- Improve collapsible header interaction: whole header is now clickable and underlies on hover.\n- Fix regression where previews in collapsed items would be empty on first render by falling back to initial values.\n- Update dependencies and bump package versions to 0.0.47.\n- Add comprehensive E2E tests for list add button and collapsible headers.",
-          "timestamp": "2026-05-05T17:00:03-05:00",
-          "tree_id": "e5eef55a0fe0495020ab0cbd0340d709bdb3e867",
-          "url": "https://github.com/jonattanva/luna-form/commit/8d3189b47da2fa029090cf66192ea18c1f3c0555"
-        },
-        "date": 1778018499219,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 265,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 188,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "406d5540ef4eb80a9de00f8bd3c46c9bb3f08a65",
           "message": "fix: restore @perf tag to E2E Benchmark",
           "timestamp": "2026-05-07T22:48:48-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 643,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "4bf0ae0e4217174591932d8f4da700856bc7911c",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-09-18T08:45:04-05:00",
+          "tree_id": "59d2cd8f35556be5b5854ace36750826966ae890",
+          "url": "https://github.com/jonattanva/luna-form/commit/4bf0ae0e4217174591932d8f4da700856bc7911c"
+        },
+        "date": 1789739175747,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 284,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 154,
             "unit": "ms"
           }
         ]
