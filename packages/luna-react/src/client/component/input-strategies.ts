@@ -43,7 +43,7 @@ export type InputStrategies = Readonly<{
 
   dispatchChange: (
     ctx: Readonly<{
-      applyChangeEventsRef: React.RefObject<((s: unknown) => void) | null>
+      applyChangeEventsRef: React.RefObject<(s: unknown) => void>
       data: Nullable<unknown[]>
       entity?: string
       inputValue: Value

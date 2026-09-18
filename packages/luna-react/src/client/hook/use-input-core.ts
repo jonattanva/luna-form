@@ -9,8 +9,9 @@ import {
   reportValueAtom,
   valueAtom,
 } from '../lib/value-store'
-import { use, useCallback, useRef, useTransition } from 'react'
+import { use, useCallback, useTransition } from 'react'
 import { useInput } from './use-input'
+import { useLatest } from './use-latest'
 import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from './use-timeout'
 import {
@@ -88,11 +89,8 @@ export function useInputCore(
 
   const { setValue, value, setSource } = deps
 
-  const valueRef = useRef(value)
-  valueRef.current = value
-
-  const translationsRef = useRef(props.translations)
-  translationsRef.current = props.translations
+  const valueRef = useLatest(value)
+  const translationsRef = useLatest(props.translations)
 
   const hasClickable = isClickable(props.field)
 
@@ -348,17 +346,18 @@ export function useInputCore(
     }
   }
 
-  // Ref pattern is intentional here. useEffectEvent cannot be used because
-  // this callback is invoked from onChange (an event handler), not from a
-  // useEffect. The ref allows onChange to always read the latest props without
-  // adding them as useCallback dependencies, avoiding unnecessary re-renders.
+  // A ref and not an Effect Event: `useEffectEvent` is for a callback an effect
+  // calls, and this one is called from `onChange`. What the ref buys is the same
+  // thing either way -- the latest props reachable from a handler that does not
+  // take them as dependencies, so `onChange` is not rebuilt on every render --
+  // and `useLatest` is what keeps the writing out of the render body.
+  //
   // `Value`, not `unknown`: what a field reports is what it holds, and for a
   // multi-value field that is the array itself -- stored as an array and handed
   // to the consumer as one. Nothing below narrows it back to text:
   // `applyTransform` only runs for an `input/*` field, and only on a string
   // even then, so an array reaches `setValue` exactly as it arrived.
-  const onValueChangeRef = useRef<((value: Value) => void) | null>(null)
-  onValueChangeRef.current = (value: Value) => {
+  const onValueChangeRef = useLatest((value: Value) => {
     // A transient field acts and keeps nothing: neither its own stored value
     // nor a word to the consumer. Its change events still go out -- they are
     // the only reason it exists -- so this returns before the two writes and
@@ -384,14 +383,12 @@ export function useInputCore(
         value: newValue,
       })
     }
-  }
+  })
 
-  // Same ref pattern: shared event processing invoked from both onChange and
-  // the initialization useEffect below.
-  const applyChangeEventsRef = useRef<((selected: unknown) => void) | null>(
-    null
-  )
-  applyChangeEventsRef.current = (selected: unknown) => {
+  // The same, read from `onChange` and from the initial-events effect in
+  // `input-base`. Both reach it after the commit it belongs to: a layout effect
+  // is written before any effect of that commit runs.
+  const applyChangeEventsRef = useLatest((selected: unknown) => {
     const events = props.field.event?.change
     if (!events) {
       return
@@ -489,7 +486,7 @@ export function useInputCore(
         applyAutoFill(newTarget, transformed)
       })
     })
-  }
+  })
 
   // `Value`, not `string`: a `chips` field validates the array it holds, and
   // `getSchema` already builds it one that reads arrays (`getArraySchema`
@@ -513,13 +510,12 @@ export function useInputCore(
 
       setErrors([...errors, ...customErrors])
     },
-    [props.field.validation?.custom, schema, setErrors, store]
+    [props.field.validation?.custom, schema, setErrors, store, translationsRef]
   )
 
-  // Same ref pattern: read from `onBlur`, which is memoized and must not take
-  // a dependency that changes on every render.
-  const releasePendingAutoFillRef = useRef<(() => void) | null>(null)
-  releasePendingAutoFillRef.current = () => {
+  // The same again: read from `onBlur`, which is memoized and must not take a
+  // dependency that changes on every render.
+  const releasePendingAutoFillRef = useLatest(() => {
     const pending = store.get(pendingAutoFillAtom)
 
     if (pending?.target !== props.field.name) {
@@ -533,7 +529,7 @@ export function useInputCore(
     if (isEmpty(store.get(valueAtom)[pending.target])) {
       applyAutoFill(pending.target, pending.value)
     }
-  }
+  })
 
   const onBlur = useCallback(
     (event: React.FocusEvent<HTMLInputElement>) => {
@@ -544,9 +540,14 @@ export function useInputCore(
         }
       }
 
-      releasePendingAutoFillRef.current?.()
+      releasePendingAutoFillRef.current()
     },
-    [hasClickable, props.config.validation.blur, validated]
+    [
+      hasClickable,
+      props.config.validation.blur,
+      releasePendingAutoFillRef,
+      validated,
+    ]
   )
 
   return {

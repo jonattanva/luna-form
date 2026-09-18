@@ -57,7 +57,7 @@ export const InputSelectable = createInput({
       (!inputValue || deepEqual(inputValue, valueRef.current))),
 
   dispatchChange: ({ applyChangeEventsRef, data, entity, inputValue }) => {
-    applyChangeEventsRef.current?.(getEntity(inputValue, data, entity))
+    applyChangeEventsRef.current(getEntity(inputValue, data, entity))
   },
 
   // What the mount-time replay hands to the change events, and it has to be

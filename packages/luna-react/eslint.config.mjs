@@ -62,6 +62,18 @@ export default defineConfig([
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      // The rules the installed plugin ships for the React Compiler. A
+      // component that breaks one of them is a component the compiler leaves
+      // unoptimized, so the build has to keep them all in green.
+      'react-hooks/refs': 'error',
+      'react-hooks/set-state-in-render': 'error',
+      'react-hooks/set-state-in-effect': 'error',
+      'react-hooks/immutability': 'error',
+      'react-hooks/purity': 'error',
+      'react-hooks/static-components': 'error',
+      'react-hooks/globals': 'error',
+      'react-hooks/use-memo': 'error',
+      'react-hooks/preserve-manual-memoization': 'error',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

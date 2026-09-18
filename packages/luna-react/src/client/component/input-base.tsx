@@ -127,7 +127,7 @@ export function InputBase(
         return
       }
 
-      applyChangeEventsRef.current?.(
+      applyChangeEventsRef.current(
         buildInitialSelected(hydratedValue, data, entity)
       )
     })
@@ -159,7 +159,7 @@ export function InputBase(
         return
       }
 
-      onValueChangeRef.current?.(inputValue)
+      onValueChangeRef.current(inputValue)
       if (props.config.validation.change) {
         validated(inputValue)
       }

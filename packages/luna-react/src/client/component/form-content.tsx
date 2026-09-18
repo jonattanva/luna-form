@@ -5,8 +5,9 @@ import { Slot } from './slot/slot'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { resolveDictionary } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
+import { useLatest } from '../hook/use-latest'
 import { useSchema } from '../hook/use-schema'
 import { useSetAtom } from 'jotai'
 import type { Children, Config, Control } from '../../type'
@@ -71,8 +72,7 @@ export function FormContent<
   // the rest of the code asks: `reportTarget` skips a lookup entirely when
   // there is no one to report to, and a wrapper that is always defined would
   // quietly take that away.
-  const onValueChangeRef = useRef(props.onValueChange)
-  onValueChangeRef.current = props.onValueChange
+  const onValueChangeRef = useLatest(props.onValueChange)
 
   const hasValueChange = !!props.onValueChange
   const onValueChange = useMemo(
@@ -81,7 +81,7 @@ export function FormContent<
         ? (input: { name: string; value: unknown }) =>
             onValueChangeRef.current?.(input)
         : undefined,
-    [hasValueChange]
+    [hasValueChange, onValueChangeRef]
   )
 
   // The `children` every field is handed, and what a field is memoized on.
