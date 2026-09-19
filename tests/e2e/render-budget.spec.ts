@@ -63,10 +63,10 @@ async function churnRows(page: Page) {
 const BUDGETS: Budget[] = [
   {
     id: 'REN-1',
-    title: 'fields filled in earlier re-render on every keystroke',
-    // `withError` hands a validated field a new `errors` object on every
-    // render, so the memo misses for each field the user has touched.
-    counts: { render: 11 },
+    title: 'fields filled in earlier stay out of a keystroke',
+    // What a field is handed is the array the store holds, so a field the user
+    // has touched matches its memo like any other.
+    counts: { render: 0 },
     target: { render: 0 },
     measure: async (page) => {
       await openScenario(page, flat(30), '/reactive')

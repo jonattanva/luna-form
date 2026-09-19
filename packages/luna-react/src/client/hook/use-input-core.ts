@@ -508,7 +508,11 @@ export function useInputCore(
           )
         : []
 
-      setErrors([...errors, ...customErrors])
+      // Nothing to report is no entry, rather than an entry holding nothing:
+      // the record is what every reader asks, and it would otherwise keep an
+      // empty array for every field the user has ever touched.
+      const issues = [...errors, ...customErrors]
+      setErrors(issues.length > 0 ? issues : undefined)
     },
     [props.field.validation?.custom, schema, setErrors, store, translationsRef]
   )
