@@ -110,10 +110,11 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-4',
-    title: 'a keystroke outside a list re-renders and rescans every row',
-    // On the uncontrolled route, so nothing but the rows' own subscription
-    // to the whole value record can render them.
-    counts: { rowPreview: 30, liveScan: 30 },
+    title: 'a keystroke outside a list leaves its rows alone',
+    // On the uncontrolled route, so only a row's own subscription could render
+    // it. This list declares no preview, so no row has a condition to answer
+    // and none of them subscribes at all.
+    counts: { rowPreview: 0, liveScan: 0 },
     target: { rowPreview: 0, liveScan: 0 },
     measure: async (page) => {
       await openScenario(page, plainAndList(30), '/')

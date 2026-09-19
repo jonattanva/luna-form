@@ -140,12 +140,22 @@ const PROBES: Probe[] = [
     anchor: '  const name = `${field.name}.${itemKey}`',
     replacement: `  ${bump('rowPreview')}\n  const name = \`\${field.name}.\${itemKey}\``,
   },
-  // A row rescanning the whole value record for its own keys.
+  // A row rescanning the whole value record for its own keys, where the scan
+  // ran inside the hook's own `useMemo`.
   {
-    name: 'liveScan',
+    name: 'liveScan (useMemo)',
     file: `${LIB}/client/hook/use-live-item-value.ts`,
     anchor: '  return useMemo(() => {\n    const prefix = `${name}.`',
+    legacy: true,
     replacement: `  return useMemo(() => {\n    ${bump('liveScan')}\n    const prefix = \`\${name}.\``,
+  },
+  // The same scan, once it moved into the selector a row subscribes with. A
+  // list with no condition to answer has no row subscribed, so this never runs.
+  {
+    name: 'liveScan (pickRow)',
+    file: `${LIB}/client/hook/use-live-item-value.ts`,
+    anchor: '  return (record: Record<string, unknown>) => {',
+    replacement: `  return (record: Record<string, unknown>) => {\n    ${bump('liveScan')}`,
   },
   // A list handing its value over as if it were unmounting.
   {

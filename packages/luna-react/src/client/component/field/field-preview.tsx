@@ -29,16 +29,7 @@ function normalize(item: PreviewItem): NormalizedPreview {
   return item
 }
 
-export function FieldPreview({
-  className,
-  fields,
-  label = 'Preview',
-  lang,
-  name,
-  previews,
-  translations,
-  value,
-}: Readonly<{
+type PreviewProps = Readonly<{
   className?: string
   fields?: Fields
   label?: string
@@ -47,21 +38,53 @@ export function FieldPreview({
   previews: PreviewItem | PreviewItem[]
   translations?: Record<string, string>
   value?: Record<string, unknown> | unknown[] | null
-}>) {
+}>
+
+export function FieldPreview(props: PreviewProps) {
   const items = useMemo(
-    () => (Array.isArray(previews) ? previews : [previews]).map(normalize),
-    [previews]
+    () =>
+      (Array.isArray(props.previews) ? props.previews : [props.previews]).map(
+        normalize
+      ),
+    [props.previews]
   )
 
+  // A condition is the only thing in a preview that has to follow what the user
+  // types, and only then does anything here read the form's values. Without one
+  // a preview is what the form was given plus the value of each field it names,
+  // and every one of those is a subscription of its own, by name.
+  if (items.some((item) => item.when !== undefined)) {
+    return <LivePreview items={items} {...props} />
+  }
+
+  return <PreviewEntries items={items} itemValue={undefined} {...props} />
+}
+
+// The row as it stands now, for the conditions that ask. See `useLiveItemValue`
+// for what this subscribes to, which is the row and not the record.
+function LivePreview(
+  props: PreviewProps & Readonly<{ items: NormalizedPreview[] }>
+) {
+  const itemValue = useLiveItemValue(props.name, props.value)
+  return <PreviewEntries itemValue={itemValue} {...props} />
+}
+
+function PreviewEntries({
+  className,
+  fields,
+  items,
+  itemValue,
+  label = 'Preview',
+  lang,
+  name,
+  translations,
+  value,
+}: PreviewProps &
+  Readonly<{ items: NormalizedPreview[]; itemValue: unknown }>) {
   const fieldLookup = useMemo(
     () => (fields ? flattenListFields(fields) : undefined),
     [fields]
   )
-
-  // Reactive item value: merges the live Jotai form state on top of the
-  // initial value tree so `when` conditions re-evaluate when the user edits
-  // sibling fields. Without this, `when` only sees the initial snapshot.
-  const itemValue = useLiveItemValue(name, value)
 
   const visibleItems = useMemo<Entry[]>(() => {
     const result: Entry[] = []

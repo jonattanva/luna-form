@@ -41,10 +41,6 @@ export function FieldListPreviewItem({
   const name = `${field.name}.${itemKey}`
   const fallbackLabel = `${label} ${index + 1}`
 
-  // Live item value used to evaluate `previewLabel.when` reactively against
-  // user edits. Mirrors FieldPreview's reactive `itemValue` logic.
-  const liveItemValue = useLiveItemValue(name, value)
-
   return (
     <FieldListItem
       canRemove={canRemove}
@@ -55,7 +51,6 @@ export function FieldListPreviewItem({
       onRemove={onRemove}
       previewLabel={renderPreviewLabel({
         fallbackLabel,
-        liveItemValue,
         name,
         previewLabel,
         translations,
@@ -93,16 +88,22 @@ export function FieldListPreviewItem({
   )
 }
 
+type PreviewLabelProps = Readonly<{
+  fallbackLabel: string
+  item: Exclude<PreviewItem, string>
+  name: string
+  translations?: Record<string, string>
+  value?: Nullable<Record<string, unknown> | unknown[]>
+}>
+
 function renderPreviewLabel({
   fallbackLabel,
-  liveItemValue,
   name,
   previewLabel,
   translations,
   value,
 }: {
   fallbackLabel: string
-  liveItemValue: unknown
   name: string
   previewLabel?: PreviewItem
   translations?: Record<string, string>
@@ -114,12 +115,45 @@ function renderPreviewLabel({
 
   const item = isString(previewLabel) ? { field: previewLabel } : previewLabel
 
+  // A condition is the only part of a label that has to follow what the user
+  // types, and it reads the row from a component of its own. A row whose label
+  // asks nothing -- or that has no label at all, which is most of them -- then
+  // never subscribes to the form's values.
   if (item.when !== undefined) {
-    if (!evaluateCondition(liveItemValue, item.when)) {
-      return undefined
-    }
+    return (
+      <ConditionalPreviewLabel
+        fallbackLabel={fallbackLabel}
+        item={item}
+        name={name}
+        translations={translations}
+        value={value}
+      />
+    )
   }
 
+  return previewLabelContent({ fallbackLabel, item, name, translations, value })
+}
+
+function ConditionalPreviewLabel(props: PreviewLabelProps) {
+  const liveItemValue = useLiveItemValue(props.name, props.value)
+
+  const content = evaluateCondition(liveItemValue, props.item.when)
+    ? previewLabelContent(props)
+    : undefined
+
+  // `FieldListItem` shows "label index" for a row that hands it no label, and
+  // a row that hands it this component has handed it one: what a condition
+  // that does not hold falls back to is this component's to render.
+  return content ?? props.fallbackLabel
+}
+
+function previewLabelContent({
+  fallbackLabel,
+  item,
+  name,
+  translations,
+  value,
+}: PreviewLabelProps): ReactNode {
   if (item.label !== undefined) {
     return translate(item.label, translations)
   }
