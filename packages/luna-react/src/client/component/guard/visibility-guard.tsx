@@ -1,6 +1,7 @@
+import { atom, useAtomValue } from 'jotai'
 import { isColumn } from '@luna-form/core'
-import { useAtomValue } from 'jotai'
 import { fieldStateAtom } from '../../lib/state-store'
+import { useMemo } from 'react'
 import type { Column, Field, FieldState, Fields, List } from '@luna-form/core'
 
 function isColumnHidden(
@@ -26,6 +27,27 @@ function isEntryHidden(
     : isFieldHidden(entry, states)
 }
 
+// Whether this guard has anything left to show: what the container itself
+// declares, and then every entry it holds.
+function isGuardHidden(
+  states: Record<string, FieldState>,
+  fields: Fields,
+  container?: Field | List
+): boolean {
+  if (container) {
+    const hidden = states[container.name]?.hidden ?? container.hidden ?? false
+    if (hidden) {
+      return true
+    }
+  }
+
+  if (fields.length === 0) {
+    return true
+  }
+
+  return fields.every((entry) => isEntryHidden(entry, states))
+}
+
 export function VisibilityGuard(
   props: Readonly<{
     children: React.ReactNode
@@ -33,24 +55,21 @@ export function VisibilityGuard(
     fields: Fields
   }>
 ) {
-  const states = useAtomValue(fieldStateAtom)
+  // A boolean, and not the record every field's state is written into. A
+  // `state` event that hides one field rewrites that record, and a guard
+  // subscribed to it woke up for all of them and walked its own fields again to
+  // reach the answer it already had. Derived, the answer is what jotai
+  // compares, so the only guard that renders is the one whose answer changed.
+  //
+  // The atom is made with the guard and collected with it, the same shape a row
+  // uses in `useLiveItemValue`: nothing is cached by name.
+  const hiddenAtom = useMemo(
+    () =>
+      atom((get) =>
+        isGuardHidden(get(fieldStateAtom), props.fields, props.container)
+      ),
+    [props.container, props.fields]
+  )
 
-  if (props.container) {
-    const hidden =
-      states[props.container.name]?.hidden ?? props.container.hidden ?? false
-    if (hidden) {
-      return null
-    }
-  }
-
-  if (props.fields.length === 0) {
-    return null
-  }
-
-  const allHidden = props.fields.every((entry) => isEntryHidden(entry, states))
-  if (allHidden) {
-    return null
-  }
-
-  return props.children
+  return useAtomValue(hiddenAtom) ? null : props.children
 }

@@ -122,13 +122,16 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-5',
-    title: 'one state change renders every visibility guard',
-    counts: { guard: 21 },
+    title: 'one state change renders only the guard it concerns',
+    counts: { guard: 1 },
     target: { guard: 1 },
     measure: async (page) => {
       await openScenario(page, sectionsWithToggle(20), '/')
       await resetCounters(page)
       await page.getByRole('checkbox', { name: /Toggle/ }).click()
+      // Wait for the last section to go, so the one render counted is the one
+      // that hides it rather than a count taken before anything happened.
+      await page.locator('input[name="f20"]').waitFor({ state: 'detached' })
       await settle(page)
       return readCounters(page)
     },
