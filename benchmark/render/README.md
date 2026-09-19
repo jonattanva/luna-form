@@ -110,6 +110,14 @@ field count, which reads 0 with no probes and double in development.
 - **A probe that applied can still count nothing.** Before trusting a zero,
   check the counters are alive: `__h.counters().render` is above zero right
   after loading, and `__h.familyKeys()` is not empty.
+- **A probed tree does not lint.** Every counter mutates an object while
+  rendering, which is what `react-hooks/immutability` is there to catch, and
+  since the React Compiler rules were turned on (PR #92) `pnpm run lint`
+  reports ten of them, all on the probe lines themselves. CI never lints a
+  probed tree -- the `render-budget` job applies the probes, builds, serves and
+  measures, and nothing else -- so this only shows up locally. Revert the
+  probes before linting rather than reshaping them to please the rule: a probe
+  has to keep counting on the commits before the rule existed.
 
 ## Harness
 
