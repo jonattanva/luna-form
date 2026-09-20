@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789884176115,
+  "lastUpdate": 1789884203375,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "a3a84910f0a08cf4a989f4d98cf07a4be81a1e9c",
-          "message": "test(e2e): fix flaky list-add-button hover test in firefox\n\n- enabled reducedMotion in playwright.config.ts\n- added motion-reduce:transition-none to AddButton\n- replaced hover({ force: true }) with dispatchEvent('mouseenter')\n- removed flaky setTimeout/raf waits in favour of reduced motion",
-          "timestamp": "2026-05-08T15:46:22-05:00",
-          "tree_id": "b646fe9bf34b40477079b6eb629d639aa60cfb67",
-          "url": "https://github.com/jonattanva/luna-form/commit/a3a84910f0a08cf4a989f4d98cf07a4be81a1e9c"
-        },
-        "date": 1778273272462,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 292,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 707,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "bdb29e384aaf80104a0178460ff58dcf6c1b7d1a",
           "message": "fix(luna-react): disable transition on list add button for stable e2e testing",
           "timestamp": "2026-05-08T23:24:30-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 440,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "725eba1c0c4dd788f6dfd4a1a9203b8a5955c7e0",
+          "message": "Merge pull request #100 from jonattanva/fix/slot-key-identity\n\nfix(slot): a slot is keyed by what it is, not by where it sits",
+          "timestamp": "2026-09-20T01:02:06-05:00",
+          "tree_id": "a1994a73e0b0fb8f247d93c58ad07f6b33615a82",
+          "url": "https://github.com/jonattanva/luna-form/commit/725eba1c0c4dd788f6dfd4a1a9203b8a5955c7e0"
+        },
+        "date": 1789884203339,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 220,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 161,
             "unit": "ms"
           }
         ]
