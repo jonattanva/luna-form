@@ -19,16 +19,15 @@ function createFieldHOC<TValue>(atomFamily: (name: string) => Atom<TValue>) {
 
 const applyError = createFieldHOC(reportInputErrorAtom)
 
+// The field's own errors, as the store holds them. Wrapped in a record keyed by
+// name, this handed the field a new object on every render of the form, and a
+// field that had been validated once never matched its memo again -- which is
+// the whole point of the memo underneath. The array itself keeps its identity
+// until the errors change, and the name is already how the atom was found.
 export function withError<
-  P extends { errors?: Record<string, string[]>; field: { name: string } },
+  P extends { errors?: string[]; field: { name: string } },
 >(Component: React.ComponentType<P>) {
-  return applyError(
-    Component,
-    (errors, props) =>
-      ({
-        errors: errors ? { [props.field.name]: errors } : undefined,
-      }) as Partial<P>
-  )
+  return applyError(Component, (errors) => ({ errors }) as Partial<P>)
 }
 
 const applyState = createFieldHOC(reportFieldStateAtom)
