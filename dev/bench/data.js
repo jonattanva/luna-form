@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789876053002,
+  "lastUpdate": 1789876076848,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "a1729ff78d6841d3d8ff08e44387da1a97a9e40a",
-          "message": "fix(tests): resolve strict mode violation in steps spec",
-          "timestamp": "2026-05-08T15:08:32-05:00",
-          "tree_id": "6c056f2d67611dcd5e7b9e07bbb922733034f353",
-          "url": "https://github.com/jonattanva/luna-form/commit/a1729ff78d6841d3d8ff08e44387da1a97a9e40a"
-        },
-        "date": 1778271007138,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 282,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 560,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "a3a84910f0a08cf4a989f4d98cf07a4be81a1e9c",
           "message": "test(e2e): fix flaky list-add-button hover test in firefox\n\n- enabled reducedMotion in playwright.config.ts\n- added motion-reduce:transition-none to AddButton\n- replaced hover({ force: true }) with dispatchEvent('mouseenter')\n- removed flaky setTimeout/raf waits in favour of reduced motion",
           "timestamp": "2026-05-08T15:46:22-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 167,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7373970b8b23089185302fbfdcc8bdc417a59a6e",
+          "message": "Merge pull request #95 from jonattanva/perf/field-errors\n\nperf(field): a field is handed its errors, not a record built around them",
+          "timestamp": "2026-09-19T22:46:48-05:00",
+          "tree_id": "8fa62778f4e776b7f0e8d6cb2ed6cae53bc902f5",
+          "url": "https://github.com/jonattanva/luna-form/commit/7373970b8b23089185302fbfdcc8bdc417a59a6e"
+        },
+        "date": 1789876076815,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 218,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 440,
             "unit": "ms"
           }
         ]
