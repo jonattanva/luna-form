@@ -1,5 +1,5 @@
 import { atom } from 'jotai'
-import { resolveEntry } from './resolve-value'
+import { resolveEntry } from '@luna-form/core'
 import type { Nullable } from '@luna-form/core'
 
 /**

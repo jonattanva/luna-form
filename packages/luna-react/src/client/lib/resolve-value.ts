@@ -1,61 +1,9 @@
-import { hasOwn, isObject } from '@luna-form/core'
+import { resolveEntry } from '@luna-form/core'
 
-// What a lookup found. `found` answers whether the path exists at all, which is
-// a different question from what sits there: a caller is free to hold an empty
-// value at a path it means to be empty, and telling that apart from a path
-// nobody mentioned is the reason this shape exists.
-export type Entry = {
-  found: boolean
-  value: unknown
-}
-
-const MISSING: Entry = { found: false, value: undefined }
-
-// Resolve a dotted path against a value tree, traversing both objects and
-// arrays (using numeric segments as array indices). Reports `found: false` when
-// any segment cannot be reached.
-export function resolveEntry(
-  name: string,
-  currentValue: Record<string, unknown> | unknown[]
-): Entry {
-  if (!Array.isArray(currentValue) && hasOwn(currentValue, name)) {
-    return { found: true, value: currentValue[name] }
-  }
-
-  if (!name.includes('.')) {
-    return MISSING
-  }
-
-  const keys = name.split('.')
-  let result: unknown = currentValue
-
-  for (const key of keys) {
-    if (result === null || result === undefined) {
-      return MISSING
-    }
-
-    if (Array.isArray(result)) {
-      const index = Number(key)
-      if (!Number.isInteger(index) || !hasOwn(result, key)) {
-        return MISSING
-      }
-      result = result[index]
-    } else if (isObject(result)) {
-      if (!hasOwn(result, key)) {
-        return MISSING
-      }
-      result = result[key]
-    } else {
-      return MISSING
-    }
-  }
-
-  return { found: true, value: result }
-}
-
-// Resolve a dotted path against a value tree, traversing both objects and
-// arrays (using numeric segments as array indices). Returns `undefined` when
-// any segment cannot be reached.
+// The value at a dotted path, for a caller that has no use for the difference
+// between a path holding nothing and a path nobody mentioned. The walk itself,
+// and that difference, are `resolveEntry` in core -- there were two walks, one
+// per package, and they did not agree.
 export function resolveValue(
   name: string,
   currentValue: Record<string, unknown> | unknown[]
