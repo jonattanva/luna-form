@@ -1,7 +1,8 @@
 import { Field as Component } from '../../../component/field/field'
 import { memo } from 'react'
-import { reportFieldStateAtom } from '../../lib/state-store'
-import { reportInputErrorAtom } from '../../lib/error-store'
+import { fieldStateAtom } from '../../lib/state-store'
+import { inputErrorAtom } from '../../lib/error-store'
+import { useEntryAtom } from '../../hook/use-entry-atom'
 import { useAtomValue } from 'jotai'
 import type { FieldProps } from '../../../component/field/field'
 
@@ -20,8 +21,8 @@ import type { FieldProps } from '../../../component/field/field'
  * props do -- which is the only way either of them changes.
  */
 function FieldWithMeta(props: FieldProps) {
-  const state = useAtomValue(reportFieldStateAtom(props.field.name))
-  const errors = useAtomValue(reportInputErrorAtom(props.field.name))
+  const state = useAtomValue(useEntryAtom(fieldStateAtom, props.field.name))
+  const errors = useAtomValue(useEntryAtom(inputErrorAtom, props.field.name))
 
   if (state?.hidden ?? props.field.hidden ?? false) {
     return null

@@ -107,12 +107,14 @@ const PROBES: Probe[] = [
   },
   {
     name: 'families: store-helper',
+    legacy: true,
     file: `${LIB}/client/lib/store-helper.ts`,
     anchor: FAMILY_IMPORT,
     replacement: FAMILY_WRAP,
   },
   {
     name: 'families: host-value-store',
+    legacy: true,
     file: `${LIB}/client/lib/host-value-store.ts`,
     anchor: FAMILY_IMPORT,
     replacement: FAMILY_WRAP,

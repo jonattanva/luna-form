@@ -9,8 +9,34 @@ import {
 } from '../../.config/eslint-base.mjs'
 import { defineConfig } from 'eslint/config'
 
+// A family caches one atom per key for the life of the page: it never lets go
+// on its own, and the release machinery that tried to make it -- four atoms, a
+// call in `useStore` and a comment on the loop to avoid -- still left two of
+// them growing. The atom belongs to whoever reads it. See `useEntryAtom`.
+const FAMILY_MESSAGE =
+  'A family keeps one atom per key for the life of the page. ' +
+  'Make the atom in the component that reads it, with useMemo: see useEntryAtom.'
+
 export default defineConfig([
   ...baseConfig,
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'jotai-family', message: FAMILY_MESSAGE },
+            {
+              name: 'jotai/utils',
+              importNames: ['atomFamily'],
+              message: FAMILY_MESSAGE,
+            },
+          ],
+        },
+      ],
+    },
+  },
   tsWithJsxA11yConfig(import.meta.dirname),
   {
     files: ['**/*.{ts,tsx}'],

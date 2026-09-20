@@ -23,7 +23,6 @@ import { createAtomStore } from './store-helper'
 const pendingRows = createAtomStore<Array<Record<string, unknown>>>()
 
 export const pendingListRowsAtom = pendingRows.atom
-export const reportPendingListRowsAtom = pendingRows.report
 
 /**
  * What a list on screen is holding: the stable ids of its live rows, in the
@@ -85,4 +84,3 @@ export type MountedList = {
 const mountedLists = createAtomStore<MountedList>()
 
 export const mountedListsAtom = mountedLists.atom
-export const reportMountedListAtom = mountedLists.report

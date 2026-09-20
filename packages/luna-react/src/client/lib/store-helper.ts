@@ -1,13 +1,5 @@
 import { atom, type PrimitiveAtom } from 'jotai'
-import { atomFamily } from 'jotai-family'
 import { deepEqual } from 'fast-equals'
-
-type RecordValue<T> = T extends Record<string, infer V> ? V : never
-
-type NestedAtomFamilyOptions<TInner> = {
-  merge?: (values: TInner[]) => TInner | undefined
-  validateTarget?: (target: string) => boolean
-}
 
 export function omitKey<T extends Record<string, unknown>>(
   obj: T,
@@ -18,28 +10,83 @@ export function omitKey<T extends Record<string, unknown>>(
   return rest as T
 }
 
-function createRecordAtomFamily<
-  TRecord extends Record<string, unknown>,
-  TValue = RecordValue<TRecord>,
->(baseAtom: PrimitiveAtom<TRecord>) {
-  return atomFamily((name: string) =>
-    atom(
-      (get) => {
-        return (get(baseAtom)[name] as TValue | undefined) ?? undefined
-      },
-      (get, set, newValue: TValue | undefined) => {
-        const current = get(baseAtom)
+// One entry of the record, as an atom of its own.
+//
+// Made by whoever reads it, in `useEntryAtom`, rather than cached by name for
+// the life of the page: a family did that, never let go on its own, and had to
+// be emptied by hand from `useStore`. It holds no state -- it reads and writes
+// `base[name]` -- so two readers of one name are two views of one record and
+// they agree, exactly as two callers of the family did.
+export function createEntryAtom<T>(
+  base: PrimitiveAtom<Record<string, T>>,
+  name: string
+) {
+  return atom(
+    (get) => (get(base)[name] as T | undefined) ?? undefined,
+    (get, set, next: T | undefined) => {
+      const current = get(base)
 
-        if (newValue !== undefined && newValue !== null) {
-          const currentValue = current[name]
-          if (!deepEqual(currentValue, newValue)) {
-            set(baseAtom, { ...current, [name]: newValue })
-          }
-        } else if (name in current) {
-          set(baseAtom, omitKey(current, name))
+      if (next !== undefined && next !== null) {
+        if (!deepEqual(current[name], next)) {
+          set(base, { ...current, [name]: next })
         }
+      } else if (name in current) {
+        set(base, omitKey(current, name))
       }
-    )
+    }
+  )
+}
+
+// The same, for a record every field writes into about *other* fields: what
+// this one is owed, merged, and a write addressed to whoever it is for.
+//
+// A `source` change event is the case. Several fields can point at the same
+// target, so a target's entry is keyed by whoever contributed it and what the
+// target reads is the merge of them all. Reading and writing go by different
+// names, which is why this is not `createEntryAtom` over a nested record.
+export function createContributionAtom<T>(
+  base: PrimitiveAtom<Record<string, Record<string, T>>>,
+  name: string,
+  options: Readonly<{
+    merge: (values: T[]) => T | undefined
+    validateTarget: (target: string) => boolean
+  }>
+) {
+  const { merge, validateTarget } = options
+
+  return atom(
+    (get) => {
+      const contributions = get(base)[name]
+      return contributions ? merge(Object.values(contributions)) : undefined
+    },
+    (get, set, target: string, value: T | undefined) => {
+      if (!validateTarget(target)) {
+        return
+      }
+
+      const current = get(base)
+      const contributions = { ...(current[target] ?? {}) }
+
+      if (value !== undefined && value !== null) {
+        if (!deepEqual(contributions[name], value)) {
+          contributions[name] = value
+          set(base, { ...current, [target]: contributions })
+        }
+        return
+      }
+
+      if (!(name in contributions)) {
+        return
+      }
+
+      delete contributions[name]
+      set(
+        base,
+        Object.keys(contributions).length === 0
+          ? omitKey(current, target)
+          : { ...current, [target]: contributions }
+      )
+    }
   )
 }
 
@@ -71,39 +118,6 @@ function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   })
 }
 
-/**
- * Forgets the cached atoms a family built for these names.
- *
- * `atomFamily` caches one atom per name and never lets go on its own, so a
- * list the user adds to and removes from grows the cache without bound: the
- * row ids only ever go up, and even removing a row registers the ones that
- * shift down behind it. Nothing on screen accounts for the total.
- *
- * Safe to call while something is still subscribed. The atoms a family builds
- * here hold no state of their own -- they read and write `baseAtom[name]` --
- * so a subscriber that keeps the forgotten atom and a caller that gets a fresh
- * one are two views of the same record, and they agree. Clearing the value is
- * a separate act, which is why this is a separate atom: a field that declares
- * `keepValue` releases its cached view and keeps its data.
- *
- * Where it is NOT safe, and the reason this is spelled out: releasing a name
- * whose atom identity feeds the dependency array of the effect doing the
- * releasing. `family(name)` returns a fresh atom once the entry is gone, so
- * `useSetAtom(family(name))` hands back a new setter, the dependency changes,
- * the effect re-runs, its cleanup releases again -- an effect whose cleanup
- * destroys the cache entry its own dependency is derived from. Measured at
- * ~6000 create/remove pairs a second, idle, with no mount or unmount in
- * between. Release from `onUnmount`, which no dependency array watches; never
- * from a cleanup that depends on the setter it is about to invalidate.
- */
-function createReleaseAtom(family: { remove: (name: string) => void }) {
-  return atom(null, (_get, _set, names: string[]) => {
-    for (const name of names) {
-      family.remove(name)
-    }
-  })
-}
-
 function createBulkReportAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, newValue: Record<string, T>) => {
     const current = get(baseAtom)
@@ -112,67 +126,6 @@ function createBulkReportAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
       set(baseAtom, newValue)
     }
   })
-}
-
-export function createNestedRecordAtomFamily<
-  TInner,
-  TRecord extends Record<string, Record<string, TInner>> = Record<
-    string,
-    Record<string, TInner>
-  >,
->(
-  baseAtom: PrimitiveAtom<TRecord>,
-  options: NestedAtomFamilyOptions<TInner> = {}
-) {
-  const { merge, validateTarget } = options
-
-  return atomFamily((contributorName: string) =>
-    atom(
-      (get) => {
-        const current = get(baseAtom)[contributorName]
-        if (current && merge) {
-          return merge(Object.values(current))
-        }
-        return undefined
-      },
-      (get, set, target: string, value: TInner | undefined) => {
-        if (validateTarget && !validateTarget(target)) {
-          return
-        }
-
-        const current = get(baseAtom)
-        const targetContributions = { ...(current[target] ?? {}) }
-
-        if (value !== undefined && value !== null) {
-          const currentContribution = targetContributions[contributorName]
-          if (!currentContribution || !deepEqual(currentContribution, value)) {
-            targetContributions[contributorName] = value as TInner
-            set(baseAtom, {
-              ...current,
-              [target]: targetContributions,
-            } as TRecord)
-          }
-        } else if (contributorName in targetContributions) {
-          delete targetContributions[contributorName]
-
-          if (Object.keys(targetContributions).length === 0) {
-            set(baseAtom, omitKey(current, target))
-          } else {
-            set(baseAtom, {
-              ...current,
-              [target]: targetContributions,
-            } as TRecord)
-          }
-        }
-      }
-    )
-  )
-}
-
-export function createNestedReleaseAtom(family: {
-  remove: (name: string) => void
-}) {
-  return createReleaseAtom(family)
 }
 
 export function createNestedClearAtom<TInner>(
@@ -217,16 +170,15 @@ export function createNestedClearAtom<TInner>(
   })
 }
 
+// The record itself, and the ways the form writes the whole of it. One entry
+// of it is `useEntryAtom`, made by the component that reads it.
 export function createAtomStore<T>(initialValue: Record<string, T> = {}) {
   const baseAtom = atom<Record<string, T>>(initialValue)
-  const report = createRecordAtomFamily(baseAtom)
 
   return {
     atom: baseAtom,
     clearAll: createClearAllAtom(baseAtom),
     clear: createClearAtom(baseAtom),
     bulkReport: createBulkReportAtom(baseAtom),
-    release: createReleaseAtom(report),
-    report,
   }
 }
