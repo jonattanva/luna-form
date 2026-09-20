@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789871126602,
+  "lastUpdate": 1789871153821,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "8a45dec49fe9d41537510319324559263a6454a3",
-          "message": "feat: enhance schema validation and event documentation\n\n- Update luna-core to support array-based validation for chips and lists\n- Refactor useValue hook in luna-react to apply transforms during resolution\n- Add comprehensive documentation for the change event system (ValueEvent, StateEvent, SourceEvent)\n- Fix E2E tests related to date selection types (string to number)\n- Improve resolveValue to safely handle object traversal",
-          "timestamp": "2026-05-08T10:44:32-05:00",
-          "tree_id": "f321f00b2ff846b3d1eacdb4e044d12c1f4baaf1",
-          "url": "https://github.com/jonattanva/luna-form/commit/8a45dec49fe9d41537510319324559263a6454a3"
-        },
-        "date": 1778255228458,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 287,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 662,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "a1729ff78d6841d3d8ff08e44387da1a97a9e40a",
           "message": "fix(tests): resolve strict mode violation in steps spec",
           "timestamp": "2026-05-08T15:08:32-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 591,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cb54a0c3316bf00e813662fcb9f107d6994f0c31",
+          "message": "Merge pull request #94 from jonattanva/perf/visibility-guard\n\nperf(guard): a state change renders only the guard whose answer changed",
+          "timestamp": "2026-09-19T21:24:37-05:00",
+          "tree_id": "6d541840f147db826404a170b4d7f2fb5d4a3a32",
+          "url": "https://github.com/jonattanva/luna-form/commit/cb54a0c3316bf00e813662fcb9f107d6994f0c31"
+        },
+        "date": 1789871153794,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 242,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 167,
             "unit": "ms"
           }
         ]
