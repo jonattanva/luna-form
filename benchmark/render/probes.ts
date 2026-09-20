@@ -128,10 +128,18 @@ const PROBES: Probe[] = [
     replacement: `    const WithField = (props: Readonly<P>) => {\n      ${bump('wrapper')}`,
   },
   {
-    name: 'guard',
+    name: 'guard (whole record)',
     file: `${LIB}/client/component/guard/visibility-guard.tsx`,
     anchor: '  const states = useAtomValue(fieldStateAtom)',
+    legacy: true,
     replacement: `  ${bump('guard')}\n  const states = useAtomValue(fieldStateAtom)`,
+  },
+  // The same guard, once its answer became a boolean of its own.
+  {
+    name: 'guard (derived boolean)',
+    file: `${LIB}/client/component/guard/visibility-guard.tsx`,
+    anchor: '  const hiddenAtom = useMemo(',
+    replacement: `  ${bump('guard')}\n  const hiddenAtom = useMemo(`,
   },
   // A list row, whether or not the list shows a preview.
   {
