@@ -5,13 +5,45 @@ import type { Base, Definition, Filterable, Nullable } from '../type'
 
 const REGEX_REF = /^#\/definition\//
 
+// What a pair of sections and definition resolved to the last time it was
+// asked. Both keys are held weakly, so an entry goes when whoever passed it
+// does, and there is nothing to release.
+//
+// A form resolves its `$ref`s while rendering, which is where the cost was: a
+// walk that rebuilds the tree hands every field a new object, and a new object
+// is a field that cannot match its memo, a schema that has to be built again,
+// and a list that runs its hand-off as if it were unmounting -- on every
+// keystroke a controlled host answers. Asked twice with the same two objects,
+// this now answers with the same array.
+const prepared = new WeakMap<object, WeakMap<object, unknown>>()
+
 export function prepare<T extends Filterable>(
   base: readonly T[] = [],
   definition?: Definition
 ) {
-  const resolved = resolveRefs(base, definition)
+  if (!isDefinition(definition)) {
+    return sortAndFilter<T>(base)
+  }
+
+  let byDefinition = prepared.get(base)
+  if (!byDefinition) {
+    byDefinition = new WeakMap()
+    prepared.set(base, byDefinition)
+  }
+
+  if (!byDefinition.has(definition)) {
+    byDefinition.set(
+      definition,
+      sortAndFilter<T>(resolveRefs(base, definition))
+    )
+  }
+
+  return byDefinition.get(definition) as T[]
+}
+
+function sortAndFilter<T extends Filterable>(resolved: unknown): T[] {
   return Array.isArray(resolved)
-    ? resolved.filter(filter).sort((a, b) => getOrder(a) - getOrder(b))
+    ? (resolved as T[]).filter(filter).sort((a, b) => getOrder(a) - getOrder(b))
     : []
 }
 
@@ -34,8 +66,19 @@ export function resolveRefs(
   }
 
   visited.add(base)
+
   if (Array.isArray(base)) {
-    return base.map((item) => resolveRefs(item, definition, cache, visited))
+    let changed = false
+    const items = base.map((item) => {
+      const next = resolveRefs(item, definition, cache, visited)
+      changed ||= next !== item
+      return next
+    })
+
+    visited.delete(base)
+    cache.set(base, changed ? items : base)
+
+    return cache.get(base)
   }
 
   if ($REF in base && isString(base[$REF])) {
@@ -49,14 +92,20 @@ export function resolveRefs(
   }
 
   const result: Record<string, unknown> = {}
+  let changed = false
   for (const [key, value] of Object.entries(base)) {
     result[key] = resolveRefs(value, definition, cache, visited)
+    changed ||= result[key] !== value
   }
 
   visited.delete(base)
-  cache.set(base, result)
 
-  return result
+  // A node with nothing resolved under it is the node it already was. Handing
+  // back a copy instead is what made every field new on every render, `$ref`
+  // or no `$ref` anywhere near it.
+  cache.set(base, changed ? result : base)
+
+  return cache.get(base)
 }
 
 export function entries<T>(values?: Nullable<Record<string, T>>) {

@@ -90,9 +90,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-3',
-    title: 'a definition re-renders every field and rebuilds its schema',
-    // `prepare` resolves $refs into new objects on every render.
-    counts: { render: 30, schema: 30 },
+    title: 'a definition leaves the fields and their schemas alone',
+    // `prepare` answers the same pair of sections and definition with the same
+    // array, and a node with no `$ref` under it comes back as itself.
+    counts: { render: 0, schema: 0 },
     target: { render: 0, schema: 0 },
     measure: async (page) => {
       await openScenario(page, flat(30, UNUSED_DEFINITION), '/reactive')
@@ -101,8 +102,8 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-3',
-    title: 'a definition runs the list hand-off on every keystroke',
-    counts: { handoff: 1 },
+    title: 'a definition leaves the list hand-off to unmount',
+    counts: { handoff: 0 },
     target: { handoff: 0 },
     measure: async (page) => {
       await openScenario(page, plainAndList(5, UNUSED_DEFINITION), '/reactive')
