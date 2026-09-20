@@ -19,6 +19,19 @@ export type SlotComponents = {
   list: React.ComponentType<ListProps>
 }
 
+// By identity and not by position: a definition that changes in place must not
+// hand one field's state to another that lands on the same index. A field and a
+// list are unique by name within a form -- that is what the schema registry is
+// keyed by -- and a column is the names it holds. A slot with no name of its
+// own keeps its position, which is all it ever had.
+function slotKey(slot: Fields[number], index: number): string {
+  if (isColumn(slot)) {
+    const names = slot.fields.map((field) => field.name).join('|')
+    return `column:${names || index}`
+  }
+  return slot.name || `slot:${index}`
+}
+
 export function SlotBase(
   props: Readonly<{
     children: Children
@@ -37,7 +50,7 @@ export function SlotBase(
   const { field: Field, list: List } = props.components
 
   return prepare(props.fields).map((field, index) => (
-    <Fragment key={index}>
+    <Fragment key={slotKey(field, index)}>
       {isColumn(field) && (
         <Column
           column={field}

@@ -213,4 +213,43 @@ test.describe('Definition swap', { tag: ['@e2e'] }, () => {
 
     await expect(page.locator('input[name="target"]')).toHaveValue('ABC')
   })
+
+  // A definition that puts another list where one was must not hand the new
+  // one the rows of the old. `SlotBase` keyed its slots by position, so React
+  // reused the instance and everything `useFieldList` keeps in state came with
+  // it: the rows, the counter that hands out their ids, and which of them are
+  // open. A list only initialises that state when it mounts.
+  test('should start a list swapped for another with its own rows', async ({
+    page,
+  }) => {
+    const list = (name: string, rows: number, placeholder: string) => ({
+      value: {
+        [name]: Array.from({ length: rows }, (_, index) => ({
+          v: String(index),
+        })),
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name,
+              label: name,
+              type: 'list',
+              fields: [
+                { name: 'v', label: 'V', type: 'input/text', placeholder },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    await inject(page, JSON.stringify(list('alpha', 3, 'Initial')))
+    await page.goto('')
+    await expect(page.locator('input[name^="alpha."]')).toHaveCount(3)
+
+    await swap(page, list('beta', 1, 'Swapped'))
+
+    await expect(page.locator('input[name^="beta."]')).toHaveCount(1)
+  })
 })
