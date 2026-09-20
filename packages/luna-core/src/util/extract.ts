@@ -23,6 +23,71 @@ export function hasOwn(value: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 
+// What a lookup found. `found` answers whether the path exists at all, which is
+// a different question from what sits there: a caller is free to hold an empty
+// value at a path it means to be empty, and telling that apart from a path
+// nobody mentioned is the reason this shape exists.
+export type Entry = {
+  found: boolean
+  value: unknown
+}
+
+const MISSING: Entry = { found: false, value: undefined }
+
+/**
+ * The one walk of a dotted path, for every reader of one.
+ *
+ * A flat key that is literally the path wins, because that is how the form
+ * keeps a list's leaves -- `items.0.name` is a key, not a route -- and a
+ * definition is free to name a field the same way. Then objects by key and
+ * arrays by numeric index.
+ *
+ * There were two of these, one per package, and they disagreed about that first
+ * step: a list named `config.items` was found by the reader in luna-react and
+ * not by the one here, so whether a form hydrated depended on which one the
+ * caller happened to use. `extract` and `resolveValue` are both this now.
+ *
+ * Every step asks `hasOwn`, so an inherited member is not a value and a name
+ * that reaches a prototype resolves to nothing. See SEG-2.
+ */
+export function resolveEntry(
+  name: string,
+  currentValue: Record<string, unknown> | unknown[]
+): Entry {
+  if (!Array.isArray(currentValue) && hasOwn(currentValue, name)) {
+    return { found: true, value: currentValue[name] }
+  }
+
+  if (!name.includes('.')) {
+    return MISSING
+  }
+
+  let result: unknown = currentValue
+
+  for (const key of name.split('.')) {
+    if (result === null || result === undefined) {
+      return MISSING
+    }
+
+    if (Array.isArray(result)) {
+      const index = Number(key)
+      if (!Number.isInteger(index) || !hasOwn(result, key)) {
+        return MISSING
+      }
+      result = result[index]
+    } else if (isObject(result)) {
+      if (!hasOwn(result, key)) {
+        return MISSING
+      }
+      result = result[key]
+    } else {
+      return MISSING
+    }
+  }
+
+  return { found: true, value: result }
+}
+
 export function getEntity<T>(
   selected: Value,
   collection: Nullable<T[]> = [],
@@ -106,35 +171,12 @@ export function extract<T>(
   value: Record<string, T>,
   namespace?: string
 ): T | null {
-  if (!namespace || !isObject(value)) {
+  if (!namespace || !value || typeof value !== 'object') {
     return null
   }
 
-  const keys = namespace.split('.').filter((key) => key !== '')
-  if (keys.length === 0) {
-    return null
-  }
-
-  // Traverse objects by key and arrays by numeric index, so paths that point
-  // inside a list (e.g. "field.0.items") resolve the same way resolveValue does
-  // in luna-react. Without the array branch, descending into an array returns
-  // null (isObject is false for arrays) and nested lists never hydrate.
-  let result: unknown = value
-  for (const key of keys) {
-    if (isObject(result) && hasOwn(result, key)) {
-      result = (result as Record<string, unknown>)[key]
-    } else if (Array.isArray(result)) {
-      const index = Number(key)
-      if (!Number.isInteger(index) || index < 0 || index >= result.length) {
-        return null
-      }
-      result = result[index]
-    } else {
-      return null
-    }
-  }
-
-  return result as T
+  const entry = resolveEntry(namespace, value as Record<string, unknown>)
+  return entry.found ? (entry.value as T) : null
 }
 
 export function toOptions<T>(
