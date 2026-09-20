@@ -122,10 +122,19 @@ const PROBES: Probe[] = [
   //
   // `withState` and `withError`, the two wrappers around every field.
   {
-    name: 'wrapper',
+    name: 'wrapper (withState, withError)',
     file: `${LIB}/client/component/field/field-with-state.tsx`,
     anchor: '    const WithField = (props: Readonly<P>) => {',
+    legacy: true,
     replacement: `    const WithField = (props: Readonly<P>) => {\n      ${bump('wrapper')}`,
+  },
+  // The same reads, once the two wrappers became one component with the memo
+  // around it.
+  {
+    name: 'wrapper (FieldWithMeta)',
+    file: `${LIB}/client/component/field/field.tsx`,
+    anchor: 'function FieldWithMeta(props: FieldProps) {',
+    replacement: `function FieldWithMeta(props: FieldProps) {\n  ${bump('wrapper')}`,
   },
   {
     name: 'guard (whole record)',

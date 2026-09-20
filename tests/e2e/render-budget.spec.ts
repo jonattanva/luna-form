@@ -78,9 +78,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-2',
-    title: 'the two wrappers around every field render on every keystroke',
-    // `withState(withError(memo(Field)))`: the memo is the innermost layer.
-    counts: { wrapper: 200 },
+    title: 'a host render stops at the memo of every field',
+    // The memo is the outermost layer now, so a render of the form with equal
+    // props stops before the field reads anything.
+    counts: { wrapper: 0 },
     target: { wrapper: 0 },
     measure: async (page) => {
       await openScenario(page, flat(100), '/reactive')
