@@ -4,7 +4,7 @@ import {
   type HostEntry,
 } from '../lib/host-value-store'
 import { ListPathContext } from '../context/list-path-context'
-import { use, useCallback } from 'react'
+import { use, useCallback, useMemo } from 'react'
 import { useAtomValue, useStore } from 'jotai'
 
 /**
@@ -21,13 +21,19 @@ function useTranslatedName(name: string): string {
   return translateListPath(name)
 }
 
+// The entry's atom, made here and collected with whoever asked. See
+// `hostEntryAtom`.
+function useHostEntryAtom(name: string) {
+  const translated = useTranslatedName(name)
+  return useMemo(() => hostEntryAtom(translated), [translated])
+}
+
 /**
  * What the host says about one field. Re-renders this field when its own entry
  * changes, and only then.
  */
 export function useHostEntry(name: string): HostEntry {
-  const translated = useTranslatedName(name)
-  return readHostEntry(useAtomValue(hostEntryAtom(translated)))
+  return readHostEntry(useAtomValue(useHostEntryAtom(name)))
 }
 
 /**
@@ -41,12 +47,12 @@ export function useHostEntry(name: string): HostEntry {
  * run by then, the form's write included.
  */
 export function useHostEntryReader(name: string): () => HostEntry {
-  const translated = useTranslatedName(name)
+  const entryAtom = useHostEntryAtom(name)
   const store = useStore()
 
   // Stable, so an effect can depend on it without re-running every render.
   return useCallback(
-    () => readHostEntry(store.get(hostEntryAtom(translated))),
-    [store, translated]
+    () => readHostEntry(store.get(entryAtom)),
+    [entryAtom, store]
   )
 }

@@ -4,5 +4,3 @@ import type { FieldState } from '@luna-form/core'
 const store = createAtomStore<FieldState>()
 
 export const fieldStateAtom = store.atom
-export const releaseFieldStateAtom = store.release
-export const reportFieldStateAtom = store.report

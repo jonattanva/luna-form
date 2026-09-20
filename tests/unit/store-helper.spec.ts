@@ -1,9 +1,10 @@
-import { atom, createStore } from 'jotai'
+import { atom, createStore, type PrimitiveAtom } from 'jotai'
 import { describe, expect, test } from 'vitest'
 import {
   createAtomStore,
+  createContributionAtom,
+  createEntryAtom,
   createNestedClearAtom,
-  createNestedRecordAtomFamily,
   omitKey,
 } from '@/packages/luna-react/src/client/lib/store-helper'
 
@@ -11,9 +12,9 @@ describe('store-helper', () => {
   describe('createClearAtom — falsy values not deleted', () => {
     test('clears a boolean false value', () => {
       const store = createStore()
-      const { atom: base, report, clear } = createAtomStore<boolean>()
+      const { atom: base, clear } = createAtomStore<boolean>()
 
-      store.set(report('active'), false)
+      store.set(createEntryAtom(base, 'active'), false)
       expect(store.get(base)).toEqual({ active: false })
 
       store.set(clear, ['active'])
@@ -24,9 +25,9 @@ describe('store-helper', () => {
 
     test('clears a numeric 0 value', () => {
       const store = createStore()
-      const { atom: base, report, clear } = createAtomStore<number>()
+      const { atom: base, clear } = createAtomStore<number>()
 
-      store.set(report('count'), 0)
+      store.set(createEntryAtom(base, 'count'), 0)
       expect(store.get(base)).toEqual({ count: 0 })
 
       store.set(clear, ['count'])
@@ -36,9 +37,9 @@ describe('store-helper', () => {
 
     test('clears an empty string value', () => {
       const store = createStore()
-      const { atom: base, report, clear } = createAtomStore<string>()
+      const { atom: base, clear } = createAtomStore<string>()
 
-      store.set(report('label'), '')
+      store.set(createEntryAtom(base, 'label'), '')
       expect(store.get(base)).toEqual({ label: '' })
 
       store.set(clear, ['label'])
@@ -48,10 +49,10 @@ describe('store-helper', () => {
 
     test('only clears requested keys, leaving others intact', () => {
       const store = createStore()
-      const { atom: base, report, clear } = createAtomStore<boolean>()
+      const { atom: base, clear } = createAtomStore<boolean>()
 
-      store.set(report('a'), false)
-      store.set(report('b'), true)
+      store.set(createEntryAtom(base, 'a'), false)
+      store.set(createEntryAtom(base, 'b'), true)
 
       store.set(clear, ['a'])
       expect(store.get(base)).toEqual({ b: true })
@@ -71,19 +72,19 @@ describe('store-helper', () => {
     })
   })
 
-  describe('createRecordAtomFamily setter — spurious update when current value is falsy', () => {
+  describe('createEntryAtom setter — spurious update when current value is falsy', () => {
     test('does not update when setting false over an existing false', () => {
       const store = createStore()
-      const { atom: base, report } = createAtomStore<boolean>()
+      const { atom: base } = createAtomStore<boolean>()
 
-      store.set(report('flag'), false)
+      store.set(createEntryAtom(base, 'flag'), false)
 
       let updates = 0
       store.sub(base, () => {
         updates++
       })
 
-      store.set(report('flag'), false)
+      store.set(createEntryAtom(base, 'flag'), false)
       // Bug: `!currentValue` is true when currentValue === false,
       // so deepEqual is bypassed and set() fires unconditionally
       expect(updates).toBe(0)
@@ -91,48 +92,48 @@ describe('store-helper', () => {
 
     test('does not update when setting 0 over an existing 0', () => {
       const store = createStore()
-      const { atom: base, report } = createAtomStore<number>()
+      const { atom: base } = createAtomStore<number>()
 
-      store.set(report('score'), 0)
+      store.set(createEntryAtom(base, 'score'), 0)
 
       let updates = 0
       store.sub(base, () => {
         updates++
       })
 
-      store.set(report('score'), 0)
+      store.set(createEntryAtom(base, 'score'), 0)
       // Bug: `!currentValue` is true when currentValue === 0
       expect(updates).toBe(0)
     })
 
     test('does update when the new value differs from a falsy current value', () => {
       const store = createStore()
-      const { atom: base, report } = createAtomStore<number>()
+      const { atom: base } = createAtomStore<number>()
 
-      store.set(report('score'), 0)
+      store.set(createEntryAtom(base, 'score'), 0)
 
       let updates = 0
       store.sub(base, () => {
         updates++
       })
 
-      store.set(report('score'), 1)
+      store.set(createEntryAtom(base, 'score'), 1)
       expect(updates).toBe(1)
       expect(store.get(base)).toEqual({ score: 1 })
     })
 
     test('does not update when a truthy value is set to itself via deepEqual', () => {
       const store = createStore()
-      const { atom: base, report } = createAtomStore<Record<string, string>>()
+      const { atom: base } = createAtomStore<Record<string, string>>()
 
-      store.set(report('user'), { name: 'alice' })
+      store.set(createEntryAtom(base, 'user'), { name: 'alice' })
 
       let updates = 0
       store.sub(base, () => {
         updates++
       })
 
-      store.set(report('user'), { name: 'alice' })
+      store.set(createEntryAtom(base, 'user'), { name: 'alice' })
       expect(updates).toBe(0)
     })
   })
@@ -207,31 +208,39 @@ describe('store-helper', () => {
     })
   })
 
-  describe('createNestedRecordAtomFamily — read and write consistency', () => {
+  describe('createContributionAtom — read and write consistency', () => {
+    const anyTarget = (target: string) => target.trim() !== ''
+
+    const contribution = (
+      base: PrimitiveAtom<Record<string, Record<string, string>>>,
+      name: string,
+      merge: (values: string[]) => string | undefined
+    ) =>
+      createContributionAtom<string>(base, name, {
+        merge,
+        validateTarget: anyTarget,
+      })
+
     test('stores contribution and returns merged value for the target', () => {
       const store = createStore()
       const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base, {
-        merge: (values) => values.join(','),
-      })
+      const merge = (values: string[]) => values.join(',')
 
       // Contributor "fieldA" contributes to target "fieldB"
-      store.set(family('fieldA'), 'fieldB', 'hello')
+      store.set(contribution(base, 'fieldA', merge), 'fieldB', 'hello')
       expect(store.get(base)).toEqual({ fieldB: { fieldA: 'hello' } })
 
       // Reading via target "fieldB" returns the merged value
-      expect(store.get(family('fieldB'))).toBe('hello')
+      expect(store.get(contribution(base, 'fieldB', merge))).toBe('hello')
     })
 
     test('removes target key entirely when value is set to undefined', () => {
       const store = createStore()
       const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base, {
-        merge: (values) => values.join(','),
-      })
+      const merge = (values: string[]) => values.join(',')
 
-      store.set(family('fieldA'), 'fieldB', 'hello')
-      store.set(family('fieldA'), 'fieldB', undefined)
+      store.set(contribution(base, 'fieldA', merge), 'fieldB', 'hello')
+      store.set(contribution(base, 'fieldA', merge), 'fieldB', undefined)
 
       expect(store.get(base)).toEqual({})
     })
@@ -239,56 +248,66 @@ describe('store-helper', () => {
     test('skips write when validateTarget returns false', () => {
       const store = createStore()
       const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base, {
-        merge: (values) => values.join(','),
-        validateTarget: (t) => t.trim() !== '',
-      })
+      const merge = (values: string[]) => values.join(',')
 
-      store.set(family('fieldA'), '  ', 'hello')
+      store.set(contribution(base, 'fieldA', merge), '  ', 'hello')
       expect(store.get(base)).toEqual({})
     })
 
     test('merges multiple contributors for the same target', () => {
       const store = createStore()
       const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base, {
-        merge: (values) => values.sort().join(','),
-      })
+      const merge = (values: string[]) => values.sort().join(',')
 
-      store.set(family('fieldA'), 'target', 'alpha')
-      store.set(family('fieldB'), 'target', 'beta')
+      store.set(contribution(base, 'fieldA', merge), 'target', 'alpha')
+      store.set(contribution(base, 'fieldB', merge), 'target', 'beta')
 
       expect(store.get(base)).toEqual({
         target: { fieldA: 'alpha', fieldB: 'beta' },
       })
-      expect(store.get(family('target'))).toBe('alpha,beta')
+      expect(store.get(contribution(base, 'target', merge))).toBe('alpha,beta')
     })
 
     test('does not trigger a state update when writing the same value (deepEqual guard)', () => {
       const store = createStore()
       const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base, {
-        merge: (values) => values.join(','),
-      })
+      const merge = (values: string[]) => values.join(',')
 
-      store.set(family('fieldA'), 'target', 'hello')
+      store.set(contribution(base, 'fieldA', merge), 'target', 'hello')
 
       let updates = 0
       store.sub(base, () => {
         updates++
       })
 
-      store.set(family('fieldA'), 'target', 'hello')
+      store.set(contribution(base, 'fieldA', merge), 'target', 'hello')
       expect(updates).toBe(0)
     })
+  })
 
-    test('returns undefined when no merge function is provided', () => {
+  // Two readers of one name are two atoms now, and they have to agree: the
+  // atom holds nothing of its own, the record holds everything.
+  describe('createEntryAtom — two views of one record', () => {
+    test('answers the same for two atoms made for the same name', () => {
       const store = createStore()
-      const base = atom<Record<string, Record<string, string>>>({})
-      const family = createNestedRecordAtomFamily<string>(base)
+      const { atom: base } = createAtomStore<string>()
 
-      store.set(family('fieldA'), 'target', 'hello')
-      expect(store.get(family('target'))).toBeUndefined()
+      store.set(createEntryAtom(base, 'email'), 'ada@example.com')
+
+      expect(store.get(createEntryAtom(base, 'email'))).toBe('ada@example.com')
+    })
+
+    test('a write through one is seen through the other', () => {
+      const store = createStore()
+      const { atom: base } = createAtomStore<string>()
+      const one = createEntryAtom(base, 'email')
+      const other = createEntryAtom(base, 'email')
+
+      store.set(one, 'ada@example.com')
+      store.set(other, undefined)
+
+      expect(store.get(one)).toBeUndefined()
+      expect(store.get(base)).toEqual({})
     })
   })
 
@@ -314,10 +333,10 @@ describe('store-helper', () => {
   describe('createAtomStore — clearAll', () => {
     test('removes all keys from the store', () => {
       const store = createStore()
-      const { atom: base, report, clearAll } = createAtomStore<string>()
+      const { atom: base, clearAll } = createAtomStore<string>()
 
-      store.set(report('a'), 'x')
-      store.set(report('b'), 'y')
+      store.set(createEntryAtom(base, 'a'), 'x')
+      store.set(createEntryAtom(base, 'b'), 'y')
       expect(store.get(base)).toEqual({ a: 'x', b: 'y' })
 
       store.set(clearAll)
@@ -341,10 +360,10 @@ describe('store-helper', () => {
   describe('createAtomStore — bulkReport', () => {
     test('replaces the entire store with the provided value', () => {
       const store = createStore()
-      const { atom: base, report, bulkReport } = createAtomStore<number>()
+      const { atom: base, bulkReport } = createAtomStore<number>()
 
-      store.set(report('a'), 1)
-      store.set(report('b'), 2)
+      store.set(createEntryAtom(base, 'a'), 1)
+      store.set(createEntryAtom(base, 'b'), 2)
 
       store.set(bulkReport, { c: 3, d: 4 })
       expect(store.get(base)).toEqual({ c: 3, d: 4 })

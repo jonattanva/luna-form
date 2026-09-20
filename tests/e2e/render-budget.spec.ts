@@ -155,9 +155,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'SOB-1',
-    title: 'cached atoms grow with every definition the form has shown',
-    // Ten definitions of ten fields each: `hostEntryAtom` is never released.
-    counts: { atoms: 100 },
+    title: 'no atom outlives the definition it was made for',
+    // Ten definitions of ten fields each. Nothing caches an atom by name any
+    // more, so there is nothing left to count.
+    counts: { atoms: 0 },
     target: { atoms: 0 },
     measure: async (page) => {
       await openScenario(page, flat(10, {}, 's0'), '/')
@@ -172,10 +173,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'SOB-1',
-    title: 'cached atoms grow with every row a nested list has held',
+    title: 'no atom outlives the row it was made for',
     // Two more rounds of adding and removing ten rows, after a first one has
-    // reached every position: what is left is growth by stable id.
-    counts: { atoms: 40 },
+    // reached every position: what grew by stable id is gone with the families.
+    counts: { atoms: 0 },
     target: { atoms: 0 },
     measure: async (page) => {
       await openScenario(page, nestedGroups, '/')
@@ -204,7 +205,6 @@ test.describe('Render budgets', { tag: ['@render'] }, () => {
       Object.values(alive).every((count) => count > 0),
       `every counter that fires on mount has to be alive: ${JSON.stringify(alive)}`
     ).toBe(true)
-    expect(await cachedAtoms(page)).toBeGreaterThan(0)
   })
 
   for (const budget of BUDGETS) {
