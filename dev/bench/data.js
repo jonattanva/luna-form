@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789996766075,
+  "lastUpdate": 1789996797787,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "c0e3503c845a49a7e35ede31551f6fa1542f9bf7",
-          "message": "feat: add conditional interpolation and liquid format filters\n\n- Implement date and currency formatting for interpolation\n- Add conditional rendering for list items and descriptions\n- Update state handling for events\n- Add e2e and unit tests for new features",
-          "timestamp": "2026-05-11T08:26:56-05:00",
-          "tree_id": "ee9206d9526c7ea560c9e1cbed49a8d20fba6e74",
-          "url": "https://github.com/jonattanva/luna-form/commit/c0e3503c845a49a7e35ede31551f6fa1542f9bf7"
-        },
-        "date": 1778506117839,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 213,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 472,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "f93c5aec03e3c6176323244f989d952120bae471",
           "message": "fix(luna-react): resolve value hydration in InputBase and add E2E tests for onlyIfTargetEmpty",
           "timestamp": "2026-05-11T12:07:31-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 169,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0c28fb5a66f203bee47d762c7b5558f01d7c66df",
+          "message": "Merge pull request #108 from jonattanva/docs/peer-and-entry-drift\n\ndocs: the library the pages describe is the one that ships",
+          "timestamp": "2026-09-21T08:18:43-05:00",
+          "tree_id": "9b3d0026cd9bbbd3a9fc430527101ec41cdbc508",
+          "url": "https://github.com/jonattanva/luna-form/commit/0c28fb5a66f203bee47d762c7b5558f01d7c66df"
+        },
+        "date": 1789996797763,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 203,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 124,
             "unit": "ms"
           }
         ]
