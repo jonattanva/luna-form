@@ -1,7 +1,7 @@
-import { ChevronIcon } from '../chevron-icon'
-import { Collapsible } from '../collapsible'
-import { formatMarkdown } from '../../lib/string'
-import { useDisclosure } from '../../client/hook/use-disclosure'
+import { ChevronIcon } from '../../../component/chevron-icon'
+import { Collapsible } from '../../../component/collapsible'
+import { formatMarkdown } from '../../../lib/string'
+import { useDisclosure } from '../../hook/use-disclosure'
 import type { Section } from '@luna-form/core'
 
 export function FieldSetAdvanced(

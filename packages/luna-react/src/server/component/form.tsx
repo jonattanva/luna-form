@@ -1,7 +1,7 @@
 import { Form as Component } from '../../component/form'
 import { Input } from './input'
 import { resolveDictionary } from '@luna-form/core'
-import { Slot } from '../../component/slot/slot'
+import { Slot } from './slot'
 import type { Config } from '../../type'
 import type { Definition, Sections } from '@luna-form/core'
 

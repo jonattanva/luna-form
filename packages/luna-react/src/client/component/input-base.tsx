@@ -1,3 +1,4 @@
+import { FieldDescription } from './field-description'
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import { useCallback, useEffect, useRef } from 'react'
@@ -206,6 +207,7 @@ export function InputBase(
       <InputGroup
         config={props.config}
         context={props.context}
+        description={FieldDescription}
         field={props.field}
         horizontal={props.horizontal}
         translations={props.translations}

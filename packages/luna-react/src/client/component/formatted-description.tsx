@@ -1,5 +1,5 @@
-import { Description } from './description'
-import { formatMarkdown } from '../lib/string'
+import { Description } from '../../component/description'
+import { formatMarkdown } from '../../lib/string'
 import {
   interpolateIfNeeded,
   isObject,
@@ -7,9 +7,9 @@ import {
   translate,
   type Description as DescriptionType,
 } from '@luna-form/core'
-import { ChevronIcon } from './chevron-icon'
-import { useDisclosure } from '../client/hook/use-disclosure'
-import type { Config } from '../type'
+import { ChevronIcon } from '../../component/chevron-icon'
+import { useDisclosure } from '../hook/use-disclosure'
+import type { Config } from '../../type'
 
 export function FormattedDescription(
   props: Readonly<{
