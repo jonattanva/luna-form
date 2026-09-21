@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789952909264,
+  "lastUpdate": 1789952932421,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "bdb29e384aaf80104a0178460ff58dcf6c1b7d1a",
-          "message": "fix(luna-react): disable transition on list add button for stable e2e testing",
-          "timestamp": "2026-05-08T23:24:30-05:00",
-          "tree_id": "7462c34d4e09a3285c162eefde036f841738ec96",
-          "url": "https://github.com/jonattanva/luna-form/commit/bdb29e384aaf80104a0178460ff58dcf6c1b7d1a"
-        },
-        "date": 1778300741809,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 266,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 501,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "08e501c25d28a46677b13687ade0e4fa19ae78ac",
           "message": "fix(test): wait for hover styles in list-add-button e2e",
           "timestamp": "2026-05-08T23:52:33-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 161,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "77ae8ca09aaef5dba1a320775bd22e9b538cdc8e",
+          "message": "Merge pull request #101 from jonattanva/perf/atoms-per-component\n\nperf: the four changes that merged into each other instead of into main",
+          "timestamp": "2026-09-20T20:07:48-05:00",
+          "tree_id": "15d6be6e5ccf6707f3509ca4aa86d4cbf8050131",
+          "url": "https://github.com/jonattanva/luna-form/commit/77ae8ca09aaef5dba1a320775bd22e9b538cdc8e"
+        },
+        "date": 1789952932390,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 176,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 112,
             "unit": "ms"
           }
         ]
