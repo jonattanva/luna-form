@@ -49,7 +49,10 @@ export function InputBase(
   //
   // On its own this changes nothing measurable -- the identity chain has a
   // second break, in whatever hands `sections` to the form -- and the two have
-  // to be fixed together. See `reactive-form-preview`.
+  // to be fixed together. That half belongs to the caller, and the condition
+  // is that the prop keeps its identity across renders: parsed or built once
+  // and held, not rebuilt while rendering. A caller that rebuilds it hands
+  // every field a new definition before any of this runs.
   const field =
     Boolean(props.field.disabled) === commonProps.disabled
       ? props.field

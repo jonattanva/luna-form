@@ -28,6 +28,19 @@ export const hostValueAtom = hostValue
  */
 const MISSING = Symbol('host-value-missing')
 
+/** What the host says about one field, with the sentinel already read. */
+export type HostEntry = {
+  /** The host names this field. A field it does not name reads `undefined`. */
+  found: boolean
+  value: unknown
+}
+
+export function readHostEntry(entry: unknown): HostEntry {
+  return entry === MISSING
+    ? { found: false, value: undefined }
+    : { found: true, value: entry }
+}
+
 /**
  * One field's entry in that record.
  *
@@ -44,19 +57,6 @@ const MISSING = Symbol('host-value-missing')
  * ten fields. See `useEntryAtom` for the same move on the records a field
  * writes into.
  */
-/** What the host says about one field, with the sentinel already read. */
-export type HostEntry = {
-  /** The host names this field. A field it does not name reads `undefined`. */
-  found: boolean
-  value: unknown
-}
-
-export function readHostEntry(entry: unknown): HostEntry {
-  return entry === MISSING
-    ? { found: false, value: undefined }
-    : { found: true, value: entry }
-}
-
 export function hostEntryAtom(name: string) {
   return atom((get) => {
     const current = get(hostValue)
