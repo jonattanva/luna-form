@@ -111,7 +111,7 @@ Validates a string value against a regular expression.
 
 `pattern` never fires on an empty value — pair it with `required`/`requiredWhen` when the field is mandatory.
 
-A `regex` or `flags` that does not compile is a mistake in the definition, not in the value. The rule then holds back every value it checks with its `message`, as it does a value that does not match, and the form keeps working. The same goes for a `pattern` among [`rules`](#rules).
+A `regex` or `flags` that does not compile is a mistake in the definition, not in the value. The rule then holds back every value it checks with its `message`, as it does a value that does not match, and the form keeps working. The same goes for a `pattern` among [`rules`](#rules). Since the `message` is written for whoever fills the form in, the expression that failed to compile is named on the console instead — see [Warnings](../setup.md#warnings).
 
 A `regex` that compiles runs as written, on what the user types: in the browser when the form is submitted, and on the server when it validates with `buildFormSchema`. Nothing inspects it first, so it is part of the code the form ships with. Accept one only from someone you would let write that code.
 

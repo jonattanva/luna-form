@@ -31,7 +31,6 @@
     "date-fns": "^4.0.0",
     "fast-equals": "^6.0.0",
     "jotai": "^2.0.0",
-    "jotai-family": "^1.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "swr": "^2.0.0",
@@ -44,7 +43,8 @@
     "@types/react-dom": "19.3.0",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.1.1",
-    "eslint-plugin-react-refresh": "0.5.7"
+    "eslint-plugin-react-refresh": "0.5.7",
+    "jotai-family": "^1.0.0"
   },
   "license": "Apache-2.0",
   "repository": {

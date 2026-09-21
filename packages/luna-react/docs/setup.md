@@ -13,15 +13,15 @@ pnpm add react-luna-form
 The package carries no dependencies of its own: everything it needs is a peer
 dependency, so your application resolves one copy of React, Zod and the rest.
 
-| Peer                    | Version             | Used for                                    |
-| ----------------------- | ------------------- | ------------------------------------------- |
-| `react`, `react-dom`    | `^19.0.0`           | rendering, and `useActionState` on submit   |
-| `zod`                   | `^4.0.0`            | the schema derived from `sections`          |
-| `jotai`, `jotai-family` | `^2.0.0` / `^1.0.0` | the value, error and source stores          |
-| `swr`                   | `^2.0.0`            | fetching a field's remote `source`          |
-| `date-fns`              | `^4.0.0`            | date and time formatting, `duration` filter |
-| `fast-equals`           | `^6.0.0`            | change detection in the stores              |
-| `tailwind-merge`        | `^3.5.0`            | merging the classes the components render   |
+| Peer                 | Version   | Used for                                    |
+| -------------------- | --------- | ------------------------------------------- |
+| `react`, `react-dom` | `^19.0.0` | rendering, and `useActionState` on submit   |
+| `zod`                | `^4.0.0`  | the schema derived from `sections`          |
+| `jotai`              | `^2.0.0`  | the value, error and source stores          |
+| `swr`                | `^2.0.0`  | fetching a field's remote `source`          |
+| `date-fns`           | `^4.0.0`  | date and time formatting, `duration` filter |
+| `fast-equals`        | `^6.0.0`  | change detection in the stores              |
+| `tailwind-merge`     | `^3.7.0`  | merging the classes the components render   |
 
 None of them is optional, and none is bundled. A package manager that installs
 peers automatically (npm 7+, or pnpm with `auto-install-peers=true`) brings
@@ -48,19 +48,25 @@ CSS.
 
 Every element also carries a `data-slot` attribute — `field`, `field-label`,
 `field-control`, `field-set`, `field-set-content`, `field-content`,
-`field-group`, `field-separator`, `column`, `list-item-card` — so a design
-system can restyle the structure without patching the library. The components
-you register yourself are yours to style; these slots cover the scaffolding
-around them.
+`field-group`, `field-separator`, `collapsible-content`, `column`,
+`list-item-card` — so a design system can restyle the structure without
+patching the library. The components you register yourself are yours to style;
+these slots cover the scaffolding around them.
 
 ## Entry points
 
 | Import                   | Contains                                                                                  |
 | ------------------------ | ----------------------------------------------------------------------------------------- |
 | `react-luna-form`        | `Form` (client), `withDeclaredFields`, and the `Sections`, `Source` and `ZodSchema` types |
-| `react-luna-form/server` | `Form` (server) and `Fallback`                                                            |
+| `react-luna-form/server` | `Form` (server) and `Fallback`, usable under the `react-server` condition                 |
 | `react-luna-form/config` | `defineConfig` and the `define*` registration helpers                                     |
 | `react-luna-form/schema` | `buildFormSchema` and `collectIssues`                                                     |
+
+The client bundle is published carrying a `'use client'` directive, so an App
+Router project imports `Form` straight from a Server Component and needs no
+wrapper module of its own to say it. The server bundle carries none and
+resolves under the `react-server` condition, which is what lets a Server
+Component render the form itself.
 
 ## Configuring
 
@@ -126,7 +132,8 @@ fetcher: {
 A blocked URL is not an error. The library logs
 `URL blocked by remotePatterns: <url>` and the field renders with no options at
 all, which on screen looks like an empty select rather than a rejected request.
-Check the console when a remote source comes back empty.
+Check the console when a remote source comes back empty — see
+[Warnings](#warnings) for when that line is written.
 
 ### `style`, `alert`, `env`
 
@@ -135,6 +142,20 @@ Check the console when a remote source comes back empty.
   is on.
 - `env` is a flat record of values available to interpolation, in labels and in
   descriptions. Its `locale` key is also what those two read to format values.
+
+## Warnings
+
+Some of what can go wrong is nobody's to fix but the author of the form, and
+the library says so on the console rather than on screen: a `pattern` that does
+not compile, a field name that reaches a prototype and is left out of the
+submit, the error an `action` threw, a remote `source` that failed or was
+blocked. Every one of those lines is prefixed `[Luna Form]`.
+
+They are written outside production and silent inside it, and which one you are
+in is your build's answer to give: the published bundle leaves
+`process.env.NODE_ENV` for your bundler to resolve instead of deciding while it
+is being packaged. A development build of your application shows them and a
+production build does not. Where nothing defines it at all, they are shown.
 
 ## Rendering
 
