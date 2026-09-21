@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789989983376,
+  "lastUpdate": 1789990010891,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "b754720db2fa4b6a850d0d6c90dbdafde7ad11d8",
-          "message": "refactor(tests): update e2e test tags format and remove unstable hover test",
-          "timestamp": "2026-05-09T00:06:42-05:00",
-          "tree_id": "54f78ea43aa7b052903d69968d3f018110b13e76",
-          "url": "https://github.com/jonattanva/luna-form/commit/b754720db2fa4b6a850d0d6c90dbdafde7ad11d8"
-        },
-        "date": 1778303287638,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 280,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 614,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "aaeabca8f3429c5f38bcf0c0a74feb6dfadc8f97",
           "message": "format files",
           "timestamp": "2026-05-09T00:35:39-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 678,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f9614d9d47e1526ae1e31b139ecdb6be0617629",
+          "message": "Merge pull request #103 from jonattanva/fix/use-client-banner\n\nfix(build): the client bundle says \"use client\" for the project importing it",
+          "timestamp": "2026-09-21T06:25:30-05:00",
+          "tree_id": "400c257cdc59966aab86f08a2b53f533dbd75dca",
+          "url": "https://github.com/jonattanva/luna-form/commit/7f9614d9d47e1526ae1e31b139ecdb6be0617629"
+        },
+        "date": 1789990010849,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 294,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 215,
             "unit": "ms"
           }
         ]
