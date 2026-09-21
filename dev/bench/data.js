@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789990020894,
+  "lastUpdate": 1789990046524,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "aaeabca8f3429c5f38bcf0c0a74feb6dfadc8f97",
-          "message": "format files",
-          "timestamp": "2026-05-09T00:35:39-05:00",
-          "tree_id": "716706fe0ae70a8a98f7e4862999a8e578089578",
-          "url": "https://github.com/jonattanva/luna-form/commit/aaeabca8f3429c5f38bcf0c0a74feb6dfadc8f97"
-        },
-        "date": 1778305027101,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 283,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 220,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "d6ca7c2df0e3f8ee281af4935777a9e2db0cfaf9",
           "message": "feat: implement relative target resolution in list events using 'list/field' syntax and update docs",
           "timestamp": "2026-05-09T22:51:04-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 215,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "da3f724f75e529e59ba403a80984ecac7a66d320",
+          "message": "Merge pull request #104 from jonattanva/fix/validation-merge\n\nfix(config): validation merges into the defaults instead of replacing them",
+          "timestamp": "2026-09-21T06:26:15-05:00",
+          "tree_id": "1e541609be1e52d1d393ab41d355a21c6a91d715",
+          "url": "https://github.com/jonattanva/luna-form/commit/da3f724f75e529e59ba403a80984ecac7a66d320"
+        },
+        "date": 1789990046481,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 304,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 635,
             "unit": "ms"
           }
         ]
