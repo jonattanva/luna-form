@@ -99,10 +99,9 @@ When to validate and whether to summarise errors. All four default to `true`.
 validation: { blur: true, change: true, showError: true, submit: true }
 ```
 
-**This object replaces the defaults, it does not merge into them.** Passing
-`{ change: false }` also turns off `blur`, `submit` and `showError`, so the form
-stops validating on blur and loses its error summary with no indication why.
-Pass every key you still want.
+This object merges into the defaults, so pass only what you want to change.
+`{ change: false }` stops the form validating as the user types and leaves the
+other three alone.
 
 ### `fetcher.remotePatterns`
 

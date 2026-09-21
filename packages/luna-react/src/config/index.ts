@@ -13,6 +13,13 @@ import {
 } from '@luna-form/core'
 import type { AlertProps, Config, InputConfig } from '../type'
 
+const DEFAULT_VALIDATION = {
+  blur: true,
+  change: true,
+  showError: true,
+  submit: true,
+}
+
 export function defineConfig<T extends React.ElementType>(
   options: Readonly<{
     alert?: React.ComponentType<AlertProps>
@@ -49,12 +56,12 @@ export function defineConfig<T extends React.ElementType>(
     style: options.style,
   } as Config
 
-  config.validation = options.validation ?? {
-    blur: true,
-    change: true,
-    showError: true,
-    submit: true,
-  }
+  // Merged, not replaced. Passing one key used to turn the other three off:
+  // `{ submit: false }` also stopped the form validating on blur and on change
+  // and took away its error summary, with nothing on screen to say why. Whoever
+  // passes all four notices no difference; whoever passes fewer gets what they
+  // wrote.
+  config.validation = { ...DEFAULT_VALIDATION, ...options.validation }
 
   options.inputs.forEach(({ types, input }) => {
     const type = Array.isArray(types) ? types : [types]
