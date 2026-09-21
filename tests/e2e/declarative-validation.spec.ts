@@ -250,4 +250,59 @@ test.describe('Declarative validation', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name="code"]')).toHaveValue('abc')
     expect(errors).toEqual([])
   })
+
+  // The message above is for whoever fills the form in; this one is for
+  // whoever wrote it, and it never arrived. `logger` writes outside production,
+  // but the published build answered that question while bundling the library
+  // rather than leaving it to the application, so every warning the library
+  // has -- a pattern that does not compile, a field name that reaches a
+  // prototype, the error an action threw -- was silenced before it shipped.
+  test('a pattern that does not compile is named in the console', async ({
+    page,
+  }) => {
+    const messages: string[] = []
+    page.on('console', (message) => {
+      if (message.type() === 'error') {
+        messages.push(message.text())
+      }
+    })
+
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Code",
+                "name": "code",
+                "type": "input/text",
+                "validation": {
+                  "pattern": {
+                    "regex": "^(abc",
+                    "message": "Code has an invalid format"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await page.locator('input[name="code"]').fill('abc')
+    await page.locator('button[type="submit"]').click()
+
+    await expect(
+      page.getByText('Code has an invalid format', { exact: true })
+    ).toBeVisible()
+
+    expect(
+      messages.some(
+        (text) => text.includes('[Luna Form]') && text.includes('^(abc')
+      )
+    ).toBe(true)
+  })
 })

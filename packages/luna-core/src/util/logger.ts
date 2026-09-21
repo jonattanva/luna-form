@@ -18,6 +18,11 @@ export const logger = {
 
 const isConsoleAvailable = () => typeof getConsole() !== 'undefined'
 
-const isProduction = () => process.env.NODE_ENV === 'production'
+// `process` belongs to the bundler of whoever installs this, and the build
+// leaves the expression for it to answer rather than answering it here. Where
+// nothing defines it -- a browser with no bundler at all -- reading it would
+// throw, so nothing is production there and the warnings come through.
+const isProduction = () =>
+  typeof process !== 'undefined' && process.env.NODE_ENV === 'production'
 
 const getConsole = () => globalThis.console
