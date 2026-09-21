@@ -26,6 +26,13 @@ const config: KnipConfig = {
       // way in and reports the whole of `src/` as unused, entry points
       // included.
       entry: ['src/{client,server,config,schema}/index.ts'],
+      // Nothing in `src` imports it, and that is the point: the library
+      // stopped using atom families, and the render probes write the import
+      // back into a copy of these sources to measure the commits that still
+      // had them. It is a devDependency here rather than a peer because it is
+      // the instrument's, not the published build's, and it lives in this
+      // workspace because that is where the probes inject it.
+      ignoreDependencies: ['jotai-family'],
     },
     'apps/react-luna-editor': {
       // shadcn writes one module per component straight into this folder, and

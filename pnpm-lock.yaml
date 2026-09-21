@@ -356,9 +356,6 @@ importers:
       jotai:
         specifier: ^2.0.0
         version: 2.20.3(@babel/core@7.29.7(supports-color@7.2.0))(@babel/template@7.29.7)(@types/react@19.3.0)(react@19.3.0)
-      jotai-family:
-        specifier: ^1.0.0
-        version: 1.1.0(jotai@2.20.3(@babel/core@7.29.7(supports-color@7.2.0))(@babel/template@7.29.7)(@types/react@19.3.0)(react@19.3.0))
       react:
         specifier: ^19.0.0
         version: 19.3.0
@@ -393,6 +390,9 @@ importers:
       eslint-plugin-react-refresh:
         specifier: 0.5.7
         version: 0.5.7(eslint@9.39.4(jiti@2.7.0)(supports-color@7.2.0))
+      jotai-family:
+        specifier: ^1.0.0
+        version: 1.1.0(jotai@2.20.3(@babel/core@7.29.7(supports-color@7.2.0))(@babel/template@7.29.7)(@types/react@19.3.0)(react@19.3.0))
 
 packages:
 

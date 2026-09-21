@@ -36,15 +36,15 @@ The package ships no dependencies of its own. Everything it needs is a peer
 dependency, so your application resolves a single copy of React, Zod and the
 rest:
 
-| Peer                    | Required version   | Used for                                    |
-| ----------------------- | ------------------ | ------------------------------------------- |
-| `react`, `react-dom`    | `^19.0.0`          | rendering, and `useActionState` on submit   |
-| `zod`                   | `^4.0.0`           | the schema derived from `sections`          |
-| `jotai`, `jotai-family` | `^2.0.0`, `^1.0.0` | the form's value, error and source stores   |
-| `swr`                   | `^2.0.0`           | fetching a field's remote `source`          |
-| `date-fns`              | `^4.0.0`           | date and time formatting, `duration` filter |
-| `fast-equals`           | `^6.0.0`           | change detection in the stores              |
-| `tailwind-merge`        | `^3.5.0`           | merging the classes the components render   |
+| Peer                 | Required version | Used for                                    |
+| -------------------- | ---------------- | ------------------------------------------- |
+| `react`, `react-dom` | `^19.0.0`        | rendering, and `useActionState` on submit   |
+| `zod`                | `^4.0.0`         | the schema derived from `sections`          |
+| `jotai`              | `^2.0.0`         | the form's value, error and source stores   |
+| `swr`                | `^2.0.0`         | fetching a field's remote `source`          |
+| `date-fns`           | `^4.0.0`         | date and time formatting, `duration` filter |
+| `fast-equals`        | `^6.0.0`         | change detection in the stores              |
+| `tailwind-merge`     | `^3.7.0`         | merging the classes the components render   |
 
 None of them is optional. A package manager that installs peers automatically
 (npm 7+, or pnpm with `auto-install-peers=true`) brings them in for you;
@@ -66,7 +66,8 @@ Without that `@source` line the form renders with the right markup and none of
 its layout.
 
 Every element also carries a `data-slot` attribute — `field`, `field-label`,
-`field-control`, `field-set`, `field-group`, `field-separator`, `column`,
+`field-control`, `field-set`, `field-set-content`, `field-content`,
+`field-group`, `field-separator`, `collapsible-content`, `column`,
 `list-item-card` — so a design system can restyle the structure without
 touching the library.
 
@@ -123,6 +124,10 @@ if (!result.success) {
 | `react-luna-form/server` | `Form` (server) and `Fallback`, usable under the `react-server` condition |
 | `react-luna-form/config` | `defineConfig` and the `define*` registration helpers                     |
 | `react-luna-form/schema` | `buildFormSchema` and `collectIssues`, with no React dependency           |
+
+The client bundle is published carrying a `'use client'` directive, so
+`react-luna-form` can be imported straight from a Server Component with no
+wrapper module of your own.
 
 ## Documentation
 
