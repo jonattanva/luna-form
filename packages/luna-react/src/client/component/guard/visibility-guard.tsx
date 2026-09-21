@@ -1,52 +1,8 @@
 import { atom, useAtomValue } from 'jotai'
-import { isColumn } from '@luna-form/core'
 import { fieldStateAtom } from '../../lib/state-store'
+import { isGuardHidden } from '../../../lib/visibility'
 import { useMemo } from 'react'
-import type { Column, Field, FieldState, Fields, List } from '@luna-form/core'
-
-function isColumnHidden(
-  column: Column,
-  states: Record<string, FieldState>
-): boolean {
-  return column.fields.every((field) => isFieldHidden(field, states))
-}
-
-function isFieldHidden(
-  field: Field | List,
-  states: Record<string, FieldState>
-): boolean {
-  return states[field.name]?.hidden ?? field.hidden ?? false
-}
-
-function isEntryHidden(
-  entry: Fields[number],
-  states: Record<string, FieldState>
-): boolean {
-  return isColumn(entry)
-    ? isColumnHidden(entry, states)
-    : isFieldHidden(entry, states)
-}
-
-// Whether this guard has anything left to show: what the container itself
-// declares, and then every entry it holds.
-function isGuardHidden(
-  states: Record<string, FieldState>,
-  fields: Fields,
-  container?: Field | List
-): boolean {
-  if (container) {
-    const hidden = states[container.name]?.hidden ?? container.hidden ?? false
-    if (hidden) {
-      return true
-    }
-  }
-
-  if (fields.length === 0) {
-    return true
-  }
-
-  return fields.every((entry) => isEntryHidden(entry, states))
-}
+import type { Field, Fields, List } from '@luna-form/core'
 
 export function VisibilityGuard(
   props: Readonly<{

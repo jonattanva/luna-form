@@ -1,6 +1,6 @@
+import { DescriptionText, type DescriptionTextProps } from './description'
 import { getColumn, type Column } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
-import { FormattedDescription } from './formatted-description'
 import type { Config } from '../type'
 
 export function Column(
@@ -9,9 +9,11 @@ export function Column(
     column?: Column
     config?: Config
     context?: Record<string, unknown>
+    description?: React.ComponentType<DescriptionTextProps>
     translations?: Record<string, string>
   }>
 ) {
+  const Description = props.description ?? DescriptionText
   const cols = getColumn(props.column?.advanced?.cols)
 
   return (
@@ -23,7 +25,7 @@ export function Column(
         {props.children}
       </div>
       {props.column?.description && (
-        <FormattedDescription
+        <Description
           config={props.config}
           context={props.context}
           text={props.column.description}

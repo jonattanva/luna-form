@@ -8,6 +8,7 @@ import {
   type Style,
 } from '@luna-form/core'
 import { Column } from '../column'
+import type { DescriptionTextProps } from '../description'
 import { Fragment } from 'react'
 import { SlotList } from './slot-list'
 import type { Children, Config } from '../../type'
@@ -15,6 +16,7 @@ import type { FieldProps } from '../field/field'
 import type { ListProps } from '../field/field-list'
 
 export type SlotComponents = {
+  description?: React.ComponentType<DescriptionTextProps>
   field: React.ComponentType<FieldProps>
   list: React.ComponentType<ListProps>
 }
@@ -56,6 +58,7 @@ export function SlotBase(
           column={field}
           config={props.config}
           context={props.context}
+          description={props.components.description}
           translations={props.translations}
         >
           <SlotBase {...props} fields={field.fields} />

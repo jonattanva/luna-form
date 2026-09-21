@@ -1,6 +1,6 @@
 import { FieldSetAdvanced } from './field-set-advanced'
-import { FieldSetBase } from './field-set-base'
-import { Group } from '../group'
+import { FieldSetBase } from '../../../component/field/field-set-base'
+import { Group } from '../../../component/group'
 import {
   mergeStyle,
   translateOptional,

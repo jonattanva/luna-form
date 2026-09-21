@@ -1,5 +1,5 @@
-import { FieldDescription } from './field-description'
 import { Label } from './label'
+import { StaticDescription, type DescriptionProps } from './field-description'
 import { interpolateIfNeeded, translate, type Field } from '@luna-form/core'
 import type { Config } from '../type'
 
@@ -7,11 +7,14 @@ export function InputLabel(
   props: Readonly<{
     config?: Config
     context?: Record<string, unknown>
+    description?: React.ComponentType<DescriptionProps>
     field: Field
     horizontal?: boolean
     translations?: Record<string, string>
   }>
 ) {
+  const Description = props.description ?? StaticDescription
+
   const interpolateOpts = {
     context: props.context,
     env: props.config?.env,
@@ -40,7 +43,7 @@ export function InputLabel(
         {translate(label, props.translations)}
       </Label>
       {props.horizontal === true && (
-        <FieldDescription
+        <Description
           config={props.config}
           context={props.context}
           field={props.field}

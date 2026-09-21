@@ -1,11 +1,29 @@
 import { Control as Action } from './control'
-import { FieldSet } from './field/field-set'
+import { StaticFieldSet } from './field/field-set-static'
 import { Group } from './group'
 import { Separator } from './separator'
-import { VisibilityGuard } from '../client/component/guard/visibility-guard'
+import { isGuardHidden } from '../lib/visibility'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Control, Slot } from '../type'
+import type { Fields } from '@luna-form/core'
 import type { FormEvent } from 'react'
+
+export type GuardProps = Readonly<{
+  children: React.ReactNode
+  fields: Fields
+}>
+
+// What a form knows about visibility with nothing to read: the definition, and
+// that is all there is on the server. The guard that also reads what the form
+// has been told since is the client's, and the client passes it in -- the way
+// `createSlot` already hands this tree its `field` and its `list`.
+//
+// This is what keeps the server entry loadable under the `react-server`
+// condition: a tree shared by both sides cannot import an atom, because jotai
+// reaches for `createContext` as it loads and React does not export one there.
+export function StaticGuard(props: GuardProps) {
+  return isGuardHidden({}, props.fields) ? null : props.children
+}
 
 export function Form(
   props: Readonly<{
@@ -17,6 +35,8 @@ export function Form(
     config: Config
     control?: Control
     definition?: Definition
+    fieldSet?: React.ComponentType<React.ComponentProps<typeof StaticFieldSet>>
+    guard?: React.ComponentType<GuardProps>
     isPending?: boolean
     noValidate?: boolean
     onSubmit?: (event: FormEvent<HTMLFormElement>) => void
@@ -26,6 +46,8 @@ export function Form(
   }>
 ) {
   const sections = prepare(props.sections, props.definition)
+  const Guard = props.guard ?? StaticGuard
+  const FieldSet = props.fieldSet ?? StaticFieldSet
 
   // The client form submits through `onSubmit`, which dispatches the action
   // itself so that React resets nothing after a failed submit. See
@@ -41,7 +63,7 @@ export function Form(
       >
         <Group>
           {sections.map((section, index) => (
-            <VisibilityGuard
+            <Guard
               key={`key-${section.id}-${index}`}
               fields={section.fields ?? []}
             >
@@ -58,7 +80,7 @@ export function Form(
                 })}
               </FieldSet>
               {section.advanced?.separator && <Separator />}
-            </VisibilityGuard>
+            </Guard>
           ))}
           {props.control && (
             <Action isPending={props.isPending}>{props.control}</Action>
