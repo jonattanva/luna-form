@@ -28,4 +28,25 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
 
     expect(run).not.toThrow()
   })
+
+  // And that it renders: `/server` in the editor is a Server Component with
+  // nothing above it saying "use client", so Next resolves the entry under the
+  // condition and renders the form before any JavaScript runs. Read from the
+  // response body rather than from the page, because that is the half a browser
+  // cannot tell apart from hydration.
+  test('should render the fields from a Server Component', async ({
+    page,
+    request,
+  }) => {
+    const html = await (await request.get('/server')).text()
+
+    expect(html).toContain('name="name"')
+    expect(html).toContain('name="email"')
+    expect(html).toContain('Server rendered')
+
+    await page.goto('/server')
+
+    await expect(page.locator('input[name="name"]')).toBeVisible()
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+  })
 })
