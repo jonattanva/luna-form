@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789996087733,
+  "lastUpdate": 1789996117812,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "d6ca7c2df0e3f8ee281af4935777a9e2db0cfaf9",
-          "message": "feat: implement relative target resolution in list events using 'list/field' syntax and update docs",
-          "timestamp": "2026-05-09T22:51:04-05:00",
-          "tree_id": "0d2a0c3b6db83e8e03fcd8f92c0357bc9ab6fd34",
-          "url": "https://github.com/jonattanva/luna-form/commit/d6ca7c2df0e3f8ee281af4935777a9e2db0cfaf9"
-        },
-        "date": 1778385165174,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 538,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 132,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "c0e3503c845a49a7e35ede31551f6fa1542f9bf7",
           "message": "feat: add conditional interpolation and liquid format filters\n\n- Implement date and currency formatting for interpolation\n- Add conditional rendering for list items and descriptions\n- Update state handling for events\n- Add e2e and unit tests for new features",
           "timestamp": "2026-05-11T08:26:56-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 635,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "98b03c564d5a7a805f1d906a0e807b6c2a1d75de",
+          "message": "Merge pull request #107 from jonattanva/docs/stale-comments\n\ndocs(src): a comment points at something a reader can open",
+          "timestamp": "2026-09-21T08:07:21-05:00",
+          "tree_id": "d2c7b689e0972c1724904b680ec34e0cca8e42fe",
+          "url": "https://github.com/jonattanva/luna-form/commit/98b03c564d5a7a805f1d906a0e807b6c2a1d75de"
+        },
+        "date": 1789996117777,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 235,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 169,
             "unit": "ms"
           }
         ]
