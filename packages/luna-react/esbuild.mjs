@@ -9,6 +9,8 @@ const isWatch = process.argv.includes('--watch')
 const outputs = []
 
 const USE_CLIENT = '"use client";'
+const LOGGER_TAG = '[Luna Form]'
+const NODE_ENV = 'process.env.NODE_ENV'
 
 function isClient(outdir) {
   return outdir.includes('/client/')
@@ -25,6 +27,13 @@ function entry(entryPoints, callback) {
       // Component; unmarked, it needs a file of its own that says it.
       banner: isClient(outdir) ? { js: '"use client";' } : undefined,
       bundle: true,
+      // Left as an expression, for the bundler of whoever installs this to
+      // answer. Minifying for the browser -- the default platform -- is what
+      // decided it here instead: esbuild defines `process.env.NODE_ENV` as
+      // "production" while it minifies, so `logger`'s check was resolved inside
+      // the library and no warning ever reached a console, not even in a
+      // development build of the application reading it.
+      define: { 'process.env.NODE_ENV': 'process.env.NODE_ENV' },
       drop: ['console', 'debugger'],
       entryPoints: entryPoints,
       external: dependencies,
@@ -74,6 +83,21 @@ if (!isWatch) {
   if (unminified.length > 0) {
     console.error(
       `Build produced un-minified output in:\n${unminified.map((f) => `  - ${f}`).join('\n')}`
+    )
+    process.exit(1)
+  }
+
+  // An output that carries `logger` has to leave the question of what is
+  // production to the application reading it, or every warning the library has
+  // for whoever wrote the form is silenced before it ships.
+  const decided = outputs.filter((file) => {
+    const content = readFileSync(file, 'utf8')
+    return content.includes(LOGGER_TAG) && !content.includes(NODE_ENV)
+  })
+
+  if (decided.length > 0) {
+    console.error(
+      `Build answered ${NODE_ENV} inside the library in:\n${decided.map((f) => `  - ${f}`).join('\n')}`
     )
     process.exit(1)
   }
