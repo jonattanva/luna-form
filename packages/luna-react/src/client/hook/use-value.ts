@@ -5,7 +5,8 @@ import {
   isValidValue,
   type Field,
 } from '@luna-form/core'
-import { reportValueAtom } from '../lib/value-store'
+import { useEntryAtom } from './use-entry-atom'
+import { valueAtom } from '../lib/value-store'
 import { useAtom } from 'jotai'
 import { useCallback, useEffect, useRef, useEffectEvent } from 'react'
 import { useHostEntry } from './use-host-entry'
@@ -14,7 +15,7 @@ export function useValue(field: Field) {
   const { name } = field
 
   const skipNextOnChangeRef = useRef(false)
-  const [value, setValue] = useAtom(reportValueAtom(name))
+  const [value, setValue] = useAtom(useEntryAtom(valueAtom, name))
 
   // This field's entry, and nothing else.
   //

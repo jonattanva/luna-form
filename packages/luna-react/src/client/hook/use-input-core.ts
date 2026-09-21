@@ -1,15 +1,15 @@
 import { fieldStateAtom } from '../lib/state-store'
 import { ListPathContext } from '../context/list-path-context'
 import { omitKey } from '../lib/store-helper'
-import { reportInputErrorAtom } from '../lib/error-store'
+import { inputErrorAtom } from '../lib/error-store'
 import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
 import {
   appliedAutoFillAtom,
   pendingAutoFillAtom,
-  reportValueAtom,
   valueAtom,
 } from '../lib/value-store'
 import { use, useCallback, useTransition } from 'react'
+import { useEntryAtom } from './use-entry-atom'
 import { useInput } from './use-input'
 import { useLatest } from './use-latest'
 import { useSetAtom, useStore } from 'jotai'
@@ -96,7 +96,7 @@ export function useInputCore(
 
   const setValues = useSetAtom(valueAtom)
   const setFieldStates = useSetAtom(fieldStateAtom)
-  const setErrors = useSetAtom(reportInputErrorAtom(props.field.name))
+  const setErrors = useSetAtom(useEntryAtom(inputErrorAtom, props.field.name))
   const setAppliedAutoFill = useSetAtom(appliedAutoFillAtom)
   const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
@@ -503,7 +503,7 @@ export function useInputCore(
         ? validateCustom(
             value,
             custom,
-            (name) => store.get(reportValueAtom(name)),
+            (name) => store.get(valueAtom)[name],
             translationsRef.current
           )
         : []

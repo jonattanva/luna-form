@@ -30,13 +30,9 @@ import {
   ListPathContext,
   type TranslateListPath,
 } from '../context/list-path-context'
-import {
-  mountedListsAtom,
-  pendingListRowsAtom,
-  reportMountedListAtom,
-  reportPendingListRowsAtom,
-} from '../lib/list-store'
+import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
 import { resolveValue } from '../lib/resolve-value'
+import { useEntryAtom } from './use-entry-atom'
 import { useLatest } from './use-latest'
 import { valueAtom } from '../lib/value-store'
 
@@ -291,7 +287,7 @@ export function useFieldList(
   // Withdrawing it is a second effect rather than this one's cleanup, so that
   // a row added or removed here is one write to the registry instead of a
   // withdrawal and a re-registration.
-  const reportMounted = useSetAtom(reportMountedListAtom(field.name))
+  const reportMounted = useSetAtom(useEntryAtom(mountedListsAtom, field.name))
   const keepValue = keepsValue(field)
   useEffect(() => {
     reportMounted({
@@ -330,7 +326,7 @@ export function useFieldList(
   )
 
   const [pendingRows, reportPendingRows] = useAtom(
-    reportPendingListRowsAtom(field.name)
+    useEntryAtom(pendingListRowsAtom, field.name)
   )
 
   const applyRows = useEffectEvent((rows: Array<Record<string, unknown>>) => {

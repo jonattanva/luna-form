@@ -6,8 +6,6 @@ const store = createAtomStore<unknown>()
 export const valueAtom = store.atom
 export const clearAllValueAtom = store.clearAll
 export const clearInputValueAtom = store.clear
-export const releaseInputValueAtom = store.release
-export const reportValueAtom = store.report
 
 // What a `value` change event has delivered to each target, and what it still
 // owes one. Both are keyed by the target rather than by the source that

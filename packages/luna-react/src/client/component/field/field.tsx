@@ -1,6 +1,41 @@
 import { Field as Component } from '../../../component/field/field'
 import { memo } from 'react'
-import { withError, withState } from './field-with-state'
+import { fieldStateAtom } from '../../lib/state-store'
+import { inputErrorAtom } from '../../lib/error-store'
+import { useEntryAtom } from '../../hook/use-entry-atom'
+import { useAtomValue } from 'jotai'
+import type { FieldProps } from '../../../component/field/field'
+
+/**
+ * Everything a field reads from the store, in one component, with the memo
+ * around it rather than inside.
+ *
+ * Two wrappers used to sit outside that memo, one per atom, and both of them
+ * ran on every render of the form: a hundred fields cost two hundred renders a
+ * keystroke on a controlled host, for the memo underneath to then find every
+ * prop unchanged. Outside, the same comparison stops the field whole, the two
+ * reads included.
+ *
+ * Stopping there does not cut a field off from the store. What it reads are
+ * subscriptions, so its own state and its own errors render it whatever its
+ * props do -- which is the only way either of them changes.
+ */
+function FieldWithMeta(props: FieldProps) {
+  const state = useAtomValue(useEntryAtom(fieldStateAtom, props.field.name))
+  const errors = useAtomValue(useEntryAtom(inputErrorAtom, props.field.name))
+
+  if (state?.hidden ?? props.field.hidden ?? false) {
+    return null
+  }
+
+  return (
+    <Component
+      {...props}
+      disabled={state?.disabled ?? props.disabled}
+      errors={errors}
+    />
+  )
+}
 
 /**
  * A field renders when something it can see has changed, and not because a
@@ -18,7 +53,7 @@ import { withError, withState } from './field-with-state'
  * prop, so `children` is a stable callback rather than a closure rebuilt
  * whenever that value moved; a field reads its own entry from the store, and
  * the one thing that has to be read while rendering comes through a context
- * whose identity never changes. `errors` is the one prop that moves, and it
- * moves for the field it belongs to.
+ * whose identity never changes. What used to move, `errors`, is read from the
+ * store now, on the inside of this comparison.
  */
-export const Field = withState(withError(memo(Component)))
+export const Field = memo(FieldWithMeta)

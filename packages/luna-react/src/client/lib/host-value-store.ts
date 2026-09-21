@@ -1,6 +1,5 @@
 import { atom } from 'jotai'
-import { atomFamily } from 'jotai-family'
-import { resolveEntry } from './resolve-value'
+import { resolveEntry } from '@luna-form/core'
 import type { Nullable } from '@luna-form/core'
 
 /**
@@ -39,13 +38,11 @@ const MISSING = Symbol('host-value-missing')
  * read; doing it at the call site is what keeps this correct where a memo
  * comparator could not be. See `ListPathContext`.
  *
- * Not released the way the per-name families in `store-helper` are, and it does
- * not need to be for the same reason it is keyed this way: a position is reused
- * where a stable id only ever climbs, so the keys here are bounded by the
- * widest the form has ever been rather than by every row it has ever held.
- * Measured going 1 -> 20 -> 14 -> 20 rows: the released families fall back to
- * 23 and this one stays at 29, its high-water mark. Worth knowing before
- * someone reads the absence of a release as an oversight.
+ * Made by whoever subscribes rather than cached by name, so it goes with the
+ * component that asked: a family kept one per name for the life of the page,
+ * and this one was never released at all -- 110 keys after ten definitions of
+ * ten fields. See `useEntryAtom` for the same move on the records a field
+ * writes into.
  */
 /** What the host says about one field, with the sentinel already read. */
 export type HostEntry = {
@@ -60,8 +57,8 @@ export function readHostEntry(entry: unknown): HostEntry {
     : { found: true, value: entry }
 }
 
-export const hostEntryAtom = atomFamily((name: string) =>
-  atom((get) => {
+export function hostEntryAtom(name: string) {
+  return atom((get) => {
     const current = get(hostValue)
     if (!current) {
       return MISSING
@@ -70,4 +67,4 @@ export const hostEntryAtom = atomFamily((name: string) =>
     const entry = resolveEntry(name, current)
     return entry.found ? entry.value : MISSING
   })
-)
+}

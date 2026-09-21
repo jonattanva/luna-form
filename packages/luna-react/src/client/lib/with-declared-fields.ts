@@ -1,4 +1,4 @@
-import { resolveEntry } from './resolve-value'
+import { resolveEntry } from '@luna-form/core'
 import type { Fields, Sections } from '@luna-form/core'
 
 // Every field name the form declares, in declaration order. A column carries no

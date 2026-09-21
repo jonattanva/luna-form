@@ -78,9 +78,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-2',
-    title: 'the two wrappers around every field render on every keystroke',
-    // `withState(withError(memo(Field)))`: the memo is the innermost layer.
-    counts: { wrapper: 200 },
+    title: 'a host render stops at the memo of every field',
+    // The memo is the outermost layer now, so a render of the form with equal
+    // props stops before the field reads anything.
+    counts: { wrapper: 0 },
     target: { wrapper: 0 },
     measure: async (page) => {
       await openScenario(page, flat(100), '/reactive')
@@ -89,9 +90,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-3',
-    title: 'a definition re-renders every field and rebuilds its schema',
-    // `prepare` resolves $refs into new objects on every render.
-    counts: { render: 30, schema: 30 },
+    title: 'a definition leaves the fields and their schemas alone',
+    // `prepare` answers the same pair of sections and definition with the same
+    // array, and a node with no `$ref` under it comes back as itself.
+    counts: { render: 0, schema: 0 },
     target: { render: 0, schema: 0 },
     measure: async (page) => {
       await openScenario(page, flat(30, UNUSED_DEFINITION), '/reactive')
@@ -100,8 +102,8 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'REN-3',
-    title: 'a definition runs the list hand-off on every keystroke',
-    counts: { handoff: 1 },
+    title: 'a definition leaves the list hand-off to unmount',
+    counts: { handoff: 0 },
     target: { handoff: 0 },
     measure: async (page) => {
       await openScenario(page, plainAndList(5, UNUSED_DEFINITION), '/reactive')
@@ -153,9 +155,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'SOB-1',
-    title: 'cached atoms grow with every definition the form has shown',
-    // Ten definitions of ten fields each: `hostEntryAtom` is never released.
-    counts: { atoms: 100 },
+    title: 'no atom outlives the definition it was made for',
+    // Ten definitions of ten fields each. Nothing caches an atom by name any
+    // more, so there is nothing left to count.
+    counts: { atoms: 0 },
     target: { atoms: 0 },
     measure: async (page) => {
       await openScenario(page, flat(10, {}, 's0'), '/')
@@ -170,10 +173,10 @@ const BUDGETS: Budget[] = [
   },
   {
     id: 'SOB-1',
-    title: 'cached atoms grow with every row a nested list has held',
+    title: 'no atom outlives the row it was made for',
     // Two more rounds of adding and removing ten rows, after a first one has
-    // reached every position: what is left is growth by stable id.
-    counts: { atoms: 40 },
+    // reached every position: what grew by stable id is gone with the families.
+    counts: { atoms: 0 },
     target: { atoms: 0 },
     measure: async (page) => {
       await openScenario(page, nestedGroups, '/')
@@ -202,7 +205,6 @@ test.describe('Render budgets', { tag: ['@render'] }, () => {
       Object.values(alive).every((count) => count > 0),
       `every counter that fires on mount has to be alive: ${JSON.stringify(alive)}`
     ).toBe(true)
-    expect(await cachedAtoms(page)).toBeGreaterThan(0)
   })
 
   for (const budget of BUDGETS) {

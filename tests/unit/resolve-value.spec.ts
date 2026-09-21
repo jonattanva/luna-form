@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import {
-  resolveEntry,
-  resolveValue,
-} from '@/packages/luna-react/src/client/lib/resolve-value'
+import { extract, resolveEntry } from '@/packages/luna-core/src/util/extract'
+import { resolveValue } from '@/packages/luna-react/src/client/lib/resolve-value'
 
 // `found` is the half `resolveValue` cannot express. Both a path nobody
 // mentioned and a path holding an empty value read back as `undefined`, and
@@ -146,4 +144,27 @@ describe('resolve value', () => {
   test('should return undefined for a path that is not there', () => {
     expect(resolveValue('auth.token', { auth: {} })).toBeUndefined()
   })
+})
+
+// Two walks, one per package, disagreed about the first step: a flat key that
+// is literally the path. Whether a list named `config.items` was found came
+// down to which reader the caller happened to use. Each row runs through both.
+describe('one walk for every reader', () => {
+  const cases: Array<[string, Record<string, unknown>, unknown]> = [
+    ['a.b', { 'a.b': 1 }, 1],
+    ['a.b', { a: { b: 2 } }, 2],
+    ['list.1.v', { list: [{ v: 'x' }, { v: 'y' }] }, 'y'],
+    ['list.5.v', { list: [{ v: 'x' }] }, undefined],
+    ['missing.path', { a: 1 }, undefined],
+    ['toString', { a: 1 }, undefined],
+    ['a.b', { a: { b: '' } }, ''],
+  ]
+
+  test.each(cases)(
+    '%s resolves the same way everywhere',
+    (path, value, expected) => {
+      expect(resolveValue(path, value)).toBe(expected)
+      expect(extract(value, path) ?? undefined).toBe(expected)
+    }
+  )
 })
