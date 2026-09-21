@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789989955579,
+  "lastUpdate": 1789989981512,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "08e501c25d28a46677b13687ade0e4fa19ae78ac",
-          "message": "fix(test): wait for hover styles in list-add-button e2e",
-          "timestamp": "2026-05-08T23:52:33-05:00",
-          "tree_id": "a9381db64be79d674a25c17255bd9218c9540992",
-          "url": "https://github.com/jonattanva/luna-form/commit/08e501c25d28a46677b13687ade0e4fa19ae78ac"
-        },
-        "date": 1778302434527,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 262,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 620,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "b754720db2fa4b6a850d0d6c90dbdafde7ad11d8",
           "message": "refactor(tests): update e2e test tags format and remove unstable hover test",
           "timestamp": "2026-05-09T00:06:42-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 112,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "82fc0a64b01f070924564c2addb51def807a4bf6",
+          "message": "Merge pull request #102 from jonattanva/fix/server-entry-rsc\n\nfix(server): the server entry loads under the react-server condition again",
+          "timestamp": "2026-09-21T06:25:11-05:00",
+          "tree_id": "a5556984539768bbc2c6919f10f7188277f3d85d",
+          "url": "https://github.com/jonattanva/luna-form/commit/82fc0a64b01f070924564c2addb51def807a4bf6"
+        },
+        "date": 1789989981465,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 305,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 678,
             "unit": "ms"
           }
         ]
