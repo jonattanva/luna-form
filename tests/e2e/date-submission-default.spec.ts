@@ -113,8 +113,9 @@ test.describe(
       await page.locator('input[name="birth_date"]').fill('next tuesday')
       await page.getByRole('button', { name: 'Submit' }).click()
 
+      // Exact, or it matches the definition in the editor beside the form.
       await expect(
-        page.getByText('Write the date as June 15, 2024').first()
+        page.getByText('Write the date as June 15, 2024', { exact: true }).first()
       ).toBeVisible()
       await expect(page.getByText('Form submitted successfully')).toBeHidden()
     })
