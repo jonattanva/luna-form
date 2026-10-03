@@ -20,6 +20,7 @@ import {
   handleSourceEvent,
   handleStateEvent,
   handleValueEvent,
+  holdValue,
   isClickable,
   isEmpty,
   isInput,
@@ -448,10 +449,16 @@ export function useInputCore(
           return
         }
 
+        // Held the way the target holds a value it is given, a date as
+        // `yyyy-MM-dd`, so a value the user did not type is no different.
         const transform = getTransform(newTarget)
-        const transformed = transform
+        const targetField = props.getField(newTarget)
+        const written = transform
           ? applyTransform(candidate, transform)
           : candidate
+        const transformed = targetField
+          ? holdValue(targetField, written)
+          : written
 
         const previousValues = store.get(valueAtom) as Record<string, unknown>
         const current = previousValues[newTarget]

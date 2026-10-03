@@ -1,10 +1,17 @@
-import { evaluateCondition, isString, translate } from '@luna-form/core'
+import {
+  dateFormatOf,
+  evaluateCondition,
+  flattenListFields,
+  isString,
+  translate,
+} from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
 import { FieldPreview } from './field-preview'
 import { FieldPreviewValue } from './field-preview-value'
 import { resolveValue } from '../../lib/resolve-value'
 import { useLiveItemValue } from '../../hook/use-live-item-value'
-import type { List, Nullable, PreviewItem } from '@luna-form/core'
+import { useMemo } from 'react'
+import type { DateFormat, List, Nullable, PreviewItem } from '@luna-form/core'
 import type { ReactNode } from 'react'
 
 export function FieldListPreviewItem({
@@ -41,6 +48,15 @@ export function FieldListPreviewItem({
   const name = `${field.name}.${itemKey}`
   const fallbackLabel = `${label} ${index + 1}`
 
+  // The label names one leaf of the row; when that leaf is a date, the label
+  // shows it the way the field does. See `dateFormatOf`.
+  const labelDateFormat = useMemo(() => {
+    const leaf = isString(previewLabel) ? previewLabel : previewLabel?.field
+    return leaf
+      ? dateFormatOf(flattenListFields(field.fields)[leaf])
+      : undefined
+  }, [field.fields, previewLabel])
+
   return (
     <FieldListItem
       canRemove={canRemove}
@@ -50,6 +66,7 @@ export function FieldListPreviewItem({
       label={label}
       onRemove={onRemove}
       previewLabel={renderPreviewLabel({
+        dateFormat: labelDateFormat,
         fallbackLabel,
         name,
         previewLabel,
@@ -89,6 +106,7 @@ export function FieldListPreviewItem({
 }
 
 type PreviewLabelProps = Readonly<{
+  dateFormat?: DateFormat
   fallbackLabel: string
   item: Exclude<PreviewItem, string>
   name: string
@@ -97,12 +115,14 @@ type PreviewLabelProps = Readonly<{
 }>
 
 function renderPreviewLabel({
+  dateFormat,
   fallbackLabel,
   name,
   previewLabel,
   translations,
   value,
 }: {
+  dateFormat?: DateFormat
   fallbackLabel: string
   name: string
   previewLabel?: PreviewItem
@@ -122,6 +142,7 @@ function renderPreviewLabel({
   if (item.when !== undefined) {
     return (
       <ConditionalPreviewLabel
+        dateFormat={dateFormat}
         fallbackLabel={fallbackLabel}
         item={item}
         name={name}
@@ -131,7 +152,14 @@ function renderPreviewLabel({
     )
   }
 
-  return previewLabelContent({ fallbackLabel, item, name, translations, value })
+  return previewLabelContent({
+    dateFormat,
+    fallbackLabel,
+    item,
+    name,
+    translations,
+    value,
+  })
 }
 
 function ConditionalPreviewLabel(props: PreviewLabelProps) {
@@ -148,6 +176,7 @@ function ConditionalPreviewLabel(props: PreviewLabelProps) {
 }
 
 function previewLabelContent({
+  dateFormat,
   fallbackLabel,
   item,
   name,
@@ -166,6 +195,7 @@ function previewLabelContent({
 
   return (
     <FieldPreviewValue
+      dateFormat={dateFormat}
       initialValue={value ? resolveValue(fieldName, value) : undefined}
       name={fieldName}
     >

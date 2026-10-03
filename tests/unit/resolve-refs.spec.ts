@@ -76,3 +76,44 @@ describe('Resolve refs', () => {
     expect(result).toEqual([{ id: 1 }, { id: 2 }])
   })
 })
+
+// `#/context/` reads what the host passed as the form's `context`, beside the
+// definition the form reuses, with the same syntax and the same walk.
+describe('Resolve refs into context', () => {
+  test('should resolve a reference into context', () => {
+    const obj = { min: { $ref: '#/context/dates.today' } }
+    const result = resolveRefs(obj, undefined, {
+      dates: { today: '2026-10-02' },
+    })
+    expect(result).toEqual({ min: '2026-10-02' })
+  })
+
+  test('should read each root from its own object', () => {
+    const obj = [{ $ref: '#/definition/item' }, { $ref: '#/context/item' }]
+    const result = resolveRefs(
+      obj,
+      { item: 'from definition' },
+      { item: 'from context' }
+    )
+    expect(result).toEqual(['from definition', 'from context'])
+  })
+
+  test('should let a definition entry point into context', () => {
+    const definition = { checkIn: { min: { $ref: '#/context/today' } } }
+    const obj = { $ref: '#/definition/checkIn' }
+    const result = resolveRefs(obj, definition, { today: '2026-10-02' })
+    expect(result).toEqual({ min: '2026-10-02' })
+  })
+
+  test('should leave a reference into context standing without a context', () => {
+    const obj = { $ref: '#/context/today' }
+    expect(resolveRefs(obj, { today: 'definition' })).toEqual(obj)
+    expect(resolveRefs(obj, undefined, {})).toEqual(obj)
+  })
+
+  test('should keep reading a path with no root from the definition', () => {
+    const obj = { $ref: 'input' }
+    const result = resolveRefs(obj, { input: { id: 1 } }, { input: { id: 2 } })
+    expect(result).toEqual({ id: 1 })
+  })
+})

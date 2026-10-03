@@ -43,4 +43,30 @@ test.describe('Definition form', { tag: ['@e2e'] }, () => {
     const option = page.getByRole('option', { name: 'Leanne Graham' })
     await expect(option).toBeVisible()
   })
+
+  test('should resolve a $ref into the context the form is given', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+            "context": { "labels": { "nickname": "Apodo" } },
+            "sections": [
+                {
+                    "fields": [
+                        {
+                            "label": { "$ref": "#/context/labels.nickname" },
+                            "name": "nickname",
+                            "type": "input/text"
+                        }
+                    ]
+                }
+            ]
+        }`
+    )
+
+    await page.goto('')
+
+    await expect(page.getByLabel('Apodo')).toBeVisible()
+  })
 })

@@ -1,6 +1,7 @@
 import { deepEqual } from 'fast-equals'
 import {
   applyTransform,
+  holdValue,
   isInput,
   isValidValue,
   type Field,
@@ -28,9 +29,12 @@ export function useValue(field: Field) {
   const { found, value: hostValue } = useHostEntry(name)
 
   const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
+    // The host's value and a `defaultValue` come in by the same door as
+    // everything else a field holds: a date as `yyyy-MM-dd`. See `holdValue`.
+    const held = holdValue(field, rawValue)
     const transformedValue = isInput(field)
-      ? applyTransform(rawValue, field.advanced?.transform)
-      : rawValue
+      ? applyTransform(held, field.advanced?.transform)
+      : held
 
     if (!silent && !deepEqual(value, transformedValue)) {
       skipNextOnChangeRef.current = true

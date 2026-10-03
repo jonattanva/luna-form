@@ -33,6 +33,7 @@ export function Form(
     action?: (formData: FormData) => void
     children: Slot
     config: Config
+    context?: Record<string, unknown>
     control?: Control
     definition?: Definition
     fieldSet?: React.ComponentType<React.ComponentProps<typeof StaticFieldSet>>
@@ -45,7 +46,7 @@ export function Form(
     translations?: Record<string, string>
   }>
 ) {
-  const sections = prepare(props.sections, props.definition)
+  const sections = prepare(props.sections, props.definition, props.context)
   const Guard = props.guard ?? StaticGuard
   const FieldSet = props.fieldSet ?? StaticFieldSet
 

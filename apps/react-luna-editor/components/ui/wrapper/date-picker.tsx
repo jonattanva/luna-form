@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { format as fnsFormat, isValid, parse } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
+import { readDateProps } from 'react-luna-form/config'
 
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -17,40 +18,51 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-const NATIVE_FORMAT = 'yyyy-MM-dd'
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+const ISO_FORMAT = 'yyyy-MM-dd'
 
-function parseDate(value: string, format: string): Date | undefined {
-  if (!value) {
+// `yyyy-MM-dd` is a day, not an instant, so it is read in local time:
+// `new Date('2026-10-02')` is midnight UTC, the day before anywhere west of
+// Greenwich. As strict as the form is: `2024-6-5` is no day here either.
+function parseDay(value?: string): Date | undefined {
+  if (!value || !ISO_DATE.test(value)) {
     return undefined
   }
 
-  try {
-    const date = parse(value, format, new Date())
-    return isValid(date) ? date : undefined
-  } catch {
-    return undefined
-  }
+  const date = parse(value, ISO_FORMAT, new Date())
+  return isValid(date) ? date : undefined
+}
+
+// The form hands over a day as `yyyy-MM-dd`, or the text someone typed that is
+// no day: the first is shown in the field's format, the second as it is.
+function display(value: string | undefined, format: string): string {
+  const day = parseDay(value)
+  return day ? fnsFormat(day, format) : (value ?? '')
 }
 
 export function DatePickerInput({
+  defaultValue,
+  onBlur,
   onChange,
   value,
-  'data-format': dateFormat = NATIVE_FORMAT,
   ...props
 }: {
   'data-format'?: string
+  defaultValue?: string
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   value?: string
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [localValue, setLocalValue] = React.useState(value ?? '')
-  const isFocused = React.useRef(false)
+  const { format } = readDateProps(props)
 
-  React.useEffect(() => {
-    if (!isFocused.current) {
-      setLocalValue(value ?? '')
-    }
-  }, [value])
+  // The client form hands over `value`, the server form `defaultValue`.
+  const current = value ?? defaultValue
+
+  const [open, setOpen] = React.useState(false)
+
+  // What the person is typing, while they type it. `null` shows the day the
+  // field holds, in its format, so nothing has to copy the prop into state.
+  const [draft, setDraft] = React.useState<string | null>(null)
 
   function commit(raw: string) {
     if (onChange) {
@@ -60,37 +72,36 @@ export function DatePickerInput({
     }
   }
 
+  // What a person types goes to the form as typed: the form reads it in the
+  // field's format, and keeps it as text if it is no day.
   function handleValueChange(event: React.ChangeEvent<HTMLInputElement>) {
     const raw = event.target.value
-    setLocalValue(raw)
+    setDraft(raw)
     commit(raw)
   }
 
-  function handleFocus() {
-    isFocused.current = true
-  }
-
-  function handleBlur() {
-    isFocused.current = false
-    setLocalValue(value ?? '')
+  // The form's own blur runs too: it validates the field and releases an
+  // auto-fill that was waiting for the user to leave it.
+  function handleBlur(event: React.FocusEvent<HTMLInputElement>) {
+    setDraft(null)
+    onBlur?.(event)
   }
 
   function handleCalendarSelect(date: Date | undefined) {
-    const native = date ? fnsFormat(date, NATIVE_FORMAT) : ''
-    commit(native)
+    setDraft(null)
+    commit(date ? fnsFormat(date, ISO_FORMAT) : '')
     setOpen(false)
   }
 
-  const selectedDate = parseDate(value ?? '', dateFormat)
+  const selectedDate = parseDay(current)
 
   return (
     <InputGroup>
       <InputGroupInput
         {...props}
         type="text"
-        value={localValue}
+        value={draft ?? display(current, format)}
         onChange={handleValueChange}
-        onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {

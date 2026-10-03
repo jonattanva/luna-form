@@ -136,3 +136,90 @@ describe('Prepare with $ref', () => {
     })
   })
 })
+
+describe('Prepare with a $ref into context', () => {
+  type Prepared = Array<{
+    fields: Array<{ advanced: { length: { min: unknown } } }>
+  }>
+
+  const form = () =>
+    [
+      {
+        fields: [
+          {
+            name: 'check_in',
+            type: 'input/date',
+            advanced: { length: { min: { $ref: '#/context/dates.today' } } },
+          },
+        ],
+      },
+    ] as unknown as Filterable[]
+
+  const context = { dates: { today: '2026-10-02' } }
+
+  test('should resolve to the value the host passed in context', () => {
+    const [section] = prepare(form(), undefined, context) as unknown as Prepared
+    expect(section.fields[0].advanced.length.min).toBe('2026-10-02')
+  })
+
+  test('should answer the same sections and context with the same array', () => {
+    const sections = form()
+    expect(prepare(sections, undefined, context)).toBe(
+      prepare(sections, undefined, context)
+    )
+  })
+
+  test('should resolve again for another context', () => {
+    const sections = form()
+    const tomorrow = { dates: { today: '2026-10-03' } }
+
+    const first = prepare(sections, undefined, context)
+    const second = prepare(sections, undefined, tomorrow) as unknown as Prepared
+
+    expect(second).not.toBe(first)
+    expect(second[0].fields[0].advanced.length.min).toBe('2026-10-03')
+  })
+
+  // A host that feeds interpolation tends to hand over a new context on every
+  // render, `context={{ user }}`. A form that reads none of it through `$ref`
+  // does not depend on it, and keeps what it resolved to.
+  test('should answer a form that reads no context the same for any context', () => {
+    const sections = [
+      {
+        fields: [
+          {
+            name: 'remote',
+            type: 'select',
+            source: { $ref: '#/definition/common' },
+          },
+        ],
+      },
+    ] as unknown as Filterable[]
+    const definition = { common: { url: 'https://api.example.com' } }
+
+    const first = prepare(sections, definition, { user: 'Ana' })
+
+    expect(prepare(sections, definition, { user: 'Ana' })).toBe(first)
+    expect(prepare(sections, definition, { user: 'Luis' })).toBe(first)
+  })
+
+  test('should answer a form with no $ref the same for any context', () => {
+    const sections = [
+      { fields: [{ name: 'plain', type: 'input/text' }] },
+    ] as unknown as Filterable[]
+
+    const first = prepare(sections, undefined, { user: 'Ana' })
+
+    expect(prepare(sections, undefined, { user: 'Luis' })).toBe(first)
+  })
+
+  test('should keep definition and context in their own cache entries', () => {
+    const sections = form()
+    const definition = { unused: {} }
+
+    const withBoth = prepare(sections, definition, context)
+
+    expect(prepare(sections, definition, context)).toBe(withBoth)
+    expect(prepare(sections, undefined, context)).not.toBe(withBoth)
+  })
+})

@@ -1,4 +1,5 @@
 import type { core, z, ZodObject } from 'zod'
+import type { DATE_FORMATS } from './util/constant'
 
 // `z.ZodType` without generics, which is what `z.ZodTypeAny` was an alias for
 // -- both default all three parameters to the same thing. Zod 4 keeps the old
@@ -27,8 +28,7 @@ export type Description =
     }
 
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
-export type DateFormat =
-  'yyyy-MM-dd' | 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'MMMM d, yyyy'
+export type DateFormat = (typeof DATE_FORMATS)[number]
 
 export type DataSource = {
   body?: BodyInit | Record<string, unknown>
@@ -256,6 +256,9 @@ export type AssertRule = {
 
 export type Validation = {
   custom?: CustomValidation | Array<CustomValidation>
+  // An `input/date` holding text that is no day: typed in another format, or
+  // an impossible one such as February 30.
+  date?: string
   email?: string
   length?: Length<string>
   required?: string

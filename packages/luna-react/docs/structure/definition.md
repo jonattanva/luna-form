@@ -67,6 +67,35 @@ section:
 References inside a definition are resolved too, so one entry can be built out
 of others.
 
+## What the host knows: `#/context/`
+
+A definition is JSON the form reuses. What the host only knows when it renders,
+such as the options a user may pick or the nights already booked, is passed as
+the form's `context` prop instead and read with the same syntax, under
+`#/context/`:
+
+```json
+{
+  "name": "room",
+  "type": "select",
+  "source": { "$ref": "#/context/rooms" }
+}
+```
+
+```tsx
+<Form sections={sections} context={{ rooms }} config={config} />
+```
+
+Both roots resolve the same way and follow the rules below. A path with no root
+reads the definition, as it always has, and an entry of the definition can
+point into `#/context/`.
+
+A form whose JSON never reads `#/context/` does not depend on `context`, however
+often the host hands over a new one. A form that does is resolved again
+whenever `context` is a new object, so keep it the same object while nothing in
+it changes, and hand over a new one when something does: a `$ref` does not see
+a value changed in place.
+
 ## The rules
 
 - **Resolution happens once, before anything else.** The tree is resolved first,
@@ -76,24 +105,25 @@ of others.
   stays as the literal `{ "$ref": ... }` object. What that looks like on screen
   depends on where it was — a field whose `source` is still a reference renders
   with no options at all, which is the usual way a typo in the path is noticed.
-- **An empty or missing `definition` resolves nothing.** `definition={{}}` is
-  treated as absent, and every `$ref` in the form is left as written.
+- **An empty or missing root resolves nothing under it.** `definition={{}}` is
+  treated as absent, and so is `context={{}}`: every `$ref` into a root that is
+  absent is left as written.
 - **A cycle stops instead of hanging.** Two entries pointing at each other
   resolve until the loop closes and leave the reference that would repeat
   unresolved.
 
 ## Pass it everywhere the sections go
 
-`definition` is a prop of both the client and the server `Form`, and the third
-argument of the headless builder:
+`definition` and `context` are props of both the client and the server `Form`,
+and the third and fourth arguments of the headless builder:
 
 ```ts
 import { buildFormSchema } from 'react-luna-form/schema'
 
-const schema = buildFormSchema(sections, translations, definition)
+const schema = buildFormSchema(sections, translations, definition, context)
 ```
 
-A schema built without the definition sees `$ref` objects where the form sees
+A schema built without them sees `$ref` objects where the form sees
 fields — the rendered form and the validated shape drift apart, which is the one
 thing [the schema being derived from the same descriptors](../validation/overview.md#headless-validation)
 is meant to prevent.
