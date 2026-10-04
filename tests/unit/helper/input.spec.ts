@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import {
   buildCommon,
   prepareDefaultValue,
@@ -544,6 +544,42 @@ describe('date fields', () => {
     expect(buildCommon(unknown)).toMatchObject({
       'data-format': 'MMMM d, yyyy',
     })
+  })
+
+  test('should put the bounds on the props both render paths build', () => {
+    const bounded: DateField = {
+      ...field,
+      advanced: {
+        ...field.advanced,
+        length: { min: '2026-10-05', max: '2026-10-20' },
+      },
+    }
+
+    expect(buildCommon(bounded)).toMatchObject({
+      max: '2026-10-20',
+      min: '2026-10-05',
+    })
+  })
+
+  // What a native `<input type="date">` would ignore is not put on it at all,
+  // so the component and the schema read the same bounds.
+  // And it is named where the props are built, which a server render does
+  // without ever building a schema.
+  test('should leave out a bound that is no yyyy-MM-dd day and name it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const props = buildCommon(
+        JSON.parse(
+          '{"name":"d","type":"input/date","advanced":{"length":{"min":"05/10/2026","max":{"$ref":"#/context/end"}}}}'
+        ) as DateField
+      )
+
+      expect(props).not.toHaveProperty('min')
+      expect(props).not.toHaveProperty('max')
+      expect(warn).toHaveBeenCalledTimes(2)
+    } finally {
+      warn.mockRestore()
+    }
   })
 
   test('should put the format on a time field beside its step', () => {

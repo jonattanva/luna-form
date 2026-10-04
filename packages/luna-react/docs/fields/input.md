@@ -54,7 +54,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 
 These basic field types support extra manipulation properties inside the `advanced` block:
 
-- **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type).
+- **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type). On an `input/date` the bounds are days instead; see [The first and the last day](#the-first-and-the-last-day).
 - **`step`** _(number)_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `0.001` for three decimals. A step has to be a number above 0. The browser ignores 0 and below, and so does the form; text such as `"any"` is no step either, and it is never rendered. Either way the number stays whole.
 - **`transform`** _(string | string[])_: Safely intercepts user inputs and manipulates content dynamically. Options include:
   - `"lowercase"`
@@ -83,6 +83,40 @@ An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`. That is the 
 - In a description, `{value}` is the `yyyy-MM-dd` text. To show it another way, use a filter such as `{value | date:long}`.
 - Everything that compares a date sees `yyyy-MM-dd` too: a `when`, a `custom` or `rules` validation, a change event. Write the dates they compare against that way, as in `"value": "2026-10-01"`.
 
+### The first and the last day
+
+`advanced.length` bounds an `input/date` the way it bounds a number: `min` is the first day a person may pick and `max` the last, both included, written as `yyyy-MM-dd` whatever the field's `format`. `validation.length.min` and `.max` are the messages for a day outside them; without one, the message names the bound the way the field shows a day.
+
+```json
+{
+  "name": "check_in",
+  "type": "input/date",
+  "advanced": {
+    "format": "dd/MM/yyyy",
+    "length": { "min": "2026-10-05", "max": "2026-10-20" }
+  },
+  "validation": { "length": { "min": "We open on October 5" } }
+}
+```
+
+The component gets the bounds as `min` and `max`, which a native `<input type="date">` uses as they are and a calendar reads back with `readDateProps` (see [Date components](custom-inputs.md#date-components)). The form checks them itself, so a day typed, passed in by the host or posted to the server outside them holds the submit back whatever the component allowed.
+
+The form keeps no clock, so which day is today is the host's to say. Pass it in [`context`](../structure/definition.md#what-the-host-knows-context) and point the bound at it:
+
+```json
+"advanced": { "length": { "min": { "$ref": "#/context/today" } } }
+```
+
+```tsx
+const context = useMemo(() => ({ today }), [today])
+
+<Form sections={sections} context={context} config={config} />
+```
+
+The host decides the day and the time zone it is counted in, and a server that validates with `buildFormSchema(sections, translations, definition, context)` gets the same answer as the browser. Keep `context` the same object until the day changes: every field renders again when it is a new one (see [What the host knows](../structure/definition.md#what-the-host-knows-context)).
+
+A bound that is no `yyyy-MM-dd` day, such as `"05/10/2026"`, or a `$ref` the context does not hold or holds as `undefined`, bounds nothing, the way a browser ignores a `min` it cannot read. A development build names it in the console wherever the form reads the bounds, in the browser and on the server alike: once for each field, and again whenever a new `context` resolves them anew. A minimum later than the maximum, which no day passes, is named the same way.
+
 ---
 
 ## Validation (`validation` object)
@@ -92,7 +126,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
-- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when input lengths are breached.
+- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, a number out of range, a day before the first or after the last.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:
   - `field`: Optional target reference string.

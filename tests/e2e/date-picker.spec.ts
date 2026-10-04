@@ -2,6 +2,21 @@ import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 import { captureValueChanges, lastEventFor } from './support/value-changes'
 
+// A stay that opens on October 5 and closes on October 20, 2026.
+const BOUNDED = `{
+  "sections": [{
+    "fields": [{
+      "advanced": { "length": { "min": "2026-10-05", "max": "2026-10-20" } },
+      "label": "Check-in",
+      "name": "check_in",
+      "type": "input/date",
+      "validation": {
+        "length": { "min": "We open on October 5", "max": "We close on October 20" }
+      }
+    }]
+  }]
+}`
+
 test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
   test('should open calendar when clicking the calendar button', async ({
     page,
@@ -206,6 +221,89 @@ test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
 
     await expect(input).toHaveValue('15/06/2')
     await expect(page.getByText('Not a day', { exact: true })).toBeVisible()
+  })
+
+  // The bounds reach the calendar as `min` and `max`. It opens on the month of
+  // the minimum, so this does not depend on the day it runs, and neither a day
+  // outside them nor a month outside them can be reached.
+  test('should not let a day outside the bounds be picked', async ({
+    page,
+  }) => {
+    await inject(page, BOUNDED)
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Select date' }).click()
+    const calendar = page.locator('[data-slot="calendar"]')
+
+    await expect(
+      calendar.locator('td[data-day="2026-10-04"] button')
+    ).toBeDisabled()
+    await expect(
+      calendar.locator('td[data-day="2026-10-05"] button')
+    ).toBeEnabled()
+    await expect(
+      calendar.locator('td[data-day="2026-10-20"] button')
+    ).toBeEnabled()
+    await expect(
+      calendar.locator('td[data-day="2026-10-21"] button')
+    ).toBeDisabled()
+    await expect(
+      calendar.getByRole('button', { name: 'Go to the Next Month' })
+    ).toHaveAttribute('aria-disabled', 'true')
+  })
+
+  // What the calendar disables, a person can still type. The schema checks the
+  // same bounds, so the day is held back all the same.
+  test('should hold back a typed day outside the bounds', async ({ page }) => {
+    await inject(page, BOUNDED)
+    await page.goto('')
+
+    const input = page.locator('input[name="check_in"]')
+    await input.fill('2026-10-04')
+    await input.blur()
+    await expect(
+      page.getByText('We open on October 5', { exact: true })
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeHidden()
+  })
+
+  // The library keeps no clock: the host passes today in `context`, and the
+  // field reads its minimum from there.
+  test('should take its minimum from the context the host passes', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+          "context": { "today": "2026-10-05" },
+          "sections": [{
+            "fields": [{
+              "advanced": { "length": { "min": { "$ref": "#/context/today" } } },
+              "label": "Check-in",
+              "name": "check_in",
+              "type": "input/date",
+              "validation": { "length": { "min": "Pick today or a later day" } }
+            }]
+          }]
+        }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="check_in"]')
+    await input.fill('2026-10-04')
+    await input.blur()
+    await expect(
+      page.getByText('Pick today or a later day', { exact: true })
+    ).toBeVisible()
+
+    await input.fill('2026-10-05')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"check_in": "2026-10-05"'
+    )
   })
 
   // The host is told the day as `yyyy-MM-dd`, the shape it can hand back: on

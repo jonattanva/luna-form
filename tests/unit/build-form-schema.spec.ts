@@ -2,7 +2,7 @@ import {
   buildFormSchema,
   collectIssues,
 } from '@/packages/luna-core/src/util/schema'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import type { Sections } from '@/packages/luna-core/src/type'
 
 describe('buildFormSchema (headless)', () => {
@@ -453,5 +453,85 @@ describe('buildFormSchema with dates and context', () => {
     ] as unknown as Sections
 
     expect(buildFormSchema(sections).safeParse({}).success).toBe(true)
+  })
+
+  // The library keeps no clock: the host says what today is, and a bound reads
+  // it from context, the same on the server as in the browser.
+  describe('a bound the host passes in context', () => {
+    // A new definition for each test: a bound is named once for the object
+    // that declares it.
+    const form = () =>
+      [
+        {
+          fields: [
+            {
+              name: 'check_in',
+              type: 'input/date',
+              advanced: { length: { min: { $ref: '#/context/today' } } },
+              validation: { length: { min: 'Pick today or a later day' } },
+            },
+          ],
+        },
+      ] as unknown as Sections
+
+    const warnings = (warn: { mock: { calls: unknown[][] } }) =>
+      warn.mock.calls.map((call) => call.slice(1).join(' '))
+
+    test('holds back a day before it', () => {
+      const schema = buildFormSchema(form(), undefined, undefined, {
+        today: '2026-10-03',
+      })
+
+      expect(schema.parse({ check_in: '2026-10-03' })).toEqual({
+        check_in: '2026-10-03',
+      })
+      expect(
+        collectIssues(schema.safeParse({ check_in: '2026-10-02' }).error!)
+      ).toEqual([{ path: 'check_in', message: 'Pick today or a later day' }])
+    })
+
+    test('is no bound when the context does not hold it', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        expect(
+          buildFormSchema(form()).safeParse({ check_in: '2000-01-01' }).success
+        ).toBe(true)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    // A host's context is JavaScript, and the day may not be known yet.
+    test('is no bound, and is named, when the context holds nothing there', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const schema = buildFormSchema(form(), undefined, undefined, {
+          today: undefined,
+        })
+
+        expect(schema.safeParse({ check_in: '2000-01-01' }).success).toBe(true)
+        expect(warnings(warn)).toEqual([
+          'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field has no minimum',
+        ])
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    // Each request builds the schema again, from a copy of every optional
+    // field: the bound is named once all the same.
+    test('is named once however many times the schema is built', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const sections = form()
+        for (let request = 0; request < 3; request++) {
+          buildFormSchema(sections)
+        }
+
+        expect(warn).toHaveBeenCalledTimes(1)
+      } finally {
+        warn.mockRestore()
+      }
+    })
   })
 })

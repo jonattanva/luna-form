@@ -376,7 +376,14 @@ type TemporalField<T> = Field & {
   }
 }
 
-export type Date = TemporalField<DateFormat>
+export type Date = TemporalField<DateFormat> & {
+  advanced?: {
+    // The first and the last day a person may pick, both included, as
+    // `yyyy-MM-dd` whatever the field's `format`.
+    length?: Length<string>
+  }
+}
+
 export type Time = TemporalField<TimeFormat>
 
 export type Environment = {

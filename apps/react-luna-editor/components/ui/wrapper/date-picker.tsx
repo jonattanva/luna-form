@@ -49,11 +49,13 @@ export function DatePickerInput({
 }: {
   'data-format'?: string
   defaultValue?: string
+  max?: string
+  min?: string
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   value?: string
 }) {
-  const { format } = readDateProps(props)
+  const { format, max, min } = readDateProps(props)
 
   // The client form hands over `value`, the server form `defaultValue`.
   const current = value ?? defaultValue
@@ -95,6 +97,16 @@ export function DatePickerInput({
 
   const selectedDate = parseDay(current)
 
+  // A day outside the bounds cannot be picked and a month outside them cannot
+  // be reached. With no day selected, the calendar opens on today, or on the
+  // bound nearest to it. The form checks the same bounds for what is typed.
+  const firstDay = parseDay(min)
+  const lastDay = parseDay(max)
+  const outside = [
+    ...(firstDay ? [{ before: firstDay }] : []),
+    ...(lastDay ? [{ after: lastDay }] : []),
+  ]
+
   return (
     <InputGroup>
       <InputGroupInput
@@ -133,6 +145,9 @@ export function DatePickerInput({
               mode="single"
               selected={selectedDate}
               defaultMonth={selectedDate}
+              disabled={outside}
+              startMonth={firstDay}
+              endMonth={lastDay}
               onSelect={handleCalendarSelect}
             />
           </PopoverContent>

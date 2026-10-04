@@ -72,4 +72,20 @@ describe('readDateProps', () => {
       format: 'MMMM d, yyyy',
     })
   })
+
+  test('should read the bounds the field put on its props', () => {
+    expect(
+      readDateProps({
+        'data-format': 'dd/MM/yyyy',
+        max: '2026-10-20',
+        min: '2026-10-05',
+      })
+    ).toEqual({ format: 'dd/MM/yyyy', max: '2026-10-20', min: '2026-10-05' })
+  })
+
+  test('should read no bound that is no yyyy-MM-dd day', () => {
+    expect(readDateProps({ max: '2026-02-30', min: '05/10/2026' })).toEqual({
+      format: 'MMMM d, yyyy',
+    })
+  })
 })
