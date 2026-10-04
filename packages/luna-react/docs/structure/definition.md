@@ -83,18 +83,20 @@ the form's `context` prop instead and read with the same syntax, under
 ```
 
 ```tsx
-<Form sections={sections} context={{ rooms }} config={config} />
+const context = useMemo(() => ({ rooms }), [rooms])
+
+<Form sections={sections} context={context} config={config} />
 ```
 
 Both roots resolve the same way and follow the rules below. A path with no root
 reads the definition, as it always has, and an entry of the definition can
 point into `#/context/`.
 
-A form whose JSON never reads `#/context/` does not depend on `context`, however
-often the host hands over a new one. A form that does is resolved again
-whenever `context` is a new object, so keep it the same object while nothing in
-it changes, and hand over a new one when something does: a `$ref` does not see
-a value changed in place.
+Keep `context` the same object while nothing in it changes, and hand over a new
+one when something does. Every field renders again when `context` is a new
+object, since a label or a description may interpolate it, and a field whose
+JSON reads `#/context/` is resolved again as well. A value changed in place, in
+the same object, is not something the form can notice.
 
 ## The rules
 
@@ -105,6 +107,8 @@ a value changed in place.
   stays as the literal `{ "$ref": ... }` object. What that looks like on screen
   depends on where it was — a field whose `source` is still a reference renders
   with no options at all, which is the usual way a typo in the path is noticed.
+  A path that holds nothing is unresolved too: a key that is missing, and one
+  the host left `undefined` or `null`.
 - **An empty or missing root resolves nothing under it.** `definition={{}}` is
   treated as absent, and so is `context={{}}`: every `$ref` into a root that is
   absent is left as written.

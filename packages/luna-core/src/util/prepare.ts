@@ -149,7 +149,11 @@ function resolveWith(base: unknown, walk: Walk): unknown {
   if ($REF in base && isString(base[$REF])) {
     const resolved = resolvePath(base[$REF], walk)
 
-    if (resolved !== null) {
+    // A path that holds nothing resolves nothing: a key that is missing, and
+    // one a host left `undefined` or `null`, which a JavaScript `context` can
+    // hold and JSON cannot. The reference stands, so whatever reads it can
+    // tell it from a value.
+    if (resolved != null) {
       return resolveWith(resolved, walk)
     }
     return base
@@ -173,8 +177,9 @@ function resolveWith(base: unknown, walk: Walk): unknown {
 }
 
 // What a `$ref` points at, or `null` when its root was not given or does not
-// hold the path. A path with no root reads the definition, as every `$ref` did
-// before `#/context/` existed.
+// hold the path; a path that is there and holds `undefined` gives `undefined`.
+// A path with no root reads the definition, as every `$ref` did before
+// `#/context/` existed.
 function resolvePath(ref: string, walk: Walk): unknown {
   const match = REGEX_REF.exec(ref)
   if (!match) {

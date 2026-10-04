@@ -162,6 +162,21 @@ describe('Prepare with a $ref into context', () => {
     expect(section.fields[0].advanced.length.min).toBe('2026-10-02')
   })
 
+  // A host's context is JavaScript, so a key can be there and hold nothing.
+  // That resolves nothing, as a missing key does: the reference stands, and
+  // whatever reads it can tell it from a value.
+  test('should leave a $ref standing when its path holds undefined or null', () => {
+    for (const today of [undefined, null]) {
+      const [section] = prepare(form(), undefined, {
+        dates: { today },
+      }) as unknown as Prepared
+
+      expect(section.fields[0].advanced.length.min).toEqual({
+        $ref: '#/context/dates.today',
+      })
+    }
+  })
+
   test('should answer the same sections and context with the same array', () => {
     const sections = form()
     expect(prepare(sections, undefined, context)).toBe(
