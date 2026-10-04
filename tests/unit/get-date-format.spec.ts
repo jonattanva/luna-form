@@ -124,6 +124,18 @@ describe('readDateProps', () => {
     expect(readDateProps(props).reserved).toBe(readDateProps(props).reserved)
   })
 
+  // Several date fields render on one page, and each keeps getting its own
+  // array back while its days stay the same.
+  test('should hand each field back its list whatever others read between', () => {
+    const night = { 'data-reserved': '2026-12-24,2026-12-25' }
+    const stay = { 'data-reserved': '2026-11-01' }
+
+    const first = readDateProps(night).reserved
+    readDateProps(stay)
+
+    expect(readDateProps(night).reserved).toBe(first)
+  })
+
   test('should drop from the reserved days what is no yyyy-MM-dd day', () => {
     expect(
       readDateProps({ 'data-reserved': '2026-12-24,24/12/2026,,2026-02-30' })

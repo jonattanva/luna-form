@@ -75,7 +75,7 @@ Date and time inputs omit transformations and instead expose a `format` property
 
 ### What a date holds
 
-An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`, or two of them in [a range](#a-range-of-days). That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
+An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`, or two of them in [a range](#a-range-of-days). That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. With [submit validation off](../forms/submit.md#turning-submit-validation-off), the action gets the raw `FormData` instead, where a single day is whatever its control holds; a range and a read-only field still carry `yyyy-MM-dd`, in the hidden inputs the form adds. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
 
 - A value the host passes in, or a `defaultValue`, is read in either shape: `yyyy-MM-dd`, or the field's `format`. A host that keeps what the form submitted can pass it straight back.
 - Text that is no day, typed in another format, with a year short of four digits, or naming a day that does not exist such as February 30, is kept as typed and holds the submit back with `validation.date`.
@@ -164,8 +164,82 @@ An entry that is no `yyyy-MM-dd` day reserves nothing, and neither does a list t
 - Nothing picked is no range: an optional one is not submitted, and a required one asks with `validation.required`.
 - The form submits the two days itself, in two hidden inputs, so the component's control has no `name` and nothing it renders is sent. A host passes a range the way it gets one back, as `[from, to]`.
 - A native `<input type="date">` holds one day. A range needs a component that picks two (see [Date components](custom-inputs.md#date-components)), or two date fields compared with a `custom` validation and `gte`.
-- In a description, `{value}` prints the two days separated by a comma.
-- A `custom` rule, a `when` or a `requiredWhen` compares a value as a whole, and no operator orders a pair of days: a rule that compares a range never holds, and one in `custom` holds every submit back. Keep such rules on single dates.
+- In a description, `{value}` stays as written: it takes one value, and a range is two.
+- A range is a list of two days. `exists`, `empty`, `truthy` and `contains` read it the way they read any list, but the operators that order (`gt`, `gte`, `lt`, `lte`), and `eq` or `in` against a single day, never hold on it, so a `custom` rule that orders a range holds every submit back. Compare single dates instead.
+
+### A booking, end to end
+
+A stay that starts today at the earliest, within a year, and on no night already booked. The form declares the rules; the host knows the facts, and hands them over in `context`:
+
+```json
+{
+  "name": "stay",
+  "type": "input/date",
+  "label": "Stay",
+  "required": true,
+  "advanced": {
+    "format": "dd/MM/yyyy",
+    "mode": "range",
+    "length": {
+      "min": { "$ref": "#/context/dates.today" },
+      "max": { "$ref": "#/context/dates.inOneYear" }
+    },
+    "reserved": { "$ref": "#/context/booked" }
+  },
+  "validation": {
+    "required": "Pick your stay",
+    "range": "Pick the first and the last night",
+    "length": {
+      "min": "A stay cannot start in the past",
+      "max": "We take bookings a year ahead"
+    },
+    "reserved": "A night in it is taken"
+  }
+}
+```
+
+Which day is today depends on where it is counted, so the host counts it where the business does, not where the server runs:
+
+```ts
+// In the application, not in the form.
+import { addYears, format, parse } from 'date-fns'
+
+// 'en-CA' writes a day as yyyy-MM-dd.
+const day = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Bogota',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+export function formDates(now: Date) {
+  const today = day.format(now)
+  const next = addYears(parse(today, 'yyyy-MM-dd', new Date()), 1)
+  return { today, inOneYear: format(next, 'yyyy-MM-dd') }
+}
+```
+
+The page works the context out once per request, so it is the same object for as long as the form is on screen, and the server validates the submit with a context worked out when it arrives:
+
+```tsx
+const context = {
+  dates: formDates(new Date()),
+  booked: await bookedNights(roomId),
+}
+
+<Form sections={sections} context={context} config={config} action={book} />
+```
+
+```ts
+// In the action: the same rules, against the nights booked by now.
+const schema = buildFormSchema(sections, translations, definition, {
+  dates: formDates(new Date()),
+  booked: await bookedNights(roomId),
+})
+const result = schema.safeParse(form) // { stay: ['2026-11-02', '2026-11-06'] }
+```
+
+That holds back a stay chosen from a list that was old by the time it was sent. Two submits for the same night at the same moment are told apart only by the application, when it saves: the form is the first line, not the guarantee.
 
 ---
 

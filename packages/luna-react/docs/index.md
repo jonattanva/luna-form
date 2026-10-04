@@ -22,7 +22,8 @@ between the client and server `Form`.
 | Declaring a text, number, date or password field                             | [fields/input.md](fields/input.md)                                 |
 | Declaring a `select`, `radio` or `chips` field, or filling one from a source | [fields/select.md](fields/select.md)                               |
 | Declaring a repeatable group of fields                                       | [fields/list.md](fields/list.md)                                   |
-| Looking for a date range, a color or another ready-made picker               | [fields/specialized-selectors.md](fields/specialized-selectors.md) |
+| Picking a range of days, bounding a date or blocking days                    | [fields/input.md](fields/input.md#a-range-of-days)                 |
+| Picking a day of the month, a month, a year, weekdays or a time zone         | [fields/specialized-selectors.md](fields/specialized-selectors.md) |
 | Implementing a field type this library does not ship                         | [fields/custom-inputs.md](fields/custom-inputs.md)                 |
 | Filling a `select` from an API                                               | [fields/data-source.md](fields/data-source.md)                     |
 | Making a field required, or validating against another field                 | [validation/overview.md](validation/overview.md)                   |

@@ -617,17 +617,30 @@ export function readDateProps(
   }
 }
 
-// The reserved days a component was last handed. It renders on every keystroke
-// with the same text, so the text is read once, and the same array comes back
-// for it: a component can memoize on what it gets.
-let lastReserved: Readonly<{ text: string; days: readonly string[] }> = {
-  text: '',
-  days: NO_DAYS.days,
-}
+// The reserved days components are handed, read once per text. A component
+// renders on every keystroke with the same text and gets the same array back,
+// so it can memoize on it, whatever other date fields read in between. A few
+// texts are kept, about as many date fields as a form shows at once, and the
+// oldest goes first, so a server rendering one list per request holds no more.
+const READ_TEXTS = 32
+const readTexts = new Map<string, readonly string[]>()
 
 function readReservedProp(text = ''): readonly string[] {
-  if (text !== lastReserved.text) {
-    lastReserved = { text, days: readDays(text.split(',')).days }
+  if (!text) {
+    return NO_DAYS.days
   }
-  return lastReserved.days
+
+  const known = readTexts.get(text)
+  if (known) {
+    return known
+  }
+
+  const oldest = readTexts.keys().next().value
+  if (readTexts.size >= READ_TEXTS && oldest !== undefined) {
+    readTexts.delete(oldest)
+  }
+
+  const days = readDays(text.split(',')).days
+  readTexts.set(text, days)
+  return days
 }

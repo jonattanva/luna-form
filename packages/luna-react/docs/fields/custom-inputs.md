@@ -129,29 +129,22 @@ any other component — the library does not do it for you.
 
 ## Date components
 
-A component registered for `input/date` receives the day as `yyyy-MM-dd`, in
-`value` from the client `Form` and in `defaultValue` from the server one, and
-the field's `format` as `data-format`. A control with a text box shows the day
-in that format; a native `<input type="date">` needs nothing and ignores it.
+A component registered for `input/date` gets the field's day and its rules as
+plain props, and only renders. The form reads what it emits, checks every rule
+itself, on submit and on the server, and submits the value. Any calendar can
+render the field, and a native `<input type="date">` needs nothing at all.
 
-When the field declares [its first and last day](input.md#the-first-and-the-last-day),
-they arrive as `min` and `max`, as `yyyy-MM-dd`. A native date input uses them
-as they are. [Days nobody can pick](input.md#days-nobody-can-pick) arrive as
-`data-reserved`, a list a native input ignores. A calendar should offer none of
-those days: the form rejects one anyway, but a person should not be able to
-pick it.
+### What it receives
 
-A [range](input.md#a-range-of-days) arrives with `data-mode="range"`, and its
-value as `[from, to]`, with `''` for an end not picked yet. Emit it the same
-way, `onChange({ target: { value: [from, to] } })`, or `''` once nothing is
-picked. The form submits the two days itself, so the control the component
-renders gets no `name`. Do not spread the props onto a calendar either: in range
-mode, react-day-picker reads `min` and `max` as numbers of nights.
-
-Emit `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the user
-picked, or with the text as the user typed it: the form reads text in the
-field's format, and keeps anything else as typed so that validation can say
-what is wrong with it.
+| Prop            | Example                                        | What it is                                                                                                                           |
+| --------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `value`         | `"2026-10-02"`, `["2026-10-01", "2026-10-05"]` | The day as `yyyy-MM-dd`, from the client `Form`. A [range](input.md#a-range-of-days) is `[from, to]`, `''` for an end not picked yet |
+| `defaultValue`  | the same                                       | The same, from the server `Form`                                                                                                     |
+| `data-format`   | `"dd/MM/yyyy"`                                 | How to show the day, in date-fns tokens                                                                                              |
+| `data-mode`     | `"range"`                                      | Only on a range                                                                                                                      |
+| `min`, `max`    | `"2026-10-01"`                                 | [The first and the last day](input.md#the-first-and-the-last-day), both included                                                     |
+| `data-reserved` | `"2026-12-24,2026-12-25"`                      | [Days nobody can pick](input.md#days-nobody-can-pick)                                                                                |
+| `name`          | `"stay"`                                       | Absent, in the client `Form`, on a range and on a read-only field: the form submits those itself                                     |
 
 Read the props with `readDateProps` instead of by attribute name, so the
 component keeps working whatever the form puts on them next:
@@ -162,15 +155,115 @@ import { readDateProps } from 'react-luna-form/config'
 const { format, mode, min, max, reserved } = readDateProps(props)
 ```
 
-`mode` is `'single'` or `'range'`.
-`min` and `max` come back only when they are days, so a component can test
-them for `undefined` and nothing else. `reserved` is always a list, empty when
-nothing is reserved, sorted and with each day once. It is the same array for as
-long as the days are, so a component can memoize on it.
+`mode` is `'single'` or `'range'`. `min` and `max` come back only when they are
+days, so a component can test them for `undefined` and nothing else. `reserved`
+is always a list, empty when nothing is reserved, sorted and with each day once.
+It is the same array for as long as the days are, so a component can memoize on
+it.
 
-A `yyyy-MM-dd` value is a day, not an instant, so parse it in local time.
-`new Date("2026-10-02")` is midnight UTC, which is the day before anywhere west
-of Greenwich: a calendar fed that marks the wrong day.
+### What it emits
+
+- One day: `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the
+  user picked, or with the text as the user typed it. The form reads text in
+  the field's format, and keeps anything else as typed so that validation can
+  say what is wrong with it.
+- A range: `onChange({ target: { value: [from, to] } })`, with `''` for an end
+  not picked yet, or `''` once nothing is picked.
+- `onBlur` when the user leaves the component: that is when the form validates
+  the field.
+
+A calendar should offer no day outside `min` and `max` nor any in `reserved`,
+and a read-only or disabled field nothing to pick from. The form holds a wrong
+day back anyway, and ignores the change a locked field's component sends, but a
+person should not be able to pick it.
+
+### A calendar, in a few lines
+
+One day picked in react-day-picker, which is what shadcn's `Calendar` renders:
+
+```tsx
+'use client'
+
+import { format as formatDay, isValid, parse } from 'date-fns'
+import { DayPicker } from 'react-day-picker'
+import { readDateProps } from 'react-luna-form/config'
+
+// A day, read in local time: see the first mistake below.
+function toDay(iso?: string) {
+  const day = iso ? parse(iso, 'yyyy-MM-dd', new Date()) : undefined
+  return day && isValid(day) ? day : undefined
+}
+
+function toIso(day?: Date) {
+  return day ? formatDay(day, 'yyyy-MM-dd') : ''
+}
+
+export function CalendarDate(
+  props: Readonly<{
+    'data-format'?: string
+    'data-reserved'?: string
+    defaultValue?: string
+    max?: string
+    min?: string
+    onChange?: (event: { target: { value: string } }) => void
+    value?: string
+  }>
+) {
+  const { min, max, reserved } = readDateProps(props)
+  const booked = new Set(reserved)
+  const first = toDay(min)
+  const last = toDay(max)
+
+  return (
+    <DayPicker
+      mode="single"
+      selected={toDay(props.value ?? props.defaultValue)}
+      onSelect={(day) => props.onChange?.({ target: { value: toIso(day) } })}
+      disabled={[
+        ...(first ? [{ before: first }] : []),
+        ...(last ? [{ after: last }] : []),
+        (day: Date) => booked.has(toIso(day)),
+      ]}
+      startMonth={first}
+      endMonth={last}
+    />
+  )
+}
+```
+
+A range is the same with `mode="range"`, `selected={{ from, to }}` and
+`onSelect={(range) => ...}` emitting `[toIso(range.from), toIso(range.to)]`.
+
+### Mapping to common libraries
+
+| luna-form gives     | react-day-picker (shadcn `Calendar`)                           | MUI X                                                               | `<input type="date">`                        |
+| ------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- |
+| `value`, one day    | `selected={toDay(value)}`                                      | `value={dayjs(value)}`                                              | `value` as it is                             |
+| `value`, a range    | `mode="range"`, `selected={{ from, to }}`                      | `DateRangePicker` (Pro) with `[dayjs(from), dayjs(to)]`             | none: two date fields and a `custom` rule    |
+| `onChange`          | from `onSelect`, with `format(day, 'yyyy-MM-dd')`              | from `onChange`, with `day.format('YYYY-MM-DD')`                    | native                                       |
+| `min`, `max`        | `disabled={[{ before }, { after }]}`, `startMonth`, `endMonth` | `minDate`, `maxDate`                                                | native                                       |
+| `data-reserved`     | `disabled` with a function that looks the day up in a set      | `shouldDisableDate={(day) => booked.has(day.format('YYYY-MM-DD'))}` | not shown; the form checks it all the same   |
+| `data-mode="range"` | `excludeDisabled`, `numberOfMonths={2}`                        | `DateRangePicker`                                                   | not supported                                |
+| `data-format`       | the text box: `format(day, dataFormat)`                        | `format`, in dayjs tokens                                           | ignored: the browser shows the user's locale |
+
+### Mistakes that are easy to make
+
+1. **`new Date("2026-10-02")` is midnight UTC**, which is the day before
+   anywhere west of Greenwich: a calendar fed that marks the wrong day. Read a
+   `yyyy-MM-dd` day in local time, with `parse(iso, 'yyyy-MM-dd', new Date())`
+   or `new Date(year, month - 1, day)`.
+2. **In range mode, react-day-picker's `min` and `max` are numbers:** how many
+   days the range must or may span, not its first and last day. Spread the
+   form's props onto `<Calendar>` and a date lands where a count is expected:
+   hand it only what the component works out.
+3. **`startMonth` and `endMonth` only limit navigation.** The days outside the
+   bounds are disabled with `disabled`.
+4. **MUI takes dayjs tokens, `advanced.format` is in date-fns tokens:**
+   `dd/MM/yyyy` is `DD/MM/YYYY` there. Translate the format rather than pass it
+   through.
+5. **Disabling a day in the calendar validates nothing.** A typed date, a value
+   from the host and a payload posted to the server never pass through the
+   calendar; the form checks them, so the component does not have to.
 
 ## Checklist
 
@@ -180,6 +273,6 @@ Before shipping a custom input:
 - The `id` it receives reaches the focusable element
 - It forwards or calls the `onChange` and `onBlur` it receives
 - If it is a select variant, it does not rely on `''` to clear
-- If it renders `input/date`, it reads and emits `yyyy-MM-dd`, and offers no day
-  outside `min` and `max` nor any in `reserved`
-- If it renders a range, it reads and emits `[from, to]`
+- If it renders `input/date`, it reads and emits `yyyy-MM-dd`, or `[from, to]`
+  for a range, offers no day outside `min` and `max` nor any in `reserved`, and
+  nothing to pick while it is disabled
