@@ -3,15 +3,18 @@ import { buildNumberStep } from './build'
 import {
   buildDateLimits,
   checkDay,
+  checkRange,
   displayDate,
   getDateFormat,
   toNativeDate,
+  toRange,
   type DateIssue,
 } from './date'
 import {
   isCheckbox,
   isColumn,
   isDate,
+  isDateRange,
   isEmail,
   isList,
   isNumber,
@@ -223,6 +226,43 @@ export function getDateSchema(
   const invalid =
     translateOptional(field.validation?.date, translations) ?? 'Invalid date'
 
+  if (isDateRange(field)) {
+    const range = z.unknown().transform((value, context) => {
+      const keepOut = (message: string) => {
+        context.addIssue({ code: 'custom', message })
+        return z.NEVER
+      }
+
+      const ends = toRange(value)
+      if (!ends) {
+        return keepOut(invalid)
+      }
+
+      const [fromText, toText] = ends
+      if (fromText.trim() === '' || toText.trim() === '') {
+        return keepOut(
+          keptOutMessage(field, { issue: 'range' }, format, translations)
+        )
+      }
+
+      const from = toNativeDate(fromText, format)
+      const to = toNativeDate(toText, format)
+      if (!from || !to) {
+        return keepOut(invalid)
+      }
+
+      const kept = checkRange(from, to, limits)
+      if (kept) {
+        return keepOut(keptOutMessage(field, kept, format, translations))
+      }
+
+      const days: [string, string] = [from, to]
+      return days
+    })
+
+    return presentLeaf(range, field, translations, rangeToAbsent)
+  }
+
   const day = z.string().transform((text, context) => {
     const native = toNativeDate(text, format)
     if (!native) {
@@ -260,11 +300,29 @@ function keptOutMessage(
     )
   }
 
+  if (kept.issue === 'range') {
+    return (
+      translateOptional(field.validation?.range, translations) ??
+      'Invalid date range'
+    )
+  }
+
   const day = displayDate(kept.limit, format)
   return (
     translateOptional(field.validation?.length?.[kept.issue], translations) ??
     `Date must be on or ${kept.issue === 'min' ? 'after' : 'before'} ${day}`
   )
+}
+
+// Nothing picked is no range: no value at all, or two ends that are both blank,
+// which is what the two hidden inputs of an untouched range submit.
+function rangeToAbsent(value: unknown) {
+  if (value == null) {
+    return undefined
+  }
+
+  const ends = toRange(value)
+  return ends?.every((end) => end.trim() === '') ? undefined : value
 }
 
 // Blank text is no day, the way `required` reads whitespace on every other

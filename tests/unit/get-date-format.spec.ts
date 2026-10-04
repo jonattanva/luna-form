@@ -60,17 +60,23 @@ describe('readDateProps', () => {
   test('should read the format the field put on its props', () => {
     expect(readDateProps({ 'data-format': 'dd/MM/yyyy' })).toEqual({
       format: 'dd/MM/yyyy',
+      mode: 'single',
       reserved: [],
     })
   })
 
   test('should fall back to the default format when there is none', () => {
-    expect(readDateProps({})).toEqual({ format: 'MMMM d, yyyy', reserved: [] })
+    expect(readDateProps({})).toEqual({
+      format: 'MMMM d, yyyy',
+      mode: 'single',
+      reserved: [],
+    })
   })
 
   test('should fall back to the default format for one the form does not know', () => {
     expect(readDateProps({ 'data-format': 'DD/MM/YYYY' })).toEqual({
       format: 'MMMM d, yyyy',
+      mode: 'single',
       reserved: [],
     })
   })
@@ -86,6 +92,7 @@ describe('readDateProps', () => {
       format: 'dd/MM/yyyy',
       max: '2026-10-20',
       min: '2026-10-05',
+      mode: 'single',
       reserved: [],
     })
   })
@@ -93,6 +100,7 @@ describe('readDateProps', () => {
   test('should read no bound that is no yyyy-MM-dd day', () => {
     expect(readDateProps({ max: '2026-02-30', min: '05/10/2026' })).toEqual({
       format: 'MMMM d, yyyy',
+      mode: 'single',
       reserved: [],
     })
   })
@@ -101,6 +109,11 @@ describe('readDateProps', () => {
     expect(
       readDateProps({ 'data-reserved': '2026-12-24,2026-12-25' }).reserved
     ).toEqual(['2026-12-24', '2026-12-25'])
+  })
+
+  test('should read the range mode the field put on its props', () => {
+    expect(readDateProps({ 'data-mode': 'range' }).mode).toBe('range')
+    expect(readDateProps({ 'data-mode': 'multiple' }).mode).toBe('single')
   })
 
   // A component renders on every keystroke, and the list it is handed is the

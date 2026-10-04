@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { format as fnsFormat, isValid, parse } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
 import { readDateProps } from 'react-luna-form/config'
 
 import { Calendar } from '@/components/ui/calendar'
@@ -43,6 +44,10 @@ function display(value: string | undefined, format: string): string {
   return day ? fnsFormat(day, format) : (value ?? '')
 }
 
+function toIso(day?: Date): string {
+  return day ? fnsFormat(day, ISO_FORMAT) : ''
+}
+
 export function DatePickerInput({
   defaultValue,
   onBlur,
@@ -51,18 +56,23 @@ export function DatePickerInput({
   ...props
 }: {
   'data-format'?: string
+  'data-mode'?: string
   'data-reserved'?: string
-  defaultValue?: string
+  defaultValue?: string | string[]
+  disabled?: boolean
   max?: string
   min?: string
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
-  value?: string
+  onChange?: (event: { target: { value: string | string[] } }) => void
+  value?: string | string[]
 }) {
-  const { format, max, min, reserved } = readDateProps(props)
+  const { format, max, min, mode, reserved } = readDateProps(props)
 
-  // The client form hands over `value`, the server form `defaultValue`.
+  // The client form hands over `value`, the server form `defaultValue`: a day,
+  // or `[from, to]` for a range.
   const current = value ?? defaultValue
+  const day = typeof current === 'string' ? current : undefined
+  const [from, to] = Array.isArray(current) ? current : []
 
   const [open, setOpen] = React.useState(false)
 
@@ -70,12 +80,8 @@ export function DatePickerInput({
   // field holds, in its format, so nothing has to copy the prop into state.
   const [draft, setDraft] = React.useState<string | null>(null)
 
-  function commit(raw: string) {
-    if (onChange) {
-      onChange({
-        target: { value: raw },
-      } as React.ChangeEvent<HTMLInputElement>)
-    }
+  function commit(raw: string | string[]) {
+    onChange?.({ target: { value: raw } })
   }
 
   // What a person types goes to the form as typed: the form reads it in the
@@ -95,11 +101,18 @@ export function DatePickerInput({
 
   function handleCalendarSelect(date: Date | undefined) {
     setDraft(null)
-    commit(date ? fnsFormat(date, ISO_FORMAT) : '')
+    commit(toIso(date))
     setOpen(false)
   }
 
-  const selectedDate = parseDay(current)
+  // A first click is already a range of one day, so the calendar stays open
+  // until the two ends are different days; nothing picked is nothing.
+  function handleRangeSelect(range: DateRange | undefined) {
+    commit(range ? [toIso(range.from), toIso(range.to)] : '')
+    if (range?.from && range.to && toIso(range.from) !== toIso(range.to)) {
+      setOpen(false)
+    }
+  }
 
   // A day outside the bounds or a reserved one cannot be picked, and a month
   // outside the bounds cannot be reached. With no day selected, the calendar
@@ -112,22 +125,42 @@ export function DatePickerInput({
   // render, so each day is looked up in a set rather than compared with every
   // reserved date.
   const reservedDays = new Set(reserved)
-  const isReserved = (date: Date) =>
-    reservedDays.has(fnsFormat(date, ISO_FORMAT))
+  const isReserved = (date: Date) => reservedDays.has(toIso(date))
 
-  const unavailable = [
-    ...(firstDay ? [{ before: firstDay }] : []),
-    ...(lastDay ? [{ after: lastDay }] : []),
-    isReserved,
-  ]
+  // Only what this component works out goes on the calendar, never the form's
+  // own props: in range mode react-day-picker's `min` and `max` count nights.
+  const limits = {
+    disabled: [
+      ...(firstDay ? [{ before: firstDay }] : []),
+      ...(lastDay ? [{ after: lastDay }] : []),
+      isReserved,
+    ],
+    endMonth: lastDay,
+    modifiers: { reserved: isReserved },
+    modifiersClassNames: RESERVED_CLASS,
+    startMonth: firstDay,
+  }
+
+  // A range is picked in the calendar and shown in the box, its two days in the
+  // field's format; there is no typing two days into one box. A single day can
+  // be typed as well as picked.
+  const box =
+    mode === 'range'
+      ? {
+          readOnly: true,
+          value: [from, to]
+            .filter((end) => end)
+            .map((end) => display(end, format))
+            .join(' - '),
+        }
+      : { onChange: handleValueChange, value: draft ?? display(day, format) }
 
   return (
     <InputGroup>
       <InputGroupInput
         {...props}
+        {...box}
         type="text"
-        value={draft ?? display(current, format)}
-        onChange={handleValueChange}
         onBlur={handleBlur}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
@@ -139,8 +172,11 @@ export function DatePickerInput({
       <InputGroupAddon align="inline-end">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
+            {/* Locked with the box: a read-only or disabled date offers no
+                calendar to pick another day from. */}
             <InputGroupButton
               aria-label="Select date"
+              disabled={props.disabled}
               id="date-picker"
               size="icon-xs"
               variant="ghost"
@@ -155,17 +191,27 @@ export function DatePickerInput({
             alignOffset={-8}
             sideOffset={10}
           >
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              defaultMonth={selectedDate}
-              disabled={unavailable}
-              startMonth={firstDay}
-              endMonth={lastDay}
-              modifiers={{ reserved: isReserved }}
-              modifiersClassNames={RESERVED_CLASS}
-              onSelect={handleCalendarSelect}
-            />
+            {mode === 'range' ? (
+              <Calendar
+                {...limits}
+                mode="range"
+                excludeDisabled
+                numberOfMonths={2}
+                selected={
+                  from ? { from: parseDay(from), to: parseDay(to) } : undefined
+                }
+                defaultMonth={parseDay(from)}
+                onSelect={handleRangeSelect}
+              />
+            ) : (
+              <Calendar
+                {...limits}
+                mode="single"
+                selected={parseDay(day)}
+                defaultMonth={parseDay(day)}
+                onSelect={handleCalendarSelect}
+              />
+            )}
           </PopoverContent>
         </Popover>
       </InputGroupAddon>

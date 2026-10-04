@@ -1,12 +1,7 @@
 import { createInput } from './input-create'
 import { deepEqual } from 'fast-equals'
-import {
-  getEntity,
-  isMultiple,
-  isOptions,
-  isSelect,
-  isValidValue,
-} from '@luna-form/core'
+import { getEntity, isOptions, isSelect, isValidValue } from '@luna-form/core'
+import { toChangeValue } from './input-strategies'
 import { useDataSource } from '../hook/use-data-source'
 import type { Config } from '../../type'
 import type { Field, Nullable, Value } from '@luna-form/core'
@@ -60,19 +55,11 @@ export const InputSelectable = createInput({
     applyChangeEventsRef.current(getEntity(inputValue, data, entity))
   },
 
-  // What the mount-time replay hands to the change events, and it has to be
-  // the same thing `dispatchChange` hands them: a form reopened on saved data
-  // reveals what it revealed when it was filled in. A `chips` value is an array
-  // and travels as one -- `String()` on it joins the selections into
-  // "email,sms", which answers to no option and matches no `when`. Everything
-  // else is a scalar the collection is keyed by as text: a numeric option value
-  // is found by "1", not by 1.
+  // What the mount-time replay hands to the change events: see
+  // `toChangeValue`. A scalar is keyed as text, so a numeric option value is
+  // found by "1", not by 1.
   buildInitialSelected: (defaultValue, data, entity) =>
-    getEntity(
-      isMultiple(defaultValue) ? defaultValue : String(defaultValue),
-      data,
-      entity
-    ),
+    getEntity(toChangeValue(defaultValue), data, entity),
 
   isInitialReady: (field, defaultValue, data) =>
     (!isOptions(field) || (!!data && data.length > 0)) &&

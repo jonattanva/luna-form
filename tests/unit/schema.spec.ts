@@ -1102,6 +1102,112 @@ describe('date schema', () => {
   })
 })
 
+// Two days in one field, `[from, to]`. Each end answers to the rules of a
+// single day, the last cannot come before the first, and no reserved day may
+// fall between them.
+describe('date ranges', () => {
+  const range = (extra: Partial<DateField> = {}): DateField => ({
+    name: 'stay',
+    type: 'input/date',
+    advanced: {
+      format: 'dd/MM/yyyy',
+      mode: 'range',
+      length: { min: '2026-10-01', max: '2026-12-31' },
+      reserved: ['2026-12-24'],
+    },
+    ...extra,
+  })
+
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  test('should give back both ends as yyyy-MM-dd', () => {
+    const schema = getDateSchema(range())
+
+    expect(schema.parse(['2026-10-03', '06/10/2026'])).toEqual([
+      '2026-10-03',
+      '2026-10-06',
+    ])
+    expect(schema.parse(['2026-10-03', '2026-10-03'])).toEqual([
+      '2026-10-03',
+      '2026-10-03',
+    ])
+  })
+
+  test('should hold back half a range and one that runs backwards', () => {
+    const schema = getDateSchema(
+      range({ validation: { range: 'Pick the first and the last night' } })
+    )
+
+    for (const value of [
+      ['2026-10-03', ''],
+      ['', '2026-10-06'],
+      ['2026-10-06', '2026-10-03'],
+    ]) {
+      expect(messagesOf(schema.safeParse(value))).toEqual([
+        'Pick the first and the last night',
+      ])
+    }
+    expect(
+      messagesOf(getDateSchema(range()).safeParse(['2026-10-03', '']))
+    ).toEqual(['Invalid date range'])
+  })
+
+  test('should check each end like a single day', () => {
+    const schema = getDateSchema(range())
+
+    expect(messagesOf(schema.safeParse(['2026-09-30', '2026-10-03']))).toEqual([
+      'Date must be on or after 01/10/2026',
+    ])
+    expect(
+      messagesOf(schema.safeParse(['2026-10-03', 'next tuesday']))
+    ).toEqual(['Invalid date'])
+    expect(messagesOf(schema.safeParse(['2026-12-24', '2026-12-26']))).toEqual([
+      'This date is not available',
+    ])
+  })
+
+  test('should hold back a range with a reserved day inside it', () => {
+    const schema = getDateSchema(range())
+
+    expect(messagesOf(schema.safeParse(['2026-12-20', '2026-12-27']))).toEqual([
+      'This date is not available',
+    ])
+    expect(schema.parse(['2026-12-25', '2026-12-27'])).toEqual([
+      '2026-12-25',
+      '2026-12-27',
+    ])
+  })
+
+  // A value that is no range is held back as such, not taken for one nobody
+  // picked: on the server, a malformed payload would otherwise pass.
+  test('should hold back a value that is no range', () => {
+    const schema = getDateSchema(range())
+
+    for (const value of [
+      [20261003, 20261006],
+      { from: '2026-10-03', to: '2026-10-06' },
+      5,
+      ['', '', '2026-10-09'],
+      ['2026-10-03', '2026-10-06', '2026-10-09'],
+    ]) {
+      expect(messagesOf(schema.safeParse(value))).toEqual(['Invalid date'])
+    }
+  })
+
+  test('should read a range nobody picked as absent, or ask for it', () => {
+    const optional = getDateSchema(range())
+    for (const empty of [undefined, null, '', [], ['', ''], ['  ', '']]) {
+      expect(optional.parse(empty)).toBeUndefined()
+    }
+
+    const required = getDateSchema(
+      range({ required: true, validation: { required: 'Pick your stay' } })
+    )
+    expect(messagesOf(required.safeParse(['', '']))).toEqual(['Pick your stay'])
+  })
+})
+
 // Days nobody may pick, whatever the bounds allow: a stay that is booked, a
 // holiday. They are written as `yyyy-MM-dd`, like the bounds.
 describe('reserved days', () => {

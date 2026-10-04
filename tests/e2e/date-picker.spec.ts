@@ -32,6 +32,33 @@ const RESERVED = `{
   }]
 }`
 
+// A stay in October 2026, with the night of the 10th already booked. The
+// bounds keep the calendar on October whatever day the test runs.
+const STAY = (value?: [string, string]) =>
+  JSON.stringify({
+    ...(value && { value: { stay: value } }),
+    sections: [
+      {
+        fields: [
+          {
+            advanced: {
+              mode: 'range',
+              length: { min: '2026-10-01', max: '2026-10-31' },
+              reserved: ['2026-10-10'],
+            },
+            label: 'Stay',
+            name: 'stay',
+            type: 'input/date',
+            validation: {
+              range: 'Pick the first and the last night',
+              reserved: 'A night in it is taken',
+            },
+          },
+        ],
+      },
+    ],
+  })
+
 test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
   test('should open calendar when clicking the calendar button', async ({
     page,
@@ -393,6 +420,146 @@ test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).toContainText(
       '"night": "2026-12-23"'
     )
+  })
+
+  // A range is two days the form submits itself, whatever the component shows.
+  test('should submit the two days of a range picked in the calendar', async ({
+    page,
+  }) => {
+    await inject(page, STAY())
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Select date' }).click()
+    const calendar = page.locator('[data-slot="calendar"]')
+    await calendar.locator('td[data-day="2026-10-03"] button').click()
+    await calendar.locator('td[data-day="2026-10-06"] button').click()
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    expect(JSON.parse(await page.locator('pre code').innerText())).toEqual({
+      stay: ['2026-10-03', '2026-10-06'],
+    })
+  })
+
+  // A range cannot hold a booked night: the calendar starts over from the day
+  // picked last, and half a range is held back.
+  test('should not let a range run over a reserved day', async ({ page }) => {
+    await inject(page, STAY())
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Select date' }).click()
+    const calendar = page.locator('[data-slot="calendar"]')
+    await calendar.locator('td[data-day="2026-10-08"] button').click()
+    await calendar.locator('td[data-day="2026-10-12"] button').click()
+    await page.keyboard.press('Escape')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(
+      page
+        .getByText('Pick the first and the last night', { exact: true })
+        .first()
+    ).toBeVisible()
+    await expect(page.getByText('Form submitted successfully')).toBeHidden()
+  })
+
+  // A range the host holds never went through the calendar: the form checks it.
+  test('should hold back a host range that runs over a reserved day', async ({
+    page,
+  }) => {
+    await inject(page, STAY(['2026-10-08', '2026-10-12']))
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(
+      page.getByText('A night in it is taken', { exact: true }).first()
+    ).toBeVisible()
+    await expect(page.getByText('Form submitted successfully')).toBeHidden()
+  })
+
+  // What a range hands its change events is the pair it holds, at mount as on a
+  // click: a range copied into another one at mount arrives whole.
+  test('should hand a range to its change events as the pair it holds', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        value: { stay: ['2026-10-03', '2026-10-06'] },
+        sections: [
+          {
+            fields: [
+              {
+                advanced: { mode: 'range' },
+                event: {
+                  change: [{ action: 'value', value: { copy: '{value}' } }],
+                },
+                label: 'Stay',
+                name: 'stay',
+                type: 'input/date',
+              },
+              {
+                advanced: { mode: 'range' },
+                label: 'Copy',
+                name: 'copy',
+                type: 'input/date',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    expect(JSON.parse(await page.locator('pre code').innerText())).toEqual({
+      copy: ['2026-10-03', '2026-10-06'],
+      stay: ['2026-10-03', '2026-10-06'],
+    })
+  })
+
+  // The form sends a range itself, so its control has no name to send under,
+  // disabled or not.
+  test('should give the control of a disabled range no name', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                defaultValue: 'yes',
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      target: 'stay',
+                      state: { disabled: true },
+                    },
+                  ],
+                },
+                label: 'Lock',
+                name: 'lock',
+                type: 'input/text',
+              },
+              {
+                advanced: { mode: 'range' },
+                label: 'Stay',
+                name: 'stay',
+                type: 'input/date',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('')
+
+    const box = page.locator('input[data-mode="range"]')
+    await expect(box).toBeDisabled()
+    expect(await box.getAttribute('name')).toBeNull()
   })
 
   // The host is told the day as `yyyy-MM-dd`, the shape it can hand back: on

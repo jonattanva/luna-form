@@ -409,6 +409,9 @@ Two details:
   `source`, the initial run is held until the data has loaded, so an action
   keyed on the selected entity sees the entity rather than a bare value. Text
   and date fields run as soon as the value is valid.
+- **A date range carries its pair.** A [range](../fields/input.md#a-range-of-days)
+  runs its events with `[from, to]`, at mount and on a click alike: `{value}` is
+  that pair.
 - **A `chips` field carries its array, not an entity.** No single option answers
   to a value that can hold several, so a `chips` change carries the array
   itself, at mount and on a click alike: `{value}` is that array, and there is

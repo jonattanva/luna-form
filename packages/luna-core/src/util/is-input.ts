@@ -28,6 +28,7 @@ import {
 import type {
   Chips,
   Column,
+  Date as DateField,
   Field,
   Input,
   List,
@@ -57,8 +58,13 @@ export const isChipsDays = (field: Field): boolean =>
 export const isChipsMonths = (field: Field): boolean =>
   createTypeChecker(CHIPS_MONTHS)(field)
 
-export const isDate = createTypeChecker<Field>(INPUT_DATE)
+export const isDate = createTypeChecker<DateField>(INPUT_DATE)
 export const isTime = createTypeChecker<Time>(INPUT_TIME)
+
+// A date that holds two days, `[from, to]`, rather than one.
+export function isDateRange(field: Field): boolean {
+  return isDate(field) && field.advanced?.mode === 'range'
+}
 
 export const isCheckbox = createTypeChecker<Input>(CHECKBOX)
 export const isChips = createTypeChecker<Chips>(CHIPS)

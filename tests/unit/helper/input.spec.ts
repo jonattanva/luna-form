@@ -602,6 +602,13 @@ describe('date fields', () => {
     }
   })
 
+  test('should put the range mode on the props, and only for a range', () => {
+    const range: DateField = { ...field, advanced: { mode: 'range' } }
+
+    expect(buildCommon(range)).toMatchObject({ 'data-mode': 'range' })
+    expect(buildCommon(field)).not.toHaveProperty('data-mode')
+  })
+
   test('should put the bounds on the props both render paths build', () => {
     const bounded: DateField = {
       ...field,
@@ -691,6 +698,54 @@ describe('date fields', () => {
     expect(dateFormatOf(field)).toBe('dd/MM/yyyy')
     expect(dateFormatOf({ name: 'n', type: 'input/text' })).toBe(undefined)
     expect(dateFormatOf(undefined)).toBe(undefined)
+  })
+})
+
+// A range holds `[from, to]`, each end the way a single day is held.
+describe('holdValue of a range', () => {
+  const range: DateField = {
+    name: 'stay',
+    type: 'input/date',
+    advanced: { format: 'dd/MM/yyyy', mode: 'range' },
+  }
+
+  test('should hold each end as yyyy-MM-dd in either shape it arrives in', () => {
+    expect(holdValue(range, ['15/06/2024', '2024-06-20'])).toEqual([
+      '2024-06-15',
+      '2024-06-20',
+    ])
+  })
+
+  test('should hold half a range and text that is no day as they came', () => {
+    expect(holdValue(range, ['15/06/2024', ''])).toEqual(['2024-06-15', ''])
+    expect(holdValue(range, ['next tuesday', ''])).toEqual(['next tuesday', ''])
+  })
+
+  // One text alone, as a host may hand over, is the first end.
+  test('should read a lone day as the first end', () => {
+    expect(holdValue(range, '15/06/2024')).toEqual(['2024-06-15', ''])
+  })
+
+  test('should leave nothing as nothing', () => {
+    expect(holdValue(range, undefined)).toBe(undefined)
+    expect(holdValue(range, null)).toBe(null)
+  })
+
+  // The schema says what is wrong with a value that is no range; holding it
+  // would turn it into a blank range first.
+  test('should leave a value that is no range as it came', () => {
+    const numbers = [20261003, 20261006]
+    const object = { from: '2026-10-03', to: '2026-10-06' }
+
+    expect(holdValue(range, numbers)).toBe(numbers)
+    expect(holdValue(range, object)).toBe(object)
+  })
+
+  // The field hands its value to the component on every render: a pair held
+  // already comes back as the same array.
+  test('should hand back a pair already held as the same array', () => {
+    const pair = ['2026-10-03', '2026-10-06']
+    expect(holdValue(range, pair)).toBe(pair)
   })
 })
 

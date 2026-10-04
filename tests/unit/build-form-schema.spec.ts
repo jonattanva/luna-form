@@ -455,8 +455,34 @@ describe('buildFormSchema with dates and context', () => {
     expect(buildFormSchema(sections).safeParse({}).success).toBe(true)
   })
 
-  // The library keeps no clock: the host says what today is, and a bound reads
-  // it from context, the same on the server as in the browser.
+  // The two hidden inputs a range is submitted with arrive as an array.
+  test('checks a range against the reserved days the host passes', () => {
+    const sections = [
+      {
+        fields: [
+          {
+            name: 'stay',
+            type: 'input/date',
+            advanced: { mode: 'range', reserved: { $ref: '#/context/booked' } },
+            validation: { reserved: 'A night in it is taken' },
+          },
+        ],
+      },
+    ] as unknown as Sections
+    const schema = buildFormSchema(sections, undefined, undefined, {
+      booked: ['2026-12-24'],
+    })
+
+    expect(
+      collectIssues(
+        schema.safeParse({ stay: ['2026-12-20', '2026-12-27'] }).error!
+      )
+    ).toEqual([{ path: 'stay', message: 'A night in it is taken' }])
+    expect(schema.parse({ stay: ['2026-12-25', '2026-12-27'] })).toEqual({
+      stay: ['2026-12-25', '2026-12-27'],
+    })
+  })
+
   // What is booked is the host's to know, at the moment it validates.
   describe('reserved days the host passes in context', () => {
     const form = () =>
@@ -514,6 +540,8 @@ describe('buildFormSchema with dates and context', () => {
     })
   })
 
+  // The library keeps no clock: the host says what today is, and a bound reads
+  // it from context, the same on the server as in the browser.
   describe('a bound the host passes in context', () => {
     // A new definition for each test: a bound is named once for the object
     // that declares it.

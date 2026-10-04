@@ -7,6 +7,7 @@ import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import {
   holdValue,
+  isDateRange,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
@@ -68,6 +69,11 @@ export function InputBase(
   )
 
   const inputProps = prepareInputValue(props.field, defaultValue)
+
+  // Disabled or read-only, the field is locked, and the value is the form's to
+  // keep: a component that does not honour `disabled` -- a calendar button left
+  // enabled -- can still send a change, and the form does not take it.
+  const locked = Boolean(commonPropsWithOptions.disabled)
 
   useEffect(() => {
     if (initialEventsProcessedRef.current) {
@@ -147,6 +153,10 @@ export function InputBase(
 
   const onChange = useCallback(
     (event: InputChangeEvent) => {
+      if (locked) {
+        return
+      }
+
       const inputValue = getValue(event, props.field)
 
       if (
@@ -183,6 +193,7 @@ export function InputBase(
       entity,
       getValue,
       hasClickable,
+      locked,
       onValueChangeRef,
       props.config.validation.change,
       props.field,
@@ -194,14 +205,22 @@ export function InputBase(
     ]
   )
 
-  // A read-only field is locked the one way every control understands, by
-  // being disabled, and a disabled control sends nothing. Its value is still
-  // the form's, so the form sends it: the control goes without a name, and
-  // what the field holds travels in hidden inputs instead. Nothing the control
-  // renders is sent, so no control can send it twice.
-  const controlProps = props.readOnly
-    ? { ...commonPropsWithOptions, name: undefined }
-    : commonPropsWithOptions
+  // The form sends what the field holds whenever the control cannot. A
+  // read-only field is locked the one way every control understands, by being
+  // disabled, and a disabled control sends nothing; one control cannot carry
+  // the two ends of a range either. The value is still the form's, so the form
+  // sends it: the control goes without a name, and what the field holds
+  // travels in hidden inputs instead. Nothing the control renders is sent, so
+  // no control can send it twice. A disabled range sends nothing, as any
+  // disabled control, and its control has no name all the same: what it shows
+  // is never the value.
+  const isRange = isDateRange(props.field)
+  const formSends = props.readOnly || (isRange && !locked)
+
+  const controlProps =
+    props.readOnly || isRange
+      ? { ...commonPropsWithOptions, name: undefined }
+      : commonPropsWithOptions
 
   return renderIfExists(props.config.inputs[props.field.type], (Component) => (
     <>
@@ -224,9 +243,7 @@ export function InputBase(
           onChange={onChange}
         />
       </InputGroup>
-      {props.readOnly && (
-        <SubmittedValue name={props.field.name} {...inputProps} />
-      )}
+      {formSends && <SubmittedValue name={props.field.name} {...inputProps} />}
     </>
   ))
 }
