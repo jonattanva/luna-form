@@ -546,6 +546,62 @@ describe('date fields', () => {
     })
   })
 
+  // A list of days goes on as one attribute, which any element accepts: an
+  // array in a prop a native input does not know would reach the DOM as text.
+  test('should put the reserved days on the props, sorted and once each', () => {
+    const reserving: DateField = {
+      ...field,
+      advanced: {
+        ...field.advanced,
+        reserved: ['2026-12-25', '2026-12-24', '2026-12-25'],
+      },
+    }
+
+    expect(buildCommon(reserving)).toMatchObject({
+      'data-reserved': '2026-12-24,2026-12-25',
+    })
+  })
+
+  // A new declaration is read again, even over the same array: that is how a
+  // list the host added to arrives once `context` is handed over anew.
+  test('should read the reserved days again for each new declaration', () => {
+    const booked = ['2026-12-24']
+    const declare = (): DateField => ({
+      name: 'night',
+      type: 'input/date',
+      advanced: { reserved: booked },
+    })
+
+    const first = buildCommon(declare())
+    booked.push('2026-12-25')
+    const second = buildCommon(declare())
+
+    expect(first).toMatchObject({ 'data-reserved': '2026-12-24' })
+    expect(second).toMatchObject({ 'data-reserved': '2026-12-24,2026-12-25' })
+  })
+
+  test('should put no reserved days on the props when none is a day', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const entries = buildCommon(
+        JSON.parse(
+          '{"name":"d","type":"input/date","advanced":{"reserved":["24/12/2026",{"$ref":"#/context/eve"}]}}'
+        ) as DateField
+      )
+      const unresolved = buildCommon(
+        JSON.parse(
+          '{"name":"d","type":"input/date","advanced":{"reserved":{"$ref":"#/context/booked"}}}'
+        ) as DateField
+      )
+
+      expect(entries).not.toHaveProperty('data-reserved')
+      expect(unresolved).not.toHaveProperty('data-reserved')
+      expect(warn).toHaveBeenCalledTimes(3)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   test('should put the bounds on the props both render paths build', () => {
     const bounded: DateField = {
       ...field,

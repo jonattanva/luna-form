@@ -457,6 +457,63 @@ describe('buildFormSchema with dates and context', () => {
 
   // The library keeps no clock: the host says what today is, and a bound reads
   // it from context, the same on the server as in the browser.
+  // What is booked is the host's to know, at the moment it validates.
+  describe('reserved days the host passes in context', () => {
+    const form = () =>
+      [
+        {
+          fields: [
+            {
+              name: 'night',
+              type: 'input/date',
+              advanced: { reserved: { $ref: '#/context/booked' } },
+              validation: { reserved: 'That night is taken' },
+            },
+          ],
+        },
+      ] as unknown as Sections
+
+    test('holds back a day the list holds', () => {
+      const schema = buildFormSchema(form(), undefined, undefined, {
+        booked: ['2026-12-24', '2026-12-25'],
+      })
+
+      expect(
+        collectIssues(schema.safeParse({ night: '2026-12-24' }).error!)
+      ).toEqual([{ path: 'night', message: 'That night is taken' }])
+      expect(schema.parse({ night: '2026-12-23' })).toEqual({
+        night: '2026-12-23',
+      })
+    })
+
+    // A host may keep one list and add to it as nights are booked. Each request
+    // hands over a new context, and the schema checks the list as it is then:
+    // the night booked a moment ago is not taken twice.
+    test('checks the list as the host holds it at each request', () => {
+      const booked = ['2026-12-24']
+      const request = () =>
+        buildFormSchema(form(), undefined, undefined, { booked }).safeParse({
+          night: '2026-12-26',
+        }).success
+
+      expect(request()).toBe(true)
+      booked.push('2026-12-26')
+      expect(request()).toBe(false)
+    })
+
+    test('reserves nothing when the context does not hold the list', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        expect(
+          buildFormSchema(form()).safeParse({ night: '2026-12-24' }).success
+        ).toBe(true)
+        expect(warn).toHaveBeenCalledTimes(1)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+  })
+
   describe('a bound the host passes in context', () => {
     // A new definition for each test: a bound is named once for the object
     // that declares it.

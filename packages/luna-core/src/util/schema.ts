@@ -6,7 +6,7 @@ import {
   displayDate,
   getDateFormat,
   toNativeDate,
-  type DateBound,
+  type DateIssue,
 } from './date'
 import {
   isCheckbox,
@@ -33,6 +33,7 @@ import { z } from 'zod'
 import type {
   AssertRule,
   CustomValidation,
+  DateFormat,
   Definition,
   Field,
   Fields,
@@ -229,17 +230,11 @@ export function getDateSchema(
       return z.NEVER
     }
 
-    const outside = checkDay(native, limits)
-    if (outside) {
-      const { bound, limit } = outside
+    const kept = checkDay(native, limits)
+    if (kept) {
       context.addIssue({
         code: 'custom',
-        message: boundMessage(
-          field,
-          bound,
-          displayDate(limit, format),
-          translations
-        ),
+        message: keptOutMessage(field, kept, format, translations),
       })
       return z.NEVER
     }
@@ -250,17 +245,25 @@ export function getDateSchema(
   return presentLeaf(day, field, translations, blankToAbsent)
 }
 
-// The field's own message for a bound, or one that names the bound the way the
-// field shows a day.
-function boundMessage(
+// The field's own message for what kept a day out, or one that says it: a
+// bound is named the way the field shows a day.
+function keptOutMessage(
   field: Field,
-  bound: DateBound,
-  day: string,
+  kept: DateIssue,
+  format: DateFormat,
   translations?: Record<string, string>
 ) {
+  if (kept.issue === 'reserved') {
+    return (
+      translateOptional(field.validation?.reserved, translations) ??
+      'This date is not available'
+    )
+  }
+
+  const day = displayDate(kept.limit, format)
   return (
-    translateOptional(field.validation?.length?.[bound], translations) ??
-    `Date must be on or ${bound === 'min' ? 'after' : 'before'} ${day}`
+    translateOptional(field.validation?.length?.[kept.issue], translations) ??
+    `Date must be on or ${kept.issue === 'min' ? 'after' : 'before'} ${day}`
   )
 }
 

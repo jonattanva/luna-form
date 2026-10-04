@@ -17,6 +17,21 @@ const BOUNDED = `{
   }]
 }`
 
+// Christmas Eve and Christmas are booked. The host holds a day in December, so
+// the calendar opens there whatever day the test runs.
+const RESERVED = `{
+  "value": { "night": "2026-12-20" },
+  "sections": [{
+    "fields": [{
+      "advanced": { "reserved": ["2026-12-24", "2026-12-25"] },
+      "label": "Night",
+      "name": "night",
+      "type": "input/date",
+      "validation": { "reserved": "That night is taken" }
+    }]
+  }]
+}`
+
 test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
   test('should open calendar when clicking the calendar button', async ({
     page,
@@ -303,6 +318,80 @@ test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
     await expect(page.getByText('Form submitted successfully')).toBeVisible()
     await expect(page.locator('pre code')).toContainText(
       '"check_in": "2026-10-05"'
+    )
+  })
+
+  // The reserved days reach the calendar as `data-reserved`: it neither lets
+  // one be picked nor hides why, striking it through.
+  test('should not let a reserved day be picked', async ({ page }) => {
+    await inject(page, RESERVED)
+    await page.goto('')
+
+    await page.getByRole('button', { name: 'Select date' }).click()
+    const calendar = page.locator('[data-slot="calendar"]')
+
+    await expect(
+      calendar.locator('td[data-day="2026-12-24"] button')
+    ).toBeDisabled()
+    await expect(
+      calendar.locator('td[data-day="2026-12-25"] button')
+    ).toBeDisabled()
+    await expect(calendar.locator('td[data-day="2026-12-24"]')).toHaveClass(
+      /line-through/
+    )
+    await expect(
+      calendar.locator('td[data-day="2026-12-23"] button')
+    ).toBeEnabled()
+  })
+
+  test('should hold back a typed reserved day', async ({ page }) => {
+    await inject(page, RESERVED)
+    await page.goto('')
+
+    const input = page.locator('input[name="night"]')
+    await input.fill('2026-12-24')
+    await input.blur()
+    await expect(
+      page.getByText('That night is taken', { exact: true })
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeHidden()
+  })
+
+  // What is booked is the host's to know: it passes the list in `context`.
+  test('should take its reserved days from the context the host passes', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+          "context": { "booked": ["2026-12-24"] },
+          "sections": [{
+            "fields": [{
+              "advanced": { "reserved": { "$ref": "#/context/booked" } },
+              "label": "Night",
+              "name": "night",
+              "type": "input/date",
+              "validation": { "reserved": "That night is taken" }
+            }]
+          }]
+        }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="night"]')
+    await input.fill('2026-12-24')
+    await input.blur()
+    await expect(
+      page.getByText('That night is taken', { exact: true })
+    ).toBeVisible()
+
+    await input.fill('2026-12-23')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"night": "2026-12-23"'
     )
   })
 

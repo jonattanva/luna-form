@@ -1102,6 +1102,91 @@ describe('date schema', () => {
   })
 })
 
+// Days nobody may pick, whatever the bounds allow: a stay that is booked, a
+// holiday. They are written as `yyyy-MM-dd`, like the bounds.
+describe('reserved days', () => {
+  const reserving = (extra: Partial<DateField> = {}): DateField => ({
+    name: 'night',
+    type: 'input/date',
+    advanced: { format: 'dd/MM/yyyy', reserved: ['2026-12-24', '2026-12-25'] },
+    ...extra,
+  })
+
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  test('should hold back a reserved day however it was typed', () => {
+    const schema = getDateSchema(reserving())
+
+    expect(messagesOf(schema.safeParse('2026-12-24'))).toEqual([
+      'This date is not available',
+    ])
+    expect(messagesOf(schema.safeParse('25/12/2026'))).toEqual([
+      'This date is not available',
+    ])
+  })
+
+  test('should take the days around a reserved one', () => {
+    const schema = getDateSchema(reserving())
+
+    expect(schema.parse('2026-12-23')).toBe('2026-12-23')
+    expect(schema.parse('26/12/2026')).toBe('2026-12-26')
+  })
+
+  test('should say what is wrong with the message the field declares', () => {
+    const schema = getDateSchema(
+      reserving({ validation: { reserved: 'That night is taken' } })
+    )
+
+    expect(messagesOf(schema.safeParse('2026-12-24'))).toEqual([
+      'That night is taken',
+    ])
+  })
+
+  test('should check the bounds before the reservations', () => {
+    const schema = getDateSchema(
+      reserving({
+        advanced: {
+          length: { max: '2026-12-20' },
+          reserved: ['2026-12-24'],
+        },
+      })
+    )
+
+    expect(messagesOf(schema.safeParse('2026-12-24'))).toEqual([
+      'Date must be on or before December 20, 2026',
+    ])
+  })
+
+  // A list that did not arrive reserves nothing, and neither does an entry
+  // that is no day; whoever wrote the form is told which.
+  test('should name a list nothing resolved and an entry that is no day', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const unresolved = getDateSchema(
+        JSON.parse(
+          '{"name":"night","type":"input/date","advanced":{"reserved":{"$ref":"#/context/booked"}}}'
+        ) as DateField
+      )
+      const entries = getDateSchema(
+        JSON.parse(
+          '{"name":"night","type":"input/date","advanced":{"reserved":["2026-12-24","24/12/2026",{"$ref":"#/context/eve"}]}}'
+        ) as DateField
+      )
+
+      expect(unresolved.parse('2026-12-24')).toBe('2026-12-24')
+      expect(entries.safeParse('2026-12-24').success).toBe(false)
+      expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
+        'night: advanced.reserved points at #/context/booked, which nothing resolved, so no day is reserved',
+        'night: advanced.reserved[1] is "24/12/2026", which is no yyyy-MM-dd day, so it reserves nothing',
+        'night: advanced.reserved[2] points at #/context/eve, which nothing resolved, so it reserves nothing',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})
+
 // A date can be held between two days, both included. The bounds are written
 // as `yyyy-MM-dd`, the shape a native `<input type="date">` takes for its own
 // `min` and `max`, and a day is compared in that shape however it was typed.

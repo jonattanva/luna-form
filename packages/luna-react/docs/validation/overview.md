@@ -19,6 +19,7 @@ This page documents every key of the `validation` object plus the shared operato
 - **`email`** _(string)_: Message for an invalid email format (`input/email`).
 - **`date`** _(string)_: Message when an `input/date` holds text that is no day. See [Input](../fields/input.md#what-a-date-holds).
 - **`length`** _({ min?: string, max?: string })_: Messages when the value breaches `advanced.length`: its length, a number's range, or a date's first and last day. See [Input](../fields/input.md#the-first-and-the-last-day).
+- **`reserved`** _(string)_: Message when an `input/date` holds a day its `advanced.reserved` lists. See [Input](../fields/input.md#days-nobody-can-pick).
 - **`step`** _(string)_: Message when an `input/number` is off its step: a decimal on a whole number, or a value off `advanced.step`. See [Input](../fields/input.md).
 - **`custom`** _(CustomValidation | CustomValidation[])_: Cross-field comparison. See [Custom (cross-field)](#custom-cross-field).
 - **`requiredWhen`** _(WhenRule | WhenRule[])_: Conditionally required. See [requiredWhen](#requiredwhen).
@@ -266,15 +267,15 @@ if (!result.success) {
 
 ### What each path validates
 
-| Rule                                                  | Rendered `<Form>` submit | `buildFormSchema` (headless) |
-| ----------------------------------------------------- | ------------------------ | ---------------------------- |
-| `required`, `email`, `length`, `step`, `date` (field) | ✅                       | ✅                           |
-| `custom`                                              | ✅                       | ✅                           |
-| `requiredWhen` (top-level)                            | ✅                       | ✅                           |
-| `pattern`                                             | ✅                       | ✅                           |
-| `rules` (top-level)                                   | ✅                       | ✅                           |
-| `requiredWhen` **inside a list** (item scope)         | —                        | ✅                           |
-| List `length`                                         | —                        | ✅                           |
+| Rule                                                              | Rendered `<Form>` submit | `buildFormSchema` (headless) |
+| ----------------------------------------------------------------- | ------------------------ | ---------------------------- |
+| `required`, `email`, `length`, `step`, `date`, `reserved` (field) | ✅                       | ✅                           |
+| `custom`                                                          | ✅                       | ✅                           |
+| `requiredWhen` (top-level)                                        | ✅                       | ✅                           |
+| `pattern`                                                         | ✅                       | ✅                           |
+| `rules` (top-level)                                               | ✅                       | ✅                           |
+| `requiredWhen` **inside a list** (item scope)                     | —                        | ✅                           |
+| List `length`                                                     | —                        | ✅                           |
 
 The headless builder is the superset: item-scoped conditions and list length require the nested tree it produces.
 

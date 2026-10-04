@@ -134,8 +134,10 @@ in that format; a native `<input type="date">` needs nothing and ignores it.
 
 When the field declares [its first and last day](input.md#the-first-and-the-last-day),
 they arrive as `min` and `max`, as `yyyy-MM-dd`. A native date input uses them
-as they are. A calendar should offer no day outside them: the form rejects one
-anyway, but a person should not be able to pick it.
+as they are. [Days nobody can pick](input.md#days-nobody-can-pick) arrive as
+`data-reserved`, a list a native input ignores. A calendar should offer none of
+those days: the form rejects one anyway, but a person should not be able to
+pick it.
 
 Emit `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the user
 picked, or with the text as the user typed it: the form reads text in the
@@ -148,11 +150,13 @@ component keeps working whatever the form puts on them next:
 ```ts
 import { readDateProps } from 'react-luna-form/config'
 
-const { format, min, max } = readDateProps(props)
+const { format, min, max, reserved } = readDateProps(props)
 ```
 
 `min` and `max` come back only when they are days, so a component can test
-them for `undefined` and nothing else.
+them for `undefined` and nothing else. `reserved` is always a list, empty when
+nothing is reserved, sorted and with each day once. It is the same array for as
+long as the days are, so a component can memoize on it.
 
 A `yyyy-MM-dd` value is a day, not an instant, so parse it in local time.
 `new Date("2026-10-02")` is midnight UTC, which is the day before anywhere west
@@ -167,4 +171,4 @@ Before shipping a custom input:
 - It forwards or calls the `onChange` and `onBlur` it receives
 - If it is a select variant, it does not rely on `''` to clear
 - If it renders `input/date`, it reads and emits `yyyy-MM-dd`, and offers no day
-  outside `min` and `max`
+  outside `min` and `max` nor any in `reserved`

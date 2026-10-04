@@ -264,6 +264,8 @@ export type Validation = {
   required?: string
   // Field is required only when the condition(s) hold. Multiple rules OR together.
   requiredWhen?: WhenRule | Array<WhenRule>
+  // An `input/date` holding a day its `advanced.reserved` lists.
+  reserved?: string
   pattern?: PatternRule
   // Escape-hatch-in-JSON: a general list of gated assertions (see AssertRule).
   rules?: Array<AssertRule>
@@ -381,6 +383,8 @@ export type Date = TemporalField<DateFormat> & {
     // The first and the last day a person may pick, both included, as
     // `yyyy-MM-dd` whatever the field's `format`.
     length?: Length<string>
+    // Days nobody may pick, as `yyyy-MM-dd`.
+    reserved?: string[]
   }
 }
 
