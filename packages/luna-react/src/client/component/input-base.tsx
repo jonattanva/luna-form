@@ -213,10 +213,12 @@ export function InputBase(
         horizontal={props.horizontal}
         translations={props.translations}
       >
+        {/* `advanced.data` first: an attribute the form writes for its own
+            rules, such as a date's format, is the form's to say. */}
         <Component
+          {...props.dataAttributes}
           {...controlProps}
           {...props.ariaAttributes}
-          {...props.dataAttributes}
           {...inputProps}
           onBlur={onBlur}
           onChange={onChange}

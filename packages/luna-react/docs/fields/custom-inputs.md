@@ -44,14 +44,18 @@ Props are applied in this order:
 
 ```tsx
 <Component
+  {...dataAttributes} // advanced.data, as data-* attributes
   {...commonProps} // id, name, placeholder, disabled, required, and what the field family adds
-  {...ariaAttributes} // aria-invalid, aria-errormessage
-  {...dataAttributes} // data-invalid, data-readonly
+  {...ariaAttributes} // advanced.aria, and aria-invalid, aria-errormessage
   {...inputProps} // the prepared value or defaultValue
   onBlur={onBlur}
   onChange={onChange}
 />
 ```
+
+`advanced.data` comes first, so an attribute the form writes for its own rules,
+such as the `data-format` of a date, keeps the form's value whatever
+`advanced.data` declares under the same name.
 
 `onChange` and `onBlur` are applied **last**, after every spread. A component
 that forwards its props unchanged gets them for free. A component that declares

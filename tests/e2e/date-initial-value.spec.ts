@@ -146,6 +146,33 @@ test.describe('Date initial value', { tag: ['@e2e'] }, () => {
     )
   })
 
+  // `advanced.data` can name any attribute, including one the form writes for
+  // its own rules. The form's value wins, so the component still shows the day
+  // in the field's format.
+  test('should keep its own format whatever advanced.data names', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+          "value": { "birth_date": "2024-06-15" },
+          "sections": [{
+            "fields": [{
+              "advanced": { "format": "dd/MM/yyyy", "data": { "format": "yyyy" } },
+              "label": "Birth Date",
+              "name": "birth_date",
+              "type": "input/date"
+            }]
+          }]
+        }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="birth_date"]')
+    await expect(input).toHaveAttribute('data-format', 'dd/MM/yyyy')
+    await expect(input).toHaveValue('15/06/2024')
+  })
+
   // A host can still hold a day the way it used to be shown. The field holds
   // it as `yyyy-MM-dd` like any other day, so what reads the value -- here a
   // description -- sees the shape it sees once the user has typed.
