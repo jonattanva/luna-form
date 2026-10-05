@@ -128,7 +128,8 @@ export function DatePickerInput({
   const isReserved = (date: Date) => reservedDays.has(toIso(date))
 
   // Only what this component works out goes on the calendar, never the form's
-  // own props: in range mode react-day-picker's `min` and `max` count nights.
+  // own props: in range mode react-day-picker's `min` and `max` are a number of
+  // days the range may span, not dates.
   const limits = {
     disabled: [
       ...(firstDay ? [{ before: firstDay }] : []),
