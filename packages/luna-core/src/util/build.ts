@@ -1,7 +1,9 @@
 import { $REF } from './constant'
+import { describeBounds, isUnreadableLength, type BoundRules } from './date'
 import { isObject } from './is-type'
-import { isCheckbox, isChips, isRadio, isSelect } from './is-input'
-import type { Field, Input, Nullable, Select } from '../type'
+import { isCheckbox, isChips, isList, isRadio, isSelect } from './is-input'
+import { logger } from './logger'
+import type { Field, Input, List, Nullable, Select } from '../type'
 
 export function buildOptions(
   field: Field,
@@ -61,6 +63,89 @@ export function buildNumberStep(input: Input) {
     return step
   }
   return undefined
+}
+
+export type LengthLimits = Readonly<{
+  max?: number
+  min?: number
+  // A bound the field declares that is no number: a `$ref` the host did not
+  // resolve, or text such as a day. The form cannot tell what such a field
+  // allows, so it takes nothing: on a server that forgot its `context`, taking
+  // everything would let through what the bound was there to keep out, with
+  // nothing in production to say so.
+  unreadable: boolean
+}>
+
+const NO_LENGTH: LengthLimits = { unreadable: false }
+
+// Read once per declaration, as a date's limits are: the form reads them on
+// every render, and the form copies a field but never its `advanced`.
+const readLengths = new WeakMap<object, LengthLimits>()
+
+/**
+ * The bounds `advanced.length` gives a field outside the date family, both
+ * included: how many characters a text takes, the lowest and the highest
+ * number, how few and how many rows a list holds. Each is a number, or a
+ * `$ref` the host resolved to one.
+ *
+ * Read once for the props the field renders and for the schema that checks
+ * it, so the two cannot disagree: a bound that is no number is never rendered,
+ * and the schema holds back what it would have checked, the way a date does
+ * with a bound that is no day. It is the one place they are read, on the
+ * server and in the browser, so it is where such a bound is named for whoever
+ * wrote the form.
+ */
+export function buildLengthLimits(field: Input | List): LengthLimits {
+  const advanced = field.advanced
+  if (!isObject(advanced)) {
+    return NO_LENGTH
+  }
+
+  const known = readLengths.get(advanced)
+  if (known) {
+    return known
+  }
+
+  const length: unknown = advanced.length
+  const declared = isObject(length) ? length : undefined
+  const bounds = {
+    max: readLength(declared?.max),
+    min: readLength(declared?.min),
+  }
+  const limits: LengthLimits = {
+    ...bounds,
+    unreadable: isUnreadableLength(length, bounds),
+  }
+  readLengths.set(advanced, limits)
+
+  const rules = isList(field) ? LIST_BOUNDS : FIELD_BOUNDS
+  for (const problem of describeBounds(field.name, length, limits, rules)) {
+    logger.warn(problem)
+  }
+
+  return limits
+}
+
+// A bound is a number. Text that reads as one, such as "3", is not: the
+// contract keeps one type per key.
+function readLength(value: unknown): number | undefined {
+  return typeof value === 'number' && !Number.isNaN(value) ? value : undefined
+}
+
+const FIELD_BOUNDS: BoundRules = {
+  beyond: 'above',
+  disordered: 'no value passes',
+  kind: 'number',
+  lost: 'the field takes no value',
+  needsBoth: false,
+}
+
+const LIST_BOUNDS: BoundRules = {
+  beyond: 'above',
+  disordered: 'no list passes',
+  kind: 'number',
+  lost: 'no list passes',
+  needsBoth: false,
 }
 
 export function buildSource(field: Field) {

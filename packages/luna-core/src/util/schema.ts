@@ -1,5 +1,5 @@
 import { MAX, MIN } from './constant'
-import { buildNumberStep } from './build'
+import { buildLengthLimits, buildNumberStep, type LengthLimits } from './build'
 import {
   buildDateLimits,
   buildYearLimits,
@@ -53,7 +53,9 @@ import type {
 } from '../type'
 import { translate, translateOptional } from './translate'
 
-type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
+// What `advanced.length` bounds: the characters of a text or an address, the
+// value of a number.
+type Bounded = z.ZodString | z.ZodEmail | z.ZodCoercedNumber
 
 type SchemaChecker = (input: Input) => boolean
 type SchemaGetter = (
@@ -119,20 +121,24 @@ function optionalLeaf<T extends z.ZodType>(schema: T) {
 }
 
 export function getEmail(input: Input, translations?: Record<string, string>) {
+  // Bounds the form cannot read hold back an address as they hold back any
+  // other text: whether it is an address is no longer the question.
+  const limits = buildLengthLimits(input)
+  if (limits.unreadable) {
+    return getText(input, translations)
+  }
+
   const baseSchema = z.string().trim()
+  const address = applyEmail(input, limits, translations)
 
   if (input.required) {
     const message = getRequiredMessage(input, translations)
-    const schema = baseSchema
-      .min(1, message)
-      .pipe(applyEmail(input, translations))
+    const schema = baseSchema.min(1, message).pipe(address)
 
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
 
-  return optionalLeaf(
-    baseSchema.pipe(applyEmail(input, translations)).or(z.literal(''))
-  )
+  return optionalLeaf(baseSchema.pipe(address).or(z.literal('')))
 }
 
 function getBoolean(input: Input, translations?: Record<string, string>) {
@@ -173,25 +179,45 @@ function getRadio(input: Input, translations?: Record<string, string>) {
   return optionalLeaf(schema.or(z.literal('')))
 }
 
+// Text left empty is no value for a bound to check, as the browser's
+// `minlength` reads it: an optional field passes, and a required one asks for a
+// value with its own message before its bounds, as a number does. Text that is
+// there and fails a bound still says which one, as an email does: the empty
+// literal's failure aborts and the bound's does not.
 export function getText(input: Input, translations?: Record<string, string>) {
-  let schema = z.coerce.string().trim()
-  schema = applyMinAndMax(schema, input, translations)
+  const limits = buildLengthLimits(input)
+  const text = z.coerce.string().trim()
+  // The bounds check what `text` made of the value: text, already trimmed.
+  const read = z.string()
+  const bounded = limits.unreadable
+    ? read.refine(() => false, UNREADABLE)
+    : applyMinAndMax(read, limits, input, translations)
 
   if (input.required) {
-    schema = applyRequired(schema, input, translations)
-    return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
+    const message = getRequiredMessage(input, translations)
+    return z.preprocess(
+      (value) => (isEmpty(value) ? '' : value),
+      text.min(1, message).pipe(bounded)
+    )
   }
-  return optionalLeaf(schema)
+  return optionalLeaf(text.pipe(z.literal('').or(bounded)))
 }
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
-  const schema = applyMinAndMax(z.coerce.number(), input, translations)
-  return presentLeaf(
-    applyStep(schema, input, translations),
-    input,
-    translations,
-    normalize
-  )
+  const limits = buildLengthLimits(input)
+  const number = z.coerce.number()
+  // The step counts from `length.min`, so a bound that cannot be read leaves
+  // no step to check either: one message says why.
+  const schema = limits.unreadable
+    ? number.refine(() => false, UNREADABLE)
+    : applyStep(
+        applyMinAndMax(number, limits, input, translations),
+        limits,
+        input,
+        translations
+      )
+
+  return presentLeaf(schema, input, translations, normalize)
 }
 
 // The years a year select offers, read by the same `buildYearLimits` as its
@@ -401,6 +427,7 @@ function presentLeaf<T>(
 // it says, whichever of the two steps it is off.
 function applyStep(
   schema: z.ZodCoercedNumber,
+  limits: LengthLimits,
   input: Input,
   translations?: Record<string, string>
 ) {
@@ -410,7 +437,7 @@ function applyStep(
     return schema.int(message)
   }
 
-  const base = input.advanced?.length?.min ?? 0
+  const base = limits.min ?? 0
   return schema.refine((value) => isOnStep(value, step, base), {
     message:
       message ??
@@ -434,61 +461,45 @@ function decimalsOf(value: number): number {
   return Math.max(0, fraction - Number(exponent))
 }
 
-function applyEmail(input: Input, translations?: Record<string, string>) {
+// The bounds are checks on the address itself, after the one that says it is
+// an address. When every option of a union fails, zod passes on the issues of
+// the one option whose failure did not abort, and says only `Invalid input`
+// otherwise. A pipe aborts when what it pipes fails, so bounds in front of the
+// address would leave an optional email out of them unable to say which one.
+function applyEmail(
+  input: Input,
+  limits: LengthLimits,
+  translations?: Record<string, string>
+) {
   const message = input.validation?.email
     ? translate(input.validation?.email, translations)
     : undefined
 
-  return z.email(message)
+  return applyMinAndMax(z.email(message), limits, input, translations)
 }
 
-function applyMinAndMax<T extends Coerced>(
+// What a field whose bounds cannot be read says about any value it is given.
+// It is the form's to fix, not the person's, and no value passes until it is.
+const UNREADABLE = 'This value cannot be checked'
+
+// The bounds are read by `buildLengthLimits`, the same reading
+// `defineConstraints` renders on the input, so the browser and the schema
+// check the same numbers.
+function applyMinAndMax<T extends Bounded>(
   schema: T,
+  limits: LengthLimits,
   input: Input,
   translations?: Record<string, string>
 ): T {
-  schema = min(schema, input, translations)
-  schema = max(schema, input, translations)
-  return schema
-}
-
-function applyRequired<T extends Coerced>(
-  schema: T,
-  input: Input,
-  translations?: Record<string, string>
-): T {
-  const min = input.advanced?.length?.min
-  if (min === undefined || min < 1) {
-    return schema.min(1, getRequiredMessage(input, translations)) as T
-  }
-  return schema
-}
-
-const min = <T extends Coerced>(
-  schema: T,
-  input: Input,
-  translations?: Record<string, string>
-) => applyConstraint(schema, input, MIN, translations)
-
-const max = <T extends Coerced>(
-  schema: T,
-  input: Input,
-  translations?: Record<string, string>
-) => applyConstraint(schema, input, MAX, translations)
-
-function applyConstraint<T extends Coerced>(
-  schema: T,
-  input: Input,
-  method: typeof MIN | typeof MAX,
-  translations?: Record<string, string>
-) {
-  const value = input.advanced?.length?.[method]
-  if (value !== undefined) {
-    const message = input.validation?.length?.[method]
-      ? translate(input.validation?.length?.[method], translations)
-      : undefined
-
-    return schema[method](value, message) as T
+  for (const method of [MIN, MAX] as const) {
+    const value = limits[method]
+    if (value !== undefined) {
+      const message = translateOptional(
+        input.validation?.length?.[method],
+        translations
+      )
+      schema = schema[method](value, message) as T
+    }
   }
   return schema
 }
@@ -971,20 +982,26 @@ function isPatternRule(value: unknown): value is PatternRule {
   return isObject(value) && 'regex' in value
 }
 
+// A list has no `required` of its own: its `length.min` is how it asks for
+// rows, so when its bounds cannot be read no list passes, not even an empty
+// one.
 function applyListLength<T extends z.ZodType>(
   items: z.ZodArray<T>,
   list: List,
   translations?: Record<string, string>
 ): z.ZodArray<T> {
+  const { max, min, unreadable } = buildLengthLimits(list)
+  if (unreadable) {
+    return items.refine(() => false, 'This list cannot be checked')
+  }
+
   let schema = items
-  const min = list.advanced?.length?.min
   if (min !== undefined) {
     schema = schema.min(
       min,
       translateOptional(list.validation?.length?.min, translations)
     )
   }
-  const max = list.advanced?.length?.max
   if (max !== undefined) {
     schema = schema.max(
       max,

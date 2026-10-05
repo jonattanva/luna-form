@@ -1,3 +1,4 @@
+import { buildLengthLimits } from './build'
 import { COLUMN } from './constant'
 import { extract } from './extract'
 import { isColumn, isList } from './is-input'
@@ -9,13 +10,13 @@ import type { AnyField, Field, Fields, List, Nullable } from '../type'
  *
  * The defaults are here rather than at each reading, because they are read at
  * mount, on every add and remove, and on assignment -- four chances for one of
- * them to say a list shows one row by default and another to say none.
+ * them to say a list shows one row by default and another to say none. A bound
+ * that is no number keeps its default: the schema, which reads the bounds the
+ * same way, holds such a list back.
  */
 export function getListBounds(list: List): { min: number; max: number } {
-  return {
-    min: list.advanced?.length?.min ?? 1,
-    max: list.advanced?.length?.max ?? Infinity,
-  }
+  const { max, min } = buildLengthLimits(list)
+  return { min: min ?? 1, max: max ?? Infinity }
 }
 
 /**

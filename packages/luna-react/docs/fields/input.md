@@ -54,7 +54,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 
 These basic field types support extra manipulation properties inside the `advanced` block:
 
-- **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type). On an `input/date` the bounds are days instead; see [The first and the last day](#the-first-and-the-last-day).
+- **`length`** _({ min?: number, max?: number })_: Applies HTML structural limits (`minlength` / `maxlength`, or `min` / `max` depending on the input type). Each bound is a number, or a `$ref` the host resolves to one; see [A bound that is no number](#a-bound-that-is-no-number). On an `input/date` the bounds are days instead; see [The first and the last day](#the-first-and-the-last-day).
 - **`step`** _(number)_ (`input/number` only): A number is whole unless it declares a step, which is the browser's own default of 1. The step is rendered on the input, so its arrows move by it, and validation accepts only values on it, counted from `length.min` when there is one, as the browser does: `0.01` for a price, `0.5` for halves, `0.001` for three decimals. A step has to be a number above 0. The browser ignores 0 and below, and so does the form; text such as `"any"` is no step either, and it is never rendered. Either way the number stays whole.
 - **`transform`** _(string | string[])_: Safely intercepts user inputs and manipulates content dynamically. Options include:
   - `"lowercase"`
@@ -65,6 +65,22 @@ These basic field types support extra manipulation properties inside the `advanc
 ### Empty and required numbers
 
 A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
+
+### Empty and required text
+
+A text left empty is no value for its `length` bounds to check, as the browser's `minlength` does not apply to an empty value either. An optional field left empty, or holding only spaces, passes as `""`, whatever its `length.min`. A required one left empty asks for a value with `validation.required`, not with `validation.length.min`, and its bounds only apply once there is text. This holds for `input/text`, `input/tel`, `input/password`, a [`textarea`](#textarea), and a type the form does not know, which it checks as text.
+
+### A bound that is no number
+
+On the types above, on a [`textarea`](#textarea), and on a type the form does not know, which it checks as text, a `length` bound is a number. A day such as `"2026-10-05"` is not one, nor is text that reads as one, such as `"3"`, nor a `$ref` the context does not hold or holds as `undefined`. Such a bound is a rule the form cannot read, so the field takes no value: anything in it is held back with `This value cannot be checked`, whatever else the field would have checked, such as the address of an `input/email` or the `step` of a number. An optional field left empty still passes, and a required one still asks for a value.
+
+That is deliberate, as it is for [a date](#the-first-and-the-last-day): a server that validates with `buildFormSchema` and forgets its `context` would otherwise let through what the bound was there to keep out, with nothing in production to say so. The input is not handed such a bound, and a development build names it in the console, in the browser and on the server alike, once for each field:
+
+```text
+[Luna Form] when: advanced.length.min is "2026-10-05", which is no number, so the field takes no value
+```
+
+A minimum above the maximum, which no value passes, is named the same way.
 
 ### Temporal Options (`input/date`, `input/time`)
 
@@ -251,7 +267,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
-- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, a number out of range, a day before the first or after the last.
+- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, the address of an `input/email` included, a number out of range, a day before the first or after the last. An address that is no address and is out of its bounds shows both messages, the `email` one first. An optional `input/email` left empty still passes.
 - **`reserved`** _(string)_: `input/date` only. The message shown for a day its `advanced.reserved` lists. Without it, the message is `This date is not available`.
 - **`range`** _(string)_: `input/date` ranges only. The message shown for a range with an end missing, or whose last day comes before its first. Without it, the message is `Invalid date range`.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
@@ -325,7 +341,10 @@ Everything else in `advanced` is ignored for this type.
 ```
 
 `length.min` and `length.max` are emitted as the `minLength` and `maxLength`
-attributes on the rendered element.
+attributes on the rendered element, and validation checks the same bounds on
+text that is there: see [Empty and required text](#empty-and-required-text). A
+bound that is no number is neither: see
+[A bound that is no number](#a-bound-that-is-no-number).
 
 Like the `input/*` family, a declared `change` event on a `textarea` is
 debounced: it fires 300 ms after the last keystroke, not on every one.

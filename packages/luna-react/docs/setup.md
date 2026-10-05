@@ -16,7 +16,7 @@ dependency, so your application resolves one copy of React, Zod and the rest.
 | Peer                 | Version   | Used for                                    |
 | -------------------- | --------- | ------------------------------------------- |
 | `react`, `react-dom` | `^19.0.0` | rendering, and `useActionState` on submit   |
-| `zod`                | `^4.0.0`  | the schema derived from `sections`          |
+| `zod`                | `^4.0.6`  | the schema derived from `sections`          |
 | `jotai`              | `^2.0.0`  | the value, error and source stores          |
 | `swr`                | `^2.0.0`  | fetching a field's remote `source`          |
 | `date-fns`           | `^4.0.0`  | date and time formatting, `duration` filter |
@@ -28,6 +28,10 @@ peers automatically (npm 7+, or pnpm with `auto-install-peers=true`) brings
 them in for you; anywhere else, install them alongside the library. A missing
 peer surfaces as a module resolution error at import time, not as a form that
 renders badly.
+
+Zod has to be 4.0.6 or later. An earlier 4.0 reports a value that an optional
+text or email field holds back as `Invalid input`, instead of with the field's
+own message.
 
 ## Styling
 

@@ -175,6 +175,7 @@ function readYear(value: unknown): number | undefined {
 const NO_YEAR = 'the field offers no year'
 
 const YEAR_BOUNDS: BoundRules = {
+  beyond: 'after',
   disordered: NO_YEAR,
   kind: 'whole year',
   lost: NO_YEAR,
@@ -647,10 +648,11 @@ export function buildDateLimits(field: DateField): DateLimits {
 }
 
 // Bounds that are declared and cannot be read: the whole `length` a `$ref`
-// nothing resolved, or a bound that is no day.
-function isUnreadableLength(
+// nothing resolved, or a bound that is no value of its kind -- no day here, no
+// number for `buildLengthLimits`.
+export function isUnreadableLength<T>(
   length: unknown,
-  read: Readonly<{ max?: string; min?: string }>
+  read: Readonly<{ max?: T; min?: T }>
 ): boolean {
   if (length == null) {
     return false
@@ -748,7 +750,10 @@ function describeDateLimits(
 // How a field's bounds fail it, for `describeBounds`: what a bound that is not
 // a value of its `kind` is, what the field is left with when a bound is lost
 // or the two are out of order, and whether it needs both to offer anything.
-type BoundRules = Readonly<{
+// `beyond` says how a minimum stands past the maximum: a day or a year comes
+// after another, a number is above it.
+export type BoundRules = Readonly<{
+  beyond: 'above' | 'after'
   disordered: string
   kind: string
   lost: string
@@ -758,6 +763,7 @@ type BoundRules = Readonly<{
 const NO_DAY = 'the field takes no day'
 
 const DATE_BOUNDS: BoundRules = {
+  beyond: 'after',
   disordered: 'no day passes',
   kind: 'yyyy-MM-dd day',
   lost: NO_DAY,
@@ -767,8 +773,8 @@ const DATE_BOUNDS: BoundRules = {
 // What is wrong with the bounds a field declares in `advanced.length`, given
 // what was read from them: the whole `length` a `$ref` nothing resolved, a
 // bound that is no value of its kind or, where both are needed, missing, and a
-// minimum after the maximum.
-function describeBounds<T extends number | string>(
+// minimum past the maximum.
+export function describeBounds<T extends number | string>(
   name: string,
   length: unknown,
   limits: Readonly<{ max?: T; min?: T }>,
@@ -809,7 +815,7 @@ function describeBounds<T extends number | string>(
     limits.min > limits.max
   ) {
     problems.push(
-      `${name}: advanced.length.min is after advanced.length.max, so ${rules.disordered}`
+      `${name}: advanced.length.min is ${rules.beyond} advanced.length.max, so ${rules.disordered}`
     )
   }
 
