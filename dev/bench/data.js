@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791238904837,
+  "lastUpdate": 1791238943268,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "359664cea9aa041027f4d51d311871ba5ea0d676",
-          "message": "Merge pull request #38 from jonattanva/fix/list-remove-nonlast-hydrated-item\n\nfix(react): list keeps trailing item value on non-last removal",
-          "timestamp": "2026-06-01T10:14:40-05:00",
-          "tree_id": "e67ae60ef45b50658413cf304de0c61881bf1eab",
-          "url": "https://github.com/jonattanva/luna-form/commit/359664cea9aa041027f4d51d311871ba5ea0d676"
-        },
-        "date": 1780326963150,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 283,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 683,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "15c576f2034e315ab525d5f5bde89a9d59e28dac",
           "message": "Merge pull request #39 from jonattanva/fix/grid-alignment-truncation\n\nfeat(luna-react): improve grid alignment with label truncation",
           "timestamp": "2026-06-01T18:18:04-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 152,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e4124f583509c08044d97963a27caaa5c733a128",
+          "message": "Merge pull request #121 from jonattanva/fix/length-bound-unreadable\n\nfix(schema): hold back a field whose length bound is no number",
+          "timestamp": "2026-10-05T17:20:51-05:00",
+          "tree_id": "d84e24291f468a2d82af0070c513e94ef5f6ffbb",
+          "url": "https://github.com/jonattanva/luna-form/commit/e4124f583509c08044d97963a27caaa5c733a128"
+        },
+        "date": 1791238943147,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 251,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 140,
             "unit": "ms"
           }
         ]
