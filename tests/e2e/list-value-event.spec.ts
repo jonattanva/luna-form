@@ -316,16 +316,20 @@ function names(page: Page) {
   return page.locator('input[name$=".name"]')
 }
 
+// Returns once the select has finished closing. The popup unmounts after an
+// exit animation and Radix hands focus back to the trigger a task later; a
+// `fill` that starts before that loses its keystrokes.
 async function choose(page: Page, option: string, label = 'Preset') {
-  await page
+  const combobox = page
     .locator('[data-slot="field"]')
     .filter({ hasText: label })
     .getByRole('combobox')
     .first()
-    .click()
+  await combobox.click()
   await page.getByRole('option', { name: option, exact: true }).click()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('listbox')).toBeHidden()
+  await expect(combobox).toBeFocused()
 }
 
 test.describe('List filled by a value event', { tag: ['@e2e'] }, () => {

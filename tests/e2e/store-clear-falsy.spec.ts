@@ -65,11 +65,16 @@ test.describe(
       const mode = page.getByRole('combobox')
       const score = page.locator('input[name="score"]')
 
-      // Show the score field
+      // Show the score field. Wait for the select to finish closing before
+      // typing: the popup unmounts after an exit animation and Radix hands
+      // focus back to the trigger a task later, and a fill that starts before
+      // that loses its keystrokes. No click-away here: the option click closes
+      // the popup, and a click at a fixed point lands in the definition editor
+      // and takes focus away from the trigger this waits for.
       await mode.click()
       await page.getByRole('option', { name: 'Advanced' }).click()
-      await page.mouse.click(10, 10)
       await expect(page.getByRole('listbox')).toBeHidden()
+      await expect(mode).toBeFocused()
 
       await expect(score).toBeVisible()
       await expect(score).toHaveValue('')
@@ -142,11 +147,12 @@ test.describe(
       const mode = page.getByRole('combobox')
       const score = page.locator('input[name="score"]')
 
-      // Show score, enter a value, then hide
+      // Show score, enter a value, then hide. Settled the same way as the
+      // test above before typing.
       await mode.click()
       await page.getByRole('option', { name: 'Advanced' }).click()
-      await page.mouse.click(10, 10)
       await expect(page.getByRole('listbox')).toBeHidden()
+      await expect(mode).toBeFocused()
 
       await score.fill('99')
       await score.blur()
