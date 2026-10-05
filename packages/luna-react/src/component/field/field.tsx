@@ -19,6 +19,8 @@ export type FieldProps = Readonly<{
   errors?: string[]
   field: Field
   lang?: string
+  // `context.now`, the instant a timezone select labels its zones for.
+  now?: string
   style?: Style
   translations?: Record<string, string>
 }>
@@ -58,6 +60,7 @@ export function Field(props: FieldProps) {
           field={props.field}
           horizontal={horizontal}
           lang={props.lang}
+          now={props.now}
           readOnly={readOnly}
           translations={props.translations}
         >

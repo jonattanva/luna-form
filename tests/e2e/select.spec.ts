@@ -34,19 +34,28 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(form).toContainText('May')
   })
 
+  // The years are the host's to give: luna-form keeps no clock, so the test
+  // runs the same on any day.
   test('should work correctly with select year input type', async ({
     page,
   }) => {
     await inject(
       page,
       `{
+            "context": { "years": { "current": 2026, "inFive": 2031 } },
             "sections": [
                 {
                     "fields": [
                         {
                             "label": "Select Year",
                             "name": "year",
-                            "type": "select/year"
+                            "type": "select/year",
+                            "advanced": {
+                                "length": {
+                                    "min": { "$ref": "#/context/years.current" },
+                                    "max": { "$ref": "#/context/years.inFive" }
+                                }
+                            }
                         }
                     ]
                 }
@@ -54,19 +63,25 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
         }`
     )
 
-    const currentYear = new Date().getFullYear()
-    const targetYear = currentYear + 2
-
     await page.goto('')
 
     const select = page.getByRole('combobox')
     await select.click()
 
-    const option = page.getByRole('option', { name: targetYear.toString() })
-    await option.click()
+    const options = page.getByRole('option')
+    await expect(options).toHaveText([
+      '2026',
+      '2027',
+      '2028',
+      '2029',
+      '2030',
+      '2031',
+    ])
+
+    await page.getByRole('option', { name: '2028' }).click()
 
     const form = page.locator('form')
-    await expect(form).toContainText(targetYear.toString())
+    await expect(form).toContainText('2028')
   })
 
   test('should render select array source correctly', async ({ page }) => {

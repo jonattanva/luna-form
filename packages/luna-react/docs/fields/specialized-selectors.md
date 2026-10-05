@@ -21,10 +21,18 @@ An optional month nobody picked is not submitted at all, and a required one asks
 
 ### 2. Year Selector (`select/year`)
 
-Renders a dropdown with a range of years.
+Renders a dropdown with the years from `advanced.length.min` to `advanced.length.max`, both included, written as whole numbers:
 
-- **Default behavior**: Shows the current year plus the next 5 years.
-- **Customization**: Use `advanced.length.min` and `advanced.length.max` to define the start and end years relative to the current year.
+```json
+{
+  "name": "graduation_year",
+  "type": "select/year",
+  "label": "Graduation Year",
+  "advanced": { "length": { "min": 1980, "max": 2030 } }
+}
+```
+
+The form keeps no clock, so which year it is now is the host's to say, the way it says [which day is today](input.md#the-first-and-the-last-day) to a date. Pass the years in [`context`](../structure/definition.md#what-the-host-knows-context) and point the bounds at them:
 
 ```json
 {
@@ -33,14 +41,30 @@ Renders a dropdown with a range of years.
   "label": "Expiration Year",
   "advanced": {
     "length": {
-      "min": 0,
-      "max": 10
+      "min": { "$ref": "#/context/years.current" },
+      "max": { "$ref": "#/context/years.inTen" }
     }
   }
 }
 ```
 
-An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
+```ts
+// In the application, counted where the business is, not where the server runs.
+const year = Number(
+  new Intl.DateTimeFormat('en', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+  }).format(new Date())
+)
+
+const context = { years: { current: year, inTen: year + 10 } }
+```
+
+At 03:00 UTC on 1 January the year is already the next one in UTC and still the old one in Bogota, so the host decides where it is counted. The server renders and validates with the years it is given, the same ones the browser gets.
+
+A year select needs both bounds. Without one, or with one that is no whole number, such as `"2026"` written as text or a `$ref` the context does not hold, it offers no year, and a development build names it in the console. A minimum after the maximum is named the same way.
+
+The schema checks the same bounds, so a year outside them, from a host value or a submit made by hand, is held back with `validation.length.min` or `validation.length.max` as the message, or a default such as `Too small: expected number to be >=2026`. An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
 
 ### 3. Day Selector (`select/day`)
 
@@ -56,16 +80,31 @@ Renders a dropdown with days 1 through 31.
 
 ### 4. Timezone Selector (`select/timezone`)
 
-Provides a comprehensive list of global timezones.
+Provides every time zone the runtime knows, from `Intl.supportedValuesOf('timeZone')`, grouped by region. A field submits the zone's IANA name, such as `America/Bogota`.
 
 ```json
 {
-  "name": "user_timezone",
+  "name": "meeting_zone",
   "type": "select/timezone",
-  "label": "Your Timezone",
-  "defaultValue": "America/New_York"
+  "label": "Time zone",
+  "advanced": { "suggested": { "$ref": "#/context/user.timeZone" } }
 }
 ```
+
+```tsx
+// Worked out once per request, on the server.
+const context = {
+  now: new Date().toISOString(),
+  user: { timeZone: session.timeZone },
+}
+
+<Form sections={sections} context={context} config={config} />
+```
+
+- **`advanced.suggested`** is the zone offered first, alone in a "Suggested" group. The host knows it, from a profile, a cookie or a header, so it usually arrives through [`context`](../structure/definition.md#what-the-host-knows-context), and the server and the browser suggest the same one. Without it there is no "Suggested" group. A value that is no zone the runtime knows suggests nothing, and a development build names it in the console.
+- **[`context.now`](../interpolation/overview.md#the-instant-relative-dates-use)** is the instant the zones are labelled for. A zone's offset depends on it, `Madrid - Central European (UTC+01:00)` in January and `(UTC+02:00)` in July, and so does its name, which some zones have changed over the years. Without it each zone is labelled by its city alone, `Madrid`.
+
+The list is the runtime's own, so two engines can list different zones: Node and Chromium list `Asia/Calcutta` and leave out `UTC`, which can still be suggested.
 
 ---
 

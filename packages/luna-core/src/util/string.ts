@@ -48,6 +48,8 @@ const REGEX_WHOLE_PLACEHOLDER = /^{([^}|]{1,200})}$/
 
 export type InterpolateOptions = {
   locale?: string
+  // The instant a relative date is measured from: `context.now`.
+  now?: string
 }
 
 /**
@@ -216,6 +218,7 @@ function replacePlaceholders(
     for (const filter of filters) {
       const result = applyFormatFilter(current, filter, {
         locale: options.locale,
+        now: options.now,
       })
       if (result === undefined) {
         return match

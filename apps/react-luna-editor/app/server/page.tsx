@@ -30,15 +30,30 @@ const sections = [
         type: 'input/date',
         advanced: { format: 'dd/MM/yyyy', data: { format: 'yyyy' } },
       },
+      {
+        // The zone suggested and the instant the zones and the description
+        // are given for come from the context below, not from this process.
+        label: 'Time zone',
+        name: 'zone',
+        type: 'select/timezone',
+        description: 'Renews {context.renewal | date:relative}',
+        advanced: { suggested: { $ref: '#/context/zone' } },
+      },
     ],
   },
 ]
+
+const context = {
+  now: '2026-01-15T12:00:00Z',
+  renewal: '2026-01-22T12:00:00Z',
+  zone: 'America/Bogota',
+}
 
 export default function ServerPage() {
   return (
     <div className="flex h-full w-full items-start justify-center overflow-auto">
       <div className="w-full max-w-md p-8">
-        <Form config={config} sections={sections} />
+        <Form config={config} context={context} sections={sections} />
       </div>
     </div>
   )

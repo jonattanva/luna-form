@@ -1,6 +1,11 @@
 import { Label } from './label'
 import { StaticDescription, type DescriptionProps } from './field-description'
-import { interpolateIfNeeded, translate, type Field } from '@luna-form/core'
+import {
+  interpolateIfNeeded,
+  readNow,
+  translate,
+  type Field,
+} from '@luna-form/core'
 import type { Config } from '../type'
 
 export function InputLabel(
@@ -28,6 +33,7 @@ export function InputLabel(
 
   const label = interpolateIfNeeded(props.field.label, interpolateOpts, {
     locale,
+    now: readNow(props.context),
   })
 
   return (

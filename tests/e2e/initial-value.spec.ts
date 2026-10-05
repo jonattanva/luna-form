@@ -356,15 +356,13 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
   test('should render form with initial values for multiple field types', async ({
     page,
   }) => {
-    const currentYear = new Date().getFullYear()
-
     await inject(
       page,
       `{
         "value": {
           "name": "Complete User",
           "email": "complete@example.com",
-          "year": "${currentYear}",
+          "year": "2028",
           "newsletter": true
         },
         "sections": [
@@ -396,7 +394,8 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
                 "label": "Year",
                 "name": "year",
                 "type": "select/year",
-                "required": true
+                "required": true,
+                "advanced": { "length": { "min": 2026, "max": 2032 } }
               },
               {
                 "advanced": {
@@ -422,9 +421,7 @@ test.describe('Form initial value (props.value)', { tag: ['@e2e'] }, () => {
 
     await expect(nameInput).toHaveValue('Complete User')
     await expect(emailInput).toHaveValue('complete@example.com')
-    await expect(page.getByRole('combobox').first()).toContainText(
-      currentYear.toString()
-    )
+    await expect(page.getByRole('combobox').first()).toContainText('2028')
     await expect(newsletterCheckbox).toBeChecked()
 
     await page.getByRole('button', { name: 'Submit' }).click()

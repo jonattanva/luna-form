@@ -236,7 +236,10 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
                                 "label": "Year",
                                 "name": "year",
                                 "type": "select/year",
-                                "required": true
+                                "required": true,
+                                "advanced": {
+                                    "length": { "min": 2026, "max": 2032 }
+                                }
                             },
                             {
                                 "label": "CVV",
@@ -252,8 +255,6 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
       }`
     )
     await page.goto('')
-
-    const currentYear = new Date().getFullYear()
 
     const name = page.getByLabel('Name on card')
     await name.fill('Jane Smith')
@@ -272,9 +273,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     const yearInput = page.getByRole('combobox').nth(1)
     await yearInput.click()
 
-    const yearOption = page.getByRole('option', {
-      name: currentYear.toString(),
-    })
+    const yearOption = page.getByRole('option', { name: '2028' })
     await yearOption.click()
 
     await page.getByLabel('CVV').fill('123')
@@ -286,7 +285,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
       name: 'Jane Smith',
       card_number: '1234 5678 9012 3456',
       month: 1,
-      year: currentYear,
+      year: 2028,
       cvv: 123,
     }
 

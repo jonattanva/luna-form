@@ -361,9 +361,13 @@ export type Input = Field & {
 export type Select = Field & {
   advanced?: {
     autocomplete?: never
-    length?: Length<number | string>
+    // A year select's first and last year, both included.
+    length?: Length<number>
     options?: Option
     preselected?: boolean
+    // The zone a timezone select offers first, an IANA name such as
+    // `America/Bogota`.
+    suggested?: string
   }
   source?: DataSource | Array<unknown>
 }

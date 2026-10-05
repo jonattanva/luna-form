@@ -12,6 +12,8 @@ export type ListProps = Readonly<{
   children: (index: number) => React.ReactNode
   field: List
   lang?: string
+  // `context.now`, which a row's preview labels a time zone for.
+  now?: string
   onValueChange?: (input: { name: string; value: unknown }) => void
   translations?: Record<string, string>
   value?: Nullable<Record<string, unknown>>

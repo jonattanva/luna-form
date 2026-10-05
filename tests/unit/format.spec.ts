@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import {
   applyFormatFilter,
   formatFilters,
@@ -72,13 +72,40 @@ describe('formatFilters.date', () => {
     expect(result).toMatch(/May (9|10), 2026/)
   })
 
-  test('formats relative style', () => {
-    const future = new Date(Date.now() + 7 * 86400 * 1000)
-    const result = formatFilters.date(future.toISOString(), ['relative'], {
+  // Measured from the instant the host gives, never from this machine's clock,
+  // so the server and the browser render the same words on any day.
+  test('formats relative style from the instant it is given', () => {
+    const result = formatFilters.date('2026-10-12T12:00:00Z', ['relative'], {
       locale: 'en-US',
+      now: '2026-10-05T12:00:00Z',
     })
-    expect(result).toMatch(/in /i)
+    expect(result).toBe('in 7 days')
   })
+
+  test('formats relative style the same whatever day it is', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2031-01-15T12:00:00Z'))
+      const result = formatFilters.date('2026-10-12T12:00:00Z', ['relative'], {
+        locale: 'en-US',
+        now: '2026-10-05T12:00:00Z',
+      })
+      expect(result).toBe('in 7 days')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test.each([undefined, 'not-an-instant'])(
+    'shows the date in medium style with no instant to measure from (%s)',
+    (now) => {
+      const result = formatFilters.date('2026-10-12T12:00:00', ['relative'], {
+        locale: 'en-US',
+        now,
+      })
+      expect(result).toBe('Oct 12, 2026')
+    }
+  )
 
   test('falls back to String for invalid date', () => {
     expect(formatFilters.date('not-a-date', [], { locale: 'en-US' })).toBe(
@@ -88,12 +115,19 @@ describe('formatFilters.date', () => {
 })
 
 describe('formatFilters.duration', () => {
-  test('returns relative distance for ISO date input', () => {
-    const past = new Date(Date.now() - 90 * 86400 * 1000)
-    const result = formatFilters.duration(past.toISOString(), [], {
+  test('returns the distance from the instant it is given for a date', () => {
+    const result = formatFilters.duration('2026-07-07T12:00:00Z', [], {
+      locale: 'en-US',
+      now: '2026-10-05T12:00:00Z',
+    })
+    expect(result).toBe('3 months ago')
+  })
+
+  test('shows a date in medium style with no instant to measure from', () => {
+    const result = formatFilters.duration('2026-07-07T12:00:00', [], {
       locale: 'en-US',
     })
-    expect(result.toLowerCase()).toContain('ago')
+    expect(result).toBe('Jul 7, 2026')
   })
 
   test('formats milliseconds (default unit) as legible breakdown', () => {

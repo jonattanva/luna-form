@@ -764,4 +764,66 @@ test.describe('Context interpolation', { tag: ['@e2e'] }, () => {
     await expect(personalDesc).toBeVisible()
     await expect(contactDesc).toBeVisible()
   })
+
+  // A relative date is measured from the instant the host passes as
+  // `context.now`, never from the clock of the machine that renders it.
+  test('should measure a relative date from context.now', async ({ page }) => {
+    await inject(
+      page,
+      `{
+        "context": {
+          "now": "2026-10-05T12:00:00Z",
+          "renewal": "2026-10-12T12:00:00Z",
+          "paid": "2026-07-07T12:00:00Z"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Renews {context.renewal | date:relative}",
+                "description": "Last paid {context.paid | duration}",
+                "name": "plan",
+                "type": "input/text"
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(page.locator('[data-slot="field-label"]')).toContainText(
+      'Renews in 7 days'
+    )
+    await expect(page.getByText('Last paid 3 months ago')).toBeVisible()
+  })
+
+  test('should show the date itself when the host passes no instant', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "context": { "renewal": "2026-10-12T12:00:00" },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Renews {context.renewal | date:relative}",
+                "name": "plan",
+                "type": "input/text"
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(page.locator('[data-slot="field-label"]')).toContainText(
+      'Renews Oct 12, 2026'
+    )
+  })
 })

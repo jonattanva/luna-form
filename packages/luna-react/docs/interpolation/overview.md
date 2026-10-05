@@ -167,6 +167,25 @@ whatever is running the code: the browser in the client form, the process in the
 server one, which are not always the same machine. Set it once in `env` and both
 renders agree.
 
+## The instant relative dates use
+
+The form keeps no clock. A [`date:relative`](format-filters.md#date) or a [`duration`](format-filters.md#duration) of a date is measured from `context.now`, an ISO date and time the host passes, such as `2026-10-05T19:30:00-05:00`:
+
+```tsx
+// Worked out once per request, on the server.
+const context = { now: new Date().toISOString(), renewal: plan.renewsAt }
+
+<Form sections={sections} context={context} config={config} />
+```
+
+```json
+{ "label": "Renews {context.renewal | date:relative}" }
+```
+
+With `now` at `2026-10-05T12:00:00Z` and the renewal at `2026-10-10T12:00:00Z`, the label reads `Renews in 5 days` on the server and in the browser alike, whatever their clocks say. Without `context.now`, or with one that is no ISO instant, the date is shown in the `medium` style: `Renews Oct 10, 2026`.
+
+`now` is the one key of `context` the form reads on its own, wherever the text it formats can read `context`: a label and a description. A [`value` or `source` payload](#event-payloads) resolves against the selected option and nothing else, so a relative date written there shows the date. A [`select/timezone`](../fields/specialized-selectors.md#4-timezone-selector-selecttimezone) labels its zones for the same instant.
+
 ## An unresolved placeholder cancels a request
 
 A `source.url` still holding a `{placeholder}` after interpolation is **not

@@ -92,6 +92,11 @@ Both roots resolve the same way and follow the rules below. A path with no root
 reads the definition, as it always has, and an entry of the definition can
 point into `#/context/`.
 
+One key of `context` is read by the form on its own: `now`, the instant
+[relative dates](../interpolation/overview.md#the-instant-relative-dates-use)
+are measured from and a time zone select labels its zones for. The form keeps
+no clock, so without it there is no "now".
+
 Keep `context` the same object while nothing in it changes, and hand over a new
 one when something does. Every field renders again when `context` is a new
 object, since a label or a description may interpolate it, and a field whose

@@ -10,17 +10,18 @@ import {
 import { isObject, isString } from './is-type'
 import { logger } from './logger'
 import { refOf } from './prepare'
-import { isValid, parse, format as fnsFormat } from 'date-fns'
+import { isValid, parse, parseISO, format as fnsFormat } from 'date-fns'
 import type {
   Date as DateField,
   DateFormat,
+  Input,
+  Select,
   Time,
   TimeFormat,
   TimezoneGroup,
   TimezoneItem,
 } from '../type'
 
-const REGEX_DIGITS = /^\d+$/
 const REF = new Date(2000, 0, 1)
 
 // A day the way the form exchanges it: what a native `<input type="date">`
@@ -100,12 +101,100 @@ export function getYear(
   return []
 }
 
-export function getCurrentYear() {
-  return new Date().getFullYear()
+export type YearLimits = Readonly<{ max?: number; min?: number }>
+
+// Read once per declaration, as a date field's limits are, since the form reads
+// them on every render. A field that declares no `advanced` is its own key.
+const readYears = new WeakMap<object, YearLimits>()
+
+/**
+ * The first and the last year a year select offers, both included: whole
+ * numbers, the way an `input/number` takes its bounds, or a `$ref` the host
+ * resolved to one. The library keeps no clock, so "this year" is the host's to
+ * say, through `context`, and a field without both bounds offers no year.
+ *
+ * Read once for the options the component is handed and for the schema that
+ * checks a year, so the two cannot disagree. It takes an `Input` as well,
+ * which is what the schema sees every field as.
+ */
+export function buildYearLimits(field: Input | Select): YearLimits {
+  const key = field.advanced ?? field
+  const known = readYears.get(key)
+  if (known) {
+    return known
+  }
+
+  const length = field.advanced?.length
+  const limits: YearLimits = {
+    max: readYear(length?.max),
+    min: readYear(length?.min),
+  }
+  readYears.set(key, limits)
+
+  for (const problem of describeYears(field.name, length, limits)) {
+    logger.warn(problem)
+  }
+
+  return limits
 }
 
-export function getUserTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone
+function readYear(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isInteger(value)
+    ? value
+    : undefined
+}
+
+const NO_YEAR = 'the field offers no year'
+
+function describeYears(
+  name: string,
+  length: unknown,
+  limits: YearLimits
+): string[] {
+  const unresolved = refOf(length)
+  if (unresolved !== undefined) {
+    return [
+      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so ${NO_YEAR}`,
+    ]
+  }
+
+  const declared = isObject(length) ? length : {}
+  if (declared.min == null && declared.max == null) {
+    return [
+      `${name}: a year select needs advanced.length.min and .max, so ${NO_YEAR}`,
+    ]
+  }
+
+  const problems: string[] = []
+  for (const [bound] of BOUND_NAMES) {
+    if (limits[bound] !== undefined) {
+      continue
+    }
+
+    const value = declared[bound]
+    problems.push(
+      value == null
+        ? `${name}: advanced.length.${bound} is missing, so ${NO_YEAR}`
+        : describeValue(
+            `${name}: advanced.length.${bound}`,
+            value,
+            'whole year',
+            NO_YEAR
+          )
+    )
+  }
+
+  if (
+    limits.min !== undefined &&
+    limits.max !== undefined &&
+    limits.min > limits.max
+  ) {
+    problems.push(
+      `${name}: advanced.length.min is after advanced.length.max, so ${NO_YEAR}`
+    )
+  }
+
+  return problems
 }
 
 function getTimezoneRegion(tz: string): string {
@@ -158,44 +247,119 @@ function getTimezoneCity(tz: string): string {
   return tz.slice(tz.lastIndexOf('/') + 1).replace(/_/g, ' ')
 }
 
-export function getTimezones(): TimezoneGroup[] {
-  const date = new Date()
+// Read once per declaration, since the form reads it on every render.
+const readZones = new WeakMap<object, { zone?: string }>()
 
-  const detectedTimezone = getUserTimezone()
-  const groupMap = new Map<string, TimezoneItem[]>()
-
-  const detectedCity = getTimezoneCity(detectedTimezone)
-  const { offset: detectedOffset, longName: detectedLongName } =
-    getTimezoneInfo(detectedTimezone, date)
-
-  const detectedItem: TimezoneItem = {
-    value: detectedTimezone,
-    label: `${detectedCity} - ${detectedLongName} (${detectedOffset})`,
+/**
+ * The zone a timezone select suggests, as its definition gives it in
+ * `advanced.suggested`: the host knows it -- a profile, a cookie, a header --
+ * and passes it through `context`, so the server and the browser suggest the
+ * same one. A value that is no zone `Intl` knows suggests nothing, and a
+ * development build names it.
+ */
+export function buildSuggestedZone(field: Select): string | undefined {
+  const advanced = field.advanced
+  if (!isObject(advanced) || advanced.suggested == null) {
+    return undefined
   }
 
-  for (const tz of getSupportedTimezones()) {
-    if (tz === detectedTimezone) {
-      continue
-    }
+  const known = readZones.get(advanced)
+  if (known) {
+    return known.zone
+  }
 
+  const value: unknown = advanced.suggested
+  const zone = isString(value) && isTimeZone(value) ? value : undefined
+  readZones.set(advanced, { zone })
+
+  if (zone === undefined) {
+    logger.warn(
+      describeValue(
+        `${field.name}: advanced.suggested`,
+        value,
+        'time zone',
+        'no zone is suggested'
+      )
+    )
+  }
+
+  return zone
+}
+
+function isTimeZone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: zone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * An instant as the host gives it in `context.now`: an ISO date and time, such
+ * as `2026-10-05T19:30:00-05:00`. Anything else is no instant.
+ */
+export function readInstant(text?: string): Date | undefined {
+  if (text === undefined) {
+    return undefined
+  }
+
+  const instant = parseISO(text)
+  return isValid(instant) ? instant : undefined
+}
+
+// A few lists, one per zone and instant a form suggests and is rendered at.
+const BUILT_ZONES = 8
+const builtZones = new Map<string, TimezoneGroup[]>()
+
+/**
+ * Every zone this engine knows, grouped by region, with the one the host
+ * suggests first. Labelled for the instant the host gives, `context.now`: the
+ * offset a zone has, and the name it goes by, both depend on it, so without one
+ * a zone goes by its city. Nothing here reads this machine's clock or zone.
+ *
+ * Built once while the zone and the instant hold: a timezone select builds its
+ * options on every render, and there are hundreds of zones. `suggested` is a
+ * zone `Intl` knows, as `buildSuggestedZone` gives it.
+ */
+export function getTimezones(
+  suggested?: string,
+  now?: string
+): TimezoneGroup[] {
+  return remember(
+    builtZones,
+    `${suggested ?? ''}|${now ?? ''}`,
+    () => buildTimezones(suggested, readInstant(now)),
+    BUILT_ZONES
+  )
+}
+
+function buildTimezones(
+  suggested: string | undefined,
+  instant: Date | undefined
+): TimezoneGroup[] {
+  const itemOf = (tz: string): TimezoneItem => {
     const city = getTimezoneCity(tz)
-    const { offset, longName } = getTimezoneInfo(tz, date)
-
-    const item: TimezoneItem = {
-      value: tz,
-      label: `${city} - ${longName} (${offset})`,
+    if (!instant) {
+      return { value: tz, label: city }
     }
 
+    const { offset, longName } = getTimezoneInfo(tz, instant)
+    return { value: tz, label: `${city} - ${longName} (${offset})` }
+  }
+
+  const groupMap = new Map<string, TimezoneItem[]>()
+  for (const tz of getSupportedTimezones()) {
     const region = getTimezoneRegion(tz)
-    if (region === 'Other') {
+    if (tz === suggested || region === 'Other') {
       continue
     }
 
     const existing = groupMap.get(region)
     if (existing) {
-      existing.push(item)
+      existing.push(itemOf(tz))
     } else {
-      groupMap.set(region, [item])
+      groupMap.set(region, [itemOf(tz)])
     }
   }
 
@@ -203,40 +367,13 @@ export function getTimezones(): TimezoneGroup[] {
     items.sort((a, b) => a.label.localeCompare(b.label))
   }
 
-  const sortedGroups = Array.from(groupMap.entries())
+  const groups = Array.from(groupMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([label, items]) => ({ label, items }))
 
-  return [{ label: 'Suggested', items: [detectedItem] }, ...sortedGroups]
-}
-
-// Cannot access current time from a Client Component without a fallback UI defined
-// https://nextjs.org/docs/messages/next-prerender-current-time-client
-export function getConvert(value: string | number, current?: number): number {
-  if (typeof value === 'number') {
-    return value
-  }
-
-  const now = current ?? getCurrentYear()
-  const trimmed = value.trim().toLowerCase()
-
-  if (trimmed.startsWith('current')) {
-    const match = trimmed.match(/^current([+-])(\d+)$/)
-    if (match) {
-      const [, operator, offsetStr] = match
-      const offset = parseInt(offsetStr, 10)
-      if (!isNaN(offset)) {
-        return operator === '+' ? now + offset : now - offset
-      }
-    }
-    return now
-  }
-
-  if (REGEX_DIGITS.test(trimmed)) {
-    return parseInt(trimmed, 10)
-  }
-
-  return now
+  return suggested
+    ? [{ label: 'Suggested', items: [itemOf(suggested)] }, ...groups]
+    : groups
 }
 
 // The one reading of a day, for every way a date leaves this module.
@@ -529,9 +666,10 @@ function describeLength(
     }
 
     problems.push(
-      describeDay(
+      describeValue(
         `${name}: advanced.length.${bound}`,
         value,
+        'yyyy-MM-dd day',
         `the field has no ${noun}`
       )
     )
@@ -570,15 +708,25 @@ function describeReserved(
   }
 
   return rejected.map((index) =>
-    describeDay(`${key}[${index}]`, reserved[index], 'it reserves nothing')
+    describeValue(
+      `${key}[${index}]`,
+      reserved[index],
+      'yyyy-MM-dd day',
+      'it reserves nothing'
+    )
   )
 }
 
-function describeDay(key: string, value: unknown, outcome: string) {
+function describeValue(
+  key: string,
+  value: unknown,
+  kind: string,
+  outcome: string
+) {
   const unresolved = refOf(value)
   return unresolved !== undefined
     ? `${key} points at ${unresolved}, which nothing resolved, so ${outcome}`
-    : `${key} is ${JSON.stringify(value)}, which is no yyyy-MM-dd day, so ${outcome}`
+    : `${key} is ${JSON.stringify(value)}, which is no ${kind}, so ${outcome}`
 }
 
 export type DateProps = Readonly<{
@@ -626,21 +774,37 @@ const READ_TEXTS = 32
 const readTexts = new Map<string, readonly string[]>()
 
 function readReservedProp(text = ''): readonly string[] {
-  if (!text) {
-    return NO_DAYS.days
-  }
+  return text
+    ? remember(
+        readTexts,
+        text,
+        () => readDays(text.split(',')).days,
+        READ_TEXTS
+      )
+    : NO_DAYS.days
+}
 
-  const known = readTexts.get(text)
-  if (known) {
+// What a reader worked out for a key, kept while it is among the last `limit`
+// keys read, the oldest dropped first: what a component reads on every render
+// is worked out once while its input holds, and a server that sees a new input
+// on every request holds no more than that.
+function remember<T>(
+  cache: Map<string, T>,
+  key: string,
+  compute: () => T,
+  limit: number
+): T {
+  const known = cache.get(key)
+  if (known !== undefined) {
     return known
   }
 
-  const oldest = readTexts.keys().next().value
-  if (readTexts.size >= READ_TEXTS && oldest !== undefined) {
-    readTexts.delete(oldest)
+  const oldest = cache.keys().next().value
+  if (cache.size >= limit && oldest !== undefined) {
+    cache.delete(oldest)
   }
 
-  const days = readDays(text.split(',')).days
-  readTexts.set(text, days)
-  return days
+  const value = compute()
+  cache.set(key, value)
+  return value
 }

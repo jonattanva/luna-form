@@ -92,6 +92,53 @@ describe('number values', () => {
     expect(parsed.data?.year).toBeUndefined()
   })
 
+  // The schema checks the years the field offers: a host value or a payload
+  // outside them answers no question the field asks.
+  describe('a year between its bounds', () => {
+    const bounded: Input = {
+      name: 'year',
+      type: 'select/year',
+      advanced: { length: { min: 2026, max: 2030 } },
+    }
+
+    test.each(['2026', '2028', '2030'])('should accept %s', (value) => {
+      const parsed = parse(bounded, value)
+
+      expect(parsed.success).toBe(true)
+      expect(parsed.data?.year).toBe(Number(value))
+    })
+
+    test.each(['1990', '2025', '2031', '2099'])(
+      'should hold %s back',
+      (value) => {
+        expect(parse(bounded, value).success).toBe(false)
+      }
+    )
+
+    test('should hold a year outside its bounds with the message of each', () => {
+      const messages: Input = {
+        ...bounded,
+        validation: {
+          length: { min: 'From 2026 on', max: 'Up to 2030' },
+        },
+      }
+
+      expect(parse(messages, '2025').error?.issues[0].message).toBe(
+        'From 2026 on'
+      )
+      expect(parse(messages, '2031').error?.issues[0].message).toBe(
+        'Up to 2030'
+      )
+    })
+
+    test('should still leave an optional year nobody picked out', () => {
+      const parsed = parse(bounded, '')
+
+      expect(parsed.success).toBe(true)
+      expect(parsed.data?.year).toBeUndefined()
+    })
+  })
+
   test('should not hold an optional month nobody picked', () => {
     const parsed = parse({ name: 'month', type: 'select/month' }, '')
 

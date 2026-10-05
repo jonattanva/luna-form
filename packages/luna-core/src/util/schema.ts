@@ -2,6 +2,7 @@ import { MAX, MIN } from './constant'
 import { buildNumberStep } from './build'
 import {
   buildDateLimits,
+  buildYearLimits,
   checkDay,
   checkRange,
   displayDate,
@@ -193,11 +194,31 @@ export function getNumber(input: Input, translations?: Record<string, string>) {
   )
 }
 
+// The years a year select offers, read by the same `buildYearLimits` as its
+// options: a host value or a payload outside them answers no question the
+// field asks.
 export function getYearSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
-  return presentLeaf(z.coerce.number().int(), input, translations, normalize)
+  const { max, min } = buildYearLimits(input)
+  let schema = z.coerce.number().int()
+
+  if (min !== undefined) {
+    schema = schema.min(
+      min,
+      translateOptional(input.validation?.length?.min, translations)
+    )
+  }
+
+  if (max !== undefined) {
+    schema = schema.max(
+      max,
+      translateOptional(input.validation?.length?.max, translations)
+    )
+  }
+
+  return presentLeaf(schema, input, translations, normalize)
 }
 
 export function getMonthSchema(

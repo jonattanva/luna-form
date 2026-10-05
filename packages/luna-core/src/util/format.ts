@@ -1,6 +1,6 @@
 import {
   format as fnsFormat,
-  formatDistanceToNow,
+  formatDistance,
   formatDuration,
   intervalToDuration,
   isValid,
@@ -8,9 +8,12 @@ import {
 } from 'date-fns'
 import { enUS, es } from 'date-fns/locale'
 import { isString } from './is-type'
+import { readInstant } from './date'
 import type { Locale } from 'date-fns'
 
-export type FormatContext = { locale?: string }
+// `now` is the instant a relative date is measured from, as the host gives it
+// in `context.now`: an ISO date and time.
+export type FormatContext = { locale?: string; now?: string }
 export type FormatFilter = (
   value: unknown,
   args: string[],
@@ -91,6 +94,26 @@ function toDate(value: unknown): Date | null {
   return null
 }
 
+/**
+ * `context.now`, the one key of the host's `context` the library reads on its
+ * own: the instant a relative date is measured from and a time zone's offset is
+ * given for. The library keeps no clock, so without it there is no "now".
+ */
+export function readNow(context?: Record<string, unknown>): string | undefined {
+  const now = context?.now
+  return isString(now) ? now : undefined
+}
+
+// Measured from the instant the host gives, never from this machine's clock:
+// the server and the browser render the same words, and on any day. Without an
+// instant there is nothing to measure from, so the date is shown as it is.
+function since(date: Date, ctx: FormatContext, locale?: Locale): string {
+  const now = readInstant(ctx.now)
+  return now
+    ? formatDistance(date, now, { addSuffix: true, locale })
+    : fnsFormat(date, DATE_PATTERNS.medium, { locale })
+}
+
 export const formatFilters: Record<string, FormatFilter> = {
   currency: (value, args, ctx) => {
     const num = toNumber(value)
@@ -128,7 +151,7 @@ export const formatFilters: Record<string, FormatFilter> = {
     const style = args[0] ?? 'short'
     const locale = resolveLocale(ctx.locale)
     if (style === 'relative') {
-      return formatDistanceToNow(date, { addSuffix: true, locale })
+      return since(date, ctx, locale)
     }
     const pattern = DATE_PATTERNS[style] ?? style
     return fnsFormat(date, pattern, { locale })
@@ -150,7 +173,7 @@ export const formatFilters: Record<string, FormatFilter> = {
 
     const date = toDate(value)
     if (date) {
-      return formatDistanceToNow(date, { addSuffix: true, locale })
+      return since(date, ctx, locale)
     }
 
     return String(value)

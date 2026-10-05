@@ -1,4 +1,7 @@
 {
+    "context": {
+        "years": { "current": 2026, "inSix": 2032 }
+    },
     "sections": [
         {
             "advanced": {
@@ -37,7 +40,13 @@
                             "label": "Year",
                             "name": "year",
                             "type": "select/year",
-                            "required": true
+                            "required": true,
+                            "advanced": {
+                                "length": {
+                                    "min": { "$ref": "#/context/years.current" },
+                                    "max": { "$ref": "#/context/years.inSix" }
+                                }
+                            }
                         },
                         {
                             "label": "CVV",
