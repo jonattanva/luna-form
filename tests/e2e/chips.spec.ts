@@ -150,4 +150,41 @@ test.describe('Chips with custom source - multiple', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).toContainText('"priority"')
     await expect(page.locator('pre code')).toContainText('"med"')
   })
+
+  // `docs/fields/input.md`: a disabled field "is non-interactive".
+  test('should disable every option when the field is disabled', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Priority",
+                "name": "priority",
+                "type": "chips",
+                "disabled": true,
+                "defaultValue": ["med"],
+                "source": [
+                  { "label": "Low", "value": "low" },
+                  { "label": "Medium", "value": "med" },
+                  { "label": "High", "value": "high" }
+                ]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const chips = page.locator('button[type="button"]')
+    await expect(chips).toHaveCount(3)
+
+    for (const chip of await chips.all()) {
+      await expect(chip).toBeDisabled()
+    }
+  })
 })

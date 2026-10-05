@@ -22,6 +22,12 @@ const sections = [
         type: 'input/email',
         required: true,
       },
+      {
+        label: 'Code',
+        name: 'code',
+        type: 'input/text',
+        disabled: true,
+      },
     ],
   },
 ]

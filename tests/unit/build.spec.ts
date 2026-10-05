@@ -166,6 +166,22 @@ describe('Build', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildDisabled(field)).toBe(false)
     })
+
+    test('should return true if the field declares disabled', () => {
+      const field = { type: 'text', name: 'test', disabled: true } as Field
+      expect(buildDisabled(field)).toBe(true)
+    })
+
+    // `false` is a form that is not read-only, which leaves the field its own.
+    test('should not let a form that is not read-only enable a disabled field', () => {
+      const field = { type: 'text', name: 'test', disabled: true } as Field
+      expect(buildDisabled(field, false)).toBe(true)
+    })
+
+    test('should let a read-only form lock a field that declares disabled false', () => {
+      const field = { type: 'text', name: 'test', disabled: false } as Field
+      expect(buildDisabled(field, true)).toBe(true)
+    })
   })
 
   describe('buildReadOnly', () => {
@@ -187,6 +203,19 @@ describe('Build', () => {
         disabled: true,
       } as Field
       expect(buildReadOnly(field)).toBe(false)
+    })
+
+    // What a `state` event that enables the field leaves it as: still locked,
+    // and sent again, as any read-only field is.
+    test('should submit a read-only field whose disabled is false', () => {
+      const field = {
+        type: 'text',
+        name: 'test',
+        readonly: true,
+        disabled: false,
+      } as Field
+      expect(buildDisabled(field)).toBe(true)
+      expect(buildReadOnly(field)).toBe(true)
     })
 
     test('should say nothing about a field that is not read-only', () => {

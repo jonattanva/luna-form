@@ -8,12 +8,16 @@ type Option = {
 }
 
 export function Chips({
+  disabled,
   name,
   onChange,
   options = [],
   value = [],
   multiple = true,
 }: {
+  // A disabled field is neither changed nor sent: every button is disabled,
+  // and so is every hidden input, which the browser then leaves out.
+  disabled?: boolean
   name?: string
   // Reports an array, and says so. The runtime reads nothing off a change but
   // `target.value` (`InputChangeEvent` in `input-strategies`), and its value is
@@ -40,16 +44,25 @@ export function Chips({
   return (
     <div className="flex w-full flex-wrap gap-2">
       {name &&
-        value.map((v) => <input key={v} type="hidden" name={name} value={v} />)}
+        value.map((v) => (
+          <input
+            key={v}
+            disabled={disabled}
+            type="hidden"
+            name={name}
+            value={v}
+          />
+        ))}
       {options.map((option) => {
         const selected = value.includes(option.value)
         return (
           <button
             key={option.value}
+            disabled={disabled}
             type="button"
             onClick={() => toggleDay(option.value)}
             className={cn(
-              'flex min-w-0 flex-1 items-center justify-center rounded-md p-2 text-sm font-semibold transition-colors',
+              'flex min-w-0 flex-1 items-center justify-center rounded-md p-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               'sm:min-w-[80px] sm:flex-none',
               selected
                 ? 'bg-violet-600 text-white'

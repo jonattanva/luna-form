@@ -34,9 +34,13 @@ export function buildReverse(field: Field): boolean {
   return field.advanced?.reverse !== false
 }
 
+// Whether a field can be edited. `field.disabled` is what the field says about
+// itself: its declaration, or on the client the `disabled` a `state` event put
+// in its place. `disabled` is the lock the form puts on every field, its
+// `readOnly`, and it only ever adds one: a form that is not read-only leaves
+// each field to its own. A read-only field is locked as well.
 export function buildDisabled(field: Field, disabled?: boolean) {
-  const readonly = field.readonly ?? false
-  return disabled ? disabled : readonly
+  return Boolean(disabled || field.disabled || field.readonly)
 }
 
 // Locked the way a disabled field is, but still the form's: a read-only field
