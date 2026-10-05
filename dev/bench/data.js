@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791167441474,
+  "lastUpdate": 1791167473342,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "785039e2b646ccc04a5f9a6030081dce1a5f4053",
-          "message": "chore: formatting and package updates",
-          "timestamp": "2026-05-11T18:14:32-05:00",
-          "tree_id": "5dac4503d6fc013e936c392c12be17988be895f9",
-          "url": "https://github.com/jonattanva/luna-form/commit/785039e2b646ccc04a5f9a6030081dce1a5f4053"
-        },
-        "date": 1778541343742,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 262,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 198,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "69e1f0f2214fefdcb41fddf5376af68f28acbf1f",
           "message": "docs: remove deprecated collapsible property from list field and update types",
           "timestamp": "2026-05-11T22:11:48-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 628,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "dab47866b31fd34f5843a83ba7b7d44326b8bd2c",
+          "message": "docs(interpolation): env.locale reaches labels and descriptions, not event payloads\n\n\"Locale resolution\" in format-filters.md said `config.env.locale` applies\nwherever a filter is written, a `value` payload included. It does not:\n`handleValueEvent` and `handleSourceEvent` interpolate without a locale, so\nfilters in a `value` payload and in `source.url` / `source.body` format with\nthe runtime default even when `env.locale` is set.\n\nThe page now says so, with the example run in /reactive (es-ES env, en-US\nbrowser): 1234567 through `| number` reads 1.234.567 in a description and\n1,234,567 in a value target, a source url and a POST body.\n\nTwo unit tests pin the behaviour the page describes, compared against\n`Intl.NumberFormat()` so they hold under any host locale.",
+          "timestamp": "2026-10-04T21:29:56-05:00",
+          "tree_id": "f563886eac52831e39d4a81d56992411752a58b1",
+          "url": "https://github.com/jonattanva/luna-form/commit/dab47866b31fd34f5843a83ba7b7d44326b8bd2c"
+        },
+        "date": 1791167473299,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 352,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 620,
             "unit": "ms"
           }
         ]
