@@ -249,11 +249,44 @@ jobs:
           echo "The application server did not answer on port 3000" >&2
           exit 1
       - name: Run e2e tests
-        run: pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
+        run: pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-e2e-${{ matrix.browser }}-${{ matrix.shard }}
+          name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+  e2e-report:
+    name: e2e-report
+    timeout-minutes: 5
+    runs-on: ubuntu-26.04
+    needs: e2e-test
+    if: ${{ !cancelled() && needs.e2e-test.result != 'skipped' }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          cache: true
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Download blob reports
+        uses: actions/download-artifact@v8
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge into one HTML report
+        run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+      - uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-e2e
           path: playwright-report/
           retention-days: 1
   render-budget:
