@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import {
   flattenListFields,
   getAssignedCount,
@@ -204,6 +204,24 @@ describe('getListBounds', () => {
     }
 
     expect(getListBounds(list)).toEqual({ min: 0, max: 3 })
+  })
+
+  // The schema holds such a list back; the rows it shows meanwhile are the
+  // defaults, never a count worked out from text.
+  test('keeps the default for a bound that is no number', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const list = {
+        name: 'rows',
+        type: 'list',
+        fields: [],
+        advanced: { length: { min: { $ref: '#/context/rows' }, max: 3 } },
+      } as unknown as List
+
+      expect(getListBounds(list)).toEqual({ min: 1, max: 3 })
+    } finally {
+      warn.mockRestore()
+    }
   })
 })
 

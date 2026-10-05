@@ -647,10 +647,11 @@ export function buildDateLimits(field: DateField): DateLimits {
 }
 
 // Bounds that are declared and cannot be read: the whole `length` a `$ref`
-// nothing resolved, or a bound that is no day.
-function isUnreadableLength(
+// nothing resolved, or a bound that is no value of its kind -- no day here, no
+// number for `buildLengthLimits`.
+export function isUnreadableLength(
   length: unknown,
-  read: Readonly<{ max?: string; min?: string }>
+  read: Readonly<{ max?: unknown; min?: unknown }>
 ): boolean {
   if (length == null) {
     return false
@@ -748,7 +749,7 @@ function describeDateLimits(
 // How a field's bounds fail it, for `describeBounds`: what a bound that is not
 // a value of its `kind` is, what the field is left with when a bound is lost
 // or the two are out of order, and whether it needs both to offer anything.
-type BoundRules = Readonly<{
+export type BoundRules = Readonly<{
   disordered: string
   kind: string
   lost: string
@@ -768,7 +769,7 @@ const DATE_BOUNDS: BoundRules = {
 // what was read from them: the whole `length` a `$ref` nothing resolved, a
 // bound that is no value of its kind or, where both are needed, missing, and a
 // minimum after the maximum.
-function describeBounds<T extends number | string>(
+export function describeBounds<T extends number | string>(
   name: string,
   length: unknown,
   limits: Readonly<{ max?: T; min?: T }>,

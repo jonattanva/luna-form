@@ -1466,3 +1466,180 @@ describe('a date rule the form cannot read', () => {
     }
   })
 })
+
+// Outside the date family `advanced.length` is a number: characters for text,
+// the value itself for a number. A bound that is not one -- a day written on a
+// text field, a `$ref` nothing resolved -- is a rule the form cannot read, so
+// the field takes no value rather than every value, as a date does with a
+// bound that is no day, and whoever wrote the form is told once.
+describe('a length bound the form cannot read', () => {
+  const read = (json: string) => JSON.parse(json) as Input
+
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  const warningsOf = (warn: { mock: { calls: unknown[][] } }) =>
+    warn.mock.calls.map((call) => call.slice(1).join(' '))
+
+  test('should hold back every text there is, and let an optional one left empty pass', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getText(
+        read(
+          '{"name":"when","type":"datetime/expression","advanced":{"length":{"min":"2026-10-05","max":"2026-11-03"}}}'
+        )
+      )
+
+      expect(schema.parse('')).toBe('')
+      expect(messagesOf(schema.safeParse('2026-10-20'))).toEqual([
+        'This value cannot be checked',
+      ])
+      expect(messagesOf(schema.safeParse('a'))).toEqual([
+        'This value cannot be checked',
+      ])
+      expect(warningsOf(warn)).toEqual([
+        'when: advanced.length.min is "2026-10-05", which is no number, so the field takes no value',
+        'when: advanced.length.max is "2026-11-03", which is no number, so the field takes no value',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should still ask a required text for a value', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getText(
+        read(
+          '{"name":"note","type":"input/text","required":true,"validation":{"required":"Write a note"},"advanced":{"length":{"min":{"$ref":"#/context/note.min"}}}}'
+        )
+      )
+
+      expect(messagesOf(schema.safeParse(''))).toEqual(['Write a note'])
+      expect(messagesOf(schema.safeParse('hello'))).toEqual([
+        'This value cannot be checked',
+      ])
+      expect(warningsOf(warn)).toEqual([
+        'note: advanced.length.min points at #/context/note.min, which nothing resolved, so the field takes no value',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should name bounds that are a $ref nothing resolved as a whole', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getText(
+        read(
+          '{"name":"note","type":"textarea","advanced":{"length":{"$ref":"#/context/note"}}}'
+        )
+      )
+
+      expect(schema.safeParse('hello').success).toBe(false)
+      expect(warningsOf(warn)).toEqual([
+        'note: advanced.length points at #/context/note, which nothing resolved, so the field takes no value',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  // An address is held back like any other text: whether it is one is no
+  // longer the question.
+  test('should hold back every address there is', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getEmail(
+        read(
+          '{"name":"email","type":"input/email","advanced":{"length":{"max":{"$ref":"#/context/email.max"}}}}'
+        )
+      )
+
+      expect(schema.parse('')).toBe('')
+      expect(messagesOf(schema.safeParse('ana@example.com'))).toEqual([
+        'This value cannot be checked',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  // The step counts from `length.min`, so a minimum that is no number cannot
+  // say which values are on it either: one message says why, not two.
+  test('should hold back every number there is with one message', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getNumber(
+        read(
+          '{"name":"guests","type":"input/number","advanced":{"step":2,"length":{"min":"2026-10-05"}}}'
+        )
+      )
+
+      expect(schema.parse('')).toBeUndefined()
+      expect(messagesOf(schema.safeParse('5'))).toEqual([
+        'This value cannot be checked',
+      ])
+      expect(messagesOf(schema.safeParse('4'))).toEqual([
+        'This value cannot be checked',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  // The form copies a field -- an optional one in the headless schema, a
+  // read-only one while it renders -- but not the bounds it declares.
+  test('should name a bound once however many copies of the field read it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const field = read(
+        '{"name":"guests","type":"input/number","required":true,"advanced":{"length":{"max":"ten"}}}'
+      )
+
+      getNumber(field)
+      getNumber({ ...field, required: false })
+      getText({ ...field, disabled: true })
+
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should name a minimum above the maximum, which no value passes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getNumber({
+        name: 'guests',
+        type: 'input/number',
+        advanced: { length: { min: 5, max: 2 } },
+      })
+
+      expect(schema.safeParse('3').success).toBe(false)
+      expect(warningsOf(warn)).toEqual([
+        'guests: advanced.length.min is after advanced.length.max, so no value passes',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should keep checking bounds that are numbers', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getText({
+        name: 'code',
+        type: 'input/text',
+        advanced: { length: { min: 2, max: 4 } },
+      })
+
+      expect(schema.parse('abc')).toBe('abc')
+      expect(schema.safeParse('a').success).toBe(false)
+      expect(schema.safeParse('abcde').success).toBe(false)
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})

@@ -658,3 +658,113 @@ describe('buildFormSchema with dates and context', () => {
     })
   })
 })
+
+// Outside the date family a bound is a number, read by the same helper as the
+// props a field renders. One that is not -- a day on a text field, a `$ref`
+// the host did not resolve -- holds back what the field would have checked,
+// on the server as in the browser, instead of every value with a message about
+// "2026-10-05 characters".
+describe('buildFormSchema with a length bound it cannot read', () => {
+  const warnings = (warn: { mock: { calls: unknown[][] } }) =>
+    warn.mock.calls.map((call) => call.slice(1).join(' '))
+
+  test('lets an optional field left empty pass and holds back any value', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = buildFormSchema([
+        {
+          title: 'S',
+          fields: [
+            {
+              name: 'f',
+              type: 'datetime/expression',
+              advanced: { length: { min: '2026-10-05', max: '2026-11-03' } },
+            },
+          ],
+        },
+      ] as unknown as Sections)
+
+      expect(schema.safeParse({ f: '' }).success).toBe(true)
+      expect(schema.safeParse({}).success).toBe(true)
+      expect(
+        collectIssues(schema.safeParse({ f: '2026-10-20' }).error!)
+      ).toEqual([{ path: 'f', message: 'This value cannot be checked' }])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  describe('a bound the host passes in context', () => {
+    // A new definition for each test: a bound is named once for the object
+    // that declares it.
+    const form = () =>
+      [
+        {
+          fields: [
+            {
+              name: 'note',
+              type: 'input/text',
+              advanced: { length: { max: { $ref: '#/context/limits.note' } } },
+            },
+          ],
+        },
+      ] as unknown as Sections
+
+    test('checks the bound the context gives', () => {
+      const schema = buildFormSchema(form(), undefined, undefined, {
+        limits: { note: 3 },
+      })
+
+      expect(schema.parse({ note: 'abc' })).toEqual({ note: 'abc' })
+      expect(schema.safeParse({ note: 'abcd' }).success).toBe(false)
+    })
+
+    test('holds back any text, and is named, when the context does not hold it', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const schema = buildFormSchema(form())
+
+        expect(schema.safeParse({ note: '' }).success).toBe(true)
+        expect(collectIssues(schema.safeParse({ note: 'a' }).error!)).toEqual([
+          { path: 'note', message: 'This value cannot be checked' },
+        ])
+        expect(warnings(warn)).toEqual([
+          'note: advanced.length.max points at #/context/limits.note, which nothing resolved, so the field takes no value',
+        ])
+      } finally {
+        warn.mockRestore()
+      }
+    })
+  })
+
+  // A list has no `required` of its own: its `length.min` is how it asks for
+  // rows, so a list with no rows is held back too.
+  test('holds back every list, empty or not, and names it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = buildFormSchema([
+        {
+          fields: [
+            {
+              name: 'guests',
+              type: 'list',
+              advanced: { length: { min: { $ref: '#/context/guests.min' } } },
+              fields: [{ name: 'name', type: 'input/text' }],
+            },
+          ],
+        },
+      ] as unknown as Sections)
+
+      for (const value of [{}, { guests: [] }, { guests: [{ name: 'Ana' }] }]) {
+        expect(collectIssues(schema.safeParse(value).error!)).toEqual([
+          { path: 'guests', message: 'This list cannot be checked' },
+        ])
+      }
+      expect(warnings(warn)).toEqual([
+        'guests: advanced.length.min points at #/context/guests.min, which nothing resolved, so no list passes',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})

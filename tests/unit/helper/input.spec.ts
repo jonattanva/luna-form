@@ -510,6 +510,52 @@ describe('Input Helper', () => {
       }
     )
   })
+
+  // The bounds a field renders are read by the same helper as the ones its
+  // schema checks: a bound that is no number never reaches the DOM, where a
+  // `minLength="2026-10-05"` would mean nothing to the browser. The schema
+  // holds the field back instead.
+  describe('length bounds that are no number', () => {
+    test.each([
+      ['input/text', 'minLength', 'maxLength'],
+      ['textarea', 'minLength', 'maxLength'],
+      ['input/number', 'min', 'max'],
+    ])('should render only the bound a %s can read', (type, min, max) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const field = {
+          name: 'value',
+          type,
+          advanced: { length: { min: '2026-10-05', max: 10 } },
+        } as unknown as Field
+
+        const props = buildCommon(field)
+
+        expect(props).not.toHaveProperty(min)
+        expect(props).toHaveProperty(max, 10)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    test('should render no bound from a $ref nothing resolved', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const field = {
+          name: 'note',
+          type: 'input/text',
+          advanced: { length: { $ref: '#/context/note' } },
+        } as unknown as Field
+
+        const props = buildCommon(field)
+
+        expect(props).not.toHaveProperty('minLength')
+        expect(props).not.toHaveProperty('maxLength')
+      } finally {
+        warn.mockRestore()
+      }
+    })
+  })
 })
 
 // A date travels as `yyyy-MM-dd` between the form and its component, on the

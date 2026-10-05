@@ -9,6 +9,7 @@ import {
   OPTIONS,
 } from '../util/constant'
 import {
+  buildLengthLimits,
   buildNumberStep,
   buildOptions,
   buildSource,
@@ -291,6 +292,9 @@ function defineMinMax(input: Input): Partial<CommonProps> {
   return defineConstraints(input, { min: MIN, max: MAX })
 }
 
+// The bounds are read by `buildLengthLimits`, the same reading the schema
+// checks, so a bound that is no number never reaches the DOM, where the browser
+// would ignore it: the schema holds the field back instead.
 function defineConstraints(
   input: Input,
   keys: {
@@ -298,16 +302,14 @@ function defineConstraints(
     max: typeof MAX | typeof MAX_LENGTH
   }
 ): Partial<CommonProps> {
+  const { max, min } = buildLengthLimits(input)
   const result: Record<string, number> = {}
-  const length = input.advanced?.length
-  if (length) {
-    if (length.min !== undefined) {
-      result[keys.min] = length.min
-    }
+  if (min !== undefined) {
+    result[keys.min] = min
+  }
 
-    if (length.max !== undefined) {
-      result[keys.max] = length.max
-    }
+  if (max !== undefined) {
+    result[keys.max] = max
   }
   return result
 }
