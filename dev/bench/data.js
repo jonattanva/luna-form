@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791211978296,
+  "lastUpdate": 1791212007618,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "ee583f7b66f4efb62241b284646651c5b0e9165a",
-          "message": "upgrade dependecies",
-          "timestamp": "2026-05-14T12:37:47-05:00",
-          "tree_id": "0db436d54845b66d06afdfa95e81e7e7f1fc1559",
-          "url": "https://github.com/jonattanva/luna-form/commit/ee583f7b66f4efb62241b284646651c5b0e9165a"
-        },
-        "date": 1778780359058,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 613,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "c5dc8d96de70f39553768e08b80c08e6a3b06d8c",
           "message": "chore: update packages and add new e2e test",
           "timestamp": "2026-05-14T14:27:58-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 587,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7630798e8122974a1ff2c46ffe6c9ef5696e9b0f",
+          "message": "Merge pull request #112 from jonattanva/claude/date-reserved\n\nfeat(date): days nobody can pick",
+          "timestamp": "2026-10-05T09:52:06-05:00",
+          "tree_id": "a4fdec00032a21a493ff208a3b7643c31eccb525",
+          "url": "https://github.com/jonattanva/luna-form/commit/7630798e8122974a1ff2c46ffe6c9ef5696e9b0f"
+        },
+        "date": 1791212007583,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 335,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 620,
             "unit": "ms"
           }
         ]
