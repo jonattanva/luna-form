@@ -17,7 +17,7 @@ jobs:
   bundle-size:
     name: bundle-size
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       pull-requests: write
@@ -123,7 +123,7 @@ jobs:
   build:
     name: build
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -150,7 +150,7 @@ jobs:
   lint:
     name: lint
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -179,7 +179,7 @@ jobs:
   unit-test:
     name: unit-test
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build
     steps:
       - name: Check out code
@@ -198,10 +198,16 @@ jobs:
       - name: Run unit tests
         run: pnpm test:unit
   e2e-test:
-    name: e2e-test
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
+    name: e2e-test (${{ matrix.browser }}, ${{ matrix.shard }}/${{ matrix.shards }})
+    timeout-minutes: 30
+    runs-on: ubuntu-26.04
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2]
+        shards: [2]
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -227,20 +233,62 @@ jobs:
         run: pnpm build
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: |
+          echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+          echo "image=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> $GITHUB_OUTPUT
       - name: Cache Playwright browsers
         uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          key: ${{ steps.playwright-version.outputs.image }}-playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Start application server
-        run: pnpm serve &
+        run: |
+          pnpm serve &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:3000 > /dev/null && exit 0
+            sleep 1
+          done
+          echo "The application server did not answer on port 3000" >&2
+          exit 1
       - name: Run e2e tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
+        with:
+          name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+  e2e-report:
+    name: e2e-report
+    timeout-minutes: 5
+    runs-on: ubuntu-26.04
+    needs: e2e-test
+    if: ${{ !cancelled() && needs.e2e-test.result != 'skipped' }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          cache: true
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Download blob reports
+        uses: actions/download-artifact@v8
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge into one HTML report
+        run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
+      - uses: actions/upload-artifact@v7
         with:
           name: playwright-report-e2e
           path: playwright-report/
@@ -248,7 +296,7 @@ jobs:
   render-budget:
     name: render-budget
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build
     steps:
       - name: Check out code
@@ -273,12 +321,14 @@ jobs:
         run: pnpm build
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+        run: |
+          echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+          echo "image=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> $GITHUB_OUTPUT
       - name: Cache Playwright browsers
         uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          key: ${{ steps.playwright-version.outputs.image }}-playwright-chromium-${{ steps.playwright-version.outputs.version }}
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps chromium
       # Production, not `pnpm serve`: development StrictMode doubles the

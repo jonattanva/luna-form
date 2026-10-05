@@ -8,12 +8,16 @@ type Option = {
 }
 
 export function DayOfWeekWrapper({
+  disabled,
   name,
   onChange,
   options = [],
   value = [],
   multiple = true,
 }: {
+  // A disabled field is neither changed nor sent: every button is disabled,
+  // and so is every hidden input, which the browser then leaves out.
+  disabled?: boolean
   name?: string
   // Reports an array, and says so. The runtime reads nothing off a change but
   // `target.value` (`InputChangeEvent` in `input-strategies`), and its value is
@@ -40,16 +44,25 @@ export function DayOfWeekWrapper({
   return (
     <div className="flex gap-2">
       {name &&
-        value.map((v) => <input key={v} type="hidden" name={name} value={v} />)}
+        value.map((v) => (
+          <input
+            key={v}
+            disabled={disabled}
+            type="hidden"
+            name={name}
+            value={v}
+          />
+        ))}
       {options.map((option) => {
         const selected = value.includes(option.value)
         return (
           <button
             key={option.value}
+            disabled={disabled}
             type="button"
             onClick={() => toggleDay(option.value)}
             className={cn(
-              'flex size-10 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+              'flex size-10 items-center justify-center rounded-full text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               selected
                 ? 'bg-violet-600 text-white'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'

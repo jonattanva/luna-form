@@ -141,4 +141,36 @@ test.describe('Chips days form', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).toContainText('"0"')
     await expect(page.locator('pre code')).toContainText('"6"')
   })
+
+  // `docs/fields/input.md`: a disabled field "is non-interactive".
+  test('should disable every day when the field is disabled', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Days",
+                "name": "days",
+                "type": "chips/day",
+                "disabled": true,
+                "defaultValue": ["1"]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const dayButtons = page.locator('button[type="button"]')
+    await expect(dayButtons).toHaveCount(7)
+
+    for (const day of await dayButtons.all()) {
+      await expect(day).toBeDisabled()
+    }
+  })
 })

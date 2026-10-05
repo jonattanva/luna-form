@@ -1,5 +1,5 @@
 import { Field as Component } from '../../../component/field/field'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { fieldStateAtom } from '../../lib/state-store'
 import { inputErrorAtom } from '../../lib/error-store'
 import { useEntryAtom } from '../../hook/use-entry-atom'
@@ -24,17 +24,27 @@ function FieldWithMeta(props: FieldProps) {
   const state = useAtomValue(useEntryAtom(fieldStateAtom, props.field.name))
   const errors = useAtomValue(useEntryAtom(inputErrorAtom, props.field.name))
 
+  // A `state` event that sets `disabled` replaces what the field declares, in
+  // either direction, for as long as its condition holds, and the declaration
+  // is back once the event withdraws it. It goes into the field rather than
+  // beside it, so `buildDisabled` and `buildReadOnly` read one
+  // `field.disabled` -- the one the server tree, which has no state, reads
+  // from the definition -- and `disabled` stays the form's lock alone. Kept
+  // across renders because the field is what `useInput` builds its schema on.
+  const disabled = state?.disabled
+  const field = useMemo(
+    () =>
+      disabled === undefined || disabled === props.field.disabled
+        ? props.field
+        : { ...props.field, disabled },
+    [disabled, props.field]
+  )
+
   if (state?.hidden ?? props.field.hidden ?? false) {
     return null
   }
 
-  return (
-    <Component
-      {...props}
-      disabled={state?.disabled ?? props.disabled}
-      errors={errors}
-    />
-  )
+  return <Component {...props} errors={errors} field={field} />
 }
 
 /**

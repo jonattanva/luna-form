@@ -228,6 +228,97 @@ test.describe('State event form', { tag: ['@e2e'] }, () => {
     await expect(settings).toBeEnabled()
   })
 
+  // `docs/fields/input.md`: a field that declares `disabled` "is
+  // non-interactive". No event involved: the declaration alone locks it.
+  test('should disable a field that declares disabled', async ({ page }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Name",
+                "name": "name",
+                "type": "input/text",
+                "disabled": true
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(page.getByLabel('Name')).toBeDisabled()
+  })
+
+  // The other direction: a field declared disabled until a choice unlocks it,
+  // the shape `docs/events/change.md` shows. The state replaces the
+  // declaration while its condition matches, and the declaration is back once
+  // it stops.
+  test('should enable a field declared disabled while a state event matches', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Role",
+                "name": "role",
+                "type": "select",
+                "source": [
+                  { "label": "Admin", "value": "admin" },
+                  { "label": "Viewer", "value": "viewer" }
+                ],
+                "event": {
+                  "change": [
+                    {
+                      "action": "state",
+                      "target": "settings",
+                      "state": { "disabled": false },
+                      "when": "admin"
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Settings",
+                "name": "settings",
+                "type": "input/text",
+                "disabled": true
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const settings = page.getByLabel('Settings')
+    await expect(settings).toBeDisabled()
+
+    const role = getField(page, 'Role')
+    await role.click()
+
+    const admin = page.getByRole('option', { name: 'Admin' })
+    await admin.click()
+
+    await expect(settings).toBeEnabled()
+
+    await role.click()
+
+    const viewer = page.getByRole('option', { name: 'Viewer' })
+    await viewer.click()
+
+    await expect(settings).toBeDisabled()
+  })
+
   test('should match condition with array of values', async ({ page }) => {
     await inject(
       page,
