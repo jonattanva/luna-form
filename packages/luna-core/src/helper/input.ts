@@ -13,6 +13,7 @@ import {
   isArraySource,
 } from '../util/build'
 import {
+  buildDateLimits,
   getConvert,
   getCurrentYear,
   getDateFormat,
@@ -248,9 +249,20 @@ function defineTime(field: Field) {
   return {}
 }
 
+// A date's bounds go on as `min` and `max`, which a native date input uses as
+// they are and a calendar from any library reads back with `readDateProps`.
 function defineDate(field: Field) {
   const format = dateFormatOf(field)
-  return format ? { [DATA_FORMAT]: format } : {}
+  if (!format) {
+    return {}
+  }
+
+  const { max, min } = buildDateLimits(field)
+  return {
+    [DATA_FORMAT]: format,
+    ...(min !== undefined && { [MIN]: min }),
+    ...(max !== undefined && { [MAX]: max }),
+  }
 }
 
 function defineLength(input: Input): Partial<CommonProps> {

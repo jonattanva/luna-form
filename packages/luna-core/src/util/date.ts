@@ -1,4 +1,13 @@
-import { DATA_FORMAT, DATE_FORMATS, TIMEZONE_REGIONS } from './constant'
+import {
+  DATA_FORMAT,
+  DATE_FORMATS,
+  MAX,
+  MIN,
+  TIMEZONE_REGIONS,
+} from './constant'
+import { isObject, isString } from './is-type'
+import { logger } from './logger'
+import { refOf } from './prepare'
 import { isValid, parse, format as fnsFormat } from 'date-fns'
 import type {
   Date as DateField,
@@ -311,12 +320,130 @@ export function getDateFormat(field: DateField): DateFormat {
   return toDateFormat(field.advanced?.format)
 }
 
+export type DateLimits = Readonly<{
+  max?: string
+  min?: string
+}>
+
+export type DateBound = keyof DateLimits
+
+// A bound is a `yyyy-MM-dd` day, the shape a native `<input type="date">` takes
+// for its own `min` and `max`. Anything else bounds nothing, the way a browser
+// ignores a `min` it cannot read, so the control and the schema never disagree
+// about one.
+function readBound(value: unknown): string | undefined {
+  return isString(value) && ISO_DATE.test(value)
+    ? toNativeDate(value, ISO_FORMAT) || undefined
+    : undefined
+}
+
+// The bounds a field declares are named once. The form copies a field -- an
+// optional one in the headless schema, a read-only one while it renders -- but
+// never the `length` it declares, so that object is what is remembered.
+const reportedLimits = new WeakSet<object>()
+
+/**
+ * The first and the last day a date field allows, both included, read once for
+ * the props its component is handed and for the schema that checks it.
+ *
+ * It is the one place the bounds are read, on the server and in the browser, so
+ * it is where a bound that bounds nothing is named for whoever wrote the form.
+ */
+export function buildDateLimits(field: DateField): DateLimits {
+  const length = field.advanced?.length
+  const limits: DateLimits = {
+    max: readBound(length?.max),
+    min: readBound(length?.min),
+  }
+
+  if (isObject(length) && !reportedLimits.has(length)) {
+    reportedLimits.add(length)
+    for (const problem of describeDateLimits(field.name, length, limits)) {
+      logger.warn(problem)
+    }
+  }
+
+  return limits
+}
+
+// The bound a day falls outside of, and the day it is bounded by. Compared as
+// text: in `yyyy-MM-dd` the order of the strings is the order of the days,
+// with no time zone in the way.
+export function checkDay(
+  day: string,
+  limits: DateLimits
+): Readonly<{ bound: DateBound; limit: string }> | null {
+  if (limits.min !== undefined && day < limits.min) {
+    return { bound: 'min', limit: limits.min }
+  }
+
+  if (limits.max !== undefined && day > limits.max) {
+    return { bound: 'max', limit: limits.max }
+  }
+
+  return null
+}
+
+const BOUND_NAMES: ReadonlyArray<[DateBound, string]> = [
+  ['min', 'minimum'],
+  ['max', 'maximum'],
+]
+
+// What is wrong with the bounds a field declares, given what was read from
+// them. A bound that is no day bounds nothing -- a `$ref` that nothing resolved
+// is the usual way to get one -- and a minimum after the maximum lets no day
+// through.
+function describeDateLimits(
+  name: string,
+  length: Record<string, unknown>,
+  limits: DateLimits
+): string[] {
+  const unresolved = refOf(length)
+  if (unresolved !== undefined) {
+    return [
+      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so the field has no bounds`,
+    ]
+  }
+
+  const problems: string[] = []
+  for (const [bound, noun] of BOUND_NAMES) {
+    const value = length[bound]
+    if (value == null || limits[bound] !== undefined) {
+      continue
+    }
+
+    const key = `${name}: advanced.length.${bound}`
+    const ref = refOf(value)
+    problems.push(
+      ref !== undefined
+        ? `${key} points at ${ref}, which nothing resolved, so the field has no ${noun}`
+        : `${key} is ${JSON.stringify(value)}, which is no yyyy-MM-dd day, so the field has no ${noun}`
+    )
+  }
+
+  if (
+    limits.min !== undefined &&
+    limits.max !== undefined &&
+    limits.min > limits.max
+  ) {
+    problems.push(
+      `${name}: advanced.length.min is after advanced.length.max, so no day passes`
+    )
+  }
+
+  return problems
+}
+
 export type DateProps = Readonly<{
   format: DateFormat
+  max?: string
+  min?: string
 }>
 
 /**
- * What a date component reads back from the props the form gave it.
+ * What a date component reads back from the props the form gave it: the format
+ * to show a day in, and the first and the last day it may offer, as
+ * `yyyy-MM-dd`.
  *
  * The form writes a date field's rules as attributes, so a native input and a
  * calendar from any library can both carry them; this is the other half, and
@@ -324,7 +451,11 @@ export type DateProps = Readonly<{
  * to encode.
  */
 export function readDateProps(
-  props: Readonly<{ [DATA_FORMAT]?: string }>
+  props: Readonly<{ [DATA_FORMAT]?: string; [MAX]?: string; [MIN]?: string }>
 ): DateProps {
-  return { format: toDateFormat(props[DATA_FORMAT]) }
+  return {
+    format: toDateFormat(props[DATA_FORMAT]),
+    max: readBound(props[MAX]),
+    min: readBound(props[MIN]),
+  }
 }

@@ -1,6 +1,13 @@
 import { MAX, MIN } from './constant'
 import { buildNumberStep } from './build'
-import { getDateFormat, toNativeDate } from './date'
+import {
+  buildDateLimits,
+  checkDay,
+  displayDate,
+  getDateFormat,
+  toNativeDate,
+  type DateBound,
+} from './date'
 import {
   isCheckbox,
   isColumn,
@@ -203,25 +210,58 @@ export function getMonthSchema(
 // own format, picked from a calendar, handed back by the host -- and it leaves
 // the schema in that shape. The submit sends what the schema returns, so this
 // is the one place a date is converted on its way out, and `buildFormSchema`
-// converts it the same way.
+// converts it the same way. Its bounds are the ones its component is handed,
+// read by the same `buildDateLimits`, so what a calendar lets through and what
+// is accepted cannot drift apart.
 export function getDateSchema(
-  input: Input,
+  field: Field,
   translations?: Record<string, string>
 ) {
-  const format = getDateFormat(input)
-  const message =
-    translateOptional(input.validation?.date, translations) ?? 'Invalid date'
+  const format = getDateFormat(field)
+  const limits = buildDateLimits(field)
+  const invalid =
+    translateOptional(field.validation?.date, translations) ?? 'Invalid date'
 
   const day = z.string().transform((text, context) => {
     const native = toNativeDate(text, format)
     if (!native) {
-      context.addIssue({ code: 'custom', message })
+      context.addIssue({ code: 'custom', message: invalid })
       return z.NEVER
     }
+
+    const outside = checkDay(native, limits)
+    if (outside) {
+      const { bound, limit } = outside
+      context.addIssue({
+        code: 'custom',
+        message: boundMessage(
+          field,
+          bound,
+          displayDate(limit, format),
+          translations
+        ),
+      })
+      return z.NEVER
+    }
+
     return native
   })
 
-  return presentLeaf(day, input, translations, blankToAbsent)
+  return presentLeaf(day, field, translations, blankToAbsent)
+}
+
+// The field's own message for a bound, or one that names the bound the way the
+// field shows a day.
+function boundMessage(
+  field: Field,
+  bound: DateBound,
+  day: string,
+  translations?: Record<string, string>
+) {
+  return (
+    translateOptional(field.validation?.length?.[bound], translations) ??
+    `Date must be on or ${bound === 'min' ? 'after' : 'before'} ${day}`
+  )
 }
 
 // Blank text is no day, the way `required` reads whitespace on every other

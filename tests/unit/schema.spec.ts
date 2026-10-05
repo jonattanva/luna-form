@@ -1,5 +1,5 @@
 import { applyCustomValidation } from '@/packages/luna-core/src/util/schema'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import {
   buildSchema,
   getDateSchema,
@@ -1054,8 +1054,10 @@ describe('date schema', () => {
     expect(getDateSchema(date()).parse('2024-01-15')).toBe('2024-01-15')
   })
 
+  // As the form asks for it: with the field it renders.
   test('should be the schema getSchema gives an input/date', () => {
-    expect(getSchema(date()).parse('15/01/2024')).toBe('2024-01-15')
+    const field: Field = date()
+    expect(getSchema(field).parse('15/01/2024')).toBe('2024-01-15')
   })
 
   test('should hold back text that is no day', () => {
@@ -1096,6 +1098,155 @@ describe('date schema', () => {
       expect(result.error?.issues.map((issue) => issue.message)).toEqual([
         'Pick a day',
       ])
+    }
+  })
+})
+
+// A date can be held between two days, both included. The bounds are written
+// as `yyyy-MM-dd`, the shape a native `<input type="date">` takes for its own
+// `min` and `max`, and a day is compared in that shape however it was typed.
+describe('date bounds', () => {
+  const bounded = (extra: Partial<DateField> = {}): DateField => ({
+    name: 'check_in',
+    type: 'input/date',
+    advanced: {
+      format: 'dd/MM/yyyy',
+      length: { min: '2026-10-05', max: '2026-10-20' },
+    },
+    ...extra,
+  })
+
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  test('should take both bounds and every day between them', () => {
+    const schema = getDateSchema(bounded())
+
+    expect(schema.parse('2026-10-05')).toBe('2026-10-05')
+    expect(schema.parse('12/10/2026')).toBe('2026-10-12')
+    expect(schema.parse('2026-10-20')).toBe('2026-10-20')
+  })
+
+  test('should hold back a day before the minimum or after the maximum', () => {
+    const schema = getDateSchema(bounded())
+
+    expect(messagesOf(schema.safeParse('2026-10-04'))).toEqual([
+      'Date must be on or after 05/10/2026',
+    ])
+    expect(messagesOf(schema.safeParse('21/10/2026'))).toEqual([
+      'Date must be on or before 20/10/2026',
+    ])
+  })
+
+  test('should say what is wrong with the messages the field declares', () => {
+    const schema = getDateSchema(
+      bounded({
+        validation: {
+          length: {
+            min: 'We open on October 5',
+            max: 'We close on October 20',
+          },
+        },
+      })
+    )
+
+    expect(messagesOf(schema.safeParse('2026-10-04'))).toEqual([
+      'We open on October 5',
+    ])
+    expect(messagesOf(schema.safeParse('2026-10-21'))).toEqual([
+      'We close on October 20',
+    ])
+  })
+
+  test('should check a bound declared alone', () => {
+    const schema = getDateSchema(
+      bounded({ advanced: { length: { min: '2026-10-05' } } })
+    )
+
+    expect(schema.parse('2099-01-01')).toBe('2099-01-01')
+    expect(schema.safeParse('2026-10-04').success).toBe(false)
+  })
+
+  test('should still leave an optional date nobody gave out of the result', () => {
+    expect(getDateSchema(bounded()).parse('')).toBeUndefined()
+  })
+
+  // A bound that is no day is no bound, the way a browser ignores a `min` it
+  // cannot read: the field takes every day, and whoever wrote the form is told
+  // once, however many times the schema is built for it.
+  test('should ignore a bound that is no day and name it once', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const field = JSON.parse(
+        '{"name":"check_in","type":"input/date","advanced":{"length":{"min":{"$ref":"#/context/today"},"max":"20/10/2026"}}}'
+      ) as DateField
+
+      const schema = getDateSchema(field)
+      getDateSchema(field)
+
+      expect(schema.parse('2000-01-01')).toBe('2000-01-01')
+      expect(schema.parse('2099-01-01')).toBe('2099-01-01')
+      expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
+        'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field has no minimum',
+        'check_in: advanced.length.max is "20/10/2026", which is no yyyy-MM-dd day, so the field has no maximum',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  // The form copies a field -- an optional one in the headless schema, a
+  // read-only one while it renders -- but not the bounds it declares.
+  test('should name a bound once however many copies of the field read it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const field = JSON.parse(
+        '{"name":"check_in","type":"input/date","required":true,"advanced":{"length":{"min":"05/10/2026"}}}'
+      ) as DateField
+
+      getDateSchema(field)
+      getDateSchema({ ...field, required: false })
+      getDateSchema({ ...field, disabled: true })
+
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should name bounds that are a $ref nothing resolved as a whole', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getDateSchema(
+        JSON.parse(
+          '{"name":"check_in","type":"input/date","advanced":{"length":{"$ref":"#/context/stay"}}}'
+        ) as DateField
+      )
+
+      expect(schema.parse('2000-01-01')).toBe('2000-01-01')
+      expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
+        'check_in: advanced.length points at #/context/stay, which nothing resolved, so the field has no bounds',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should name a minimum after the maximum, which no day passes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getDateSchema(
+        bounded({
+          advanced: { length: { min: '2026-10-20', max: '2026-10-05' } },
+        })
+      )
+
+      expect(schema.safeParse('2026-10-10').success).toBe(false)
+      expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
+        'check_in: advanced.length.min is after advanced.length.max, so no day passes',
+      ])
+    } finally {
+      warn.mockRestore()
     }
   })
 })

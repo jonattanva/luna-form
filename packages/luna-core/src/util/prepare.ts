@@ -146,8 +146,9 @@ function resolveWith(base: unknown, walk: Walk): unknown {
     return walk.cache.get(base)
   }
 
-  if ($REF in base && isString(base[$REF])) {
-    const resolved = resolvePath(base[$REF], walk)
+  const ref = refOf(base)
+  if (ref !== undefined) {
+    const resolved = resolvePath(ref, walk)
 
     // A path that holds nothing resolves nothing: a key that is missing, and
     // one a host left `undefined` or `null`, which a JavaScript `context` can
@@ -174,6 +175,12 @@ function resolveWith(base: unknown, walk: Walk): unknown {
   walk.cache.set(base, changed ? result : base)
 
   return walk.cache.get(base)
+}
+
+// The path of a `$ref` that is still the object it was written as. One that
+// nothing resolved stays that way, which is how whatever reads it can tell.
+export function refOf(value: unknown): string | undefined {
+  return isObject(value) && isString(value[$REF]) ? value[$REF] : undefined
 }
 
 // What a `$ref` points at, or `null` when its root was not given or does not

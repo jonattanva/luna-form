@@ -132,6 +132,11 @@ A component registered for `input/date` receives the day as `yyyy-MM-dd`, in
 the field's `format` as `data-format`. A control with a text box shows the day
 in that format; a native `<input type="date">` needs nothing and ignores it.
 
+When the field declares [its first and last day](input.md#the-first-and-the-last-day),
+they arrive as `min` and `max`, as `yyyy-MM-dd`. A native date input uses them
+as they are. A calendar should offer no day outside them: the form rejects one
+anyway, but a person should not be able to pick it.
+
 Emit `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the user
 picked, or with the text as the user typed it: the form reads text in the
 field's format, and keeps anything else as typed so that validation can say
@@ -143,8 +148,11 @@ component keeps working whatever the form puts on them next:
 ```ts
 import { readDateProps } from 'react-luna-form/config'
 
-const { format } = readDateProps(props)
+const { format, min, max } = readDateProps(props)
 ```
+
+`min` and `max` come back only when they are days, so a component can test
+them for `undefined` and nothing else.
 
 A `yyyy-MM-dd` value is a day, not an instant, so parse it in local time.
 `new Date("2026-10-02")` is midnight UTC, which is the day before anywhere west
@@ -158,4 +166,5 @@ Before shipping a custom input:
 - The `id` it receives reaches the focusable element
 - It forwards or calls the `onChange` and `onBlur` it receives
 - If it is a select variant, it does not rely on `''` to clear
-- If it renders `input/date`, it reads and emits `yyyy-MM-dd`
+- If it renders `input/date`, it reads and emits `yyyy-MM-dd`, and offers no day
+  outside `min` and `max`
