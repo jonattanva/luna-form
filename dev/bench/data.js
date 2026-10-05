@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791221636928,
+  "lastUpdate": 1791221662366,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "ab99b00c45af2cc8a3bc2f5a9d17769d7fd82448",
-          "message": "fix(react): apply defaultValue silently to avoid skipping first user change and update CI workflow concurrency",
-          "timestamp": "2026-05-22T09:38:52-05:00",
-          "tree_id": "a3da0df5c8b23cf106f910b61ea3253c6e437041",
-          "url": "https://github.com/jonattanva/luna-form/commit/ab99b00c45af2cc8a3bc2f5a9d17769d7fd82448"
-        },
-        "date": 1779460831759,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 278,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 635,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "c65ce54f0c91792090d6bfb500e6adc4a4d18169",
           "message": "fix(react): apply defaultValue silently in onCurrentValueChange fallback\n\nWhen the form receives a value prop that does not include this specific\nfield but the field has a defaultValue, the fallback inside\nonCurrentValueChange armed the skip flag on mount, causing the first\nuser interaction to be silently dropped on select/active and other\nSelectable-strategy fields (chips, etc.).\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
           "timestamp": "2026-05-22T16:13:03-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 631,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d9b334973950cd571813b9946166b0bf18d702b8",
+          "message": "Merge pull request #119 from jonattanva/claude/date-strict\n\nfix(date): a rule the form cannot read takes no day",
+          "timestamp": "2026-10-05T12:33:04-05:00",
+          "tree_id": "54065c4acf03e53c8e57555022e984f80854500a",
+          "url": "https://github.com/jonattanva/luna-form/commit/d9b334973950cd571813b9946166b0bf18d702b8"
+        },
+        "date": 1791221662316,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 336,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 637,
             "unit": "ms"
           }
         ]
