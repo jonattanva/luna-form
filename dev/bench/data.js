@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791221662366,
+  "lastUpdate": 1791223616793,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "359664cea9aa041027f4d51d311871ba5ea0d676",
-          "message": "Merge pull request #38 from jonattanva/fix/list-remove-nonlast-hydrated-item\n\nfix(react): list keeps trailing item value on non-last removal",
-          "timestamp": "2026-06-01T10:14:40-05:00",
-          "tree_id": "e67ae60ef45b50658413cf304de0c61881bf1eab",
-          "url": "https://github.com/jonattanva/luna-form/commit/359664cea9aa041027f4d51d311871ba5ea0d676"
-        },
-        "date": 1780326933220,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00035205491999999933,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.00114192498,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.03393920958,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.00043316687999999883,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0006000298199999997,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.02817051082,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.0235975756,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b535b42862833180a0007f81734450e39cebc60",
+          "message": "Merge pull request #120 from jonattanva/fix/field-own-disabled\n\ntest(e2e): type only once a select has finished closing",
+          "timestamp": "2026-10-05T13:06:16-05:00",
+          "tree_id": "729afb5c508e8f8f4307dde160ddb0046706d160",
+          "url": "https://github.com/jonattanva/luna-form/commit/4b535b42862833180a0007f81734450e39cebc60"
+        },
+        "date": 1791223615626,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00016055346000000013,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0005922569599999997,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00008081243999999969,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00020637530000000025,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00034641468000000034,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.01226695646,
             "unit": "ms"
           }
         ]
