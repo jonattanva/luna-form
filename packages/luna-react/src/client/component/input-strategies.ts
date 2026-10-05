@@ -1,5 +1,18 @@
+import { isMultiple } from '@luna-form/core'
 import type { Config } from '../../type'
 import type { DataSource, Field, Nullable, Value } from '@luna-form/core'
+
+/**
+ * What a held value is when the change events run at mount, which has to be
+ * what a change hands them later: a form reopened on saved data reveals what it
+ * revealed when it was filled in. An array travels as one -- a `chips` field's
+ * selections, the two days of a range -- since `String()` on it joins them into
+ * "a,b", which answers to no option, no `when` and no day. Anything else is the
+ * text it would have been typed as.
+ */
+export function toChangeValue(value: unknown): Value {
+  return isMultiple(value) ? value : String(value)
+}
 
 /**
  * What the input pipeline reads off a change, and all it reads: the new value.

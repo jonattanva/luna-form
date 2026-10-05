@@ -86,6 +86,58 @@ test.describe('What the browser does not send', { tag: ['@e2e'] }, () => {
     }
   })
 
+  // A read-only value is the form's whatever the control does: a component may
+  // not honour `disabled`, and the change it sends is not applied.
+  test('should keep a read-only date whatever its control sends', async ({
+    page,
+  }) => {
+    await open(page, [
+      {
+        label: 'Day',
+        name: 'day',
+        type: 'input/date',
+        readonly: true,
+        defaultValue: '2026-10-05',
+      },
+    ])
+
+    await expect(
+      page.getByRole('button', { name: 'Select date' })
+    ).toBeDisabled()
+    await page.locator('input[data-format]').evaluate((input) => {
+      const field = input as HTMLInputElement
+      Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value'
+      )?.set?.call(field, '2026-10-20')
+      field.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+
+    const payload = await submit(page)
+
+    expect(payload.day).toBe('2026-10-05')
+  })
+
+  // One control cannot carry two values: the form sends both ends itself.
+  test('should submit a read-only range with its two days', async ({
+    page,
+  }) => {
+    await open(page, [
+      {
+        label: 'Stay',
+        name: 'stay',
+        type: 'input/date',
+        readonly: true,
+        defaultValue: ['2026-10-03', '2026-10-06'],
+        advanced: { mode: 'range' },
+      },
+    ])
+
+    const payload = await submit(page)
+
+    expect(payload.stay).toEqual(['2026-10-03', '2026-10-06'])
+  })
+
   // The opposite promise, from the same page: a disabled field "is
   // non-interactive and blocked from events, and its value is not submitted".
   // Its default never reaches the action. What the action gets instead is what

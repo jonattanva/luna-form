@@ -8,6 +8,7 @@ import {
   pendingAutoFillAtom,
   valueAtom,
 } from '../lib/value-store'
+import { deepEqual } from 'fast-equals'
 import { use, useCallback, useTransition } from 'react'
 import { useEntryAtom } from './use-entry-atom'
 import { useInput } from './use-input'
@@ -22,8 +23,10 @@ import {
   handleValueEvent,
   holdValue,
   isClickable,
+  isDateRange,
   isEmpty,
   isInput,
+  isMultiple,
   isRows,
   keepsValue,
   resolveTarget,
@@ -475,7 +478,8 @@ export function useInputCore(
           }
         }
 
-        if (transformed === current) {
+        // Equal, not identical: a range is an array, held anew each time.
+        if (deepEqual(transformed, current)) {
           return
         }
 
@@ -545,7 +549,18 @@ export function useInputCore(
   const onBlur = useCallback(
     (event: React.FocusEvent<HTMLInputElement>) => {
       if (!hasClickable) {
-        const value = event.target.value
+        // What the field holds, not what the element shows, for a range: the
+        // text box shows whatever its component chose, and only the form holds
+        // the two days behind it. Read from the store, which a change in the
+        // same handler has already written, rather than from the last render.
+        const held = (store.get(valueAtom) as Record<string, unknown>)[
+          props.field.name
+        ]
+        const value = isDateRange(props.field)
+          ? isMultiple(held)
+            ? held
+            : ''
+          : event.target.value
         if (props.config.validation.blur) {
           validated(value)
         }
@@ -556,7 +571,9 @@ export function useInputCore(
     [
       hasClickable,
       props.config.validation.blur,
+      props.field,
       releasePendingAutoFillRef,
+      store,
       validated,
     ]
   )

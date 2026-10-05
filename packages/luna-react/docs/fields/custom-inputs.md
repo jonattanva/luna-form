@@ -66,6 +66,8 @@ field declares.
 A `readonly` field arrives `disabled` and without a `name`. Its value is still
 submitted, but by the form, in hidden inputs of its own: nothing your component
 renders for it is sent, so it is sent once, whatever your component renders.
+While a field is disabled or read-only, a change your component sends is not
+applied, so a part of it left enabled cannot change the value.
 
 ## Forwarding `id` is what gives the field its name
 
@@ -139,6 +141,13 @@ as they are. [Days nobody can pick](input.md#days-nobody-can-pick) arrive as
 those days: the form rejects one anyway, but a person should not be able to
 pick it.
 
+A [range](input.md#a-range-of-days) arrives with `data-mode="range"`, and its
+value as `[from, to]`, with `''` for an end not picked yet. Emit it the same
+way, `onChange({ target: { value: [from, to] } })`, or `''` once nothing is
+picked. The form submits the two days itself, so the control the component
+renders gets no `name`. Do not spread the props onto a calendar either: in range
+mode, react-day-picker reads `min` and `max` as numbers of nights.
+
 Emit `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the user
 picked, or with the text as the user typed it: the form reads text in the
 field's format, and keeps anything else as typed so that validation can say
@@ -150,9 +159,10 @@ component keeps working whatever the form puts on them next:
 ```ts
 import { readDateProps } from 'react-luna-form/config'
 
-const { format, min, max, reserved } = readDateProps(props)
+const { format, mode, min, max, reserved } = readDateProps(props)
 ```
 
+`mode` is `'single'` or `'range'`.
 `min` and `max` come back only when they are days, so a component can test
 them for `undefined` and nothing else. `reserved` is always a list, empty when
 nothing is reserved, sorted and with each day once. It is the same array for as
@@ -172,3 +182,4 @@ Before shipping a custom input:
 - If it is a select variant, it does not rely on `''` to clear
 - If it renders `input/date`, it reads and emits `yyyy-MM-dd`, and offers no day
   outside `min` and `max` nor any in `reserved`
+- If it renders a range, it reads and emits `[from, to]`

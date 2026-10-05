@@ -1,5 +1,6 @@
 import {
   DATA_FORMAT,
+  DATA_MODE,
   DATA_RESERVED,
   DATE_FORMATS,
   MAX,
@@ -331,9 +332,11 @@ export type DateLimits = Readonly<{
 type DateBound = 'max' | 'min'
 
 // What keeps a day out: a bound it falls outside of, with the day it is
-// bounded by, or a reservation.
+// bounded by, or a reservation. A range can also be kept out for its shape:
+// an end missing, or a last day before the first.
 export type DateIssue =
   | Readonly<{ issue: DateBound; limit: string }>
+  | Readonly<{ issue: 'range' }>
   | Readonly<{ issue: 'reserved' }>
 
 // A day the form is told about, a bound or a reservation, is a `yyyy-MM-dd`
@@ -441,6 +444,46 @@ export function checkDay(day: string, limits: DateLimits): DateIssue | null {
   return null
 }
 
+/**
+ * A range as the form holds it, `[from, to]`, with `''` for an end nobody
+ * picked: the pair a calendar emits or the two hidden inputs a form submits,
+ * and one text alone as the first end. Anything else -- numbers, an object, a
+ * list of more than two -- is no range, and comes back `undefined`, so it is
+ * held back for what it is instead of being taken for a range nobody picked.
+ */
+export function toRange(value: unknown): [string, string] | undefined {
+  if (isString(value)) {
+    return [value, '']
+  }
+
+  return Array.isArray(value) && value.length <= 2 && value.every(isString)
+    ? [value[0] ?? '', value[1] ?? '']
+    : undefined
+}
+
+// What keeps a range out, if anything does. Each end answers to the rules of a
+// single day; the last cannot come before the first; and the days between them
+// belong to the range too, so a reserved one anywhere inside takes it, which is
+// what react-day-picker calls `excludeDisabled`.
+export function checkRange(
+  from: string,
+  to: string,
+  limits: DateLimits
+): DateIssue | null {
+  if (to < from) {
+    return { issue: 'range' }
+  }
+
+  const end = checkDay(from, limits) ?? checkDay(to, limits)
+  if (end) {
+    return end
+  }
+
+  return limits.reserved.some((day) => from < day && day < to)
+    ? { issue: 'reserved' }
+    : null
+}
+
 const BOUND_NAMES: ReadonlyArray<[DateBound, string]> = [
   ['min', 'minimum'],
   ['max', 'maximum'],
@@ -542,13 +585,14 @@ export type DateProps = Readonly<{
   format: DateFormat
   max?: string
   min?: string
+  mode: 'range' | 'single'
   reserved: readonly string[]
 }>
 
 /**
  * What a date component reads back from the props the form gave it: the format
- * to show a day in, the first and the last day it may offer, and the days it
- * may not, all as `yyyy-MM-dd`.
+ * to show a day in, whether it picks one day or a range, the first and the last
+ * day it may offer, and the days it may not, all as `yyyy-MM-dd`.
  *
  * The form writes a date field's rules as attributes, so a native input and a
  * calendar from any library can both carry them; this is the other half, and
@@ -558,6 +602,7 @@ export type DateProps = Readonly<{
 export function readDateProps(
   props: Readonly<{
     [DATA_FORMAT]?: string
+    [DATA_MODE]?: string
     [DATA_RESERVED]?: string
     [MAX]?: string
     [MIN]?: string
@@ -567,6 +612,7 @@ export function readDateProps(
     format: toDateFormat(props[DATA_FORMAT]),
     max: readIsoDay(props[MAX]),
     min: readIsoDay(props[MIN]),
+    mode: props[DATA_MODE] === 'range' ? 'range' : 'single',
     reserved: readReservedProp(props[DATA_RESERVED]),
   }
 }

@@ -66,6 +66,7 @@ export const DATE_FORMATS = [
 
 // The prop a temporal field's format reaches its component in.
 export const DATA_FORMAT = 'data-format'
+export const DATA_MODE = 'data-mode'
 export const DATA_RESERVED = 'data-reserved'
 
 export const TYPE_EMAIL = 'email'

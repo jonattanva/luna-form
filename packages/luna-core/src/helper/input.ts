@@ -1,5 +1,6 @@
 import {
   DATA_FORMAT,
+  DATA_MODE,
   DATA_RESERVED,
   MAX,
   MAX_LENGTH,
@@ -25,6 +26,7 @@ import {
   getYear,
   toNativeDate,
   toNativeTime,
+  toRange,
 } from '../util/date'
 import { getCurrentValue, getType, toOptions } from '../util/extract'
 import {
@@ -33,6 +35,7 @@ import {
   isChipsDays,
   isChipsMonths,
   isDate,
+  isDateRange,
   isInput,
   isNumber,
   isOptions,
@@ -266,6 +269,7 @@ function defineDate(field: Field) {
     ...(min !== undefined && { [MIN]: min }),
     ...(max !== undefined && { [MAX]: max }),
     ...(reserved.length > 0 && { [DATA_RESERVED]: reserved.join(',') }),
+    ...(isDateRange(field) && { [DATA_MODE]: 'range' }),
   }
 }
 
@@ -452,11 +456,39 @@ export function prepareDefaultValue<T>(field: Field, value?: Nullable<T>) {
  * instead of the field quietly going blank. Any other field holds its value
  * as it came.
  */
-export function holdValue<T>(field: Field, value: T): T | string {
+export function holdValue<T>(
+  field: Field,
+  value: T
+): T | string | [string, string] {
   const format = dateFormatOf(field)
-  return format && isString(value)
-    ? toNativeDate(value, format) || value
-    : value
+  if (!format) {
+    return value
+  }
+
+  // A range holds `[from, to]`, each end the way a single day is held. Nothing
+  // stays nothing: an empty range is not a pair of empty ends. And what is no
+  // range stays as it came, for the schema to say what is wrong with it.
+  if (isDateRange(field)) {
+    const ends = value == null || value === '' ? undefined : toRange(value)
+    if (!ends) {
+      return value
+    }
+
+    const from = holdDay(ends[0], format)
+    const to = holdDay(ends[1], format)
+
+    // The field hands its value to the component on every render: a pair held
+    // already comes back as the same array.
+    return Array.isArray(value) && value[0] === from && value[1] === to
+      ? value
+      : [from, to]
+  }
+
+  return isString(value) ? holdDay(value, format) : value
+}
+
+function holdDay(text: string, format: DateFormat) {
+  return toNativeDate(text, format) || text
 }
 
 function normalizePreviewOptions(

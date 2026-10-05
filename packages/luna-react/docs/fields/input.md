@@ -29,7 +29,7 @@ Luna Form's input fields inherit the standard logical properties available to al
 - **`placeholder`** _(string, optional)_: The temporary placeholder text shown when the input is empty.
 - **`required`** _(boolean, optional)_: If `true`, standard browser/HTML5 validation makes the field mandatory.
 - **`disabled`** _(boolean, optional)_: If `true`, the field is non-interactive and blocked from events, and its value is not submitted.
-- **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user, but it is still submitted. The control renders disabled, the one lock every input component understands, and the form sends the value itself. A field that is both `readonly` and `disabled` is not submitted.
+- **`readonly`** _(boolean, optional)_: If `true`, the field's value is locked and cannot be modified by the user, but it is still submitted. The control renders disabled, the one lock every input component understands, and the form sends the value itself; a change the control sends anyway is not applied. A field that is both `readonly` and `disabled` is not submitted.
 - **`hidden`** _(boolean, optional)_: If `true`, the field is hidden from the user interface.
 - **`order`** _(number, optional)_: A numeric order determining the field's position relative to adjacent fields.
 
@@ -75,7 +75,7 @@ Date and time inputs omit transformations and instead expose a `format` property
 
 ### What a date holds
 
-An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`. That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
+An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`, or two of them in [a range](#a-range-of-days). That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
 
 - A value the host passes in, or a `defaultValue`, is read in either shape: `yyyy-MM-dd`, or the field's `format`. A host that keeps what the form submitted can pass it straight back.
 - Text that is no day, typed in another format, with a year short of four digits, or naming a day that does not exist such as February 30, is kept as typed and holds the submit back with `validation.date`.
@@ -140,6 +140,33 @@ The component gets the days as `data-reserved`, sorted, once each and joined by 
 
 An entry that is no `yyyy-MM-dd` day reserves nothing, and neither does a list that is not one, such as a `$ref` the context does not hold. A development build names both, the way it names a bound.
 
+### A range of days
+
+`advanced.mode: "range"` makes an `input/date` hold two days, the first and the last, as `[from, to]`, both `yyyy-MM-dd`. That pair is what the component gets, what the host is told and what the action receives. A range of one day has the same day at both ends.
+
+```json
+{
+  "name": "stay",
+  "type": "input/date",
+  "advanced": { "mode": "range", "reserved": { "$ref": "#/context/booked" } },
+  "validation": { "range": "Pick the first and the last night" }
+}
+```
+
+```js
+{
+  stay: ['2026-11-02', '2026-11-06']
+}
+```
+
+- Each end answers to the rules of a single day: the bounds, the reserved days, and `validation.date` for one that is no day. The days between the ends belong to the range too, so a reserved one anywhere inside holds it back.
+- An end missing, or a last day before the first, holds the submit back with `validation.range`; without it, the message is `Invalid date range`.
+- Nothing picked is no range: an optional one is not submitted, and a required one asks with `validation.required`.
+- The form submits the two days itself, in two hidden inputs, so the component's control has no `name` and nothing it renders is sent. A host passes a range the way it gets one back, as `[from, to]`.
+- A native `<input type="date">` holds one day. A range needs a component that picks two (see [Date components](custom-inputs.md#date-components)), or two date fields compared with a `custom` validation and `gte`.
+- In a description, `{value}` prints the two days separated by a comma.
+- A `custom` rule, a `when` or a `requiredWhen` compares a value as a whole, and no operator orders a pair of days: a rule that compares a range never holds, and one in `custom` holds every submit back. Keep such rules on single dates.
+
 ---
 
 ## Validation (`validation` object)
@@ -151,6 +178,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
 - **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, a number out of range, a day before the first or after the last.
 - **`reserved`** _(string)_: `input/date` only. The message shown for a day its `advanced.reserved` lists. Without it, the message is `This date is not available`.
+- **`range`** _(string)_: `input/date` ranges only. The message shown for a range with an end missing, or whose last day comes before its first. Without it, the message is `Invalid date range`.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:
   - `field`: Optional target reference string.
