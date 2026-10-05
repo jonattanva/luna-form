@@ -133,6 +133,33 @@ describe('handle source event', () => {
       key: '{otherMissing}',
     })
   })
+
+  // Like a value payload, a url and a body format in the form's language, and
+  // in English without one, as the docs say (interpolation/format-filters.md,
+  // "Language").
+  test('should format filters in URL and body in English without a language', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
+      calls.push({ name, source })
+    }
+    const events: SourceEvent[] = [
+      {
+        action: 'source',
+        target: 'total',
+        source: {
+          url: '/api/total?amount={value | number}',
+          body: { amount: '{value | number}' },
+        },
+      },
+    ]
+
+    handleSourceEvent({ value: 1234567 }, events, setSource)
+
+    const formatted = '1,234,567'
+    expect(calls).toHaveLength(1)
+    expect(calls[0].source?.url).toBe(`/api/total?amount=${formatted}`)
+    expect(calls[0].source?.body).toEqual({ amount: formatted })
+  })
 })
 
 describe('handleSourceEvent language', () => {

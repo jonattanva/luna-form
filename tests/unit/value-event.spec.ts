@@ -284,6 +284,21 @@ describe('handle value event', () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]).toEqual({ name: 'simple_body', value: rows })
   })
+
+  // A value payload formats in the form's language, as a label does, and a
+  // form without one writes English whatever the machine speaks. The docs say
+  // so (interpolation/format-filters.md, "Language"), and change with it.
+  test('should format a filter in English without a language', () => {
+    const { apply, calls } = createApply()
+
+    const events: ValueEvent[] = [
+      { action: 'value', value: { total: '{value | number}' } },
+    ]
+
+    handleValueEvent({ value: 1234567 }, events, apply)
+
+    expect(calls).toEqual([{ name: 'total', value: '1,234,567' }])
+  })
 })
 
 // An event formats in the language of the form, as its label does.
