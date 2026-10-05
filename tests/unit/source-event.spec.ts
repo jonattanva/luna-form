@@ -133,4 +133,31 @@ describe('handle source event', () => {
       key: '{otherMissing}',
     })
   })
+
+  // Like a value payload, a url and a body are not given `config.env.locale`:
+  // their filters format with the runtime default, as the docs say
+  // (interpolation/format-filters.md, "Locale resolution").
+  test('should format filters in URL and body with the runtime default locale', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const setSource = (name: string, source?: DataSource) => {
+      calls.push({ name, source })
+    }
+    const events: SourceEvent[] = [
+      {
+        action: 'source',
+        target: 'total',
+        source: {
+          url: '/api/total?amount={value | number}',
+          body: { amount: '{value | number}' },
+        },
+      },
+    ]
+
+    handleSourceEvent({ value: 1234567 }, events, setSource)
+
+    const formatted = new Intl.NumberFormat().format(1234567)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].source?.url).toBe(`/api/total?amount=${formatted}`)
+    expect(calls[0].source?.body).toEqual({ amount: formatted })
+  })
 })

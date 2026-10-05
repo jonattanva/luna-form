@@ -27,9 +27,9 @@ Multiple filters can be chained; the output of the previous filter becomes the i
 
 ## Locale resolution
 
-Locale-aware filters read the locale from `config.env.locale`. If not set, filters fall back to the runtime default (typically the browser's locale).
+Locale-aware filters in a label or a description read the locale from `config.env.locale`. If it is not set, they fall back to the runtime default (typically the browser's locale).
 
-It applies wherever a filter is written — a label, a description, a `value` payload — so one setting keeps them consistent. See [Interpolation](overview.md#the-locale-filters-use).
+Filters in a `value` payload and in `source.url` or `source.body` do not read `config.env.locale`: they always format with the runtime default, even when it is set. With `env.locale: 'es-ES'` in an en-US browser, 1234567 through `| number` reads `1.234.567` in a description and `1,234,567` in a `value` payload, a `source.url` or a `source.body`. See [Interpolation](overview.md#the-locale-filters-use).
 
 ```ts
 const config = {

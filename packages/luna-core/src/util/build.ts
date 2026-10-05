@@ -1,7 +1,7 @@
 import { $REF } from './constant'
 import { isObject } from './is-type'
 import { isCheckbox, isChips, isRadio, isSelect } from './is-input'
-import type { Field, Input, Nullable } from '../type'
+import type { Field, Input, Nullable, Select } from '../type'
 
 export function buildOptions(
   field: Field,
@@ -34,9 +34,13 @@ export function buildReverse(field: Field): boolean {
   return field.advanced?.reverse !== false
 }
 
+// Whether a field can be edited. `field.disabled` is what the field says about
+// itself: its declaration, or on the client the `disabled` a `state` event put
+// in its place. `disabled` is the lock the form puts on every field, its
+// `readOnly`, and it only ever adds one: a form that is not read-only leaves
+// each field to its own. A read-only field is locked as well.
 export function buildDisabled(field: Field, disabled?: boolean) {
-  const readonly = field.readonly ?? false
-  return disabled ? disabled : readonly
+  return Boolean(disabled || field.disabled || field.readonly)
 }
 
 // Locked the way a disabled field is, but still the form's: a read-only field
@@ -76,8 +80,12 @@ export function isArraySource(field: Field): boolean {
   return Array.isArray(buildSource(field))
 }
 
-function isValid(field: Field) {
-  return (
-    isRadio(field) || isChips(field) || (isSelect(field) && !field.disabled)
-  )
+// A disabled select fetches nothing, so a remote source gives way to the
+// fallback in `buildOptions`, the value it holds. Options declared inline need
+// no fetch: they stay, and a locked select still names what it holds.
+function isValid(field: Field): field is Select {
+  if (isSelect(field)) {
+    return !field.disabled || Array.isArray(field.source)
+  }
+  return isRadio(field) || isChips(field)
 }

@@ -121,6 +121,43 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     await expect(cherryOption).toBeVisible()
   })
 
+  // A locked select still says what it holds. Its options are declared inline,
+  // so nothing has to be fetched to name the value.
+  for (const lock of ['disabled', 'readonly']) {
+    test(`should display the value of a ${lock} select with an array source`, async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        JSON.stringify({
+          sections: [
+            {
+              fields: [
+                {
+                  label: 'Select Fruit',
+                  name: 'fruit',
+                  type: 'select',
+                  [lock]: true,
+                  defaultValue: 'banana',
+                  source: [
+                    { value: 'apple', label: 'Apple' },
+                    { value: 'banana', label: 'Banana' },
+                  ],
+                },
+              ],
+            },
+          ],
+        })
+      )
+
+      await page.goto('')
+
+      const select = page.getByRole('combobox')
+      await expect(select).toBeDisabled()
+      await expect(select).toContainText('Banana')
+    })
+  }
+
   test('should work correctly with select day input type', async ({ page }) => {
     await inject(
       page,
