@@ -65,6 +65,31 @@ describe('Build', () => {
     expect(result).toBeUndefined()
   })
 
+  test('should keep the array source of a disabled select', () => {
+    const field = {
+      source: [{ label: 'USA', value: 'us' }],
+      type: 'select',
+      name: 'country',
+      disabled: true,
+    }
+
+    const result = buildSource(field)
+    expect(result).toEqual([{ label: 'USA', value: 'us' }])
+  })
+
+  // Nothing is fetched for a disabled field, so the value it holds stands in.
+  test('should leave out the remote source of a disabled select', () => {
+    const field = {
+      source: { url: '/api/countries' },
+      type: 'select',
+      name: 'country',
+      disabled: true,
+    } as Field
+
+    const result = buildSource(field)
+    expect(result).toBeUndefined()
+  })
+
   test('should build options for disabled select fields', () => {
     const field = {
       type: 'select',
@@ -277,7 +302,7 @@ describe('Build', () => {
       expect(isArraySource(field)).toBe(false)
     })
 
-    test('should return false for a disabled select', () => {
+    test('should return true for a disabled select with an array source', () => {
       const field = {
         type: 'select',
         name: 'test',
@@ -285,7 +310,7 @@ describe('Build', () => {
         source,
       } as Field
 
-      expect(isArraySource(field)).toBe(false)
+      expect(isArraySource(field)).toBe(true)
     })
 
     test('should return false for specialized selectors without a source', () => {

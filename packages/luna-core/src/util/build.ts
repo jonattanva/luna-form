@@ -1,7 +1,7 @@
 import { $REF } from './constant'
 import { isObject } from './is-type'
 import { isCheckbox, isChips, isRadio, isSelect } from './is-input'
-import type { Field, Input, Nullable } from '../type'
+import type { Field, Input, Nullable, Select } from '../type'
 
 export function buildOptions(
   field: Field,
@@ -80,8 +80,12 @@ export function isArraySource(field: Field): boolean {
   return Array.isArray(buildSource(field))
 }
 
-function isValid(field: Field) {
-  return (
-    isRadio(field) || isChips(field) || (isSelect(field) && !field.disabled)
-  )
+// A disabled select fetches nothing, so a remote source gives way to the
+// fallback in `buildOptions`, the value it holds. Options declared inline need
+// no fetch: they stay, and a locked select still names what it holds.
+function isValid(field: Field): field is Select {
+  if (isSelect(field)) {
+    return !field.disabled || Array.isArray(field.source)
+  }
+  return isRadio(field) || isChips(field)
 }
