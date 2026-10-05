@@ -66,9 +66,11 @@ Four ways to end up with an empty field and no request:
 - **The URL is blocked** by [`fetcher.remotePatterns`](../setup.md#fetcherremotepatterns).
   This one is logged; the others are silent. Relative URLs are internal and
   always allowed.
-- **The field is disabled.** Nothing is fetched, and a disabled `select` whose
-  value is an object renders that object as its only option — so a saved
-  selection is still readable on a form that cannot be edited.
+- **The field is disabled.** Nothing is fetched, and a disabled `select` with a
+  remote source whose value is an object renders that object as its only
+  option — so a saved selection is still readable on a form that cannot be
+  edited. Inline options need no request and stay, so a disabled `select` with
+  an array source still shows the option it holds.
 
 Requests are keyed by the source itself, so two fields declaring the same one
 share a single request and its cache entry.
