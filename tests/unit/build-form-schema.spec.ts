@@ -768,3 +768,45 @@ describe('buildFormSchema with a length bound it cannot read', () => {
     }
   })
 })
+
+// A text left empty is no value for a bound to check, on the server as in the
+// browser, whose `minlength` does not apply to an empty value either.
+describe('buildFormSchema with a text left empty', () => {
+  const form = (required: boolean): Sections => [
+    {
+      fields: [
+        {
+          name: 'code',
+          type: 'input/text',
+          required,
+          advanced: { length: { min: 3 } },
+          validation: {
+            required: 'Write a code',
+            length: { min: 'Three at least' },
+          },
+        },
+      ],
+    },
+  ]
+
+  test('lets an optional text with a minimum go empty', () => {
+    const schema = buildFormSchema(form(false))
+
+    expect(schema.parse({ code: '' })).toEqual({ code: '' })
+    expect(schema.parse({})).toEqual({})
+    expect(collectIssues(schema.safeParse({ code: 'ab' }).error!)).toEqual([
+      { path: 'code', message: 'Three at least' },
+    ])
+  })
+
+  test('asks a required text with a minimum for a value', () => {
+    const schema = buildFormSchema(form(true))
+
+    expect(collectIssues(schema.safeParse({ code: '' }).error!)).toEqual([
+      { path: 'code', message: 'Write a code' },
+    ])
+    expect(collectIssues(schema.safeParse({ code: 'ab' }).error!)).toEqual([
+      { path: 'code', message: 'Three at least' },
+    ])
+  })
+})

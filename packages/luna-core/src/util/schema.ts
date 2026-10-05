@@ -177,20 +177,28 @@ function getRadio(input: Input, translations?: Record<string, string>) {
   return optionalLeaf(schema.or(z.literal('')))
 }
 
+// Text left empty is no value for a bound to check, as the browser's
+// `minlength` reads it: an optional field passes, and a required one asks for a
+// value with its own message before its bounds, as a number does. Text that is
+// there and fails a bound still says which one, as an email does: the empty
+// literal's failure aborts and the bound's does not.
 export function getText(input: Input, translations?: Record<string, string>) {
   const limits = buildLengthLimits(input)
-  let schema = z.coerce.string().trim()
-  // Text left empty is no value for a bound to check: an optional field still
-  // passes it, and a required one still asks for a value.
-  schema = limits.unreadable
-    ? schema.refine((value) => value === '', UNREADABLE)
-    : applyMinAndMax(schema, limits, input, translations)
+  const text = z.coerce.string().trim()
+  // The bounds check what `text` made of the value, already trimmed text.
+  const read = z.coerce.string<string>()
+  const bounded = limits.unreadable
+    ? read.refine(() => false, UNREADABLE)
+    : applyMinAndMax(read, limits, input, translations)
 
   if (input.required) {
-    schema = applyRequired(schema, limits, input, translations)
-    return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
+    const message = getRequiredMessage(input, translations)
+    return z.preprocess(
+      (value) => (isEmpty(value) ? '' : value),
+      text.min(1, message).pipe(bounded)
+    )
   }
-  return optionalLeaf(schema)
+  return optionalLeaf(text.pipe(z.literal('').or(bounded)))
 }
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
@@ -490,18 +498,6 @@ function applyMinAndMax<T extends Coerced | z.ZodEmail>(
       )
       schema = schema[method](value, message) as T
     }
-  }
-  return schema
-}
-
-function applyRequired<T extends Coerced>(
-  schema: T,
-  limits: LengthLimits,
-  input: Input,
-  translations?: Record<string, string>
-): T {
-  if (limits.min === undefined || limits.min < 1) {
-    return schema.min(1, getRequiredMessage(input, translations)) as T
   }
   return schema
 }

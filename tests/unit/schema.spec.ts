@@ -1709,3 +1709,58 @@ describe('a length bound the form cannot read', () => {
     }
   })
 })
+
+// Text left empty is no value for a bound to check, as the browser's
+// `minlength` reads it and as a number left empty is read: an optional field
+// passes, and a required one asks for a value with its own message.
+describe('a text left empty', () => {
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  test('should let an optional text pass its bounds', () => {
+    const schema = getText({
+      name: 'code',
+      type: 'input/text',
+      advanced: { length: { min: 3, max: 5 } },
+      validation: { length: { min: 'Three at least' } },
+    })
+
+    expect(schema.parse('')).toBe('')
+    expect(schema.parse('   ')).toBe('')
+    expect(schema.parse(null)).toBeNull()
+    expect(schema.parse(undefined)).toBeUndefined()
+    expect(messagesOf(schema.safeParse('ab'))).toEqual(['Three at least'])
+    expect(schema.parse('abc')).toBe('abc')
+    expect(schema.safeParse('abcdef').success).toBe(false)
+  })
+
+  test('should let an optional textarea pass its bounds', () => {
+    const schema = getSchema({
+      name: 'notes',
+      type: 'textarea',
+      advanced: { length: { min: 10 } },
+    })
+
+    expect(schema.parse('')).toBe('')
+    expect(schema.safeParse('short').success).toBe(false)
+  })
+
+  test('should ask a required text for a value, not for more characters', () => {
+    const schema = getText({
+      name: 'username',
+      type: 'input/text',
+      required: true,
+      advanced: { length: { min: 3 } },
+      validation: {
+        required: 'Write a name',
+        length: { min: 'Three at least' },
+      },
+    })
+
+    expect(messagesOf(schema.safeParse(''))).toEqual(['Write a name'])
+    expect(messagesOf(schema.safeParse('   '))).toEqual(['Write a name'])
+    expect(messagesOf(schema.safeParse(null))).toEqual(['Write a name'])
+    expect(messagesOf(schema.safeParse('ab'))).toEqual(['Three at least'])
+    expect(schema.parse('abc')).toBe('abc')
+  })
+})

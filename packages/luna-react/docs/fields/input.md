@@ -66,6 +66,10 @@ These basic field types support extra manipulation properties inside the `advanc
 
 A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
 
+### Empty and required text
+
+A text left empty is no value for its `length` bounds to check, as the browser's `minlength` does not apply to an empty value either. An optional field left empty, or holding only spaces, passes as `""`, whatever its `length.min`. A required one left empty asks for a value with `validation.required`, not with `validation.length.min`, and its bounds only apply once there is text. This holds for `input/text`, `input/tel`, `input/password`, a [`textarea`](#textarea), and a type the form does not know, which it checks as text.
+
 ### A bound that is no number
 
 On the types above, on a [`textarea`](#textarea), and on a type the form does not know, which it checks as text, a `length` bound is a number. A day such as `"2026-10-05"` is not one, nor is text that reads as one, such as `"3"`, nor a `$ref` the context does not hold or holds as `undefined`. Such a bound is a rule the form cannot read, so the field takes no value: anything in it is held back with `This value cannot be checked`, whatever else the field would have checked, such as the address of an `input/email` or the `step` of a number. An optional field left empty still passes, and a required one still asks for a value.
@@ -337,7 +341,8 @@ Everything else in `advanced` is ignored for this type.
 ```
 
 `length.min` and `length.max` are emitted as the `minLength` and `maxLength`
-attributes on the rendered element, and validation checks the same bounds. A
+attributes on the rendered element, and validation checks the same bounds on
+text that is there: see [Empty and required text](#empty-and-required-text). A
 bound that is no number is neither: see
 [A bound that is no number](#a-bound-that-is-no-number).
 
