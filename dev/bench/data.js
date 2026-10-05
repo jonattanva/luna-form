@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1789997063678,
+  "lastUpdate": 1791167441474,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "ae5316a7a2fff5a7fabd20c9ec5d632a6bd3c03f",
-          "message": "fix(core): improve select/active input handling and update dependencies",
-          "timestamp": "2026-05-12T14:45:35-05:00",
-          "tree_id": "53da4557ad16e0dde2aee8ff1d3e3176efce2b38",
-          "url": "https://github.com/jonattanva/luna-form/commit/ae5316a7a2fff5a7fabd20c9ec5d632a6bd3c03f"
-        },
-        "date": 1778615206636,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.003043105999999966,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.005564399999999978,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.03896065599999997,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0009637599999999793,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0016484940000000279,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.040390157999999926,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.02667315232,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "dab47866b31fd34f5843a83ba7b7d44326b8bd2c",
+          "message": "docs(interpolation): env.locale reaches labels and descriptions, not event payloads\n\n\"Locale resolution\" in format-filters.md said `config.env.locale` applies\nwherever a filter is written, a `value` payload included. It does not:\n`handleValueEvent` and `handleSourceEvent` interpolate without a locale, so\nfilters in a `value` payload and in `source.url` / `source.body` format with\nthe runtime default even when `env.locale` is set.\n\nThe page now says so, with the example run in /reactive (es-ES env, en-US\nbrowser): 1234567 through `| number` reads 1.234.567 in a description and\n1,234,567 in a value target, a source url and a POST body.\n\nTwo unit tests pin the behaviour the page describes, compared against\n`Intl.NumberFormat()` so they hold under any host locale.",
+          "timestamp": "2026-10-04T21:29:56-05:00",
+          "tree_id": "f563886eac52831e39d4a81d56992411752a58b1",
+          "url": "https://github.com/jonattanva/luna-form/commit/dab47866b31fd34f5843a83ba7b7d44326b8bd2c"
+        },
+        "date": 1791167440715,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0003088045,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0010403275399999995,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00007423103999999967,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00036734827999999995,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0005534617800000001,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.0263759563,
             "unit": "ms"
           }
         ]
