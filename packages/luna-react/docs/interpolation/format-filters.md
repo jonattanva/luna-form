@@ -25,20 +25,20 @@ Filters work in any string passed through Luna Form's interpolation engine, incl
 
 Multiple filters can be chained; the output of the previous filter becomes the input of the next.
 
-## Locale resolution
+## Language
 
-Locale-aware filters in a label or a description read the locale from `config.env.locale`. If it is not set, they fall back to the runtime default (typically the browser's locale).
+Filters format in the form's `lang`, the tag that also picks its translations
+and names its months:
 
-Filters in a `value` payload and in `source.url` or `source.body` do not read `config.env.locale`: they always format with the runtime default, even when it is set. With `env.locale: 'es-ES'` in an en-US browser, 1234567 through `| number` reads `1.234.567` in a description and `1,234,567` in a `value` payload, a `source.url` or a `source.body`. See [Interpolation](overview.md#the-locale-filters-use).
-
-```ts
-const config = {
-  env: {
-    locale: 'es-ES',
-  },
-  // ...
-}
+```tsx
+<Form sections={sections} config={config} lang="es-ES" />
 ```
+
+It applies wherever a filter is written — a label, a description, a `value` or
+`source` payload — so one setting keeps them consistent. Without `lang`, or with
+one that is no language tag or names no language the runtime has, filters write
+English, on every machine. See
+[Interpolation](overview.md#the-language-filters-use).
 
 ## Fallback rules
 
@@ -57,8 +57,8 @@ Formats a number as currency.
   - `CODE` (string, default `"USD"`) — ISO 4217 currency code.
 - **Backend**: `Intl.NumberFormat(locale, { style: 'currency', currency: CODE })`.
 - **Examples**:
-  - `1234.56` with `currency:USD` and `locale: en-US` → `$1,234.56`.
-  - `1234.56` with `currency:EUR` and `locale: es-ES` → `1234,56 €`.
+  - `1234.56` with `currency:USD` and `lang: en-US` → `$1,234.56`.
+  - `1234.56` with `currency:EUR` and `lang: es-ES` → `1234,56 €`.
 
 ### `percent`
 
@@ -67,7 +67,7 @@ Formats a fractional number as a percentage.
 - **Syntax**: `{value | percent}`
 - **Backend**: `Intl.NumberFormat(locale, { style: 'percent' })`.
 - **Examples**:
-  - `0.25` with `locale: en-US` → `25%`.
+  - `0.25` with `lang: en-US` → `25%`.
 - **Note**: input is interpreted as a fraction (`1` is `100%`).
 
 ### `number`
@@ -77,8 +77,8 @@ Formats a number with locale-aware thousands separators.
 - **Syntax**: `{value | number}`
 - **Backend**: `Intl.NumberFormat(locale)`.
 - **Examples**:
-  - `1234567` with `locale: en-US` → `1,234,567`.
-  - `1234567` with `locale: es-ES` → `1.234.567`.
+  - `1234567` with `lang: en-US` → `1,234,567`.
+  - `1234567` with `lang: es-ES` → `1.234.567`.
 
 ### `date`
 
@@ -87,12 +87,13 @@ Formats a date or ISO string with a named style.
 - **Syntax**: `{value | date:STYLE}`
 - **Args**:
   - `STYLE` (string, default `"short"`) — one of `short`, `medium`, `long`, `full`, `relative`. Any other value is passed directly to `date-fns`'s `format` as a pattern.
-- **Backend**: `date-fns` (`format`, `formatDistance` for `relative`).
+- **Backend**: `Intl.DateTimeFormat` with `dateStyle` for the named styles, `Intl.RelativeTimeFormat` for `relative`, and `date-fns`'s `format` for a pattern.
 - **Accepts**: `Date`, ISO string, or numeric timestamp (ms).
 - **`relative`** is measured from [`context.now`](overview.md#the-instant-relative-dates-use), the instant the host passes, never from the clock of the machine that renders it. Without it the date is shown in the `medium` style.
 - **Examples**:
-  - `"2026-05-10"` with `date:long` and `locale: en-US` → `May 10, 2026`.
-  - `"2026-10-12T12:00:00Z"` with `date:relative`, `context.now` at `"2026-10-05T12:00:00Z"` and `locale: en-US` → `in 7 days`; with no `context.now` → `Oct 12, 2026`.
+  - `"2026-05-10"` with `date:long` and `lang: en-US` → `May 10, 2026`.
+  - `"2026-05-10"` with `date:long` and `lang: es-ES` → `10 de mayo de 2026`.
+  - `"2026-10-12T12:00:00Z"` with `date:relative`, `context.now` at `"2026-10-05T12:00:00Z"` and `lang: en-US` → `in 7 days`; with no `context.now` → `Oct 12, 2026`.
 
 ### `duration`
 
@@ -101,7 +102,7 @@ Produces a localized human-readable duration in years, months, days, hours, minu
 - **Syntax**: `{value | duration}` or `{value | duration:UNIT}`
 - **Args**:
   - `UNIT` (string, default `"ms"`) — input unit when the value is a number. One of `ms`, `s`, `min`, `h`, `d`.
-- **Backend**: `date-fns` (`formatDistance`, `formatDuration`, `intervalToDuration`).
+- **Backend**: `Intl.RelativeTimeFormat` for a date, and `date-fns` (`formatDuration`, `intervalToDuration`) for a number.
 - **Behavior depends on input type**:
   - **Number** (or numeric string): treated as a duration in `UNIT` units, converted to milliseconds, then formatted as a breakdown (`"1 day 2 hours"`).
   - **`Date` or non-numeric ISO string**: distance between the date and [`context.now`](overview.md#the-instant-relative-dates-use) with a suffix (`"3 months ago"`, `"in 2 days"`). Without `context.now` the date is shown in the `medium` style.
@@ -121,13 +122,10 @@ Produces a localized human-readable duration in years, months, days, hours, minu
   - `{ms | duration}` with `93_600_000` → `1 day 2 hours`.
   - `{createdAt | duration}` with `"2026-07-07T12:00:00Z"` and `context.now` at `"2026-10-05T12:00:00Z"` → `3 months ago`.
 
-## Supported locales
+## Supported languages
 
-Out of the box, the following locales map to a `date-fns/locale` bundle for `date` (relative and pattern styles) and `duration`:
+The named date styles, `relative`, `currency`, `percent` and `number` are written by `Intl`, in any well-formed BCP 47 tag the runtime supports. In English the named styles read as they always did: `10/2/26`, `Oct 2, 2026`, `October 2, 2026`, `Friday, October 2, 2026`.
 
-- `en`, `en-US` → `enUS`
-- `es`, `es-ES`, `es-MX` → `es`
+`relative` writes the distance in the largest unit that holds it once rounded: seconds, minutes, hours, days up to a month, months up to a year, and then years. `in 40 seconds`, `in 3 hours`, `in 1 month`; 59 minutes and 40 seconds is `1 hour ago`, and no distance at all is `now` (`ahora` in Spanish).
 
-Other locale codes match by language prefix (e.g. `es-AR` → `es`). If no match is found, `enUS` is used as fallback.
-
-`Intl`-backed filters (`currency`, `percent`, `number`) accept any well-formed BCP 47 locale tag supported by the runtime.
+A date pattern (`date:dd/MM/yyyy`) and a `duration` of a number are written by `date-fns`, which the library ships in English and Spanish. A tag matches by its base language (`es-AR` writes Spanish), and any other language gets English names and units.

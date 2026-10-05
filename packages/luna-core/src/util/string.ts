@@ -1,7 +1,6 @@
 import { applyFormatFilter, readNow } from './format'
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
-import type { Environment } from '../type'
 
 /**
  * Every quantifier in this file is bounded, and none of the bounds is a
@@ -54,18 +53,15 @@ export type InterpolateOptions = {
 }
 
 /**
- * What text the form renders is formatted with: the locale the host set in
- * `env` and the instant it gave in `context`. A label and a description format
- * the same value the same way because they ask here.
+ * What text the form renders is formatted with: the form's language, its
+ * `lang`, and the instant the host gave in `context`. A label and a
+ * description format the same value the same way because they ask here.
  */
 export function renderOptions(
-  env?: Environment,
+  lang?: string,
   context?: Record<string, unknown>
 ): InterpolateOptions {
-  return {
-    locale: env?.locale as string | undefined,
-    now: readNow(context),
-  }
+  return { locale: lang, now: readNow(context) }
 }
 
 /**

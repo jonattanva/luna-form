@@ -26,7 +26,7 @@ export function ReactiveFormPreview() {
 
   // `env` and `style` live on the config, not on the form, so a definition
   // alone cannot reach them. The harness lifts them out of the injected JSON to
-  // let a test set one -- `env.locale` is what the format filters read and
+  // let a test set one -- `env` holds the values a label can interpolate and
   // `style` is the form-wide layout default, and nothing else here can vary
   // either.
   const formConfig =

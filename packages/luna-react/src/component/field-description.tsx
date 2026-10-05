@@ -1,12 +1,12 @@
 import { DescriptionText } from './description'
 import type { Config } from '../type'
-import type { Field } from '@luna-form/core'
+import type { Field, Localization } from '@luna-form/core'
 
 export type DescriptionProps = Readonly<{
   config?: Config
   context?: Record<string, unknown>
   field: Field
-  translations?: Record<string, string>
+  localization?: Localization
 }>
 
 // The description the form was defined with, which is all a server-rendered
@@ -22,8 +22,8 @@ export function StaticDescription(props: DescriptionProps) {
     <DescriptionText
       config={props.config}
       context={props.context}
+      localization={props.localization}
       text={props.field.description}
-      translations={props.translations}
     />
   )
 }

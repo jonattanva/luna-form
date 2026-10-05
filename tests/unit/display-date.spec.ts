@@ -50,4 +50,18 @@ describe('displayDate', () => {
     expect(displayDate('15/06/2', 'dd/MM/yyyy')).toBe('15/06/2')
     expect(displayDate('15/06/24', 'dd/MM/yyyy')).toBe('15/06/24')
   })
+
+  // A row's preview shows a day in the language of the form. The names come
+  // from date-fns, which the library ships in English and Spanish.
+  test('should name the month in the language it is given', () => {
+    expect(displayDate('2026-10-02', 'MMMM d, yyyy', 'es')).toBe(
+      'octubre 2, 2026'
+    )
+    expect(displayDate('2026-10-02', 'MMMM d, yyyy', 'es-CO')).toBe(
+      'octubre 2, 2026'
+    )
+    expect(displayDate('2026-10-02', 'MMMM d, yyyy', 'de')).toBe(
+      'October 2, 2026'
+    )
+  })
 })

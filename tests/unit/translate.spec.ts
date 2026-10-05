@@ -88,16 +88,40 @@ describe('Resolve Dictionary', () => {
 
   test('should apply the built-in dictionary to a regional tag', () => {
     expect(resolveDictionary('es-MX')?.['Add item']).toBe('Añadir elemento')
-    expect(resolveDictionary('es_MX')?.['Add item']).toBe('Añadir elemento')
     expect(resolveDictionary('ES')?.['Add item']).toBe('Añadir elemento')
   })
 
-  test('should match a form dictionary on the exact tag only', () => {
-    // Authored lookup is unchanged from before the built-ins existed: an
-    // `es-MX` form still has to key its own block by `es-MX`.
-    expect(resolveDictionary('es-MX', { es: { hello: 'hola' } })?.hello).toBe(
-      undefined
+  // The dictionary reads the language the way the months and the filters do:
+  // a tag that is no tag is English everywhere, and a tag in another case is
+  // the same tag.
+  test('should read the language the way the rest of the form does', () => {
+    expect(resolveDictionary('es_MX')).toBeUndefined()
+    expect(
+      resolveDictionary('es-co', { 'es-CO': { hello: 'quiubo' } })?.hello
+    ).toBe('quiubo')
+  })
+
+  // The language lives in `lang` alone, and it carries the region its money
+  // and dates are written for: an `es-CO` form reads its `es` block, and a
+  // block for the region, where there is one, wins key by key.
+  test('should fall back from a regional tag to the base block', () => {
+    expect(resolveDictionary('es-CO', { es: { hello: 'hola' } })?.hello).toBe(
+      'hola'
     )
+  })
+
+  test('should let the regional block win key by key', () => {
+    const result = resolveDictionary('es-CO', {
+      es: { hello: 'hola', bye: 'adiós' },
+      'es-CO': { hello: 'quiubo' },
+    })
+
+    expect(result?.hello).toBe('quiubo')
+    expect(result?.bye).toBe('adiós')
+    expect(result?.['Add item']).toBe('Añadir elemento')
+  })
+
+  test('should still read a block keyed by the exact tag alone', () => {
     expect(
       resolveDictionary('es-MX', { 'es-MX': { hello: 'hola' } })?.hello
     ).toBe('hola')

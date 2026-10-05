@@ -285,10 +285,10 @@ describe('handle value event', () => {
     expect(calls[0]).toEqual({ name: 'simple_body', value: rows })
   })
 
-  // A value payload is not given `config.env.locale`, unlike a label or a
-  // description: its filters format with the runtime default. The docs say so
-  // (interpolation/format-filters.md, "Locale resolution"), and change with it.
-  test('should format a filter with the runtime default locale', () => {
+  // A value payload formats in the form's language, as a label does, and a
+  // form without one writes English whatever the machine speaks. The docs say
+  // so (interpolation/format-filters.md, "Language"), and change with it.
+  test('should format a filter in English without a language', () => {
     const { apply, calls } = createApply()
 
     const events: ValueEvent[] = [
@@ -297,8 +297,20 @@ describe('handle value event', () => {
 
     handleValueEvent({ value: 1234567 }, events, apply)
 
-    expect(calls).toEqual([
-      { name: 'total', value: new Intl.NumberFormat().format(1234567) },
-    ])
+    expect(calls).toEqual([{ name: 'total', value: '1,234,567' }])
+  })
+})
+
+// An event formats in the language of the form, as its label does.
+describe('handleValueEvent language', () => {
+  test('should format a payload in the language it is given', () => {
+    const { apply, calls } = createApply()
+    const events: ValueEvent[] = [
+      { action: 'value', value: { total: '{value | number}' } },
+    ]
+
+    handleValueEvent({ value: 1234.5 }, events, apply, { locale: 'de' })
+
+    expect(calls).toEqual([{ name: 'total', value: '1.234,5' }])
   })
 })

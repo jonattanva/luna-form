@@ -60,6 +60,7 @@ describe('readDateProps', () => {
   test('should read the format the field put on its props', () => {
     expect(readDateProps({ 'data-format': 'dd/MM/yyyy' })).toEqual({
       format: 'dd/MM/yyyy',
+      lang: 'en',
       mode: 'single',
       reserved: [],
     })
@@ -68,6 +69,7 @@ describe('readDateProps', () => {
   test('should fall back to the default format when there is none', () => {
     expect(readDateProps({})).toEqual({
       format: 'MMMM d, yyyy',
+      lang: 'en',
       mode: 'single',
       reserved: [],
     })
@@ -76,6 +78,7 @@ describe('readDateProps', () => {
   test('should fall back to the default format for one the form does not know', () => {
     expect(readDateProps({ 'data-format': 'DD/MM/YYYY' })).toEqual({
       format: 'MMMM d, yyyy',
+      lang: 'en',
       mode: 'single',
       reserved: [],
     })
@@ -92,6 +95,7 @@ describe('readDateProps', () => {
       format: 'dd/MM/yyyy',
       max: '2026-10-20',
       min: '2026-10-05',
+      lang: 'en',
       mode: 'single',
       reserved: [],
     })
@@ -100,6 +104,7 @@ describe('readDateProps', () => {
   test('should read no bound that is no yyyy-MM-dd day', () => {
     expect(readDateProps({ max: '2026-02-30', min: '05/10/2026' })).toEqual({
       format: 'MMMM d, yyyy',
+      lang: 'en',
       mode: 'single',
       reserved: [],
     })
@@ -141,5 +146,12 @@ describe('readDateProps', () => {
       readDateProps({ 'data-reserved': '2026-12-24,24/12/2026,,2026-02-30' })
         .reserved
     ).toEqual(['2026-12-24'])
+  })
+
+  // The language a calendar names its months and days in: the form's, as the
+  // standard `lang` attribute, and English without one.
+  test('should read the language the field put on its props', () => {
+    expect(readDateProps({ lang: 'es-CO' }).lang).toBe('es-CO')
+    expect(readDateProps({}).lang).toBe('en')
   })
 })

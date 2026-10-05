@@ -529,6 +529,15 @@ describe('date fields', () => {
     })
   })
 
+  // `lang` is a standard attribute: a native input takes it as it comes, and a
+  // calendar reads it for its month and weekday names.
+  test('should put the language of the form on the props', () => {
+    expect(buildCommon(field, false, { lang: 'es-CO' })).toMatchObject({
+      lang: 'es-CO',
+    })
+    expect(buildCommon(field)).not.toHaveProperty('lang')
+  })
+
   test('should put the default format on a date that declares none', () => {
     expect(buildCommon({ name: 'd', type: 'input/date' })).toMatchObject({
       'data-format': 'MMMM d, yyyy',

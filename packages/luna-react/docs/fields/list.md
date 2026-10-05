@@ -156,7 +156,7 @@ The built-ins are layered _under_ the form's own block, so declaring a key still
 }
 ```
 
-Regional tags resolve to their base language, so `es-MX` and `es-419` both get the Spanish defaults. A form's own entries keep matching on the exact tag, unchanged.
+Regional tags fall back to their base language: `es-MX` and `es-419` get the Spanish defaults and the form's own `es` block, and a block for the exact tag, where the form has one, wins key by key. One `lang` carries the region the form's money and dates are written for without repeating its translations. A tag that is no tag, such as `es_MX`, is English everywhere, its dictionary included.
 
 ### Accessible name templates
 

@@ -8,6 +8,7 @@ import {
   SELECTS,
   TEXTAREA,
   fetcher,
+  logger,
   type Environment,
   type Protocol,
 } from '@luna-form/core'
@@ -67,6 +68,14 @@ export function defineConfig<T extends React.ElementType>(
   // passes all four notices no difference; whoever passes fewer gets what they
   // wrote.
   config.validation = { ...DEFAULT_VALIDATION, ...options.validation }
+
+  // The language lives in the form's `lang`, which also picks its translations
+  // and names its months; an `env.locale` left from before formats nothing.
+  if (options.env && 'locale' in options.env) {
+    logger.warn(
+      'env.locale is no longer read: pass the language to the form as lang'
+    )
+  }
 
   options.inputs.forEach(({ types, input }) => {
     const type = Array.isArray(types) ? types : [types]

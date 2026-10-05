@@ -5,6 +5,7 @@ import {
   type List,
   type Nullable,
   type Style,
+  type Localization,
 } from '@luna-form/core'
 import { SlotBase, type SlotComponents } from './slot-base'
 import { useMemo } from 'react'
@@ -19,10 +20,9 @@ export function SlotList(
     disabled?: boolean
     field: List
     index: number
-    lang?: string
     onValueChange?: (input: { name: string; value: unknown }) => void
     style?: Style
-    translations?: Record<string, string>
+    localization?: Localization
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
@@ -74,10 +74,9 @@ export function SlotList(
       context={props.context}
       disabled={props.disabled}
       fields={fields}
-      lang={props.lang}
       onValueChange={props.onValueChange}
       style={props.style}
-      translations={props.translations}
+      localization={props.localization}
       value={props.value}
     >
       {props.children}

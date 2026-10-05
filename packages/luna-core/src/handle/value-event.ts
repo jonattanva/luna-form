@@ -1,4 +1,4 @@
-import { interpolateValue } from '../util/string'
+import { interpolateValue, type InterpolateOptions } from '../util/string'
 import type { Nullable, ValueEvent } from '../type'
 
 export type ValueEventApply = (
@@ -18,14 +18,20 @@ export type ValueEventApply = (
 //     with a transform is non-empty after the very first source keystroke;
 //     the consumer needs its own "user-touched" tracking to decide whether
 //     the current value belongs to the auto-fill or to the user.
+// `options` carries the form's language, which a filter in the payload
+// formats with, as it does in a label.
 export function handleValueEvent<T>(
   selected: Nullable<T> = null,
   events: ValueEvent[] = [],
-  apply: ValueEventApply
+  apply: ValueEventApply,
+  options?: InterpolateOptions
 ) {
   for (const event of events) {
     for (const [target, value] of Object.entries(event.value)) {
-      apply(target, selected ? interpolateValue(value, selected) : undefined, {
+      const candidate = selected
+        ? interpolateValue(value, selected, options)
+        : undefined
+      apply(target, candidate, {
         onlyIfTargetEmpty: event.onlyIfTargetEmpty ?? false,
       })
     }

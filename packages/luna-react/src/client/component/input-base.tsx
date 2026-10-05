@@ -65,7 +65,7 @@ export function InputBase(
     commonProps,
     data,
     value,
-    isStaticSource ? props.translations : undefined
+    isStaticSource ? props.localization?.translations : undefined
   )
 
   const inputProps = prepareInputValue(props.field, defaultValue)
@@ -230,7 +230,7 @@ export function InputBase(
         description={FieldDescription}
         field={props.field}
         horizontal={props.horizontal}
-        translations={props.translations}
+        localization={props.localization}
       >
         {/* `advanced.data` first: an attribute the form writes for its own
             rules, such as a date's format, is the form's to say. */}

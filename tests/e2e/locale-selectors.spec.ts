@@ -107,51 +107,57 @@ test.describe('Locale-aware specialized selectors', { tag: ['@e2e'] }, () => {
     await expect(page.locator('pre code')).not.toContainText('mayo')
   })
 
-  test('should keep the runtime locale when the form declares no language', async ({
-    page,
-  }) => {
-    await inject(
+  // Whatever language the browser speaks: the server and the browser render
+  // the same text, as they do the same day.
+  test.describe('without a language', () => {
+    test.use({ locale: 'de-DE' })
+
+    test('should speak English when the form declares no language', async ({
       page,
-      `{
-        "sections": [
-          {
-            "fields": [
-              { "label": "Month", "name": "month", "type": "select/month" }
-            ]
-          }
-        ]
-      }`
-    )
+    }) => {
+      await inject(
+        page,
+        `{
+          "sections": [
+            {
+              "fields": [
+                { "label": "Month", "name": "month", "type": "select/month" }
+              ]
+            }
+          ]
+        }`
+      )
 
-    await page.goto('')
+      await page.goto('')
 
-    await page.getByRole('combobox').click()
+      await page.getByRole('combobox').click()
 
-    await expect(page.getByRole('option', { name: 'January' })).toBeVisible()
-  })
+      await expect(page.getByRole('option', { name: 'January' })).toBeVisible()
+    })
 
-  test('should fall back to the runtime locale for a malformed language tag', async ({
-    page,
-  }) => {
-    await inject(
+    test('should speak English for a malformed language tag', async ({
       page,
-      `{
-        "lang": "es_MX",
-        "sections": [
-          {
-            "fields": [
-              { "label": "Month", "name": "month", "type": "select/month" }
-            ]
-          }
-        ]
-      }`
-    )
+    }) => {
+      await inject(
+        page,
+        `{
+          "lang": "es_MX",
+          "sections": [
+            {
+              "fields": [
+                { "label": "Month", "name": "month", "type": "select/month" }
+              ]
+            }
+          ]
+        }`
+      )
 
-    await page.goto('')
+      await page.goto('')
 
-    await page.getByRole('combobox').click()
+      await page.getByRole('combobox').click()
 
-    await expect(page.getByRole('option', { name: 'January' })).toBeVisible()
+      await expect(page.getByRole('option', { name: 'January' })).toBeVisible()
+    })
   })
 
   test('should localize the labels shown in a collapsed list preview', async ({

@@ -31,8 +31,19 @@ describe('getMonth', () => {
     expect(values).toEqual(getMonth().map((month) => month.value))
   })
 
-  test('should fall back to the runtime locale for a malformed tag', () => {
-    expect(getMonth('es_MX')).toEqual(getMonth())
-    expect(getMonth('')).toEqual(getMonth())
+  // Without a language, or with one that is no tag, the form speaks English,
+  // whatever language the machine rendering it speaks.
+  test('should speak English without a language', () => {
+    expect(getMonth()[0].label).toBe('January')
+    expect(getMonth('es_MX')[0].label).toBe('January')
+    expect(getMonth('')[0].label).toBe('January')
+  })
+})
+
+// A tag the runtime does not know is no language either: `sp` would otherwise
+// be written in whatever language the machine speaks.
+describe('getMonth for a tag the runtime does not know', () => {
+  test.each(['sp', 'zz', 'tlh'])('should speak English for %s', (lang) => {
+    expect(getMonth(lang)[0].label).toBe('January')
   })
 })

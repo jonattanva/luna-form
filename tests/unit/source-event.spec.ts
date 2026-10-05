@@ -134,10 +134,10 @@ describe('handle source event', () => {
     })
   })
 
-  // Like a value payload, a url and a body are not given `config.env.locale`:
-  // their filters format with the runtime default, as the docs say
-  // (interpolation/format-filters.md, "Locale resolution").
-  test('should format filters in URL and body with the runtime default locale', () => {
+  // Like a value payload, a url and a body format in the form's language, and
+  // in English without one, as the docs say (interpolation/format-filters.md,
+  // "Language").
+  test('should format filters in URL and body in English without a language', () => {
     const calls: { name: string; source: DataSource | undefined }[] = []
     const setSource = (name: string, source?: DataSource) => {
       calls.push({ name, source })
@@ -155,9 +155,31 @@ describe('handle source event', () => {
 
     handleSourceEvent({ value: 1234567 }, events, setSource)
 
-    const formatted = new Intl.NumberFormat().format(1234567)
+    const formatted = '1,234,567'
     expect(calls).toHaveLength(1)
     expect(calls[0].source?.url).toBe(`/api/total?amount=${formatted}`)
     expect(calls[0].source?.body).toEqual({ amount: formatted })
+  })
+})
+
+describe('handleSourceEvent language', () => {
+  test('should format a url in the language it is given', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const events: SourceEvent[] = [
+      {
+        action: 'source',
+        target: 'list',
+        source: { url: '/api?n={n | number}' },
+      },
+    ]
+
+    handleSourceEvent(
+      { n: 1234.5 },
+      events,
+      (name, source) => calls.push({ name, source }),
+      { locale: 'de' }
+    )
+
+    expect(calls[0].source?.url).toBe('/api?n=1.234,5')
   })
 })

@@ -141,7 +141,8 @@ Check the console when a remote source comes back empty — see
 - `alert` is the component that renders the error summary, when `showError`
   is on.
 - `env` is a flat record of values available to interpolation, in labels and in
-  descriptions. Its `locale` key is also what those two read to format values.
+  descriptions. It holds the application's values: the language is the form's
+  `lang`, and a development build names an `env.locale` nothing reads.
 
 ## Warnings
 
@@ -164,21 +165,21 @@ production build does not. Where nothing defines it at all, they are shown.
 The client form. It owns its own state, so it is the one to use for anything
 interactive.
 
-| Prop            | Purpose                                                                                                         |
-| --------------- | --------------------------------------------------------------------------------------------------------------- |
-| `sections`      | the field descriptors — the form itself                                                                         |
-| `config`        | the result of `defineConfig`                                                                                    |
-| `value`         | the current values                                                                                              |
-| `action`        | server action invoked on submit, receives the form data and the schema — see [forms/submit.md](forms/submit.md) |
-| `onSuccess`     | called with the parsed data after `action` succeeds                                                             |
-| `onValueChange` | called with `{ name, value }` on every change                                                                   |
-| `readOnly`      | renders every field disabled                                                                                    |
-| `translations`  | per-locale strings for labels, options and messages                                                             |
-| `lang`          | the locale to resolve `translations` against                                                                    |
-| `context`       | arbitrary values available to interpolation, and to a `$ref` under `#/context/`                                 |
-| `definition`    | the JSON that [`$ref`](structure/definition.md) entries resolve against                                         |
-| `advanced.step` | numbers the [sections](structure/sections.md#advancedstep-numbers-the-sections)                                 |
-| `children`      | the form's control area — see [forms/submit.md](forms/submit.md#nothing-submits-without-a-control)              |
+| Prop            | Purpose                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `sections`      | the field descriptors — the form itself                                                                                 |
+| `config`        | the result of `defineConfig`                                                                                            |
+| `value`         | the current values                                                                                                      |
+| `action`        | server action invoked on submit, receives the form data and the schema — see [forms/submit.md](forms/submit.md)         |
+| `onSuccess`     | called with the parsed data after `action` succeeds                                                                     |
+| `onValueChange` | called with `{ name, value }` on every change                                                                           |
+| `readOnly`      | renders every field disabled                                                                                            |
+| `translations`  | per-language strings for labels, options and messages                                                                   |
+| `lang`          | the form's language: its translations, its month and day names, its filters and the dates it shows; English without one |
+| `context`       | arbitrary values available to interpolation, and to a `$ref` under `#/context/`                                         |
+| `definition`    | the JSON that [`$ref`](structure/definition.md) entries resolve against                                                 |
+| `advanced.step` | numbers the [sections](structure/sections.md#advancedstep-numbers-the-sections)                                         |
+| `children`      | the form's control area — see [forms/submit.md](forms/submit.md#nothing-submits-without-a-control)                      |
 
 ### `Form` from `react-luna-form/server`
 

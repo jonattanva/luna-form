@@ -5,20 +5,21 @@ import {
   translate,
   type List,
   type Nullable,
+  type Localization,
 } from '@luna-form/core'
 import { FieldListItem } from './field-list-item'
 
 export type ListProps = Readonly<{
   children: (index: number) => React.ReactNode
   field: List
-  lang?: string
   onValueChange?: (input: { name: string; value: unknown }) => void
-  translations?: Record<string, string>
+  localization?: Localization
   value?: Nullable<Record<string, unknown>>
 }>
 
 export function FieldList(props: ListProps) {
-  const label = translate(getLabel(props.field), props.translations)
+  const translations = props.localization?.translations
+  const label = translate(getLabel(props.field), translations)
   const isMultiField = isMultiFieldList(props.field)
 
   return getInitialList(props.field, props.value).map((index) => (
@@ -28,7 +29,7 @@ export function FieldList(props: ListProps) {
       isMultiField={isMultiField}
       key={index}
       label={label}
-      translations={props.translations}
+      translations={translations}
     >
       {props.children(index)}
     </FieldListItem>

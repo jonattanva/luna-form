@@ -1,3 +1,4 @@
+import { baseLanguage, toLocale } from './date'
 import { isObject, isString } from './is-type'
 
 // Every string the library renders on its own behalf. A form cannot name these
@@ -63,21 +64,31 @@ export function resolveDictionary(
   lang?: string,
   translations?: Record<string, Record<string, string>>
 ): Record<string, string> | undefined {
-  // Authored entries stay an exact `lang` lookup, unchanged from before. Only
-  // the built-ins fall back to the base language, so `es-MX` gets the Spanish
-  // defaults without silently widening how a form's own block is matched.
-  const authored = translations?.[lang ?? '']
-  const defaults = lang ? BUILT_IN[toBaseLanguage(lang)] : undefined
-
-  if (!defaults) {
-    return authored
+  if (!lang) {
+    return undefined
   }
 
-  return authored ? { ...defaults, ...authored } : defaults
-}
+  // From the general to the specific: the library's own copy, the form's block
+  // for the base language, and its block for the exact tag. The language lives
+  // in `lang` alone, so it carries the region its money and dates are written
+  // for, and an `es-CO` form reads its `es` block, with `es-CO` winning key by
+  // key where it has one. Read the way the months and the filters read it, so
+  // a tag that is no tag is English here too.
+  const tag = toLocale(lang)
+  const base = baseLanguage(tag)
+  const layers = [
+    BUILT_IN[base],
+    translations?.[base],
+    base === tag ? undefined : translations?.[tag],
+  ].filter((layer) => layer !== undefined)
 
-function toBaseLanguage(lang: string): string {
-  return lang.toLowerCase().split(/[-_]/)[0]
+  // One layer is passed through by reference: the result is what each field's
+  // schema is memoized on, and a new object per call would rebuild them all.
+  if (layers.length <= 1) {
+    return layers[0]
+  }
+
+  return Object.assign({}, ...layers)
 }
 
 export function translate(

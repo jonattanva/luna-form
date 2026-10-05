@@ -8,6 +8,7 @@ import {
   type CommonProps,
   type DataAttributes,
   type Field,
+  type Localization,
 } from '@luna-form/core'
 import type { Config } from '../../type'
 
@@ -20,7 +21,7 @@ export function Input(
     dataAttributes?: DataAttributes
     field: Field
     horizontal?: boolean
-    translations?: Record<string, string>
+    localization?: Localization
     value?: Record<string, unknown>
   }>
 ) {
@@ -31,7 +32,7 @@ export function Input(
     props.commonProps,
     source,
     props.value,
-    props.translations
+    props.localization?.translations
   )
 
   const defaultProps = prepareDefaultValue(props.field, defaultValue)
@@ -42,7 +43,7 @@ export function Input(
       context={props.context}
       field={props.field}
       horizontal={props.horizontal}
-      translations={props.translations}
+      localization={props.localization}
     >
       {/* In the client's order: `advanced.data` first, so an attribute the
           form writes for its own rules is the form's to say. */}

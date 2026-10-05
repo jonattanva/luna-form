@@ -14,6 +14,7 @@ export function FieldPreviewItem({
   className,
   dateFormat,
   initialValue,
+  lang,
   name,
   options,
   separator,
@@ -22,6 +23,7 @@ export function FieldPreviewItem({
   className?: string
   dateFormat?: DateFormat
   initialValue?: unknown
+  lang?: string
   name?: string
   options?: Array<Option | string>
   separator?: boolean
@@ -80,7 +82,7 @@ export function FieldPreviewItem({
 
   const text = String(value)
   const displayValue =
-    staticLabel ?? (dateFormat ? displayDate(text, dateFormat) : text)
+    staticLabel ?? (dateFormat ? displayDate(text, dateFormat, lang) : text)
 
   return (
     <div className="flex items-center gap-1.5 overflow-hidden">

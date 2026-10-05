@@ -21,6 +21,7 @@ import {
   handleSourceEvent,
   handleStateEvent,
   handleValueEvent,
+  renderOptions,
   holdValue,
   isClickable,
   isDateRange,
@@ -40,6 +41,7 @@ import {
   type Schema,
   type Value,
   validateCustom,
+  type Localization,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
 
@@ -52,11 +54,11 @@ export type InputCoreProps = Readonly<{
   field: Field
   getField: (name: string) => Field | undefined
   horizontal?: boolean
+  localization?: Localization
   onRegister: (name: string, schema: Schema, field: Field) => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean
-  translations?: Record<string, string>
 }>
 
 // Whether the user's caret is in this field right now.
@@ -94,7 +96,8 @@ export function useInputCore(
   const { setValue, value, setSource } = deps
 
   const valueRef = useLatest(value)
-  const translationsRef = useLatest(props.translations)
+  const translations = props.localization?.translations
+  const translationsRef = useLatest(translations)
 
   const hasClickable = isClickable(props.field)
 
@@ -109,13 +112,10 @@ export function useInputCore(
     props.field,
     props.onRegister,
     props.onUnmount,
-    props.translations
+    translations
   )
 
-  const placeholder = translate(
-    props.commonProps.placeholder,
-    props.translations
-  )
+  const placeholder = translate(props.commonProps.placeholder, translations)
 
   const commonProps = {
     ...props.commonProps,
@@ -398,11 +398,19 @@ export function useInputCore(
       return
     }
 
+    // A filter in a payload formats in the form's language, as in a label.
+    const language = renderOptions(props.localization?.lang)
+
     handleProxyEvent(events, ({ sources, states, values }) => {
       startTransition(() => {
-        handleSourceEvent(selected, sources, (target, source) => {
-          setSource(resolveTarget(target, props.field.name), source)
-        })
+        handleSourceEvent(
+          selected,
+          sources,
+          (target, source) => {
+            setSource(resolveTarget(target, props.field.name), source)
+          },
+          language
+        )
 
         handleStateEvent(selected, states, (targets, state) => {
           applyState(
@@ -427,75 +435,80 @@ export function useInputCore(
       // Same work either way, once per debounced batch: what changes is the
       // lane. It also splits the batch in two commits, so an event that both
       // fills a field and hides it now paints the value first.
-      handleValueEvent(selected, values, (target, candidate, options) => {
-        const newTarget = resolveTarget(target, props.field.name)
+      handleValueEvent(
+        selected,
+        values,
+        (target, candidate, options) => {
+          const newTarget = resolveTarget(target, props.field.name)
 
-        // A list is written by handing its rows over, not by setting a value.
-        // It holds nothing under its own name -- its values are flat keys of
-        // the form `list.<id>.<leaf>` -- and how many rows it has is state
-        // inside the component that renders it, which is the only thing that
-        // can grow or shrink it. See `list-store`.
-        //
-        // Everything below is about a single value and does not carry over: a
-        // list has no `transform`, cannot hold the caret, and gives
-        // `onlyIfTargetEmpty` nothing to call empty. So this returns either
-        // way -- a candidate that is not a list's worth of rows is a
-        // definition pointing a list at the wrong shape, and there is no
-        // sensible second place to put it.
-        if (store.get(mountedListsAtom)[newTarget]) {
-          if (isRows(candidate)) {
-            setPendingListRows((previous) => ({
-              ...previous,
-              [newTarget]: candidate,
-            }))
-          }
-          return
-        }
-
-        // Held the way the target holds a value it is given, a date as
-        // `yyyy-MM-dd`, so a value the user did not type is no different.
-        const transform = getTransform(newTarget)
-        const targetField = props.getField(newTarget)
-        const written = transform
-          ? applyTransform(candidate, transform)
-          : candidate
-        const transformed = targetField
-          ? holdValue(targetField, written)
-          : written
-
-        const previousValues = store.get(valueAtom) as Record<string, unknown>
-        const current = previousValues[newTarget]
-
-        // Only honor `onlyIfTargetEmpty` when the user has actually changed
-        // the target since our last auto-fill. If `current` still equals the
-        // value we wrote, the field is still in "auto-fill" mode and we
-        // should keep mirroring the source — otherwise targets with
-        // transforms freeze after the first character (Bug A).
-        if (options.onlyIfTargetEmpty && !isEmpty(current)) {
-          const applied = store.get(appliedAutoFillAtom)[newTarget]
-          if (!Object.is(applied, current)) {
+          // A list is written by handing its rows over, not by setting a value.
+          // It holds nothing under its own name -- its values are flat keys of
+          // the form `list.<id>.<leaf>` -- and how many rows it has is state
+          // inside the component that renders it, which is the only thing that
+          // can grow or shrink it. See `list-store`.
+          //
+          // Everything below is about a single value and does not carry over: a
+          // list has no `transform`, cannot hold the caret, and gives
+          // `onlyIfTargetEmpty` nothing to call empty. So this returns either
+          // way -- a candidate that is not a list's worth of rows is a
+          // definition pointing a list at the wrong shape, and there is no
+          // sensible second place to put it.
+          if (store.get(mountedListsAtom)[newTarget]) {
+            if (isRows(candidate)) {
+              setPendingListRows((previous) => ({
+                ...previous,
+                [newTarget]: candidate,
+              }))
+            }
             return
           }
-        }
 
-        // Equal, not identical: a range is an array, held anew each time.
-        if (deepEqual(transformed, current)) {
-          return
-        }
+          // Held the way the target holds a value it is given, a date as
+          // `yyyy-MM-dd`, so a value the user did not type is no different.
+          const transform = getTransform(newTarget)
+          const targetField = props.getField(newTarget)
+          const written = transform
+            ? applyTransform(candidate, transform)
+            : candidate
+          const transformed = targetField
+            ? holdValue(targetField, written)
+            : written
 
-        // Held back rather than written, because the user is inside the
-        // target: setting a controlled input's value while it has focus
-        // collapses the selection to the end of the new text, so everything
-        // typed next lands behind it -- `customeremail` + `customer_email`.
-        // `onBlur` releases this the moment they leave the field, so the
-        // auto-fill is postponed, never dropped (Bug C).
-        if (isFieldFocused(newTarget)) {
-          setPendingAutoFill({ target: newTarget, value: transformed })
-          return
-        }
+          const previousValues = store.get(valueAtom) as Record<string, unknown>
+          const current = previousValues[newTarget]
 
-        applyAutoFill(newTarget, transformed)
-      })
+          // Only honor `onlyIfTargetEmpty` when the user has actually changed
+          // the target since our last auto-fill. If `current` still equals the
+          // value we wrote, the field is still in "auto-fill" mode and we
+          // should keep mirroring the source — otherwise targets with
+          // transforms freeze after the first character (Bug A).
+          if (options.onlyIfTargetEmpty && !isEmpty(current)) {
+            const applied = store.get(appliedAutoFillAtom)[newTarget]
+            if (!Object.is(applied, current)) {
+              return
+            }
+          }
+
+          // Equal, not identical: a range is an array, held anew each time.
+          if (deepEqual(transformed, current)) {
+            return
+          }
+
+          // Held back rather than written, because the user is inside the
+          // target: setting a controlled input's value while it has focus
+          // collapses the selection to the end of the new text, so everything
+          // typed next lands behind it -- `customeremail` + `customer_email`.
+          // `onBlur` releases this the moment they leave the field, so the
+          // auto-fill is postponed, never dropped (Bug C).
+          if (isFieldFocused(newTarget)) {
+            setPendingAutoFill({ target: newTarget, value: transformed })
+            return
+          }
+
+          applyAutoFill(newTarget, transformed)
+        },
+        language
+      )
     })
   })
 

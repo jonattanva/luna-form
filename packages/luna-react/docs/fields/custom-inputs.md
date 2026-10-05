@@ -144,6 +144,7 @@ render the field, and a native `<input type="date">` needs nothing at all.
 | `data-mode`     | `"range"`                                      | Only on a range                                                                                                                      |
 | `min`, `max`    | `"2026-10-01"`                                 | [The first and the last day](input.md#the-first-and-the-last-day), both included                                                     |
 | `data-reserved` | `"2026-12-24,2026-12-25"`                      | [Days nobody can pick](input.md#days-nobody-can-pick)                                                                                |
+| `lang`          | `"es-CO"`                                      | The form's language, to name months and days in. Absent when the form has none                                                       |
 | `name`          | `"stay"`                                       | Absent, in the client `Form`, on a range and on a read-only field: the form submits those itself                                     |
 
 Read the props with `readDateProps` instead of by attribute name, so the
@@ -152,10 +153,11 @@ component keeps working whatever the form puts on them next:
 ```ts
 import { readDateProps } from 'react-luna-form/config'
 
-const { format, mode, min, max, reserved } = readDateProps(props)
+const { format, lang, mode, min, max, reserved } = readDateProps(props)
 ```
 
-`mode` is `'single'` or `'range'`. `min` and `max` come back only when they are
+`lang` is the form's language as a canonical tag, and `'en'` when it has
+none. `mode` is `'single'` or `'range'`. `min` and `max` come back only when they are
 days, so a component can test them for `undefined` and nothing else. `reserved`
 is always a list, empty when nothing is reserved, sorted and with each day once.
 It is the same array for as long as the days are, so a component can memoize on
@@ -245,6 +247,7 @@ A range is the same with `mode="range"`, `selected={{ from, to }}` and
 | `data-reserved`     | `disabled` with a function that looks the day up in a set      | `shouldDisableDate={(day) => booked.has(day.format('YYYY-MM-DD'))}` | not shown; the form checks it all the same   |
 | `data-mode="range"` | `excludeDisabled`, `numberOfMonths={2}`                        | `DateRangePicker`                                                   | not supported                                |
 | `data-format`       | the text box: `format(day, dataFormat)`                        | `format`, in dayjs tokens                                           | ignored: the browser shows the user's locale |
+| `lang`              | `locale` from `react-day-picker/locale`, also for `format`     | `adapterLocale` on `LocalizationProvider`                           | ignored, the same way                        |
 
 ### Mistakes that are easy to make
 

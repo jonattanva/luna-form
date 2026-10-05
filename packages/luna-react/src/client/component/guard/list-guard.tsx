@@ -8,18 +8,16 @@ import type { ListProps } from '../../../component/field/field-list'
 export function ListGuard({
   children,
   field,
-  lang,
   onValueChange,
-  translations,
+  localization,
   value,
 }: ListProps) {
   const content = (
-    <List field={field} translations={translations}>
+    <List field={field} translations={localization?.translations}>
       <FieldList
         field={field}
-        lang={lang}
         onValueChange={onValueChange}
-        translations={translations}
+        localization={localization}
         value={value}
       >
         {children}

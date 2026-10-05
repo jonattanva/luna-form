@@ -5,6 +5,7 @@ import {
   renderOptions,
   translate,
   type Description as DescriptionType,
+  type Localization,
 } from '@luna-form/core'
 import type { Config } from '../type'
 
@@ -24,8 +25,8 @@ export function Description(
 export type DescriptionTextProps = Readonly<{
   config?: Config
   context?: Record<string, unknown>
+  localization?: Localization
   text?: DescriptionType
-  translations?: Record<string, string>
 }>
 
 // A description as far as this tree can take it: the text, interpolated and
@@ -41,12 +42,14 @@ export function DescriptionText(props: DescriptionTextProps) {
   const interpolated = interpolateIfNeeded(
     message,
     { context: props.context, env: props.config?.env },
-    renderOptions(props.config?.env, props.context)
+    renderOptions(props.localization?.lang, props.context)
   )
 
   return (
     <Description title={isString(props.text) ? undefined : props.text?.title}>
-      {formatMarkdown(translate(interpolated, props.translations))}
+      {formatMarkdown(
+        translate(interpolated, props.localization?.translations)
+      )}
     </Description>
   )
 }

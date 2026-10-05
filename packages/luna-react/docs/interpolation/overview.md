@@ -153,19 +153,23 @@ until somebody fills it.
 - **Spaces are trimmed.** `{ value }` and `{value}` are the same placeholder, as
   are `{total|currency:USD}` and `{total | currency:USD}`.
 
-## The locale filters use
+## The language filters use
 
-Locale-aware filters read `config.env.locale`:
+Filters format in the form's language, its `lang`: the same tag that picks its
+[translations](../fields/list.md#built-in-translations) and names its months.
 
-```ts
-defineConfig({ inputs: [...], env: { locale: 'es-ES', currency: 'EUR' } })
+```tsx
+<Form sections={sections} config={config} lang="es-CO" />
 ```
 
-It reaches every filter the form renders — a label and a description format the
-same value the same way. With no `locale` set, filters fall back to the locale of
-whatever is running the code: the browser in the client form, the process in the
-server one, which are not always the same machine. Set it once in `env` and both
-renders agree.
+It reaches every filter the form runs: a label, a description and the payload
+of a `value` or `source` action format the same value the same way. Without
+`lang`, with one that is no language tag (`es_MX`), or with one the runtime has
+no language for (`sp`), the form speaks English, on the server and in the
+browser alike, whatever language their machines speak. Its translations follow
+the same tag, so a form never writes in two languages.
+`config.env.locale` is not read; a development build names one left in the
+config.
 
 ## The instant relative dates use
 

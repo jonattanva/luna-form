@@ -45,6 +45,13 @@ export function FormContent<
     [props.lang, props.translations]
   )
 
+  // The language and the dictionary travel together to every field, as one
+  // object that keeps its identity while neither changes.
+  const localization = useMemo(
+    () => ({ lang: props.lang, translations }),
+    [props.lang, translations]
+  )
+
   const [getSchema, getField, onRegister, onUnmount] = useSchema()
   const [action, state, isPending, onSubmit] = useFormState(
     getSchema,
@@ -100,7 +107,6 @@ export function FormContent<
         onRegister={onRegister}
         onUnmount={onUnmount}
         onValueChange={onValueChange}
-        translations={translations}
       />
     ),
     [
@@ -110,7 +116,6 @@ export function FormContent<
       onValueChange,
       props.config,
       props.context,
-      translations,
     ]
   )
 
@@ -174,10 +179,9 @@ export function FormContent<
               context={props.context}
               disabled={disabled}
               fields={fields}
-              lang={props.lang}
+              localization={localization}
               onValueChange={onValueChange}
               style={props.config.style}
-              translations={translations}
               value={props.value}
             >
               {renderInput}

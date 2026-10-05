@@ -22,6 +22,7 @@ export function Form(
   }>
 ) {
   const translations = resolveDictionary(props.lang, props.translations)
+  const localization = { lang: props.lang, translations }
 
   return (
     <Component
@@ -40,9 +41,8 @@ export function Form(
           context={props.context}
           disabled={disabled}
           fields={fields}
-          lang={props.lang}
+          localization={localization}
           style={props.config.style}
-          translations={translations}
           value={props.value}
         >
           {(internal) => (
@@ -50,7 +50,6 @@ export function Form(
               {...internal}
               config={props.config}
               context={props.context}
-              translations={translations}
               value={props.value}
             />
           )}

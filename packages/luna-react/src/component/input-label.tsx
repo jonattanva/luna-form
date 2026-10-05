@@ -5,6 +5,7 @@ import {
   renderOptions,
   translate,
   type Field,
+  type Localization,
 } from '@luna-form/core'
 import type { Config } from '../type'
 
@@ -15,7 +16,7 @@ export function InputLabel(
     description?: React.ComponentType<DescriptionProps>
     field: Field
     horizontal?: boolean
-    translations?: Record<string, string>
+    localization?: Localization
   }>
 ) {
   const Description = props.description ?? StaticDescription
@@ -25,14 +26,12 @@ export function InputLabel(
     env: props.config?.env,
   }
 
-  // Formatted the way `FormattedDescription` formats. Without the locale a
-  // filter in a label falls back to whatever locale is running the code -- the
-  // browser on the client, the process on the server -- so the same
-  // placeholder rendered one number in a label and another in a description.
+  // Formatted the way `FormattedDescription` formats, in the form's language,
+  // so the same placeholder reads the same in a label and in a description.
   const label = interpolateIfNeeded(
     props.field.label,
     interpolateOpts,
-    renderOptions(props.config?.env, props.context)
+    renderOptions(props.localization?.lang, props.context)
   )
 
   return (
@@ -43,16 +42,16 @@ export function InputLabel(
       <Label
         field={props.field}
         style={props.config?.style}
-        translations={props.translations}
+        translations={props.localization?.translations}
       >
-        {translate(label, props.translations)}
+        {translate(label, props.localization?.translations)}
       </Label>
       {props.horizontal === true && (
         <Description
           config={props.config}
           context={props.context}
           field={props.field}
-          translations={props.translations}
+          localization={props.localization}
         />
       )}
     </div>

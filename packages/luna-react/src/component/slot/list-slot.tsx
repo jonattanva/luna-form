@@ -2,21 +2,10 @@ import { FieldList } from '../field/field-list'
 import { List } from '../list'
 import type { ListProps } from '../field/field-list'
 
-export function ListSlot({
-  children,
-  field,
-  lang,
-  translations,
-  value,
-}: ListProps) {
+export function ListSlot({ children, field, localization, value }: ListProps) {
   return (
-    <List field={field} translations={translations}>
-      <FieldList
-        field={field}
-        lang={lang}
-        translations={translations}
-        value={value}
-      >
+    <List field={field} translations={localization?.translations}>
+      <FieldList field={field} localization={localization} value={value}>
         {children}
       </FieldList>
     </List>
