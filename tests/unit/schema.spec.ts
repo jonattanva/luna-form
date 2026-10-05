@@ -1266,9 +1266,9 @@ describe('reserved days', () => {
     ])
   })
 
-  // A list that did not arrive reserves nothing, and neither does an entry
-  // that is no day; whoever wrote the form is told which.
-  test('should name a list nothing resolved and an entry that is no day', () => {
+  // A list that did not arrive, or an entry that is no day, is a rule the form
+  // cannot read: it takes no day, and whoever wrote the form is told which.
+  test('should hold back every day for a list nothing resolved and an entry that is no day', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
       const unresolved = getDateSchema(
@@ -1282,12 +1282,14 @@ describe('reserved days', () => {
         ) as DateField
       )
 
-      expect(unresolved.parse('2026-12-24')).toBe('2026-12-24')
-      expect(entries.safeParse('2026-12-24').success).toBe(false)
+      expect(unresolved.safeParse('2026-12-23').error?.issues[0].message).toBe(
+        'This date cannot be checked'
+      )
+      expect(entries.safeParse('2026-12-23').success).toBe(false)
       expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
-        'night: advanced.reserved points at #/context/booked, which nothing resolved, so no day is reserved',
-        'night: advanced.reserved[1] is "24/12/2026", which is no yyyy-MM-dd day, so it reserves nothing',
-        'night: advanced.reserved[2] points at #/context/eve, which nothing resolved, so it reserves nothing',
+        'night: advanced.reserved points at #/context/booked, which nothing resolved, so the field takes no day',
+        'night: advanced.reserved[1] is "24/12/2026", which is no yyyy-MM-dd day, so the field takes no day',
+        'night: advanced.reserved[2] points at #/context/eve, which nothing resolved, so the field takes no day',
       ])
     } finally {
       warn.mockRestore()
@@ -1364,10 +1366,10 @@ describe('date bounds', () => {
     expect(getDateSchema(bounded()).parse('')).toBeUndefined()
   })
 
-  // A bound that is no day is no bound, the way a browser ignores a `min` it
-  // cannot read: the field takes every day, and whoever wrote the form is told
-  // once, however many times the schema is built for it.
-  test('should ignore a bound that is no day and name it once', () => {
+  // A bound that is no day is a rule the form cannot read, so it takes no day
+  // rather than every day, and whoever wrote the form is told once, however
+  // many times the schema is built for it.
+  test('should hold back every day for a bound that is no day and name it once', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
       const field = JSON.parse(
@@ -1377,11 +1379,11 @@ describe('date bounds', () => {
       const schema = getDateSchema(field)
       getDateSchema(field)
 
-      expect(schema.parse('2000-01-01')).toBe('2000-01-01')
-      expect(schema.parse('2099-01-01')).toBe('2099-01-01')
+      expect(schema.safeParse('2000-01-01').success).toBe(false)
+      expect(schema.safeParse('2099-01-01').success).toBe(false)
       expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
-        'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field has no minimum',
-        'check_in: advanced.length.max is "20/10/2026", which is no yyyy-MM-dd day, so the field has no maximum',
+        'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field takes no day',
+        'check_in: advanced.length.max is "20/10/2026", which is no yyyy-MM-dd day, so the field takes no day',
       ])
     } finally {
       warn.mockRestore()
@@ -1416,9 +1418,9 @@ describe('date bounds', () => {
         ) as DateField
       )
 
-      expect(schema.parse('2000-01-01')).toBe('2000-01-01')
+      expect(schema.safeParse('2000-01-01').success).toBe(false)
       expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
-        'check_in: advanced.length points at #/context/stay, which nothing resolved, so the field has no bounds',
+        'check_in: advanced.length points at #/context/stay, which nothing resolved, so the field takes no day',
       ])
     } finally {
       warn.mockRestore()
@@ -1438,6 +1440,27 @@ describe('date bounds', () => {
       expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
         'check_in: advanced.length.min is after advanced.length.max, so no day passes',
       ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})
+
+// A range is two days, and each answers to the rules of one: a rule the form
+// cannot read holds back every range as it holds back every day.
+describe('a date rule the form cannot read', () => {
+  test('should hold back every range', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const schema = getDateSchema(
+        JSON.parse(
+          '{"name":"stay","type":"input/date","advanced":{"mode":"range","reserved":{"$ref":"#/context/booked"}}}'
+        ) as DateField
+      )
+
+      expect(
+        schema.safeParse(['2026-12-20', '2026-12-22']).error?.issues[0].message
+      ).toBe('This date cannot be checked')
     } finally {
       warn.mockRestore()
     }

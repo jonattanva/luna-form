@@ -527,12 +527,18 @@ describe('buildFormSchema with dates and context', () => {
       expect(request()).toBe(false)
     })
 
-    test('reserves nothing when the context does not hold the list', () => {
+    // A server that forgot its `context` cannot tell a booked night from a
+    // free one, so it takes none: letting them all through would let a booked
+    // night be booked again, with nothing to say so in production.
+    test('holds back every night when the context does not hold the list', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
+        const schema = buildFormSchema(form())
+
         expect(
-          buildFormSchema(form()).safeParse({ night: '2026-12-24' }).success
-        ).toBe(true)
+          collectIssues(schema.safeParse({ night: '2026-12-23' }).error!)
+        ).toEqual([{ path: 'night', message: 'This date cannot be checked' }])
+        expect(schema.parse({})).toEqual({})
         expect(warn).toHaveBeenCalledTimes(1)
       } finally {
         warn.mockRestore()
@@ -607,28 +613,28 @@ describe('buildFormSchema with dates and context', () => {
       ).toEqual([{ path: 'check_in', message: 'Pick today or a later day' }])
     })
 
-    test('is no bound when the context does not hold it', () => {
+    test('holds back every day when the context does not hold it', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
         expect(
-          buildFormSchema(form()).safeParse({ check_in: '2000-01-01' }).success
-        ).toBe(true)
+          buildFormSchema(form()).safeParse({ check_in: '2099-01-01' }).success
+        ).toBe(false)
       } finally {
         warn.mockRestore()
       }
     })
 
     // A host's context is JavaScript, and the day may not be known yet.
-    test('is no bound, and is named, when the context holds nothing there', () => {
+    test('holds back every day, and is named, when the context holds nothing there', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
         const schema = buildFormSchema(form(), undefined, undefined, {
           today: undefined,
         })
 
-        expect(schema.safeParse({ check_in: '2000-01-01' }).success).toBe(true)
+        expect(schema.safeParse({ check_in: '2099-01-01' }).success).toBe(false)
         expect(warnings(warn)).toEqual([
-          'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field has no minimum',
+          'check_in: advanced.length.min points at #/context/today, which nothing resolved, so the field takes no day',
         ])
       } finally {
         warn.mockRestore()

@@ -313,6 +313,12 @@ function keptOutMessage(
   format: DateFormat,
   translations?: Record<string, string>
 ) {
+  // A rule the field declares that the form cannot read: it is the form's to
+  // fix, not the person's, and no day passes until it is.
+  if (kept.issue === 'unreadable') {
+    return 'This date cannot be checked'
+  }
+
   if (kept.issue === 'reserved') {
     return (
       translateOptional(field.validation?.reserved, translations) ??

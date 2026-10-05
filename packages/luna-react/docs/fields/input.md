@@ -116,7 +116,7 @@ const context = useMemo(() => ({ today }), [today])
 
 The host decides the day and the time zone it is counted in, and a server that validates with `buildFormSchema(sections, translations, definition, context)` gets the same answer as the browser. Keep `context` the same object until the day changes: every field renders again when it is a new one (see [What the host knows](../structure/definition.md#what-the-host-knows-context)).
 
-A bound that is no `yyyy-MM-dd` day, such as `"05/10/2026"`, or a `$ref` the context does not hold or holds as `undefined`, bounds nothing, the way a browser ignores a `min` it cannot read. A development build names it in the console wherever the form reads the bounds, in the browser and on the server alike: once for each field, and again whenever a new `context` resolves them anew. A minimum later than the maximum, which no day passes, is named the same way.
+A bound that is no `yyyy-MM-dd` day, such as `"05/10/2026"`, or a `$ref` the context does not hold or holds as `undefined`, is a rule the form cannot read, so the field takes no day: every day is held back with `This date cannot be checked`, and an optional field left empty still passes. That is deliberate. A server that validates with `buildFormSchema` and forgets its `context` would otherwise let every day through, with nothing in production to say so. The component is not handed such a bound, and a development build names it in the console wherever the form reads the bounds, in the browser and on the server alike: once for each field, and again whenever a new `context` resolves them anew. A minimum later than the maximum, which no day passes, is named the same way.
 
 ### Days nobody can pick
 
@@ -139,7 +139,7 @@ What is booked is usually the host's to know, so the list usually comes through 
 
 The component gets the days as `data-reserved`, sorted, once each and joined by commas, and reads them back as a list with `readDateProps` (see [Date components](custom-inputs.md#date-components)). The form checks them itself, and a server that validates with `buildFormSchema(sections, translations, definition, context)` checks the list it is given at that moment. That holds back a submit made with an old list on screen; two submits for the same day at the same moment are told apart only by the application, when it saves.
 
-An entry that is no `yyyy-MM-dd` day reserves nothing, and neither does a list that is not one, such as a `$ref` the context does not hold. A development build names both, the way it names a bound.
+An entry that is no `yyyy-MM-dd` day, or a list that is not one, such as a `$ref` the context does not hold, is a rule the form cannot read too: the field takes no day, with `This date cannot be checked`, rather than let a booked night through. A development build names both, the way it names a bound.
 
 ### A range of days
 

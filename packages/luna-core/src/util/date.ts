@@ -177,7 +177,7 @@ const NO_YEAR = 'the field offers no year'
 const YEAR_BOUNDS: BoundRules = {
   disordered: NO_YEAR,
   kind: 'whole year',
-  lost: () => NO_YEAR,
+  lost: NO_YEAR,
   needsBoth: true,
 }
 
@@ -533,6 +533,12 @@ export type DateLimits = Readonly<{
   min?: string
   // Sorted and without repeats, the order the component is handed them in.
   reserved: readonly string[]
+  // A rule the field declares that cannot be read: a `$ref` the host did not
+  // resolve, or a bound or a reserved day that is no day. The form cannot tell
+  // which days such a field allows, so it takes none: on a server that forgot
+  // its `context`, taking them all would let a booked night be booked again,
+  // with nothing in production to say so.
+  unreadable: boolean
 }>
 
 type DateBound = 'max' | 'min'
@@ -544,11 +550,12 @@ export type DateIssue =
   | Readonly<{ issue: DateBound; limit: string }>
   | Readonly<{ issue: 'range' }>
   | Readonly<{ issue: 'reserved' }>
+  | Readonly<{ issue: 'unreadable' }>
 
 // A day the form is told about, a bound or a reservation, is a `yyyy-MM-dd`
 // day: the shape a native `<input type="date">` takes for its own `min` and
-// `max`. Anything else is no day, the way a browser ignores a `min` it cannot
-// read, so the control and the schema never disagree about one.
+// `max`. Anything else is no day: the control is not handed it, and the schema,
+// which cannot tell what such a rule allows, takes no day at all.
 function readIsoDay(value: unknown): string | undefined {
   return isString(value) && ISO_DATE.test(value)
     ? toNativeDate(value, ISO_FORMAT) || undefined
@@ -578,7 +585,7 @@ function readDays(values: readonly unknown[]): ReadDays {
 }
 
 const NO_DAYS: ReadDays = { days: [], rejected: [] }
-const NO_LIMITS: DateLimits = { reserved: NO_DAYS.days }
+const NO_LIMITS: DateLimits = { reserved: NO_DAYS.days, unreadable: false }
 
 // What a field allows is read once per declaration. The form reads it on every
 // render, and the `advanced` that declares it stays the same object for as long
@@ -612,10 +619,17 @@ export function buildDateLimits(field: DateField): DateLimits {
   const reserved = Array.isArray(advanced.reserved)
     ? readDays(advanced.reserved)
     : NO_DAYS
-  const limits: DateLimits = {
+  const bounds = {
     max: readIsoDay(advanced.length?.max),
     min: readIsoDay(advanced.length?.min),
+  }
+  const limits: DateLimits = {
+    ...bounds,
     reserved: reserved.days,
+    unreadable:
+      isUnreadableLength(advanced.length, bounds) ||
+      (advanced.reserved != null &&
+        (!Array.isArray(advanced.reserved) || reserved.rejected.length > 0)),
   }
   readLimits.set(advanced, limits)
 
@@ -632,9 +646,32 @@ export function buildDateLimits(field: DateField): DateLimits {
   return limits
 }
 
+// Bounds that are declared and cannot be read: the whole `length` a `$ref`
+// nothing resolved, or a bound that is no day.
+function isUnreadableLength(
+  length: unknown,
+  read: Readonly<{ max?: string; min?: string }>
+): boolean {
+  if (length == null) {
+    return false
+  }
+
+  if (!isObject(length) || refOf(length) !== undefined) {
+    return true
+  }
+
+  return BOUNDS.some(
+    (bound) => length[bound] != null && read[bound] === undefined
+  )
+}
+
 // What keeps a day out, if anything does. Compared as text: in `yyyy-MM-dd` the
 // order of the strings is the order of the days, with no time zone in the way.
 export function checkDay(day: string, limits: DateLimits): DateIssue | null {
+  if (limits.unreadable) {
+    return { issue: 'unreadable' }
+  }
+
   if (limits.min !== undefined && day < limits.min) {
     return { issue: 'min', limit: limits.min }
   }
@@ -690,16 +727,12 @@ export function checkRange(
     : null
 }
 
-const BOUND_NAMES: ReadonlyArray<readonly [DateBound, 'maximum' | 'minimum']> =
-  [
-    ['min', 'minimum'],
-    ['max', 'maximum'],
-  ]
+const BOUNDS: readonly DateBound[] = ['min', 'max']
 
 // What is wrong with the limits a field declares, given what was read from
-// them, for whoever wrote it. A bound or a reserved day that is no day limits
-// nothing -- a `$ref` that nothing resolved is the usual way to get one -- and a
-// minimum after the maximum lets no day through.
+// them, for whoever wrote it. A bound or a reserved day that is no day -- a
+// `$ref` that nothing resolved is the usual way to get one -- or a minimum
+// after the maximum lets no day through.
 function describeDateLimits(
   name: string,
   advanced: Record<string, unknown>,
@@ -713,19 +746,21 @@ function describeDateLimits(
 }
 
 // How a field's bounds fail it, for `describeBounds`: what a bound that is not
-// a value of its `kind` is, what the field is left with when a bound or both
-// are lost, and whether it needs both to offer anything at all.
+// a value of its `kind` is, what the field is left with when a bound is lost
+// or the two are out of order, and whether it needs both to offer anything.
 type BoundRules = Readonly<{
   disordered: string
   kind: string
-  lost: (noun: 'bounds' | 'maximum' | 'minimum') => string
+  lost: string
   needsBoth: boolean
 }>
+
+const NO_DAY = 'the field takes no day'
 
 const DATE_BOUNDS: BoundRules = {
   disordered: 'no day passes',
   kind: 'yyyy-MM-dd day',
-  lost: (noun) => `the field has no ${noun}`,
+  lost: NO_DAY,
   needsBoth: false,
 }
 
@@ -742,19 +777,19 @@ function describeBounds<T extends number | string>(
   const unresolved = refOf(length)
   if (unresolved !== undefined) {
     return [
-      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so ${rules.lost('bounds')}`,
+      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so ${rules.lost}`,
     ]
   }
 
   const declared = isObject(length) ? length : {}
   if (rules.needsBoth && declared.min == null && declared.max == null) {
     return [
-      `${name}: advanced.length.min and .max are missing, so ${rules.lost('bounds')}`,
+      `${name}: advanced.length.min and .max are missing, so ${rules.lost}`,
     ]
   }
 
   const problems: string[] = []
-  for (const [bound, noun] of BOUND_NAMES) {
+  for (const bound of BOUNDS) {
     const value = declared[bound]
     if (limits[bound] !== undefined || (value == null && !rules.needsBoth)) {
       continue
@@ -763,8 +798,8 @@ function describeBounds<T extends number | string>(
     const key = `${name}: advanced.length.${bound}`
     problems.push(
       value == null
-        ? `${key} is missing, so ${rules.lost(noun)}`
-        : describeValue(key, value, rules.kind, rules.lost(noun))
+        ? `${key} is missing, so ${rules.lost}`
+        : describeValue(key, value, rules.kind, rules.lost)
     )
   }
 
@@ -795,18 +830,13 @@ function describeReserved(
     const unresolved = refOf(reserved)
     return [
       unresolved !== undefined
-        ? `${key} points at ${unresolved}, which nothing resolved, so no day is reserved`
-        : `${key} is ${JSON.stringify(reserved)}, which is no list of days, so no day is reserved`,
+        ? `${key} points at ${unresolved}, which nothing resolved, so ${NO_DAY}`
+        : `${key} is ${JSON.stringify(reserved)}, which is no list of days, so ${NO_DAY}`,
     ]
   }
 
   return rejected.map((index) =>
-    describeValue(
-      `${key}[${index}]`,
-      reserved[index],
-      'yyyy-MM-dd day',
-      'it reserves nothing'
-    )
+    describeValue(`${key}[${index}]`, reserved[index], 'yyyy-MM-dd day', NO_DAY)
   )
 }
 
