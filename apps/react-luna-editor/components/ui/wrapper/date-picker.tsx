@@ -21,6 +21,9 @@ import {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const ISO_FORMAT = 'yyyy-MM-dd'
 
+// Struck through, as shadcn's booked-dates example does.
+const RESERVED_CLASS = { reserved: '[&>button]:line-through opacity-100' }
+
 // `yyyy-MM-dd` is a day, not an instant, so it is read in local time:
 // `new Date('2026-10-02')` is midnight UTC, the day before anywhere west of
 // Greenwich. As strict as the form is: `2024-6-5` is no day here either.
@@ -48,6 +51,7 @@ export function DatePickerInput({
   ...props
 }: {
   'data-format'?: string
+  'data-reserved'?: string
   defaultValue?: string
   max?: string
   min?: string
@@ -55,7 +59,7 @@ export function DatePickerInput({
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   value?: string
 }) {
-  const { format, max, min } = readDateProps(props)
+  const { format, max, min, reserved } = readDateProps(props)
 
   // The client form hands over `value`, the server form `defaultValue`.
   const current = value ?? defaultValue
@@ -97,14 +101,24 @@ export function DatePickerInput({
 
   const selectedDate = parseDay(current)
 
-  // A day outside the bounds cannot be picked and a month outside them cannot
-  // be reached. With no day selected, the calendar opens on today, or on the
-  // bound nearest to it. The form checks the same bounds for what is typed.
+  // A day outside the bounds or a reserved one cannot be picked, and a month
+  // outside the bounds cannot be reached. With no day selected, the calendar
+  // opens on today, or on the bound nearest to it. The form checks the same
+  // days for what is typed.
   const firstDay = parseDay(min)
   const lastDay = parseDay(max)
-  const outside = [
+
+  // The calendar asks every day it shows whether it is reserved, on every
+  // render, so each day is looked up in a set rather than compared with every
+  // reserved date.
+  const reservedDays = new Set(reserved)
+  const isReserved = (date: Date) =>
+    reservedDays.has(fnsFormat(date, ISO_FORMAT))
+
+  const unavailable = [
     ...(firstDay ? [{ before: firstDay }] : []),
     ...(lastDay ? [{ after: lastDay }] : []),
+    isReserved,
   ]
 
   return (
@@ -145,9 +159,11 @@ export function DatePickerInput({
               mode="single"
               selected={selectedDate}
               defaultMonth={selectedDate}
-              disabled={outside}
+              disabled={unavailable}
               startMonth={firstDay}
               endMonth={lastDay}
+              modifiers={{ reserved: isReserved }}
+              modifiersClassNames={RESERVED_CLASS}
               onSelect={handleCalendarSelect}
             />
           </PopoverContent>

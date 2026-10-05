@@ -117,6 +117,29 @@ The host decides the day and the time zone it is counted in, and a server that v
 
 A bound that is no `yyyy-MM-dd` day, such as `"05/10/2026"`, or a `$ref` the context does not hold or holds as `undefined`, bounds nothing, the way a browser ignores a `min` it cannot read. A development build names it in the console wherever the form reads the bounds, in the browser and on the server alike: once for each field, and again whenever a new `context` resolves them anew. A minimum later than the maximum, which no day passes, is named the same way.
 
+### Days nobody can pick
+
+`advanced.reserved` lists days nobody may pick, as `yyyy-MM-dd`: a night already booked, a holiday. `validation.reserved` is the message for one of them; without it, the message is `This date is not available`. The bounds are checked first, so a reserved day outside them gets the bound's message.
+
+```json
+{
+  "name": "night",
+  "type": "input/date",
+  "advanced": { "reserved": ["2026-12-24", "2026-12-25"] },
+  "validation": { "reserved": "That night is taken" }
+}
+```
+
+What is booked is usually the host's to know, so the list usually comes through [`context`](../structure/definition.md#what-the-host-knows-context):
+
+```json
+"advanced": { "reserved": { "$ref": "#/context/booked" } }
+```
+
+The component gets the days as `data-reserved`, sorted, once each and joined by commas, and reads them back as a list with `readDateProps` (see [Date components](custom-inputs.md#date-components)). The form checks them itself, and a server that validates with `buildFormSchema(sections, translations, definition, context)` checks the list it is given at that moment. That holds back a submit made with an old list on screen; two submits for the same day at the same moment are told apart only by the application, when it saves.
+
+An entry that is no `yyyy-MM-dd` day reserves nothing, and neither does a list that is not one, such as a `$ref` the context does not hold. A development build names both, the way it names a bound.
+
 ---
 
 ## Validation (`validation` object)
@@ -127,6 +150,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
 - **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, a number out of range, a day before the first or after the last.
+- **`reserved`** _(string)_: `input/date` only. The message shown for a day its `advanced.reserved` lists. Without it, the message is `This date is not available`.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:
   - `field`: Optional target reference string.

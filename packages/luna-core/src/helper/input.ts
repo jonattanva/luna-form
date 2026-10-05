@@ -1,5 +1,6 @@
 import {
   DATA_FORMAT,
+  DATA_RESERVED,
   MAX,
   MAX_LENGTH,
   MIN,
@@ -250,18 +251,21 @@ function defineTime(field: Field) {
 }
 
 // A date's bounds go on as `min` and `max`, which a native date input uses as
-// they are and a calendar from any library reads back with `readDateProps`.
+// they are, and its reserved days as one list in a data attribute, which any
+// element accepts, where an array in an unknown prop would reach the DOM as
+// text. A calendar from any library reads them back with `readDateProps`.
 function defineDate(field: Field) {
   const format = dateFormatOf(field)
   if (!format) {
     return {}
   }
 
-  const { max, min } = buildDateLimits(field)
+  const { max, min, reserved } = buildDateLimits(field)
   return {
     [DATA_FORMAT]: format,
     ...(min !== undefined && { [MIN]: min }),
     ...(max !== undefined && { [MAX]: max }),
+    ...(reserved.length > 0 && { [DATA_RESERVED]: reserved.join(',') }),
   }
 }
 

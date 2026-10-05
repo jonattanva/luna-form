@@ -60,16 +60,18 @@ describe('readDateProps', () => {
   test('should read the format the field put on its props', () => {
     expect(readDateProps({ 'data-format': 'dd/MM/yyyy' })).toEqual({
       format: 'dd/MM/yyyy',
+      reserved: [],
     })
   })
 
   test('should fall back to the default format when there is none', () => {
-    expect(readDateProps({})).toEqual({ format: 'MMMM d, yyyy' })
+    expect(readDateProps({})).toEqual({ format: 'MMMM d, yyyy', reserved: [] })
   })
 
   test('should fall back to the default format for one the form does not know', () => {
     expect(readDateProps({ 'data-format': 'DD/MM/YYYY' })).toEqual({
       format: 'MMMM d, yyyy',
+      reserved: [],
     })
   })
 
@@ -80,12 +82,39 @@ describe('readDateProps', () => {
         max: '2026-10-20',
         min: '2026-10-05',
       })
-    ).toEqual({ format: 'dd/MM/yyyy', max: '2026-10-20', min: '2026-10-05' })
+    ).toEqual({
+      format: 'dd/MM/yyyy',
+      max: '2026-10-20',
+      min: '2026-10-05',
+      reserved: [],
+    })
   })
 
   test('should read no bound that is no yyyy-MM-dd day', () => {
     expect(readDateProps({ max: '2026-02-30', min: '05/10/2026' })).toEqual({
       format: 'MMMM d, yyyy',
+      reserved: [],
     })
+  })
+
+  test('should read the reserved days as a list', () => {
+    expect(
+      readDateProps({ 'data-reserved': '2026-12-24,2026-12-25' }).reserved
+    ).toEqual(['2026-12-24', '2026-12-25'])
+  })
+
+  // A component renders on every keystroke, and the list it is handed is the
+  // same text each time: it is read once, and comes back as the same array, so
+  // a component can memoize on it.
+  test('should hand back the same list for the same reserved days', () => {
+    const props = { 'data-reserved': '2026-12-24,2026-12-25' }
+    expect(readDateProps(props).reserved).toBe(readDateProps(props).reserved)
+  })
+
+  test('should drop from the reserved days what is no yyyy-MM-dd day', () => {
+    expect(
+      readDateProps({ 'data-reserved': '2026-12-24,24/12/2026,,2026-02-30' })
+        .reserved
+    ).toEqual(['2026-12-24'])
   })
 })

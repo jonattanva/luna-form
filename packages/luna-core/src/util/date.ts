@@ -1,5 +1,6 @@
 import {
   DATA_FORMAT,
+  DATA_RESERVED,
   DATE_FORMATS,
   MAX,
   MIN,
@@ -323,62 +324,118 @@ export function getDateFormat(field: DateField): DateFormat {
 export type DateLimits = Readonly<{
   max?: string
   min?: string
+  // Sorted and without repeats, the order the component is handed them in.
+  reserved: readonly string[]
 }>
 
-export type DateBound = keyof DateLimits
+type DateBound = 'max' | 'min'
 
-// A bound is a `yyyy-MM-dd` day, the shape a native `<input type="date">` takes
-// for its own `min` and `max`. Anything else bounds nothing, the way a browser
-// ignores a `min` it cannot read, so the control and the schema never disagree
-// about one.
-function readBound(value: unknown): string | undefined {
+// What keeps a day out: a bound it falls outside of, with the day it is
+// bounded by, or a reservation.
+export type DateIssue =
+  | Readonly<{ issue: DateBound; limit: string }>
+  | Readonly<{ issue: 'reserved' }>
+
+// A day the form is told about, a bound or a reservation, is a `yyyy-MM-dd`
+// day: the shape a native `<input type="date">` takes for its own `min` and
+// `max`. Anything else is no day, the way a browser ignores a `min` it cannot
+// read, so the control and the schema never disagree about one.
+function readIsoDay(value: unknown): string | undefined {
   return isString(value) && ISO_DATE.test(value)
     ? toNativeDate(value, ISO_FORMAT) || undefined
     : undefined
 }
 
-// The bounds a field declares are named once. The form copies a field -- an
-// optional one in the headless schema, a read-only one while it renders -- but
-// never the `length` it declares, so that object is what is remembered.
-const reportedLimits = new WeakSet<object>()
+// The days of a list, sorted and once each, and where the entries that are no
+// day sit, read in one pass: what names those entries does not read the list
+// again to find them.
+type ReadDays = Readonly<{
+  days: readonly string[]
+  rejected: readonly number[]
+}>
+
+function readDays(values: readonly unknown[]): ReadDays {
+  const days = new Set<string>()
+  const rejected: number[] = []
+  values.forEach((value, index) => {
+    const day = readIsoDay(value)
+    if (day === undefined) {
+      rejected.push(index)
+    } else {
+      days.add(day)
+    }
+  })
+  return { days: [...days].sort(), rejected }
+}
+
+const NO_DAYS: ReadDays = { days: [], rejected: [] }
+const NO_LIMITS: DateLimits = { reserved: NO_DAYS.days }
+
+// What a field allows is read once per declaration. The form reads it on every
+// render, and the `advanced` that declares it stays the same object for as long
+// as nothing in it changes: the form copies a field -- an optional one in the
+// headless schema, a read-only one while it renders -- but never its
+// `advanced`. A declaration whose `$ref`s resolve again -- on every request on
+// the server, with every new `context` in the browser -- is a new object, so a
+// list the host has added to is read as it is now.
+const readLimits = new WeakMap<object, DateLimits>()
 
 /**
- * The first and the last day a date field allows, both included, read once for
- * the props its component is handed and for the schema that checks it.
+ * The days a date field allows: the first and the last, both included, and
+ * the ones nobody may pick. Read once for the props its component is handed and
+ * for the schema that checks it, so the two cannot disagree.
  *
- * It is the one place the bounds are read, on the server and in the browser, so
- * it is where a bound that bounds nothing is named for whoever wrote the form.
+ * It is the one place the limits are read, on the server and in the browser, so
+ * it is where one that limits nothing is named for whoever wrote the form.
  */
 export function buildDateLimits(field: DateField): DateLimits {
-  const length = field.advanced?.length
-  const limits: DateLimits = {
-    max: readBound(length?.max),
-    min: readBound(length?.min),
+  const advanced = field.advanced
+  if (!isObject(advanced)) {
+    return NO_LIMITS
   }
 
-  if (isObject(length) && !reportedLimits.has(length)) {
-    reportedLimits.add(length)
-    for (const problem of describeDateLimits(field.name, length, limits)) {
-      logger.warn(problem)
-    }
+  const known = readLimits.get(advanced)
+  if (known) {
+    return known
+  }
+
+  // Only an array is a list: a `$ref` that nothing resolved is still an object.
+  const reserved = Array.isArray(advanced.reserved)
+    ? readDays(advanced.reserved)
+    : NO_DAYS
+  const limits: DateLimits = {
+    max: readIsoDay(advanced.length?.max),
+    min: readIsoDay(advanced.length?.min),
+    reserved: reserved.days,
+  }
+  readLimits.set(advanced, limits)
+
+  const problems = describeDateLimits(
+    field.name,
+    advanced,
+    limits,
+    reserved.rejected
+  )
+  for (const problem of problems) {
+    logger.warn(problem)
   }
 
   return limits
 }
 
-// The bound a day falls outside of, and the day it is bounded by. Compared as
-// text: in `yyyy-MM-dd` the order of the strings is the order of the days,
-// with no time zone in the way.
-export function checkDay(
-  day: string,
-  limits: DateLimits
-): Readonly<{ bound: DateBound; limit: string }> | null {
+// What keeps a day out, if anything does. Compared as text: in `yyyy-MM-dd` the
+// order of the strings is the order of the days, with no time zone in the way.
+export function checkDay(day: string, limits: DateLimits): DateIssue | null {
   if (limits.min !== undefined && day < limits.min) {
-    return { bound: 'min', limit: limits.min }
+    return { issue: 'min', limit: limits.min }
   }
 
   if (limits.max !== undefined && day > limits.max) {
-    return { bound: 'max', limit: limits.max }
+    return { issue: 'max', limit: limits.max }
+  }
+
+  if (limits.reserved.includes(day)) {
+    return { issue: 'reserved' }
   }
 
   return null
@@ -389,15 +446,31 @@ const BOUND_NAMES: ReadonlyArray<[DateBound, string]> = [
   ['max', 'maximum'],
 ]
 
-// What is wrong with the bounds a field declares, given what was read from
-// them. A bound that is no day bounds nothing -- a `$ref` that nothing resolved
-// is the usual way to get one -- and a minimum after the maximum lets no day
-// through.
+// What is wrong with the limits a field declares, given what was read from
+// them, for whoever wrote it. A bound or a reserved day that is no day limits
+// nothing -- a `$ref` that nothing resolved is the usual way to get one -- and a
+// minimum after the maximum lets no day through.
 function describeDateLimits(
   name: string,
-  length: Record<string, unknown>,
+  advanced: Record<string, unknown>,
+  limits: DateLimits,
+  rejected: readonly number[]
+): string[] {
+  return [
+    ...describeLength(name, advanced.length, limits),
+    ...describeReserved(name, advanced.reserved, rejected),
+  ]
+}
+
+function describeLength(
+  name: string,
+  length: unknown,
   limits: DateLimits
 ): string[] {
+  if (!isObject(length)) {
+    return []
+  }
+
   const unresolved = refOf(length)
   if (unresolved !== undefined) {
     return [
@@ -412,12 +485,12 @@ function describeDateLimits(
       continue
     }
 
-    const key = `${name}: advanced.length.${bound}`
-    const ref = refOf(value)
     problems.push(
-      ref !== undefined
-        ? `${key} points at ${ref}, which nothing resolved, so the field has no ${noun}`
-        : `${key} is ${JSON.stringify(value)}, which is no yyyy-MM-dd day, so the field has no ${noun}`
+      describeDay(
+        `${name}: advanced.length.${bound}`,
+        value,
+        `the field has no ${noun}`
+      )
     )
   }
 
@@ -434,16 +507,48 @@ function describeDateLimits(
   return problems
 }
 
+function describeReserved(
+  name: string,
+  reserved: unknown,
+  rejected: readonly number[]
+): string[] {
+  if (reserved == null) {
+    return []
+  }
+
+  const key = `${name}: advanced.reserved`
+  if (!Array.isArray(reserved)) {
+    const unresolved = refOf(reserved)
+    return [
+      unresolved !== undefined
+        ? `${key} points at ${unresolved}, which nothing resolved, so no day is reserved`
+        : `${key} is ${JSON.stringify(reserved)}, which is no list of days, so no day is reserved`,
+    ]
+  }
+
+  return rejected.map((index) =>
+    describeDay(`${key}[${index}]`, reserved[index], 'it reserves nothing')
+  )
+}
+
+function describeDay(key: string, value: unknown, outcome: string) {
+  const unresolved = refOf(value)
+  return unresolved !== undefined
+    ? `${key} points at ${unresolved}, which nothing resolved, so ${outcome}`
+    : `${key} is ${JSON.stringify(value)}, which is no yyyy-MM-dd day, so ${outcome}`
+}
+
 export type DateProps = Readonly<{
   format: DateFormat
   max?: string
   min?: string
+  reserved: readonly string[]
 }>
 
 /**
  * What a date component reads back from the props the form gave it: the format
- * to show a day in, and the first and the last day it may offer, as
- * `yyyy-MM-dd`.
+ * to show a day in, the first and the last day it may offer, and the days it
+ * may not, all as `yyyy-MM-dd`.
  *
  * The form writes a date field's rules as attributes, so a native input and a
  * calendar from any library can both carry them; this is the other half, and
@@ -451,11 +556,32 @@ export type DateProps = Readonly<{
  * to encode.
  */
 export function readDateProps(
-  props: Readonly<{ [DATA_FORMAT]?: string; [MAX]?: string; [MIN]?: string }>
+  props: Readonly<{
+    [DATA_FORMAT]?: string
+    [DATA_RESERVED]?: string
+    [MAX]?: string
+    [MIN]?: string
+  }>
 ): DateProps {
   return {
     format: toDateFormat(props[DATA_FORMAT]),
-    max: readBound(props[MAX]),
-    min: readBound(props[MIN]),
+    max: readIsoDay(props[MAX]),
+    min: readIsoDay(props[MIN]),
+    reserved: readReservedProp(props[DATA_RESERVED]),
   }
+}
+
+// The reserved days a component was last handed. It renders on every keystroke
+// with the same text, so the text is read once, and the same array comes back
+// for it: a component can memoize on what it gets.
+let lastReserved: Readonly<{ text: string; days: readonly string[] }> = {
+  text: '',
+  days: NO_DAYS.days,
+}
+
+function readReservedProp(text = ''): readonly string[] {
+  if (text !== lastReserved.text) {
+    lastReserved = { text, days: readDays(text.split(',')).days }
+  }
+  return lastReserved.days
 }
