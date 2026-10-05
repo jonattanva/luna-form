@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791173590220,
+  "lastUpdate": 1791173615265,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "69e1f0f2214fefdcb41fddf5376af68f28acbf1f",
-          "message": "docs: remove deprecated collapsible property from list field and update types",
-          "timestamp": "2026-05-11T22:11:48-05:00",
-          "tree_id": "7fb26dc27d715b820c2e923623e88caada13222e",
-          "url": "https://github.com/jonattanva/luna-form/commit/69e1f0f2214fefdcb41fddf5376af68f28acbf1f"
-        },
-        "date": 1778555589395,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 279,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 617,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "f657ac7f184bfb0839a7e2c77f4d7aff4f671fd6",
           "message": "feat: add reactive preview label conditions for list items and bump versions to 0.0.50",
           "timestamp": "2026-05-12T11:28:19-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 620,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb",
+          "message": "test(hidden-clear): type only once the select has finished closing\n\n\"keeps an input reverted to its static hidden that declares keepValue\"\ntimed out in Firefox in two of four full-suite runs, on the last step: the\nnote came back empty. It was never the hide. The trace shows the note's fill\nnever reached the form -- the input read \"\" straight after it, and the form\nlogged four value changes where five were due.\n\nThe editor's select plays an exit animation (`data-[state=closed]:animate-out`,\nwhich `reducedMotion` does not stop) and only then unmounts, and Radix's\nFocusScope hands focus back to the trigger a task after that. The field the\noption reveals is on screen first, so under load `toBeVisible` passed, `fill`\nfocused the note, lost focus to the closing popup, and typed into nothing. A\nprobe with the close stretched to one second lost keystrokes the same way in\nall three browsers.\n\n`choose` now waits for the listbox to go and for the trigger to hold focus,\nwhich is the last thing the close does. The helper also checks both fields hold\nwhat was typed before hiding them: a fill that never landed used to read as a\nvalue the hide lost, and let every case that expects an empty field pass on it.\n\nFirefox, 8 workers, the test repeated 40 times: 2 failures before, none after.\nFull Firefox suite at 3 workers: 591 passed.",
+          "timestamp": "2026-10-04T23:12:25-05:00",
+          "tree_id": "480aa8aecab644c935e6a8ff1a2a8fa3badeb7b8",
+          "url": "https://github.com/jonattanva/luna-form/commit/1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb"
+        },
+        "date": 1791173615078,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 201,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 148,
             "unit": "ms"
           }
         ]
