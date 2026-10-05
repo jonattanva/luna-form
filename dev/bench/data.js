@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791208719118,
+  "lastUpdate": 1791208751493,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "049f1d18dd79fc0827f7994b51a8d1014b6bb503",
-          "message": "chore: reduce benchmark noise by increasing iterations and relaxing thresholds",
-          "timestamp": "2026-05-12T17:21:28-05:00",
-          "tree_id": "0cf720b5a9cefa05102c1d74cd6d4a725e7c1bc0",
-          "url": "https://github.com/jonattanva/luna-form/commit/049f1d18dd79fc0827f7994b51a8d1014b6bb503"
-        },
-        "date": 1778624566250,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 265,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 609,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "ae37df7417e08d82615fd0a34f48ebe9b98d370b",
           "message": "upgrade dependecies",
           "timestamp": "2026-05-14T11:37:49-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 455,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9b772eb80d722e9f86b98cda0cbaa48605798ed2",
+          "message": "Merge pull request #110 from jonattanva/fix/field-own-disabled\n\nfix(field): a field's own disabled locks its control on both render paths",
+          "timestamp": "2026-10-05T08:57:43-05:00",
+          "tree_id": "3fb7d5c3912e5b64fc68958067161800b6057d55",
+          "url": "https://github.com/jonattanva/luna-form/commit/9b772eb80d722e9f86b98cda0cbaa48605798ed2"
+        },
+        "date": 1791208751446,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 312,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 612,
             "unit": "ms"
           }
         ]
