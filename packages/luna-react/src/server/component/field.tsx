@@ -36,10 +36,9 @@ export function Field(props: FieldProps) {
           disabled={disabled}
           field={props.field}
           horizontal={horizontal}
-          lang={props.lang}
+          localization={props.localization}
           now={props.now}
           readOnly={readOnly}
-          translations={props.translations}
         >
           {props.children}
         </InputBase>

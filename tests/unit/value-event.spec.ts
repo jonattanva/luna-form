@@ -285,3 +285,17 @@ describe('handle value event', () => {
     expect(calls[0]).toEqual({ name: 'simple_body', value: rows })
   })
 })
+
+// An event formats in the language of the form, as its label does.
+describe('handleValueEvent language', () => {
+  test('should format a payload in the language it is given', () => {
+    const { apply, calls } = createApply()
+    const events: ValueEvent[] = [
+      { action: 'value', value: { total: '{value | number}' } },
+    ]
+
+    handleValueEvent({ value: 1234.5 }, events, apply, { locale: 'de' })
+
+    expect(calls).toEqual([{ name: 'total', value: '1.234,5' }])
+  })
+})

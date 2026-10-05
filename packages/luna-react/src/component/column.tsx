@@ -1,5 +1,5 @@
 import { DescriptionText, type DescriptionTextProps } from './description'
-import { getColumn, type Column } from '@luna-form/core'
+import { getColumn, type Column, type Localization } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import type { Config } from '../type'
 
@@ -10,7 +10,7 @@ export function Column(
     config?: Config
     context?: Record<string, unknown>
     description?: React.ComponentType<DescriptionTextProps>
-    translations?: Record<string, string>
+    localization?: Localization
   }>
 ) {
   const Description = props.description ?? DescriptionText
@@ -28,8 +28,8 @@ export function Column(
         <Description
           config={props.config}
           context={props.context}
+          localization={props.localization}
           text={props.column.description}
-          translations={props.translations}
         />
       )}
     </div>

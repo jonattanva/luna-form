@@ -4,6 +4,7 @@ import * as React from 'react'
 import { format as fnsFormat, isValid, parse } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
+import { enUS, es, type DayPickerLocale } from 'react-day-picker/locale'
 import { readDateProps } from 'react-luna-form/config'
 
 import { Calendar } from '@/components/ui/calendar'
@@ -22,6 +23,10 @@ import {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const ISO_FORMAT = 'yyyy-MM-dd'
 
+// The languages this demo names months and days in, by base language: the
+// form's `lang`, which `readDateProps` hands back, English otherwise.
+const LOCALES: Record<string, DayPickerLocale> = { en: enUS, es }
+
 // Struck through, as shadcn's booked-dates example does.
 const RESERVED_CLASS = { reserved: '[&>button]:line-through opacity-100' }
 
@@ -39,9 +44,13 @@ function parseDay(value?: string): Date | undefined {
 
 // The form hands over a day as `yyyy-MM-dd`, or the text someone typed that is
 // no day: the first is shown in the field's format, the second as it is.
-function display(value: string | undefined, format: string): string {
+function display(
+  value: string | undefined,
+  format: string,
+  locale: DayPickerLocale
+): string {
   const day = parseDay(value)
-  return day ? fnsFormat(day, format) : (value ?? '')
+  return day ? fnsFormat(day, format, { locale }) : (value ?? '')
 }
 
 function toIso(day?: Date): string {
@@ -60,13 +69,15 @@ export function DatePickerInput({
   'data-reserved'?: string
   defaultValue?: string | string[]
   disabled?: boolean
+  lang?: string
   max?: string
   min?: string
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   onChange?: (event: { target: { value: string | string[] } }) => void
   value?: string | string[]
 }) {
-  const { format, max, min, mode, reserved } = readDateProps(props)
+  const { format, lang, max, min, mode, reserved } = readDateProps(props)
+  const locale = LOCALES[lang.split('-')[0]] ?? enUS
 
   // The client form hands over `value`, the server form `defaultValue`: a day,
   // or `[from, to]` for a range.
@@ -131,6 +142,7 @@ export function DatePickerInput({
   // own props: in range mode react-day-picker's `min` and `max` are a number of
   // days the range may span, not dates.
   const limits = {
+    locale,
     disabled: [
       ...(firstDay ? [{ before: firstDay }] : []),
       ...(lastDay ? [{ after: lastDay }] : []),
@@ -151,10 +163,13 @@ export function DatePickerInput({
           readOnly: true,
           value: [from, to]
             .filter((end) => end)
-            .map((end) => display(end, format))
+            .map((end) => display(end, format, locale))
             .join(' - '),
         }
-      : { onChange: handleValueChange, value: draft ?? display(day, format) }
+      : {
+          onChange: handleValueChange,
+          value: draft ?? display(day, format, locale),
+        }
 
   return (
     <InputGroup>

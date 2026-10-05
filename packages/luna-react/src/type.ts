@@ -6,6 +6,7 @@ import type {
   Field,
   Fields,
   FormStateError,
+  Localization,
 } from '@luna-form/core'
 
 export type Slot = (props: {
@@ -22,6 +23,9 @@ export type Children = (props: {
   dataAttributes?: DataAttributes
   field: Field
   horizontal?: boolean
+  // The form's language and dictionary, which the field's label, description
+  // and change events write with.
+  localization?: Localization
   readOnly?: boolean
 }) => React.ReactNode
 

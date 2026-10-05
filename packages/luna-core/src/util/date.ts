@@ -11,6 +11,8 @@ import { isObject, isString } from './is-type'
 import { logger } from './logger'
 import { refOf } from './prepare'
 import { isValid, parse, parseISO, format as fnsFormat } from 'date-fns'
+import { enUS, es } from 'date-fns/locale'
+import type { Locale } from 'date-fns'
 import type {
   Date as DateField,
   DateFormat,
@@ -44,23 +46,46 @@ const getSupportedTimezones = (): string[] =>
       ).supportedValuesOf('timeZone')
     : []
 
-// Resolving to the runtime locale is what `toLocaleString` already did before
-// `lang` was threaded through, so an absent or unusable tag keeps the previous
-// behavior instead of forcing a language on the form.
-const DEFAULT_LOCALE = 'default'
+// A form without a language speaks English, the language of its labels, on
+// every machine. The machine's own language is the browser's on the client
+// and the process's on the server, and the two renders would disagree.
+const DEFAULT_LOCALE = 'en'
 
-function toLocale(locale?: string): string {
-  if (!locale) {
-    return DEFAULT_LOCALE
-  }
+// A few tags, as many languages as an application serves; a server handed one
+// per request from a header keeps no more.
+const READ_LOCALES = 32
+const readLocales = new Map<string, string>()
 
+/**
+ * The language a form writes its months, days, numbers, dates and dictionary
+ * in: its `lang`, as a canonical tag, and English without one, for one that is
+ * no tag, or for one the runtime knows no language for. It is the one reading
+ * of the language, so everything the form writes agrees on it.
+ */
+export function toLocale(locale?: string): string {
+  return locale
+    ? remember(readLocales, locale, () => canonicalLocale(locale), READ_LOCALES)
+    : DEFAULT_LOCALE
+}
+
+function canonicalLocale(locale: string): string {
   try {
     // A malformed tag (`es_MX`, `español`) throws a RangeError here rather than
-    // deeper inside toLocaleString, where it would take the whole form down.
-    return Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE
+    // deeper inside `Intl`, where it would take the whole form down. A tag that
+    // is well formed but names no language the runtime has (`sp`, `zz`) would
+    // be written in the machine's own language, so it is none either.
+    const tag = Intl.getCanonicalLocales(locale)[0]
+    return tag && Intl.DateTimeFormat.supportedLocalesOf(tag).length > 0
+      ? tag
+      : DEFAULT_LOCALE
   } catch {
     return DEFAULT_LOCALE
   }
+}
+
+/** The base language of a form's language: `es` for `es-CO`. */
+export function baseLanguage(locale?: string): string {
+  return toLocale(locale).split('-')[0]
 }
 
 export function getMonth(locale?: string) {
@@ -397,8 +422,29 @@ function readDay(value: string, format: DateFormat): Date | undefined {
     return undefined
   }
 
+  if (ISO_DATE.test(text)) {
+    return parseDay(text, ISO_FORMAT)
+  }
+
+  // In either language the form writes month and day names in: a form in
+  // Spanish shows `octubre 2, 2026`, and that is the text a person edits.
+  for (const locale of Object.values(DATE_FNS_LOCALES)) {
+    const day = parseDay(text, format, locale)
+    if (day) {
+      return day
+    }
+  }
+
+  return undefined
+}
+
+function parseDay(
+  text: string,
+  pattern: string,
+  locale?: Locale
+): Date | undefined {
   try {
-    const day = parse(text, ISO_DATE.test(text) ? ISO_FORMAT : format, REF)
+    const day = parse(text, pattern, REF, { locale })
     return isValid(day) && day.getFullYear() >= MIN_YEAR ? day : undefined
   } catch {
     return undefined
@@ -445,9 +491,25 @@ export function fromNativeTime(
 
 // A value as a date field shows it: the day in the field's format, or the text
 // as it is when it is no day, which is what the field itself shows.
-export function displayDate(value: string, format: DateFormat): string {
+export function displayDate(
+  value: string,
+  format: DateFormat,
+  lang?: string
+): string {
   const day = readDay(value, format)
-  return day ? fnsFormat(day, format) : value
+  return day ? fnsFormat(day, format, { locale: dateFnsLocale(lang) }) : value
+}
+
+// The languages date-fns writes month and day names in here. A pattern is
+// date-fns's to write, so a language it is not given names them in English.
+const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es }
+
+/**
+ * The date-fns locale for a language, by its base: `es-CO` writes Spanish
+ * names. English for a language the library does not ship.
+ */
+export function dateFnsLocale(lang?: string): Locale | undefined {
+  return DATE_FNS_LOCALES[baseLanguage(lang)]
 }
 
 export function getTimeFormat(field: Time): TimeFormat {
@@ -762,6 +824,8 @@ function describeValue(
 
 export type DateProps = Readonly<{
   format: DateFormat
+  // The language to name months and days in: the form's `lang`, or English.
+  lang: string
   max?: string
   min?: string
   mode: 'range' | 'single'
@@ -785,10 +849,12 @@ export function readDateProps(
     [DATA_RESERVED]?: string
     [MAX]?: string
     [MIN]?: string
+    lang?: string
   }>
 ): DateProps {
   return {
     format: toDateFormat(props[DATA_FORMAT]),
+    lang: toLocale(props.lang),
     max: readIsoDay(props[MAX]),
     min: readIsoDay(props[MIN]),
     mode: props[DATA_MODE] === 'range' ? 'range' : 'single',
@@ -815,12 +881,14 @@ function readReservedProp(text = ''): readonly string[] {
     : NO_DAYS.days
 }
 
-// What a reader worked out for a key, kept while it is among the last `limit`
-// keys read, the one read longest ago dropped first: what a component reads on
-// every render is worked out once while its input holds, whatever other forms
-// read between, and a server that sees a new input on every request holds no
-// more than that.
-function remember<T>(
+/**
+ * What a reader worked out for a key, kept while it is among the last `limit`
+ * keys read, the one read longest ago dropped first: what a component reads on
+ * every render is worked out once while its input holds, whatever other forms
+ * read between, and a server that sees a new input on every request holds no
+ * more than that.
+ */
+export function remember<T>(
   cache: Map<string, T>,
   key: string,
   compute: () => T,

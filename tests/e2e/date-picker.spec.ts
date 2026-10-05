@@ -596,4 +596,30 @@ test.describe('Date calendar picker interaction', { tag: ['@e2e'] }, () => {
       'June 20, 2024'
     )
   })
+
+  // A calendar names its months in the language of the form, which it reads
+  // from the standard `lang` attribute the form puts on its props.
+  test('should name the month in the language of the form', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "lang": "es",
+        "value": { "night": "2026-10-02" },
+        "sections": [{
+          "fields": [{ "label": "Night", "name": "night", "type": "input/date" }]
+        }]
+      }`
+    )
+    await page.goto('')
+
+    await expect(page.locator('input[name="night"]')).toHaveValue(
+      'octubre 2, 2026'
+    )
+    await page.getByRole('button', { name: 'Select date' }).click()
+    await expect(page.locator('[data-slot="calendar"]')).toContainText(
+      'octubre 2026'
+    )
+  })
 })

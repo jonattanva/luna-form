@@ -6,6 +6,7 @@ import {
   translate,
   type DateFormat,
   type Option,
+  type Localization,
 } from '@luna-form/core'
 import { FieldPreviewItem } from './field-preview-item'
 import { resolveValue } from '../../lib/resolve-value'
@@ -36,10 +37,9 @@ type PreviewProps = Readonly<{
   className?: string
   fields?: Fields
   label?: string
-  lang?: string
+  localization?: Localization
   name: string
   previews: PreviewItem | PreviewItem[]
-  translations?: Record<string, string>
   value?: Record<string, unknown> | unknown[] | null
 }>
 
@@ -78,9 +78,8 @@ function PreviewEntries({
   items,
   itemValue,
   label = 'Preview',
-  lang,
+  localization,
   name,
-  translations,
   value,
 }: PreviewProps &
   Readonly<{ items: NormalizedPreview[]; itemValue: unknown }>) {
@@ -99,7 +98,7 @@ function PreviewEntries({
       if (item.label !== undefined) {
         result.push({
           key: item.field ?? `label:${item.label}:${index}`,
-          staticLabel: translate(item.label, translations),
+          staticLabel: translate(item.label, localization?.translations),
         })
         continue
       }
@@ -114,7 +113,7 @@ function PreviewEntries({
 
       const childField = fieldLookup?.[item.field]
       const options = childField
-        ? getPreviewOptions(childField, { lang, translations })
+        ? getPreviewOptions(childField, localization)
         : undefined
 
       result.push({
@@ -126,7 +125,7 @@ function PreviewEntries({
       })
     }
     return result
-  }, [items, itemValue, lang, name, value, translations, fieldLookup])
+  }, [items, itemValue, localization, name, value, fieldLookup])
 
   if (visibleItems.length === 0) {
     return null
@@ -143,6 +142,7 @@ function PreviewEntries({
           dateFormat={'dateFormat' in item ? item.dateFormat : undefined}
           initialValue={'initialValue' in item ? item.initialValue : undefined}
           key={item.key}
+          lang={localization?.lang}
           name={'previewName' in item ? item.previewName : undefined}
           options={'options' in item ? item.options : undefined}
           separator={index > 0}

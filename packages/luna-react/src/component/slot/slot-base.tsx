@@ -7,6 +7,7 @@ import {
   type Fields,
   type Nullable,
   type Style,
+  type Localization,
 } from '@luna-form/core'
 import { Column } from '../column'
 import type { DescriptionTextProps } from '../description'
@@ -43,10 +44,9 @@ export function SlotBase(
     context?: Record<string, unknown>
     disabled?: boolean
     fields?: Fields
-    lang?: string
     onValueChange?: (input: { name: string; value: unknown }) => void
     style?: Style
-    translations?: Record<string, string>
+    localization?: Localization
     value?: Nullable<Record<string, unknown>>
   }>
 ) {
@@ -61,7 +61,7 @@ export function SlotBase(
           config={props.config}
           context={props.context}
           description={props.components.description}
-          translations={props.translations}
+          localization={props.localization}
         >
           <SlotBase {...props} fields={field.fields} />
         </Column>
@@ -70,10 +70,9 @@ export function SlotBase(
         <Field
           disabled={props.disabled}
           field={field}
-          lang={props.lang}
           now={now}
           style={props.style}
-          translations={props.translations}
+          localization={props.localization}
         >
           {props.children}
         </Field>
@@ -81,9 +80,8 @@ export function SlotBase(
       {isList(field) && (
         <List
           field={field}
-          lang={props.lang}
           onValueChange={props.onValueChange}
-          translations={props.translations}
+          localization={props.localization}
           value={props.value}
         >
           {(index) => (
@@ -94,10 +92,9 @@ export function SlotBase(
               disabled={props.disabled}
               field={field}
               index={index}
-              lang={props.lang}
               onValueChange={props.onValueChange}
               style={props.style}
-              translations={props.translations}
+              localization={props.localization}
               value={props.value}
             >
               {props.children}

@@ -3,6 +3,7 @@ import {
   buildCommon,
   buildDataAttributes,
   type Field,
+  type Localization,
 } from '@luna-form/core'
 import type { Children } from '../../type'
 
@@ -13,10 +14,9 @@ export function InputBase(
     errors?: string[]
     field: Field
     horizontal?: boolean
-    lang?: string
+    localization?: Localization
     now?: string
     readOnly?: boolean
-    translations?: Record<string, string>
   }>
 ) {
   if (!props.field.type) {
@@ -26,7 +26,7 @@ export function InputBase(
   const commonProps = buildCommon(
     props.field,
     props.disabled,
-    { lang: props.lang, translations: props.translations },
+    props.localization,
     props.now
   )
 
@@ -70,6 +70,7 @@ export function InputBase(
     dataAttributes,
     field,
     horizontal: props.horizontal,
+    localization: props.localization,
     readOnly: props.readOnly,
   })
 }

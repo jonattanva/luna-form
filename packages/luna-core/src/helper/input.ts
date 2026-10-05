@@ -156,7 +156,7 @@ export function buildCommon(
   if (isInput(field)) {
     return {
       ...commonProps,
-      ...defineInput(field),
+      ...defineInput(field, localization?.lang),
     }
   }
 
@@ -184,13 +184,13 @@ export function buildCommon(
   return commonProps
 }
 
-function defineInput(input: Input) {
+function defineInput(input: Input, lang?: string) {
   const type = getType(input.type)
   const copy = { ...input, type }
 
   return {
     ...defineTime(input),
-    ...defineDate(input),
+    ...defineDate(input, lang),
     ...defineAutoComplete(input),
     ...defineNumberLimits(copy),
     ...defineNumberStep(copy),
@@ -264,7 +264,9 @@ function defineTime(field: Field) {
 // they are, and its reserved days as one list in a data attribute, which any
 // element accepts, where an array in an unknown prop would reach the DOM as
 // text. A calendar from any library reads them back with `readDateProps`.
-function defineDate(field: Field) {
+// `lang` is a standard attribute: a native input takes it as it comes, and a
+// calendar reads it, through `readDateProps`, for its month and day names.
+function defineDate(field: Field, lang?: string) {
   const format = dateFormatOf(field)
   if (!format) {
     return {}
@@ -273,6 +275,7 @@ function defineDate(field: Field) {
   const { max, min, reserved } = buildDateLimits(field)
   return {
     [DATA_FORMAT]: format,
+    ...(lang && { lang }),
     ...(min !== undefined && { [MIN]: min }),
     ...(max !== undefined && { [MAX]: max }),
     ...(reserved.length > 0 && { [DATA_RESERVED]: reserved.join(',') }),

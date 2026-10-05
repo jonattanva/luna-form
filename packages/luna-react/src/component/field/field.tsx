@@ -9,6 +9,7 @@ import {
   mergeStyle,
   type Field,
   type Style,
+  type Localization,
 } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import type { Children } from '../../type'
@@ -18,11 +19,10 @@ export type FieldProps = Readonly<{
   disabled?: boolean
   errors?: string[]
   field: Field
-  lang?: string
   // `context.now`, the instant a timezone select labels its zones for.
   now?: string
   style?: Style
-  translations?: Record<string, string>
+  localization?: Localization
 }>
 
 export function Field(props: FieldProps) {
@@ -59,10 +59,9 @@ export function Field(props: FieldProps) {
           errors={errors}
           field={props.field}
           horizontal={horizontal}
-          lang={props.lang}
+          localization={props.localization}
           now={props.now}
           readOnly={readOnly}
-          translations={props.translations}
         >
           {props.children}
         </InputBase>

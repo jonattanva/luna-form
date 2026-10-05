@@ -43,8 +43,8 @@ describe('getWeekDays', () => {
     expect(values).toEqual(['0', '1', '2', '3', '4', '5', '6'])
   })
 
-  test('should fall back to the runtime locale for a malformed tag', () => {
-    expect(getWeekDays('es_MX')).toEqual(getWeekDays())
-    expect(getWeekDays('')).toEqual(getWeekDays())
+  test('should speak English without a language', () => {
+    expect(getWeekDays()[1].label).toBe('Monday')
+    expect(getWeekDays('es_MX')[1].label).toBe('Monday')
   })
 })

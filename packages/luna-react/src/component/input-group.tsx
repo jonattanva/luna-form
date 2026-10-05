@@ -1,7 +1,7 @@
 import { InputLabel } from './input-label'
 import { StaticDescription, type DescriptionProps } from './field-description'
 import type { Config } from '../type'
-import type { Field } from '@luna-form/core'
+import type { Field, Localization } from '@luna-form/core'
 
 export function InputGroup(
   props: Readonly<{
@@ -11,7 +11,7 @@ export function InputGroup(
     description?: React.ComponentType<DescriptionProps>
     field: Field
     horizontal?: boolean
-    translations?: Record<string, string>
+    localization?: Localization
   }>
 ) {
   // What the client passes, or the definition's own text. See
@@ -27,7 +27,7 @@ export function InputGroup(
           description={props.description}
           field={props.field}
           horizontal={props.horizontal}
-          translations={props.translations}
+          localization={props.localization}
         />
       )}
       {props.children}
@@ -36,7 +36,7 @@ export function InputGroup(
           config={props.config}
           context={props.context}
           field={props.field}
-          translations={props.translations}
+          localization={props.localization}
         />
       )}
     </>

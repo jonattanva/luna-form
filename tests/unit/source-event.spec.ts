@@ -134,3 +134,25 @@ describe('handle source event', () => {
     })
   })
 })
+
+describe('handleSourceEvent language', () => {
+  test('should format a url in the language it is given', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const events: SourceEvent[] = [
+      {
+        action: 'source',
+        target: 'list',
+        source: { url: '/api?n={n | number}' },
+      },
+    ]
+
+    handleSourceEvent(
+      { n: 1234.5 },
+      events,
+      (name, source) => calls.push({ name, source }),
+      { locale: 'de' }
+    )
+
+    expect(calls[0].source?.url).toBe('/api?n=1.234,5')
+  })
+})

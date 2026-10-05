@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { toNativeDate } from '@/packages/luna-core/src/util/date'
+import type { DateFormat } from '@/packages/luna-core/src/type'
 
 describe('toNativeDate', () => {
   test('should return empty string for empty input', () => {
@@ -77,5 +78,17 @@ describe('toNativeDate', () => {
     expect(toNativeDate('15/06/24', 'dd/MM/yyyy')).toBe('')
     expect(toNativeDate('June 15, 2', 'MMMM d, yyyy')).toBe('')
     expect(toNativeDate('0024-06-15', 'MMMM d, yyyy')).toBe('')
+  })
+})
+
+// A form in Spanish shows its days with Spanish month names, and a person may
+// edit that text: it reads back in either language the library writes.
+describe('toNativeDate in the languages the form writes', () => {
+  test.each([
+    ['octubre 2, 2026', 'MMMM d, yyyy', '2026-10-02'],
+    ['ene 5, 2026', 'MMM d, yyyy', '2026-01-05'],
+    ['October 2, 2026', 'MMMM d, yyyy', '2026-10-02'],
+  ])('should read %s', (text, format, expected) => {
+    expect(toNativeDate(text, format as DateFormat)).toBe(expected)
   })
 })

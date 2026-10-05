@@ -12,11 +12,12 @@ import type { ListProps } from '../../component/field/field-list'
 // remove one. Adding, removing and collapsing are state and handlers, and this
 // tree has neither; the client renders the same rows with all three.
 export function ListSlot(props: ListProps) {
-  const label = translate(getLabel(props.field), props.translations)
+  const translations = props.localization?.translations
+  const label = translate(getLabel(props.field), translations)
   const isMultiField = isMultiFieldList(props.field)
 
   return (
-    <List field={props.field} translations={props.translations}>
+    <List field={props.field} translations={translations}>
       {getInitialList(props.field, props.value).map((index) => (
         <div
           data-slot={isMultiField ? 'list-item-card' : undefined}

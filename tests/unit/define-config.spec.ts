@@ -1,5 +1,5 @@
 import { defineConfig } from '@/packages/luna-react/src/config'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 // When to validate, and whether to summarise the errors. All four default to
 // true, and a form that wants to change one should not have to restate the
@@ -44,5 +44,30 @@ describe('defineConfig validation', () => {
     expect(defineConfig({ inputs: [], validation }).validation).toEqual(
       validation
     )
+  })
+})
+
+// The language lives in the form's `lang`: an `env.locale` left in the config
+// formats nothing any more, and a development build says so.
+describe('defineConfig env.locale', () => {
+  test('should name an env.locale nothing reads', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      defineConfig({ env: { locale: 'es-ES', currency: 'EUR' }, inputs: [] })
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(String(warn.mock.calls[0])).toContain('lang')
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should say nothing about an env without one', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      defineConfig({ env: { currency: 'EUR' }, inputs: [] })
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
   })
 })

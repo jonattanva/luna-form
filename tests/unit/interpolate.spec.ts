@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import { interpolate } from '@/packages/luna-core/src/util/string'
+import {
+  interpolate,
+  renderOptions,
+} from '@/packages/luna-core/src/util/string'
 
 describe('interpolate', () => {
   test('should interpolate simple values', () => {
@@ -155,5 +158,20 @@ describe('interpolate', () => {
   test('should leave the placeholder standing when it resolves to a structure', () => {
     expect(interpolate('{value}', { value: { a: 1 } })).toBe('{value}')
     expect(interpolate('{rows}', { rows: [{ key: 'a' }] })).toBe('{rows}')
+  })
+})
+
+// What a label and a description format with: the form's language, and the
+// instant the host gave in `context`.
+describe('renderOptions', () => {
+  test('should format in the language of the form', () => {
+    expect(renderOptions('es-CO', { now: '2026-10-05T12:00:00Z' })).toEqual({
+      locale: 'es-CO',
+      now: '2026-10-05T12:00:00Z',
+    })
+  })
+
+  test('should leave the language to the filters when the form has none', () => {
+    expect(renderOptions()).toEqual({ locale: undefined, now: undefined })
   })
 })

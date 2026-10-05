@@ -7,6 +7,7 @@ import {
   renderOptions,
   translate,
   type Description as DescriptionType,
+  type Localization,
 } from '@luna-form/core'
 import { ChevronIcon } from '../../component/chevron-icon'
 import { useDisclosure } from '../hook/use-disclosure'
@@ -16,8 +17,8 @@ export function FormattedDescription(
   props: Readonly<{
     config?: Config
     context?: Record<string, unknown>
+    localization?: Localization
     text?: DescriptionType
-    translations?: Record<string, string>
     value?: unknown
   }>
 ) {
@@ -27,7 +28,8 @@ export function FormattedDescription(
     value: props.value,
   }
 
-  const formatOptions = renderOptions(props.config?.env, props.context)
+  const translations = props.localization?.translations
+  const formatOptions = renderOptions(props.localization?.lang, props.context)
 
   const [isExpanded, toggle] = useDisclosure(() => {
     if (isObject(props.text) && 'collapsed' in props.text) {
@@ -45,7 +47,7 @@ export function FormattedDescription(
               interpolateOpts,
               formatOptions
             ),
-            props.translations
+            translations
           )
         )
       : undefined
@@ -56,7 +58,7 @@ export function FormattedDescription(
       interpolateOpts,
       formatOptions
     ),
-    props.translations
+    translations
   )
 
   const message = formatMarkdown(rawMessage)

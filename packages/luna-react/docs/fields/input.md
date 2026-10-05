@@ -78,6 +78,7 @@ Date and time inputs omit transformations and instead expose a `format` property
 An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`, or two of them in [a range](#a-range-of-days). That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. With [submit validation off](../forms/submit.md#turning-submit-validation-off), the action gets the raw `FormData` instead, where a single day is whatever its control holds; a range and a read-only field still carry `yyyy-MM-dd`, in the hidden inputs the form adds. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
 
 - A value the host passes in, or a `defaultValue`, is read in either shape: `yyyy-MM-dd`, or the field's `format`. A host that keeps what the form submitted can pass it straight back.
+- A `format` with month or day names reads them in English or in Spanish, the languages the form writes them in, so `octubre 2, 2026`, which a form in Spanish shows, reads back as `2026-10-02`.
 - Text that is no day, typed in another format, with a year short of four digits, or naming a day that does not exist such as February 30, is kept as typed and holds the submit back with `validation.date`.
 - An optional date left empty is not submitted at all, the way an empty number is not.
 - In a description, `{value}` is the `yyyy-MM-dd` text. To show it another way, use a filter such as `{value | date:long}`.

@@ -221,3 +221,97 @@ describe('readNow', () => {
     }
   })
 })
+
+// Without a language the filters speak English, whatever the machine speaks.
+describe('filters without a language', () => {
+  test('should write numbers and money in English', () => {
+    expect(formatFilters.currency(1234.5, ['EUR'], {})).toBe('€1,234.50')
+    expect(formatFilters.number(1234567, [], {})).toBe('1,234,567')
+  })
+
+  test('should take a language that is no tag for none', () => {
+    expect(formatFilters.number(1234567, [], { locale: 'es_MX' })).toBe(
+      '1,234,567'
+    )
+  })
+})
+
+// The named styles and `relative` speak every language the runtime knows, not
+// only the two date-fns bundles the library ships. In English nothing changes.
+describe('dates in the language of the form', () => {
+  const day = '2026-10-02T12:00:00'
+
+  test.each([
+    [
+      'en-US',
+      ['10/2/26', 'Oct 2, 2026', 'October 2, 2026', 'Friday, October 2, 2026'],
+    ],
+    [
+      'es',
+      [
+        '2/10/26',
+        '2 oct 2026',
+        '2 de octubre de 2026',
+        'viernes, 2 de octubre de 2026',
+      ],
+    ],
+    [
+      'de',
+      ['02.10.26', '02.10.2026', '2. Oktober 2026', 'Freitag, 2. Oktober 2026'],
+    ],
+  ])('should write each named style in %s', (locale, expected) => {
+    const styles = ['short', 'medium', 'long', 'full'].map((style) =>
+      formatFilters.date(day, [style], { locale })
+    )
+    expect(styles).toEqual(expected)
+  })
+
+  test.each([
+    ['en-US', '3 days ago', 'in 7 days'],
+    ['es', 'hace 3 días', 'dentro de 7 días'],
+    ['de', 'vor 3 Tagen', 'in 7 Tagen'],
+  ])('should write a relative date in %s', (locale, past, future) => {
+    const now = '2026-10-05T12:00:00Z'
+    expect(
+      formatFilters.date('2026-10-02T12:00:00Z', ['relative'], { locale, now })
+    ).toBe(past)
+    expect(
+      formatFilters.date('2026-10-12T12:00:00Z', ['relative'], { locale, now })
+    ).toBe(future)
+  })
+
+  test('should show a date with no instant in the medium style of its language', () => {
+    expect(formatFilters.date(day, ['relative'], { locale: 'de' })).toBe(
+      '02.10.2026'
+    )
+  })
+
+  test('should keep a written pattern as written', () => {
+    expect(formatFilters.date(day, ['dd/MM/yyyy'], { locale: 'de' })).toBe(
+      '02/10/2026'
+    )
+    expect(formatFilters.date(day, ['MMMM'], { locale: 'es' })).toBe('octubre')
+  })
+})
+
+// The unit is chosen after rounding, so nothing reads "60 minutes ago", and no
+// distance at all is "now".
+describe('relative rounding', () => {
+  const now = '2026-10-05T12:00:00Z'
+  const at = (instant: string, locale = 'en') =>
+    formatFilters.date(instant, ['relative'], { locale, now })
+
+  test.each([
+    ['2026-10-05T12:00:00Z', 'now'],
+    ['2026-10-05T11:59:59.600Z', 'now'],
+    ['2026-10-05T11:59:00.400Z', '1 minute ago'],
+    ['2026-10-05T11:00:20Z', '1 hour ago'],
+    ['2026-10-05T12:00:40Z', 'in 40 seconds'],
+  ])('should write %s as %s', (instant, expected) => {
+    expect(at(instant)).toBe(expected)
+  })
+
+  test('should write no distance in the language of the form', () => {
+    expect(at(now, 'es')).toBe('ahora')
+  })
+})

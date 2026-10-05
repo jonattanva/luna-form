@@ -17,8 +17,8 @@ export function FieldDescription(props: DescriptionProps) {
     <FormattedDescription
       config={props.config}
       context={props.context}
+      localization={props.localization}
       text={state?.description ?? props.field.description}
-      translations={props.translations}
       value={value}
     />
   )

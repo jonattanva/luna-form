@@ -4,6 +4,7 @@ import {
   flattenListFields,
   isString,
   translate,
+  type Localization,
 } from '@luna-form/core'
 import { FieldListItem } from '../../../component/field/field-list-item'
 import { FieldPreview } from './field-preview'
@@ -22,12 +23,11 @@ export function FieldListPreviewItem({
   isMultiField,
   itemKey,
   label,
-  lang,
+  localization,
   onRemove,
   previewBadge,
   previewLabel,
   previewTags,
-  translations,
   value,
 }: {
   canRemove: boolean
@@ -37,14 +37,14 @@ export function FieldListPreviewItem({
   isMultiField: boolean
   itemKey: string | number
   label: string
-  lang?: string
+  localization?: Localization
   onRemove: (index: number) => void
   previewBadge?: PreviewItem
   previewLabel?: PreviewItem
   previewTags?: PreviewItem[]
-  translations?: Record<string, string>
   value?: Nullable<Record<string, unknown> | unknown[]>
 }) {
+  const { lang, translations } = localization ?? {}
   const name = `${field.name}.${itemKey}`
   const fallbackLabel = `${label} ${index + 1}`
 
@@ -68,6 +68,7 @@ export function FieldListPreviewItem({
       previewLabel={renderPreviewLabel({
         dateFormat: labelDateFormat,
         fallbackLabel,
+        lang,
         name,
         previewLabel,
         translations,
@@ -78,10 +79,9 @@ export function FieldListPreviewItem({
           <FieldPreview
             className="bg-primary text-primary-foreground rounded-md px-1.5 py-0.5 leading-none font-bold uppercase"
             fields={field.fields}
-            lang={lang}
+            localization={localization}
             name={name}
             previews={previewBadge}
-            translations={translations}
             value={value}
           />
         ) : undefined
@@ -90,10 +90,9 @@ export function FieldListPreviewItem({
         previewTags ? (
           <FieldPreview
             fields={field.fields}
-            lang={lang}
+            localization={localization}
             name={name}
             previews={previewTags}
-            translations={translations}
             value={value}
           />
         ) : undefined
@@ -108,6 +107,7 @@ export function FieldListPreviewItem({
 type PreviewLabelProps = Readonly<{
   dateFormat?: DateFormat
   fallbackLabel: string
+  lang?: string
   item: Exclude<PreviewItem, string>
   name: string
   translations?: Record<string, string>
@@ -117,6 +117,7 @@ type PreviewLabelProps = Readonly<{
 function renderPreviewLabel({
   dateFormat,
   fallbackLabel,
+  lang,
   name,
   previewLabel,
   translations,
@@ -124,6 +125,7 @@ function renderPreviewLabel({
 }: {
   dateFormat?: DateFormat
   fallbackLabel: string
+  lang?: string
   name: string
   previewLabel?: PreviewItem
   translations?: Record<string, string>
@@ -145,6 +147,7 @@ function renderPreviewLabel({
         dateFormat={dateFormat}
         fallbackLabel={fallbackLabel}
         item={item}
+        lang={lang}
         name={name}
         translations={translations}
         value={value}
@@ -156,6 +159,7 @@ function renderPreviewLabel({
     dateFormat,
     fallbackLabel,
     item,
+    lang,
     name,
     translations,
     value,
@@ -179,6 +183,7 @@ function previewLabelContent({
   dateFormat,
   fallbackLabel,
   item,
+  lang,
   name,
   translations,
   value,
@@ -197,6 +202,7 @@ function previewLabelContent({
     <FieldPreviewValue
       dateFormat={dateFormat}
       initialValue={value ? resolveValue(fieldName, value) : undefined}
+      lang={lang}
       name={fieldName}
     >
       {(value) => value || fallbackLabel}
