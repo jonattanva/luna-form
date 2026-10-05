@@ -196,27 +196,26 @@ export function getNumber(input: Input, translations?: Record<string, string>) {
 
 // The years a year select offers, read by the same `buildYearLimits` as its
 // options: a host value or a payload outside them answers no question the
-// field asks.
+// field asks, and a field that offers no year takes none.
 export function getYearSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
   const { max, min } = buildYearLimits(input)
-  let schema = z.coerce.number().int()
+  const year = z.coerce.number().int()
 
-  if (min !== undefined) {
-    schema = schema.min(
-      min,
-      translateOptional(input.validation?.length?.min, translations)
-    )
-  }
-
-  if (max !== undefined) {
-    schema = schema.max(
-      max,
-      translateOptional(input.validation?.length?.max, translations)
-    )
-  }
+  const schema =
+    min === undefined || max === undefined
+      ? year.refine(() => false, 'This year is not available')
+      : year
+          .min(
+            min,
+            translateOptional(input.validation?.length?.min, translations)
+          )
+          .max(
+            max,
+            translateOptional(input.validation?.length?.max, translations)
+          )
 
   return presentLeaf(schema, input, translations, normalize)
 }

@@ -23,7 +23,6 @@ export function FieldListPreviewItem({
   itemKey,
   label,
   lang,
-  now,
   onRemove,
   previewBadge,
   previewLabel,
@@ -39,7 +38,6 @@ export function FieldListPreviewItem({
   itemKey: string | number
   label: string
   lang?: string
-  now?: string
   onRemove: (index: number) => void
   previewBadge?: PreviewItem
   previewLabel?: PreviewItem
@@ -82,7 +80,6 @@ export function FieldListPreviewItem({
             fields={field.fields}
             lang={lang}
             name={name}
-            now={now}
             previews={previewBadge}
             translations={translations}
             value={value}
@@ -95,7 +92,6 @@ export function FieldListPreviewItem({
             fields={field.fields}
             lang={lang}
             name={name}
-            now={now}
             previews={previewTags}
             translations={translations}
             value={value}

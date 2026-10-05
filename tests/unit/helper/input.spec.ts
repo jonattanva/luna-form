@@ -851,6 +851,21 @@ describe('year select', () => {
     }
   })
 
+  test.each(['oops', 0])(
+    'should offer no year when advanced is %j, and name it',
+    (advanced) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const field = { name: 'expiry', type: 'select/year', advanced } as Field
+
+        expect(yearsOf(field)).toEqual([])
+        expect(warn).toHaveBeenCalledTimes(1)
+      } finally {
+        warn.mockRestore()
+      }
+    }
+  )
+
   test('should offer no year to a field that declares nothing, and name it', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
@@ -888,7 +903,10 @@ describe('timezone select', () => {
   const groupsOf = (field: Field, now?: string) =>
     (
       buildCommon(field, false, undefined, now) as {
-        options: Array<{ label: string; items: Array<{ label: string }> }>
+        options: Array<{
+          label: string
+          items: Array<{ label: string; value: string }>
+        }>
       }
     ).options
 
@@ -906,12 +924,30 @@ describe('timezone select', () => {
     })
   })
 
+  // What a field submits is the name the list carries, so a zone written in
+  // another case or by an older name is suggested as the list names it, once.
+  test.each([
+    ['america/bogota', 'America/Bogota'],
+    ['US/Eastern', 'America/New_York'],
+  ])('should suggest %s as %s, and only there', (given, canonical) => {
+    const groups = groupsOf(declare({ suggested: given }))
+    const values = groups.flatMap((group) =>
+      group.items.map((item) => item.value)
+    )
+
+    expect(groups[0].items).toEqual([
+      expect.objectContaining({ value: canonical }),
+    ])
+    expect(values.filter((value) => value === canonical)).toHaveLength(1)
+  })
+
   test('should suggest no zone when the definition gives none', () => {
     expect(groupsOf(declare())[0].label).not.toBe('Suggested')
   })
 
   test.each([
     ['no time zone', { suggested: 'Mars/Olympus' }],
+    ['an offset, which is no zone name', { suggested: '+05:00' }],
     ['no text', { suggested: 5 }],
     ['a reference nothing resolved', { suggested: { $ref: '#/context/zone' } }],
   ])('should suggest no zone for %s, and name it once', (_, advanced) => {

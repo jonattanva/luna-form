@@ -146,6 +146,7 @@ describe('Schema Utility', () => {
       name: 'year',
       required: true,
       type: 'input/year',
+      advanced: { length: { min: -3000, max: 3000 } },
       validation: {
         required: 'Year is required',
       },
@@ -162,6 +163,7 @@ describe('Schema Utility', () => {
       name: 'year',
       required: false,
       type: 'input/year',
+      advanced: { length: { min: -3000, max: 3000 } },
     }
 
     const schema = getYearSchema(input)

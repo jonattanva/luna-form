@@ -118,20 +118,23 @@ const readYears = new WeakMap<object, YearLimits>()
  * which is what the schema sees every field as.
  */
 export function buildYearLimits(field: Input | Select): YearLimits {
-  const key = field.advanced ?? field
+  // Only an object declares anything; text or a number there is no `advanced`.
+  const advanced = isObject(field.advanced) ? field.advanced : undefined
+  const key = advanced ?? field
   const known = readYears.get(key)
   if (known) {
     return known
   }
 
-  const length = field.advanced?.length
+  const length = advanced?.length
   const limits: YearLimits = {
     max: readYear(length?.max),
     min: readYear(length?.min),
   }
   readYears.set(key, limits)
 
-  for (const problem of describeYears(field.name, length, limits)) {
+  const problems = describeBounds(field.name, length, limits, YEAR_BOUNDS)
+  for (const problem of problems) {
     logger.warn(problem)
   }
 
@@ -146,55 +149,11 @@ function readYear(value: unknown): number | undefined {
 
 const NO_YEAR = 'the field offers no year'
 
-function describeYears(
-  name: string,
-  length: unknown,
-  limits: YearLimits
-): string[] {
-  const unresolved = refOf(length)
-  if (unresolved !== undefined) {
-    return [
-      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so ${NO_YEAR}`,
-    ]
-  }
-
-  const declared = isObject(length) ? length : {}
-  if (declared.min == null && declared.max == null) {
-    return [
-      `${name}: a year select needs advanced.length.min and .max, so ${NO_YEAR}`,
-    ]
-  }
-
-  const problems: string[] = []
-  for (const [bound] of BOUND_NAMES) {
-    if (limits[bound] !== undefined) {
-      continue
-    }
-
-    const value = declared[bound]
-    problems.push(
-      value == null
-        ? `${name}: advanced.length.${bound} is missing, so ${NO_YEAR}`
-        : describeValue(
-            `${name}: advanced.length.${bound}`,
-            value,
-            'whole year',
-            NO_YEAR
-          )
-    )
-  }
-
-  if (
-    limits.min !== undefined &&
-    limits.max !== undefined &&
-    limits.min > limits.max
-  ) {
-    problems.push(
-      `${name}: advanced.length.min is after advanced.length.max, so ${NO_YEAR}`
-    )
-  }
-
-  return problems
+const YEAR_BOUNDS: BoundRules = {
+  disordered: NO_YEAR,
+  kind: 'whole year',
+  lost: () => NO_YEAR,
+  needsBoth: true,
 }
 
 function getTimezoneRegion(tz: string): string {
@@ -218,19 +177,35 @@ function getTimeZoneName(
   )
 }
 
+// The two formatters a zone is labelled with, made once each: making them is
+// most of what a list of hundreds of zones costs, and a server labels the list
+// again for every request's instant. There are as many as there are zones.
+const zoneFormats = new Map<
+  string,
+  readonly [Intl.DateTimeFormat, Intl.DateTimeFormat]
+>()
+
+function formatsOf(tz: string) {
+  const known = zoneFormats.get(tz)
+  if (known) {
+    return known
+  }
+
+  const made = [
+    new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'longOffset' }),
+    new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'long' }),
+  ] as const
+  zoneFormats.set(tz, made)
+  return made
+}
+
 function getTimezoneInfo(
   tz: string,
   date: Date
 ): { offset: string; longName: string } {
-  const offsetParts = new Intl.DateTimeFormat('en', {
-    timeZone: tz,
-    timeZoneName: 'longOffset',
-  }).formatToParts(date)
-
-  const longNameParts = new Intl.DateTimeFormat('en', {
-    timeZone: tz,
-    timeZoneName: 'long',
-  }).formatToParts(date)
+  const [offsetFormat, longNameFormat] = formatsOf(tz)
+  const offsetParts = offsetFormat.formatToParts(date)
+  const longNameParts = longNameFormat.formatToParts(date)
 
   const raw =
     offsetParts.find((part) => {
@@ -254,8 +229,8 @@ const readZones = new WeakMap<object, { zone?: string }>()
  * The zone a timezone select suggests, as its definition gives it in
  * `advanced.suggested`: the host knows it -- a profile, a cookie, a header --
  * and passes it through `context`, so the server and the browser suggest the
- * same one. A value that is no zone `Intl` knows suggests nothing, and a
- * development build names it.
+ * same one. It is read as the name the runtime gives it, and a value that is no
+ * zone suggests nothing, which a development build names.
  */
 export function buildSuggestedZone(field: Select): string | undefined {
   const advanced = field.advanced
@@ -269,7 +244,7 @@ export function buildSuggestedZone(field: Select): string | undefined {
   }
 
   const value: unknown = advanced.suggested
-  const zone = isString(value) && isTimeZone(value) ? value : undefined
+  const zone = isString(value) ? canonicalZone(value) : undefined
   readZones.set(advanced, { zone })
 
   if (zone === undefined) {
@@ -286,21 +261,36 @@ export function buildSuggestedZone(field: Select): string | undefined {
   return zone
 }
 
-function isTimeZone(zone: string): boolean {
+// The name the runtime gives a zone, the one its list carries: `America/Bogota`
+// for `america/bogota`, `America/New_York` for `US/Eastern`. A field submits
+// it, so a zone written another way is suggested, and listed, once. A name
+// starts with a letter: `Intl` takes an offset such as `+05:00` too, and that
+// is no zone.
+function canonicalZone(text: string): string | undefined {
+  if (!/^[A-Za-z]/.test(text)) {
+    return undefined
+  }
+
   try {
-    new Intl.DateTimeFormat('en', { timeZone: zone })
-    return true
+    return new Intl.DateTimeFormat('en', { timeZone: text }).resolvedOptions()
+      .timeZone
   } catch {
-    return false
+    return undefined
   }
 }
 
+// A date, a time and the offset that pins them to one instant.
+const ISO_INSTANT =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:?\d{2})$/
+
 /**
- * An instant as the host gives it in `context.now`: an ISO date and time, such
- * as `2026-10-05T19:30:00-05:00`. Anything else is no instant.
+ * An instant as the host gives it in `context.now`: an ISO date, time and
+ * offset, such as `2026-10-05T19:30:00-05:00` or `2026-10-06T00:30:00Z`.
+ * Without its offset a time would be read in this machine's zone, which is the
+ * clock the form keeps no more, so anything else is no instant.
  */
 export function readInstant(text?: string): Date | undefined {
-  if (text === undefined) {
+  if (text === undefined || !ISO_INSTANT.test(text)) {
     return undefined
   }
 
@@ -310,7 +300,7 @@ export function readInstant(text?: string): Date | undefined {
 
 // A few lists, one per zone and instant a form suggests and is rendered at.
 const BUILT_ZONES = 8
-const builtZones = new Map<string, TimezoneGroup[]>()
+const builtZones = new Map<string, readonly TimezoneGroup[]>()
 
 /**
  * Every zone this engine knows, grouped by region, with the one the host
@@ -319,17 +309,20 @@ const builtZones = new Map<string, TimezoneGroup[]>()
  * a zone goes by its city. Nothing here reads this machine's clock or zone.
  *
  * Built once while the zone and the instant hold: a timezone select builds its
- * options on every render, and there are hundreds of zones. `suggested` is a
- * zone `Intl` knows, as `buildSuggestedZone` gives it.
+ * options on every render, and there are hundreds of zones. Frozen, since every
+ * form that asks shares it, on a server every request. `suggested` is a zone's
+ * name as the runtime gives it, as `buildSuggestedZone` reads it. Sorted in
+ * English, the language of the labels, so no machine's collation orders it.
  */
 export function getTimezones(
   suggested?: string,
   now?: string
-): TimezoneGroup[] {
+): readonly TimezoneGroup[] {
+  const instant = readInstant(now)
   return remember(
     builtZones,
-    `${suggested ?? ''}|${now ?? ''}`,
-    () => buildTimezones(suggested, readInstant(now)),
+    `${suggested ?? ''}|${instant?.getTime() ?? ''}`,
+    () => buildTimezones(suggested, instant),
     BUILT_ZONES
   )
 }
@@ -337,15 +330,18 @@ export function getTimezones(
 function buildTimezones(
   suggested: string | undefined,
   instant: Date | undefined
-): TimezoneGroup[] {
+): readonly TimezoneGroup[] {
   const itemOf = (tz: string): TimezoneItem => {
     const city = getTimezoneCity(tz)
     if (!instant) {
-      return { value: tz, label: city }
+      return Object.freeze({ value: tz, label: city })
     }
 
     const { offset, longName } = getTimezoneInfo(tz, instant)
-    return { value: tz, label: `${city} - ${longName} (${offset})` }
+    return Object.freeze({
+      value: tz,
+      label: `${city} - ${longName} (${offset})`,
+    })
   }
 
   const groupMap = new Map<string, TimezoneItem[]>()
@@ -363,17 +359,28 @@ function buildTimezones(
     }
   }
 
-  for (const items of groupMap.values()) {
-    items.sort((a, b) => a.label.localeCompare(b.label))
-  }
-
   const groups = Array.from(groupMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([label, items]) => ({ label, items }))
+    .sort(([a], [b]) => a.localeCompare(b, 'en'))
+    .map(([label, items]) =>
+      Object.freeze({
+        label,
+        items: Object.freeze(
+          items.sort((a, b) => a.label.localeCompare(b.label, 'en'))
+        ),
+      })
+    )
 
-  return suggested
-    ? [{ label: 'Suggested', items: [itemOf(suggested)] }, ...groups]
-    : groups
+  return Object.freeze(
+    suggested
+      ? [
+          Object.freeze({
+            label: 'Suggested',
+            items: Object.freeze([itemOf(suggested)]),
+          }),
+          ...groups,
+        ]
+      : groups
+  )
 }
 
 // The one reading of a day, for every way a date leaves this module.
@@ -621,10 +628,11 @@ export function checkRange(
     : null
 }
 
-const BOUND_NAMES: ReadonlyArray<[DateBound, string]> = [
-  ['min', 'minimum'],
-  ['max', 'maximum'],
-]
+const BOUND_NAMES: ReadonlyArray<readonly [DateBound, 'maximum' | 'minimum']> =
+  [
+    ['min', 'minimum'],
+    ['max', 'maximum'],
+  ]
 
 // What is wrong with the limits a field declares, given what was read from
 // them, for whoever wrote it. A bound or a reserved day that is no day limits
@@ -637,41 +645,64 @@ function describeDateLimits(
   rejected: readonly number[]
 ): string[] {
   return [
-    ...describeLength(name, advanced.length, limits),
+    ...describeBounds(name, advanced.length, limits, DATE_BOUNDS),
     ...describeReserved(name, advanced.reserved, rejected),
   ]
 }
 
-function describeLength(
+// How a field's bounds fail it, for `describeBounds`: what a bound that is not
+// a value of its `kind` is, what the field is left with when a bound or both
+// are lost, and whether it needs both to offer anything at all.
+type BoundRules = Readonly<{
+  disordered: string
+  kind: string
+  lost: (noun: 'bounds' | 'maximum' | 'minimum') => string
+  needsBoth: boolean
+}>
+
+const DATE_BOUNDS: BoundRules = {
+  disordered: 'no day passes',
+  kind: 'yyyy-MM-dd day',
+  lost: (noun) => `the field has no ${noun}`,
+  needsBoth: false,
+}
+
+// What is wrong with the bounds a field declares in `advanced.length`, given
+// what was read from them: the whole `length` a `$ref` nothing resolved, a
+// bound that is no value of its kind or, where both are needed, missing, and a
+// minimum after the maximum.
+function describeBounds<T extends number | string>(
   name: string,
   length: unknown,
-  limits: DateLimits
+  limits: Readonly<{ max?: T; min?: T }>,
+  rules: BoundRules
 ): string[] {
-  if (!isObject(length)) {
-    return []
-  }
-
   const unresolved = refOf(length)
   if (unresolved !== undefined) {
     return [
-      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so the field has no bounds`,
+      `${name}: advanced.length points at ${unresolved}, which nothing resolved, so ${rules.lost('bounds')}`,
+    ]
+  }
+
+  const declared = isObject(length) ? length : {}
+  if (rules.needsBoth && declared.min == null && declared.max == null) {
+    return [
+      `${name}: advanced.length.min and .max are missing, so ${rules.lost('bounds')}`,
     ]
   }
 
   const problems: string[] = []
   for (const [bound, noun] of BOUND_NAMES) {
-    const value = length[bound]
-    if (value == null || limits[bound] !== undefined) {
+    const value = declared[bound]
+    if (limits[bound] !== undefined || (value == null && !rules.needsBoth)) {
       continue
     }
 
+    const key = `${name}: advanced.length.${bound}`
     problems.push(
-      describeValue(
-        `${name}: advanced.length.${bound}`,
-        value,
-        'yyyy-MM-dd day',
-        `the field has no ${noun}`
-      )
+      value == null
+        ? `${key} is missing, so ${rules.lost(noun)}`
+        : describeValue(key, value, rules.kind, rules.lost(noun))
     )
   }
 
@@ -681,7 +712,7 @@ function describeLength(
     limits.min > limits.max
   ) {
     problems.push(
-      `${name}: advanced.length.min is after advanced.length.max, so no day passes`
+      `${name}: advanced.length.min is after advanced.length.max, so ${rules.disordered}`
     )
   }
 
@@ -785,9 +816,10 @@ function readReservedProp(text = ''): readonly string[] {
 }
 
 // What a reader worked out for a key, kept while it is among the last `limit`
-// keys read, the oldest dropped first: what a component reads on every render
-// is worked out once while its input holds, and a server that sees a new input
-// on every request holds no more than that.
+// keys read, the one read longest ago dropped first: what a component reads on
+// every render is worked out once while its input holds, whatever other forms
+// read between, and a server that sees a new input on every request holds no
+// more than that.
 function remember<T>(
   cache: Map<string, T>,
   key: string,
@@ -796,6 +828,9 @@ function remember<T>(
 ): T {
   const known = cache.get(key)
   if (known !== undefined) {
+    // To the back of the line: a `Map` keeps the order keys went in.
+    cache.delete(key)
+    cache.set(key, known)
     return known
   }
 

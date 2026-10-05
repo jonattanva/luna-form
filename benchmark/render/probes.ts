@@ -196,8 +196,8 @@ const PROBES: Probe[] = [
   {
     name: 'tz',
     file: `${CORE}/util/date.ts`,
-    anchor: '  const detectedTimezone = getUserTimezone()',
-    replacement: `  ${bump('tz')}\n  const detectedTimezone = getUserTimezone()`,
+    anchor: '  const itemOf = (tz: string): TimezoneItem => {',
+    replacement: `  ${bump('tz')}\n  const itemOf = (tz: string): TimezoneItem => {`,
   },
 ]
 

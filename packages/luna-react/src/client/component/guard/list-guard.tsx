@@ -9,7 +9,6 @@ export function ListGuard({
   children,
   field,
   lang,
-  now,
   onValueChange,
   translations,
   value,
@@ -19,7 +18,6 @@ export function ListGuard({
       <FieldList
         field={field}
         lang={lang}
-        now={now}
         onValueChange={onValueChange}
         translations={translations}
         value={value}

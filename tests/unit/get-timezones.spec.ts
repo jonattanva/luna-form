@@ -108,6 +108,45 @@ describe('getTimezones', () => {
     )
   })
 
+  // The same instant written two ways is one list.
+  test('should hand back the same list for the same instant however written', () => {
+    expect(getTimezones('Europe/Paris', '2026-01-15T12:00:00Z')).toBe(
+      getTimezones('Europe/Paris', '2026-01-15T07:00:00-05:00')
+    )
+  })
+
+  // A list read on every render stays while other forms read theirs.
+  test('should keep the list a form reads while others are read between', () => {
+    const kept = getTimezones('Asia/Tokyo', WINTER)
+    for (let day = 1; day <= 20; day++) {
+      getTimezones(
+        'Asia/Tokyo',
+        `2026-03-${String(day).padStart(2, '0')}T12:00:00Z`
+      )
+      expect(getTimezones('Asia/Tokyo', WINTER)).toBe(kept)
+    }
+  })
+
+  // Shared by every form that asks for it, on the server by every request:
+  // nothing that reads it may change it for the others.
+  test('should hand back a list nobody can change', () => {
+    const groups = getTimezones('America/Bogota', WINTER)
+
+    expect(Object.isFrozen(groups)).toBe(true)
+    expect(Object.isFrozen(groups[0])).toBe(true)
+    expect(Object.isFrozen(groups[0].items)).toBe(true)
+    expect(Object.isFrozen(groups[0].items[0])).toBe(true)
+  })
+
+  test.each(['2026-01-15T12:00:00', '2026-01-15'])(
+    'should take %s, which has no offset, for no instant',
+    (now) => {
+      expect(itemOf(getTimezones(undefined, now), 'Europe/Madrid')?.label).toBe(
+        'Madrid'
+      )
+    }
+  )
+
   test('items within each group should be sorted alphabetically', () => {
     for (const group of getTimezones(undefined, WINTER)) {
       const labels = group.items.map((i) => i.label)

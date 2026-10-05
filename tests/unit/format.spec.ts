@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import {
   applyFormatFilter,
   formatFilters,
+  readNow,
 } from '@/packages/luna-core/src/util/format'
 
 describe('formatFilters.currency', () => {
@@ -96,7 +97,9 @@ describe('formatFilters.date', () => {
     }
   })
 
-  test.each([undefined, 'not-an-instant'])(
+  // An instant without its offset would be read in this machine's zone, which
+  // is the clock the form keeps no more.
+  test.each([undefined, 'not-an-instant', '2026-10-05T12:00:00', '2026-10-05'])(
     'shows the date in medium style with no instant to measure from (%s)',
     (now) => {
       const result = formatFilters.date('2026-10-12T12:00:00', ['relative'], {
@@ -173,5 +176,48 @@ describe('applyFormatFilter', () => {
 
   test('returns undefined for empty expression', () => {
     expect(applyFormatFilter(1, '', { locale: 'en-US' })).toBeUndefined()
+  })
+})
+
+// `context.now` is read only as an ISO date, time and offset; anything else is
+// named once for the context that carries it, since without it nothing on the
+// form measures from "now".
+describe('readNow', () => {
+  test('should read an instant with its offset', () => {
+    expect(readNow({ now: '2026-10-05T19:30:00-05:00' })).toBe(
+      '2026-10-05T19:30:00-05:00'
+    )
+    expect(readNow({ now: '2026-10-05T12:00:00Z' })).toBe(
+      '2026-10-05T12:00:00Z'
+    )
+  })
+
+  test('should read nothing, and say nothing, without a now', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      expect(readNow()).toBeUndefined()
+      expect(readNow({ user: 'jane' })).toBeUndefined()
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test.each([
+    ['a Date', new Date('2026-10-05T12:00:00Z')],
+    ['a timestamp', 1791201600000],
+    ['an instant without its offset', '2026-10-05T12:00:00'],
+    ['a day', '2026-10-05'],
+  ])('should read no instant from %s, and name it once', (_, now) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const context = { now }
+
+      expect(readNow(context)).toBeUndefined()
+      readNow(context)
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
   })
 })

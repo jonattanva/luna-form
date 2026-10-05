@@ -38,7 +38,6 @@ type PreviewProps = Readonly<{
   label?: string
   lang?: string
   name: string
-  now?: string
   previews: PreviewItem | PreviewItem[]
   translations?: Record<string, string>
   value?: Record<string, unknown> | unknown[] | null
@@ -81,7 +80,6 @@ function PreviewEntries({
   label = 'Preview',
   lang,
   name,
-  now,
   translations,
   value,
 }: PreviewProps &
@@ -116,7 +114,7 @@ function PreviewEntries({
 
       const childField = fieldLookup?.[item.field]
       const options = childField
-        ? getPreviewOptions(childField, { lang, translations }, now)
+        ? getPreviewOptions(childField, { lang, translations })
         : undefined
 
       result.push({
@@ -128,7 +126,7 @@ function PreviewEntries({
       })
     }
     return result
-  }, [items, itemValue, lang, name, now, value, translations, fieldLookup])
+  }, [items, itemValue, lang, name, value, translations, fieldLookup])
 
   if (visibleItems.length === 0) {
     return null

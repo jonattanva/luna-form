@@ -82,7 +82,6 @@ export function SlotBase(
         <List
           field={field}
           lang={props.lang}
-          now={now}
           onValueChange={props.onValueChange}
           translations={props.translations}
           value={props.value}

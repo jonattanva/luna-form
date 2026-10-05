@@ -523,16 +523,17 @@ function normalizePreviewOptions(
 
 export function getPreviewOptions(
   field: Field,
-  localization?: Localization,
-  now?: string
+  localization?: Localization
 ): Array<Option | string> | undefined {
-  if (!isOptions(field)) {
+  // A row shows a zone by its name: the list is grouped, which a preview
+  // cannot look a label up in, so building it would be all cost.
+  if (!isOptions(field) || isSelectTimezone(field)) {
     return undefined
   }
 
   const builtIn = isChips(field)
     ? buildOptionChips(field, localization)
-    : buildOptionSelect(field, localization, now)
+    : buildOptionSelect(field, localization)
 
   if (Array.isArray(builtIn)) {
     const flat = normalizePreviewOptions(builtIn)

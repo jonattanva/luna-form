@@ -169,7 +169,7 @@ renders agree.
 
 ## The instant relative dates use
 
-The form keeps no clock. A [`date:relative`](format-filters.md#date) or a [`duration`](format-filters.md#duration) of a date is measured from `context.now`, an ISO date and time the host passes, such as `2026-10-05T19:30:00-05:00`:
+The form keeps no clock. A [`date:relative`](format-filters.md#date) or a [`duration`](format-filters.md#duration) of a date is measured from `context.now`, an ISO date, time and offset the host passes, such as `2026-10-05T19:30:00-05:00` or what `toISOString()` gives:
 
 ```tsx
 // Worked out once per request, on the server.
@@ -183,6 +183,8 @@ const context = { now: new Date().toISOString(), renewal: plan.renewsAt }
 ```
 
 With `now` at `2026-10-05T12:00:00Z` and the renewal at `2026-10-10T12:00:00Z`, the label reads `Renews in 5 days` on the server and in the browser alike, whatever their clocks say. Without `context.now`, or with one that is no ISO instant, the date is shown in the `medium` style: `Renews Oct 10, 2026`.
+
+The offset is what makes it an instant. Without one, `2026-10-05T12:00:00` or `2026-10-05` would be read in the zone of the machine that renders it, so the form takes it for no instant. So is a `Date` or a timestamp: a development build names each once for the `context` that carries it. The date being measured is read the way the [`date`](format-filters.md#date) filter reads any date, so give it with its offset too: a day alone is midnight where the code runs, and the distance to it changes with the machine.
 
 `now` is the one key of `context` the form reads on its own, wherever the text it formats can read `context`: a label and a description. A [`value` or `source` payload](#event-payloads) resolves against the selected option and nothing else, so a relative date written there shows the date. A [`select/timezone`](../fields/specialized-selectors.md#4-timezone-selector-selecttimezone) labels its zones for the same instant.
 

@@ -64,7 +64,7 @@ At 03:00 UTC on 1 January the year is already the next one in UTC and still the 
 
 A year select needs both bounds. Without one, or with one that is no whole number, such as `"2026"` written as text or a `$ref` the context does not hold, it offers no year, and a development build names it in the console. A minimum after the maximum is named the same way.
 
-The schema checks the same bounds, so a year outside them, from a host value or a submit made by hand, is held back with `validation.length.min` or `validation.length.max` as the message, or a default such as `Too small: expected number to be >=2026`. An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
+The schema checks the same bounds, so a year outside them, from a host value or a submit made by hand, is held back with `validation.length.min` or `validation.length.max` as the message, or a default such as `Too small: expected number to be >=2026`. A field that offers no year takes none: any year is held back with `This year is not available`. An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
 
 ### 3. Day Selector (`select/day`)
 
@@ -101,8 +101,8 @@ const context = {
 <Form sections={sections} context={context} config={config} />
 ```
 
-- **`advanced.suggested`** is the zone offered first, alone in a "Suggested" group. The host knows it, from a profile, a cookie or a header, so it usually arrives through [`context`](../structure/definition.md#what-the-host-knows-context), and the server and the browser suggest the same one. Without it there is no "Suggested" group. A value that is no zone the runtime knows suggests nothing, and a development build names it in the console.
-- **[`context.now`](../interpolation/overview.md#the-instant-relative-dates-use)** is the instant the zones are labelled for. A zone's offset depends on it, `Madrid - Central European (UTC+01:00)` in January and `(UTC+02:00)` in July, and so does its name, which some zones have changed over the years. Without it each zone is labelled by its city alone, `Madrid`.
+- **`advanced.suggested`** is the zone offered first, alone in a "Suggested" group. The host knows it, from a profile, a cookie or a header, so it usually arrives through [`context`](../structure/definition.md#what-the-host-knows-context), and the server and the browser suggest the same one. Without it there is no "Suggested" group. A zone written another way is suggested, and submitted, by the name the runtime gives it, so it is listed once: `america/bogota` as `America/Bogota`, `US/Eastern` as `America/New_York`. A value that is no zone suggests nothing, an offset such as `+05:00` included, and a development build names it in the console.
+- **[`context.now`](../interpolation/overview.md#the-instant-relative-dates-use)**, an ISO date, time and offset, is the instant the zones are labelled for. A zone's offset depends on it, `Madrid - Central European (UTC+01:00)` in January and `(UTC+02:00)` in July, and so does its name, which some zones have changed over the years. Without it each zone is labelled by its city alone, `Madrid`.
 
 The list is the runtime's own, so two engines can list different zones: Node and Chromium list `Asia/Calcutta` and leave out `UTC`, which can still be suggested.
 

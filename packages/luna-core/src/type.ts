@@ -447,7 +447,8 @@ export type TimezoneItem = {
   value: string
 }
 
+// Shared by every form that asks for the same zone and instant, so read-only.
 export type TimezoneGroup = {
-  items: TimezoneItem[]
+  items: readonly TimezoneItem[]
   label: string
 }
