@@ -2,6 +2,7 @@ import { formatMarkdown } from '../lib/string'
 import {
   interpolateIfNeeded,
   isString,
+  renderOptions,
   translate,
   type Description as DescriptionType,
 } from '@luna-form/core'
@@ -40,7 +41,7 @@ export function DescriptionText(props: DescriptionTextProps) {
   const interpolated = interpolateIfNeeded(
     message,
     { context: props.context, env: props.config?.env },
-    { locale: props.config?.env?.locale as string | undefined }
+    renderOptions(props.config?.env, props.context)
   )
 
   return (

@@ -49,7 +49,8 @@ test.describe('Section Steps', { tag: ['@e2e'] }, () => {
                     "label": "Year",
                     "name": "year",
                     "type": "select/year",
-                    "required": true
+                    "required": true,
+                    "advanced": { "length": { "min": 2026, "max": 2032 } }
                   },
                   {
                     "label": "CVV",

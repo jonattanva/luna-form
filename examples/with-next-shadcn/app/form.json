@@ -107,8 +107,8 @@
                                 "testid": "year"
                             },
                             "length": {
-                                "min": "current",
-                                "max": "current+6"
+                                "min": { "$ref": "#/context/years.current" },
+                                "max": { "$ref": "#/context/years.inSix" }
                             }
                         },
                         "label": "Year",

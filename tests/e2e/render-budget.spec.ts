@@ -142,8 +142,9 @@ const BUDGETS: Budget[] = [
   {
     id: 'REN-6',
     title: 'the timezone list is rebuilt when its field re-renders',
-    // 406 zones and two Intl formatters each: about 63 ms a build in Node.
-    counts: { tz: 1 },
+    // Built once for each suggested zone and instant since the library stopped
+    // reading the clock: a field that renders again reuses the list.
+    counts: { tz: 0 },
     target: { tz: 0 },
     measure: async (page) => {
       await openScenario(page, timezoneToggle, '/')

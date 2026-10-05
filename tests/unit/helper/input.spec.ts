@@ -784,3 +784,182 @@ describe('holdValue', () => {
     )
   })
 })
+
+// A year select offers the years its definition gives it and no others. The
+// library keeps no clock, so "this year" is the host's to say, through
+// `context`, the way it says what today is to a date field.
+describe('year select', () => {
+  const yearsOf = (field: Field) =>
+    (buildCommon(field) as { options: Array<{ value: string }> }).options.map(
+      (option) => option.value
+    )
+
+  const declare = (length: object): Field =>
+    JSON.parse(
+      JSON.stringify({
+        name: 'expiry',
+        type: 'select/year',
+        advanced: { length },
+      })
+    ) as Field
+
+  test('should offer the years between its bounds, both included', () => {
+    expect(yearsOf(declare({ min: 2026, max: 2029 }))).toEqual([
+      '2026',
+      '2027',
+      '2028',
+      '2029',
+    ])
+  })
+
+  // What `prepare` hands the field once a `$ref` into context is resolved.
+  test('should offer the same years whatever day it is', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2031-01-15T12:00:00Z'))
+      expect(yearsOf(declare({ min: 2026, max: 2027 }))).toEqual([
+        '2026',
+        '2027',
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  // Named once for each bound that is wrong, the way a date field's are.
+  test.each([
+    ['no bounds', {}, 1],
+    ['no maximum', { min: 2026 }, 1],
+    ['no minimum', { max: 2030 }, 1],
+    ['the old relative years', { min: 'current', max: 'current+5' }, 2],
+    ['years written as text', { min: '2026', max: '2030' }, 2],
+    ['a year that is not whole', { min: 2026.5, max: 2030 }, 1],
+    [
+      'a bound nothing resolved',
+      { min: { $ref: '#/context/years.now' }, max: 2030 },
+      1,
+    ],
+    ['bounds nothing resolved', { $ref: '#/context/years' }, 1],
+    ['a minimum after the maximum', { min: 2030, max: 2026 }, 1],
+  ])('should offer no year with %s, and name it', (_, length, named) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      expect(yearsOf(declare(length))).toEqual([])
+      expect(warn).toHaveBeenCalledTimes(named)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test.each(['oops', 0])(
+    'should offer no year when advanced is %j, and name it',
+    (advanced) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const field = { name: 'expiry', type: 'select/year', advanced } as Field
+
+        expect(yearsOf(field)).toEqual([])
+        expect(warn).toHaveBeenCalledTimes(1)
+      } finally {
+        warn.mockRestore()
+      }
+    }
+  )
+
+  test('should offer no year to a field that declares nothing, and name it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      expect(yearsOf({ name: 'expiry', type: 'select/year' })).toEqual([])
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  // The form reads the bounds on every render: the same declaration is named
+  // once.
+  test('should name a declaration once however often it is read', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const field = declare({ min: 'current', max: 2030 })
+      yearsOf(field)
+      yearsOf(field)
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})
+
+// The zone a timezone select suggests is the host's to know -- a profile, a
+// cookie, a header -- and arrives through `advanced.suggested`, so the server
+// render and the browser suggest the same one.
+describe('timezone select', () => {
+  const declare = (advanced?: object): Field =>
+    JSON.parse(
+      JSON.stringify({ name: 'zone', type: 'select/timezone', advanced })
+    ) as Field
+
+  const groupsOf = (field: Field, now?: string) =>
+    (
+      buildCommon(field, false, undefined, now) as {
+        options: Array<{
+          label: string
+          items: Array<{ label: string; value: string }>
+        }>
+      }
+    ).options
+
+  test('should suggest the zone the definition gives it', () => {
+    const [suggested] = groupsOf(
+      declare({ suggested: 'America/Bogota' }),
+      '2026-01-15T12:00:00Z'
+    )
+
+    expect(suggested).toEqual({
+      label: 'Suggested',
+      items: [
+        { value: 'America/Bogota', label: 'Bogota - Colombia (UTC-05:00)' },
+      ],
+    })
+  })
+
+  // What a field submits is the name the list carries, so a zone written in
+  // another case or by an older name is suggested as the list names it, once.
+  test.each([
+    ['america/bogota', 'America/Bogota'],
+    ['US/Eastern', 'America/New_York'],
+  ])('should suggest %s as %s, and only there', (given, canonical) => {
+    const groups = groupsOf(declare({ suggested: given }))
+    const values = groups.flatMap((group) =>
+      group.items.map((item) => item.value)
+    )
+
+    expect(groups[0].items).toEqual([
+      expect.objectContaining({ value: canonical }),
+    ])
+    expect(values.filter((value) => value === canonical)).toHaveLength(1)
+  })
+
+  test('should suggest no zone when the definition gives none', () => {
+    expect(groupsOf(declare())[0].label).not.toBe('Suggested')
+  })
+
+  test.each([
+    ['no time zone', { suggested: 'Mars/Olympus' }],
+    ['an offset, which is no zone name', { suggested: '+05:00' }],
+    ['no text', { suggested: 5 }],
+    ['a reference nothing resolved', { suggested: { $ref: '#/context/zone' } }],
+  ])('should suggest no zone for %s, and name it once', (_, advanced) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const field = declare(advanced)
+
+      expect(groupsOf(field)[0].label).not.toBe('Suggested')
+      groupsOf(field)
+      expect(warn).toHaveBeenCalledTimes(1)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})

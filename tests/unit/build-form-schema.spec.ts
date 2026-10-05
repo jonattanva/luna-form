@@ -540,6 +540,38 @@ describe('buildFormSchema with dates and context', () => {
     })
   })
 
+  // The same for a year: the host says which years a field offers, and the
+  // server checks the ones it was told.
+  describe('years the host passes in context', () => {
+    const form = () =>
+      [
+        {
+          fields: [
+            {
+              name: 'expiry',
+              type: 'select/year',
+              advanced: {
+                length: {
+                  min: { $ref: '#/context/years.current' },
+                  max: { $ref: '#/context/years.last' },
+                },
+              },
+            },
+          ],
+        },
+      ] as unknown as Sections
+
+    test('holds back a year outside the ones the context gives', () => {
+      const schema = buildFormSchema(form(), undefined, undefined, {
+        years: { current: 2026, last: 2031 },
+      })
+
+      expect(schema.parse({ expiry: '2028' })).toEqual({ expiry: 2028 })
+      expect(schema.safeParse({ expiry: '2025' }).success).toBe(false)
+      expect(schema.safeParse({ expiry: '2032' }).success).toBe(false)
+    })
+  })
+
   // The library keeps no clock: the host says what today is, and a bound reads
   // it from context, the same on the server as in the browser.
   describe('a bound the host passes in context', () => {

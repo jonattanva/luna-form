@@ -1,6 +1,7 @@
-import { applyFormatFilter } from './format'
+import { applyFormatFilter, readNow } from './format'
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
+import type { Environment } from '../type'
 
 /**
  * Every quantifier in this file is bounded, and none of the bounds is a
@@ -48,6 +49,23 @@ const REGEX_WHOLE_PLACEHOLDER = /^{([^}|]{1,200})}$/
 
 export type InterpolateOptions = {
   locale?: string
+  // The instant a relative date is measured from: `context.now`.
+  now?: string
+}
+
+/**
+ * What text the form renders is formatted with: the locale the host set in
+ * `env` and the instant it gave in `context`. A label and a description format
+ * the same value the same way because they ask here.
+ */
+export function renderOptions(
+  env?: Environment,
+  context?: Record<string, unknown>
+): InterpolateOptions {
+  return {
+    locale: env?.locale as string | undefined,
+    now: readNow(context),
+  }
 }
 
 /**
@@ -216,6 +234,7 @@ function replacePlaceholders(
     for (const filter of filters) {
       const result = applyFormatFilter(current, filter, {
         locale: options.locale,
+        now: options.now,
       })
       if (result === undefined) {
         return match

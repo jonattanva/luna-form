@@ -37,6 +37,7 @@ export function Field(props: FieldProps) {
           field={props.field}
           horizontal={horizontal}
           lang={props.lang}
+          now={props.now}
           readOnly={readOnly}
           translations={props.translations}
         >

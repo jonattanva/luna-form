@@ -53,6 +53,25 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name="email"]')).toBeVisible()
   })
 
+  // What the server renders for `now` comes from the context it is handed, not
+  // from its clock or its zone: the description it sends and the zones it hands
+  // the combobox are the ones a browser anywhere would get.
+  test('should render from the instant and zone the host passes', async ({
+    page,
+    request,
+  }) => {
+    const html = await (await request.get('/server')).text()
+
+    expect(html).toContain('Renews in 7 days')
+
+    await page.goto('/server')
+    await page.getByRole('combobox', { name: /Time zone/ }).click()
+
+    await expect(page.getByRole('option').first()).toHaveText(
+      'Bogota - Colombia (UTC-05:00)'
+    )
+  })
+
   // The server tree has no field state, so a field's own `disabled` is the
   // only thing that can lock it there. Read from the body for the same reason
   // as above: the markup is what the server decided.

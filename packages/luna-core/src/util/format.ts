@@ -1,6 +1,6 @@
 import {
   format as fnsFormat,
-  formatDistanceToNow,
+  formatDistance,
   formatDuration,
   intervalToDuration,
   isValid,
@@ -8,9 +8,13 @@ import {
 } from 'date-fns'
 import { enUS, es } from 'date-fns/locale'
 import { isString } from './is-type'
+import { logger } from './logger'
+import { readInstant } from './date'
 import type { Locale } from 'date-fns'
 
-export type FormatContext = { locale?: string }
+// `now` is the instant a relative date is measured from, as the host gives it
+// in `context.now`: an ISO date, time and offset.
+export type FormatContext = { locale?: string; now?: string }
 export type FormatFilter = (
   value: unknown,
   args: string[],
@@ -91,6 +95,56 @@ function toDate(value: unknown): Date | null {
   return null
 }
 
+// The contexts whose `now` was named already: the form reads it on every
+// render, and a context is the same object while nothing in it changes.
+const namedNows = new WeakSet<object>()
+
+/**
+ * `context.now`, the one key of the host's `context` the library reads on its
+ * own: the instant a relative date is measured from and a time zone's offset is
+ * given for. The library keeps no clock, so without it there is no "now".
+ *
+ * Only an ISO date, time and offset is an instant. A `Date`, a timestamp or a
+ * time without its offset is none, and a development build names it once for
+ * the context that carries it, since nothing on the form says so otherwise.
+ */
+export function readNow(context?: Record<string, unknown>): string | undefined {
+  const now = context?.now
+  if (now == null) {
+    return undefined
+  }
+
+  if (isString(now) && readInstant(now)) {
+    return now
+  }
+
+  if (context && !namedNows.has(context)) {
+    namedNows.add(context)
+    logger.warn(
+      `context.now is ${describeNow(now)}, which is no ISO date, time and offset such as "2026-10-05T19:30:00-05:00", so nothing is measured from it`
+    )
+  }
+
+  return undefined
+}
+
+function describeNow(now: unknown): string {
+  if (now instanceof Date) {
+    return 'a Date (pass its toISOString())'
+  }
+  return isString(now) ? JSON.stringify(now) : `a ${typeof now}`
+}
+
+// Measured from the instant the host gives, never from this machine's clock:
+// the server and the browser render the same words, and on any day. Without an
+// instant there is nothing to measure from, so the date is shown as it is.
+function since(date: Date, ctx: FormatContext, locale?: Locale): string {
+  const now = readInstant(ctx.now)
+  return now
+    ? formatDistance(date, now, { addSuffix: true, locale })
+    : fnsFormat(date, DATE_PATTERNS.medium, { locale })
+}
+
 export const formatFilters: Record<string, FormatFilter> = {
   currency: (value, args, ctx) => {
     const num = toNumber(value)
@@ -128,7 +182,7 @@ export const formatFilters: Record<string, FormatFilter> = {
     const style = args[0] ?? 'short'
     const locale = resolveLocale(ctx.locale)
     if (style === 'relative') {
-      return formatDistanceToNow(date, { addSuffix: true, locale })
+      return since(date, ctx, locale)
     }
     const pattern = DATE_PATTERNS[style] ?? style
     return fnsFormat(date, pattern, { locale })
@@ -150,7 +204,7 @@ export const formatFilters: Record<string, FormatFilter> = {
 
     const date = toDate(value)
     if (date) {
-      return formatDistanceToNow(date, { addSuffix: true, locale })
+      return since(date, ctx, locale)
     }
 
     return String(value)

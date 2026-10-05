@@ -1,5 +1,5 @@
 import { buildSchema, getSchema } from '@/packages/luna-core/src/util/schema'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import type { Input } from '@/packages/luna-core/src/type'
 
 // What the submit does with the text a browser sends for a number. An
@@ -90,6 +90,82 @@ describe('number values', () => {
 
     expect(parsed.success).toBe(true)
     expect(parsed.data?.year).toBeUndefined()
+  })
+
+  // The schema checks the years the field offers: a host value or a payload
+  // outside them answers no question the field asks.
+  describe('a year between its bounds', () => {
+    const bounded: Input = {
+      name: 'year',
+      type: 'select/year',
+      advanced: { length: { min: 2026, max: 2030 } },
+    }
+
+    test.each(['2026', '2028', '2030'])('should accept %s', (value) => {
+      const parsed = parse(bounded, value)
+
+      expect(parsed.success).toBe(true)
+      expect(parsed.data?.year).toBe(Number(value))
+    })
+
+    test.each(['1990', '2025', '2031', '2099'])(
+      'should hold %s back',
+      (value) => {
+        expect(parse(bounded, value).success).toBe(false)
+      }
+    )
+
+    test('should hold a year outside its bounds with the message of each', () => {
+      const messages: Input = {
+        ...bounded,
+        validation: {
+          length: { min: 'From 2026 on', max: 'Up to 2030' },
+        },
+      }
+
+      expect(parse(messages, '2025').error?.issues[0].message).toBe(
+        'From 2026 on'
+      )
+      expect(parse(messages, '2031').error?.issues[0].message).toBe(
+        'Up to 2030'
+      )
+    })
+
+    // The options and the schema read the same bounds: a field that offers no
+    // year takes none, from a host value or a submit made by hand.
+    test.each([
+      ['no bounds', undefined],
+      ['one bound', { min: 2026 }],
+      [
+        'a bound nothing resolved',
+        { min: { $ref: '#/context/now' }, max: 2030 },
+      ],
+    ])('should hold back any year with %s', (_, length) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        const offersNone = JSON.parse(
+          JSON.stringify({
+            name: 'year',
+            type: 'select/year',
+            advanced: { length },
+          })
+        ) as Input
+
+        expect(parse(offersNone, '2028').error?.issues[0].message).toBe(
+          'This year is not available'
+        )
+        expect(parse(offersNone, '').success).toBe(true)
+      } finally {
+        warn.mockRestore()
+      }
+    })
+
+    test('should still leave an optional year nobody picked out', () => {
+      const parsed = parse(bounded, '')
+
+      expect(parsed.success).toBe(true)
+      expect(parsed.data?.year).toBeUndefined()
+    })
   })
 
   test('should not hold an optional month nobody picked', () => {

@@ -4,6 +4,7 @@ import {
   interpolateIfNeeded,
   isObject,
   isString,
+  renderOptions,
   translate,
   type Description as DescriptionType,
 } from '@luna-form/core'
@@ -26,8 +27,7 @@ export function FormattedDescription(
     value: props.value,
   }
 
-  const locale = props.config?.env?.locale as string | undefined
-  const formatOptions = { locale }
+  const formatOptions = renderOptions(props.config?.env, props.context)
 
   const [isExpanded, toggle] = useDisclosure(() => {
     if (isObject(props.text) && 'collapsed' in props.text) {

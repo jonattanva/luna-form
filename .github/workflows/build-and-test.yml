@@ -47,7 +47,11 @@ jobs:
       - name: Check bundle size
         run: |
           DIST="packages/luna-react/dist"
-          LIMIT_KB=250
+          # The guard is for a dependency bundled by mistake, which adds
+          # hundreds of kB (date-fns took the total to 342 kB). The date
+          # picker's bounds, reserved days, ranges, years and time zones are
+          # the library's own code, about 35 kB over cjs and esm together.
+          LIMIT_KB=265
           total=0
           rows=""
 

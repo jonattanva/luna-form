@@ -114,6 +114,16 @@ describe('interpolate', () => {
     expect(result).toBe('1,234.56')
   })
 
+  test('should hand a filter the instant it measures from', () => {
+    expect(
+      interpolate(
+        'Due {due | date:relative}',
+        { due: '2026-10-12T12:00:00Z' },
+        { locale: 'en-US', now: '2026-10-05T12:00:00Z' }
+      )
+    ).toBe('Due in 7 days')
+  })
+
   test('should apply duration filter with seconds unit', () => {
     expect(
       interpolate('{x | duration:s}', { x: 3600 }, { locale: 'en-US' })

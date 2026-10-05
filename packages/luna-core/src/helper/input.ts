@@ -16,8 +16,8 @@ import {
 } from '../util/build'
 import {
   buildDateLimits,
-  getConvert,
-  getCurrentYear,
+  buildSuggestedZone,
+  buildYearLimits,
   getDateFormat,
   getMonth,
   getTimeFormat,
@@ -67,8 +67,6 @@ import type {
   Localization,
 } from '../type'
 
-const now = getCurrentYear()
-
 function buildOptionChips(field: Field, localization?: Localization) {
   if (isChips(field)) {
     // Only `lang` reaches the builder: chips have no authored copy of their
@@ -87,13 +85,23 @@ function defineOptionChips(field: Chips, lang?: string) {
   }
 }
 
-function buildOptionSelect(field: Field, localization?: Localization) {
+// `now` is the instant the host gives in `context.now`, which a timezone
+// select labels its zones for.
+function buildOptionSelect(
+  field: Field,
+  localization?: Localization,
+  now?: string
+) {
   if (isSelect(field)) {
-    return defineOptionSelect(field, localization)
+    return defineOptionSelect(field, localization, now)
   }
 }
 
-function defineOptionSelect(select: Select, localization?: Localization) {
+function defineOptionSelect(
+  select: Select,
+  localization?: Localization,
+  now?: string
+) {
   const { lang, translations } = localization ?? {}
 
   if (isSelectDay(select)) {
@@ -105,14 +113,12 @@ function defineOptionSelect(select: Select, localization?: Localization) {
   }
 
   if (isSelectYear(select)) {
-    const min = select.advanced?.length?.min ?? now
-    const max = select.advanced?.length?.max ?? now + 5
-
-    return getYear(getConvert(min, now), getConvert(max, now))
+    const { max, min } = buildYearLimits(select)
+    return min !== undefined && max !== undefined ? getYear(min, max) : []
   }
 
   if (isSelectTimezone(select)) {
-    return getTimezones()
+    return getTimezones(buildSuggestedZone(select), now)
   }
 
   // The only built-in selector whose labels are authored copy rather than
@@ -136,7 +142,8 @@ function defineOptionSelect(select: Select, localization?: Localization) {
 export function buildCommon(
   field: Field,
   disabled: boolean = false,
-  localization?: Localization
+  localization?: Localization,
+  now?: string
 ): CommonProps {
   const commonProps: CommonProps = {
     disabled,
@@ -156,7 +163,7 @@ export function buildCommon(
   if (isSelect(field)) {
     return {
       ...commonProps,
-      ...defineWithOptions(buildOptionSelect(field, localization)),
+      ...defineWithOptions(buildOptionSelect(field, localization, now)),
     }
   }
 
@@ -518,7 +525,9 @@ export function getPreviewOptions(
   field: Field,
   localization?: Localization
 ): Array<Option | string> | undefined {
-  if (!isOptions(field)) {
+  // A row shows a zone by its name: the list is grouped, which a preview
+  // cannot look a label up in, so building it would be all cost.
+  if (!isOptions(field) || isSelectTimezone(field)) {
     return undefined
   }
 

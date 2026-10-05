@@ -3,6 +3,7 @@ import {
   isField,
   isList,
   prepare,
+  readNow,
   type Fields,
   type Nullable,
   type Style,
@@ -50,6 +51,7 @@ export function SlotBase(
   }>
 ) {
   const { field: Field, list: List } = props.components
+  const now = readNow(props.context)
 
   return prepare(props.fields).map((field, index) => (
     <Fragment key={slotKey(field, index)}>
@@ -69,6 +71,7 @@ export function SlotBase(
           disabled={props.disabled}
           field={field}
           lang={props.lang}
+          now={now}
           style={props.style}
           translations={props.translations}
         >

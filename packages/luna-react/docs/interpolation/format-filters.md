@@ -87,11 +87,12 @@ Formats a date or ISO string with a named style.
 - **Syntax**: `{value | date:STYLE}`
 - **Args**:
   - `STYLE` (string, default `"short"`) — one of `short`, `medium`, `long`, `full`, `relative`. Any other value is passed directly to `date-fns`'s `format` as a pattern.
-- **Backend**: `date-fns` (`format`, `formatDistanceToNow` for `relative`).
+- **Backend**: `date-fns` (`format`, `formatDistance` for `relative`).
 - **Accepts**: `Date`, ISO string, or numeric timestamp (ms).
+- **`relative`** is measured from [`context.now`](overview.md#the-instant-relative-dates-use), the instant the host passes, never from the clock of the machine that renders it. Without it the date is shown in the `medium` style.
 - **Examples**:
   - `"2026-05-10"` with `date:long` and `locale: en-US` → `May 10, 2026`.
-  - A future date with `date:relative` and `locale: en-US` → `in 7 days`.
+  - `"2026-10-12T12:00:00Z"` with `date:relative`, `context.now` at `"2026-10-05T12:00:00Z"` and `locale: en-US` → `in 7 days`; with no `context.now` → `Oct 12, 2026`.
 
 ### `duration`
 
@@ -100,10 +101,10 @@ Produces a localized human-readable duration in years, months, days, hours, minu
 - **Syntax**: `{value | duration}` or `{value | duration:UNIT}`
 - **Args**:
   - `UNIT` (string, default `"ms"`) — input unit when the value is a number. One of `ms`, `s`, `min`, `h`, `d`.
-- **Backend**: `date-fns` (`formatDistanceToNow`, `formatDuration`, `intervalToDuration`).
+- **Backend**: `date-fns` (`formatDistance`, `formatDuration`, `intervalToDuration`).
 - **Behavior depends on input type**:
   - **Number** (or numeric string): treated as a duration in `UNIT` units, converted to milliseconds, then formatted as a breakdown (`"1 day 2 hours"`).
-  - **`Date` or non-numeric ISO string**: distance between the date and "now" with a suffix (`"3 months ago"`, `"in 2 days"`).
+  - **`Date` or non-numeric ISO string**: distance between the date and [`context.now`](overview.md#the-instant-relative-dates-use) with a suffix (`"3 months ago"`, `"in 2 days"`). Without `context.now` the date is shown in the `medium` style.
 - **Multipliers to milliseconds**:
 
   | Unit  | Multiplier |
@@ -118,7 +119,7 @@ Produces a localized human-readable duration in years, months, days, hours, minu
   - `{age | duration:s}` with `3600` → `1 hour`.
   - `{wait | duration:min}` with `90` → `1 hour 30 minutes`.
   - `{ms | duration}` with `93_600_000` → `1 day 2 hours`.
-  - `{createdAt | duration}` with an ISO date in the past → `3 months ago`.
+  - `{createdAt | duration}` with `"2026-07-07T12:00:00Z"` and `context.now` at `"2026-10-05T12:00:00Z"` → `3 months ago`.
 
 ## Supported locales
 
