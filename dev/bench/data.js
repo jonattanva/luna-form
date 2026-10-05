@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791174758258,
+  "lastUpdate": 1791174785514,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "f657ac7f184bfb0839a7e2c77f4d7aff4f671fd6",
-          "message": "feat: add reactive preview label conditions for list items and bump versions to 0.0.50",
-          "timestamp": "2026-05-12T11:28:19-05:00",
-          "tree_id": "5aa15ebe9f2fb291b845bd962aee26010eb4d61d",
-          "url": "https://github.com/jonattanva/luna-form/commit/f657ac7f184bfb0839a7e2c77f4d7aff4f671fd6"
-        },
-        "date": 1778603571058,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 278,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 631,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "d58eebeb771c928a55574b8a50c9fb9555b19277",
           "message": "ci: increase e2e test timeout to 60 minutes",
           "timestamp": "2026-05-12T15:21:28-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 148,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "713243cf47e2203cc9944b177a2353277e18931d",
+          "message": "build(editor): the build task hashes the files next build reads\n\nThe editor's turbo.json extended the root build task and overrode only its\noutputs, so it inherited `inputs: [\"src/**\", \"scripts/**\", \"tsconfig.json\",\n\"esbuild.mjs\"]`. The editor has no src/: its code lives in app/, components/\nand lib/, beside luna.config.ts, next.config.ts and postcss.config.mjs. An edit\nto any of them left the hash unchanged, `pnpm run build` reported FULL TURBO and\nreplayed the old .next, and e2e ran against a stale editor. A change in either\npackage still invalidated it through ^build, which is why it went unnoticed.\n\nThe task now takes `$TURBO_DEFAULT$` (every tracked or unignored file, which\nleaves out .next, node_modules and the generated next-env.d.ts) plus `.env*`,\nwhich next build reads but git ignores.\n\nWith app/layout.tsx edited, before: 3 cached, FULL TURBO. After: luna-core and\nluna-react cached, the editor a cache miss; reverting the edit is a hit again.\nlint was never blind here (its transit dependency hashes every file in the\npackage), and the editor has no typescript script: next build type-checks it.",
+          "timestamp": "2026-10-04T23:31:53-05:00",
+          "tree_id": "b95f6a7f2849d20e08add171741815265125d58c",
+          "url": "https://github.com/jonattanva/luna-form/commit/713243cf47e2203cc9944b177a2353277e18931d"
+        },
+        "date": 1791174785481,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 243,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 163,
             "unit": "ms"
           }
         ]
