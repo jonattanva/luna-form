@@ -189,7 +189,7 @@ The `state` action modifies the interactive state or visibility of other fields 
 - `action` (string): Must be set to `"state"`.
 - `target` (string | array of strings): The field name, or an array of field names, that the state modifications should be applied to.
 - `state` (object): An object containing the new state to apply. Properties are independent of field names — the form may safely contain a field whose `name` is `"description"`, `"disabled"` or `"hidden"`; `target` identifies the field, the keys inside `state` configure it.
-  - `disabled` (boolean, optional): Whether the field should be disabled.
+  - `disabled` (boolean, optional): Whether the field should be disabled. While the condition holds it takes the place of the field's own `disabled`, in either direction: `false` enables a field declared `"disabled": true`. Once the condition stops holding, the field's own `disabled` applies again.
   - `hidden` (boolean, optional): Whether the field should be hidden from view. **Note:** When a field becomes hidden (`hidden: true`), its current value is automatically cleared from the form state to ensure no non-applicable data is submitted. See [What clearing a hidden target means](#what-clearing-a-hidden-target-means).
   - `description` (string | object, optional): A new description to render for the target field. Supports interpolation, format filters, and **Markdown** (specifically links). e.g. `"Check our [terms](https://example.com) for details."`.
 - `when` (string | array of strings | [Condition object](#the-condition-object), optional): A condition that specifies when this state should be applied.

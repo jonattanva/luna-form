@@ -86,6 +86,57 @@ test.describe('What the browser does not send', { tag: ['@e2e'] }, () => {
     }
   })
 
+  // The opposite promise, from the same page: a disabled field "is
+  // non-interactive and blocked from events, and its value is not submitted".
+  // Its default never reaches the action. What the action gets instead is what
+  // the schema makes of a key the browser left out: nothing, except that a
+  // checkbox reads it as unchecked and chips as nothing picked.
+  test.describe('a disabled field with a default', () => {
+    const withheld = (type: string) => {
+      if (type.startsWith('checkbox')) {
+        return false
+      }
+      return type.startsWith('chips') ? [] : undefined
+    }
+
+    for (const { type, value } of CASES) {
+      test(`should not submit its value: ${type}`, async ({ page }) => {
+        await open(page, [
+          {
+            label: 'Target',
+            name: 'target',
+            type,
+            disabled: true,
+            defaultValue: value,
+            ...(WITH_OPTIONS.has(type) ? { source: COLORS } : {}),
+          },
+        ])
+
+        const payload = await submit(page)
+
+        expect(payload.target).toEqual(withheld(type))
+      })
+    }
+
+    // Disabled wins over read-only, as in HTML: the field is not sent.
+    test('should not submit a field that is also read-only', async ({
+      page,
+    }) => {
+      await open(page, [
+        {
+          label: 'Target',
+          name: 'target',
+          type: 'input/text',
+          readonly: true,
+          disabled: true,
+          defaultValue: 'ABC-1',
+        },
+      ])
+
+      expect(await submit(page)).toEqual({ name: '' })
+    })
+  })
+
   // A row names its fields by the row's stable id, and the value has to travel
   // under that name all the same.
   test('should submit a read-only field inside a list row', async ({

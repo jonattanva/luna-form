@@ -52,4 +52,18 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name="name"]')).toBeVisible()
     await expect(page.locator('input[name="email"]')).toBeVisible()
   })
+
+  // The server tree has no field state, so a field's own `disabled` is the
+  // only thing that can lock it there. Read from the body for the same reason
+  // as above: the markup is what the server decided.
+  test('should render a field that declares disabled as disabled', async ({
+    request,
+  }) => {
+    const html = await (await request.get('/server')).text()
+    const input = (name: string) =>
+      html.match(new RegExp(`<input[^>]*\\sname="${name}"[^>]*>`))?.[0]
+
+    expect(input('code')).toMatch(/\sdisabled=""/)
+    expect(input('name')).toMatch(/^<input(?![^>]*\sdisabled="")/)
+  })
 })
