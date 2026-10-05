@@ -39,7 +39,7 @@ rest:
 | Peer                 | Required version | Used for                                    |
 | -------------------- | ---------------- | ------------------------------------------- |
 | `react`, `react-dom` | `^19.0.0`        | rendering, and `useActionState` on submit   |
-| `zod`                | `^4.0.0`         | the schema derived from `sections`          |
+| `zod`                | `^4.0.6`         | the schema derived from `sections`          |
 | `jotai`              | `^2.0.0`         | the form's value, error and source stores   |
 | `swr`                | `^2.0.0`         | fetching a field's remote `source`          |
 | `date-fns`           | `^4.0.0`         | date and time formatting, `duration` filter |
