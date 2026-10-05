@@ -62,6 +62,4 @@ export type InputStrategies = Readonly<{
     defaultValue: unknown,
     data: Nullable<unknown[]>
   ) => boolean
-
-  useExtraProps?: (field: Field) => Record<string, unknown> | undefined
 }>

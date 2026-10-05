@@ -73,6 +73,16 @@ Date and time inputs omit transformations and instead expose a `format` property
 - **Date format** _(used with `input/date`)_: `"yyyy-MM-dd"`, `"MM/dd/yyyy"`, `"dd/MM/yyyy"`, or `"MMMM d, yyyy"`.
 - **Time format** _(used with `input/time`)_: `"HH:mm"`, `"HH:mm:ss"`, `"hh:mm a"`, or `"hh:mm:ss a"`.
 
+### What a date holds
+
+An `input/date` holds a day as `yyyy-MM-dd`, whatever its `format`. That is the value the form hands its component, reports through `onValueChange`, submits, and validates on the server with `buildFormSchema`. `format` only says how the field shows the day, and reaches the component as its `data-format` prop (see [Date components](custom-inputs.md#date-components)).
+
+- A value the host passes in, or a `defaultValue`, is read in either shape: `yyyy-MM-dd`, or the field's `format`. A host that keeps what the form submitted can pass it straight back.
+- Text that is no day, typed in another format, with a year short of four digits, or naming a day that does not exist such as February 30, is kept as typed and holds the submit back with `validation.date`.
+- An optional date left empty is not submitted at all, the way an empty number is not.
+- In a description, `{value}` is the `yyyy-MM-dd` text. To show it another way, use a filter such as `{value | date:long}`.
+- Everything that compares a date sees `yyyy-MM-dd` too: a `when`, a `custom` or `rules` validation, a change event. Write the dates they compare against that way, as in `"value": "2026-10-01"`.
+
 ---
 
 ## Validation (`validation` object)
@@ -81,6 +91,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
+- **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
 - **`length`** _({ min?: string, max?: string })_: Specific string messages shown when input lengths are breached.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
 - **`custom`** _(CustomValidation | CustomValidation[])_: Powerful conditional-based logic blocks. An array specifying:

@@ -27,6 +27,7 @@ export function Form(
     <Component
       advanced={props.advanced}
       config={props.config}
+      context={props.context}
       control={props.children}
       definition={props.definition}
       readOnly={props.readOnly}

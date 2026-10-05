@@ -43,6 +43,9 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
     expect(html).toContain('name="name"')
     expect(html).toContain('name="email"')
     expect(html).toContain('Server rendered')
+    // The date's own format, not the `data.format` its `advanced` also names.
+    expect(html).toContain('data-format="dd/MM/yyyy"')
+    expect(html).not.toContain('data-format="yyyy"')
 
     await page.goto('/server')
 

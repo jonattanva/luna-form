@@ -28,18 +28,16 @@ On submit, in this order:
 
 1. **The form data becomes an object.** A name that appears more than once
    arrives as an array; everything else as a single value.
-2. **Date fields are normalized.** A date input holds its value in the display
-   format the field declares, and it is converted back to a native date before
-   validation, so the schema and your action see one shape whatever
+2. **It is validated** against the schema built from the fields that are
+   currently mounted. A date is read in either shape the form accepts and comes
+   out of the schema as `yyyy-MM-dd`, so your action sees one shape whatever
    `advanced.format` says.
-3. **It is validated** against the schema built from the fields that are
-   currently mounted.
-4. **Dotted names are un-flattened.** `basicAuth.username` becomes
+3. **Dotted names are un-flattened.** `basicAuth.username` becomes
    `{ basicAuth: { username } }`, and a numeric segment becomes an array index,
    so `rules.0.value` rebuilds the list — with the gaps of removed rows closed
    up.
-5. **Your `action` is awaited** with that object and the schema.
-6. **`onSuccess` is called** with what the action returned, and the form clears
+4. **Your `action` is awaited** with that object and the schema.
+5. **`onSuccess` is called** with what the action returned, and the form clears
    itself.
 
 ## Only mounted fields are validated

@@ -9,8 +9,15 @@ import {
   resolveSource,
   prepareInputProps,
   prepareInputValue,
+  dateFormatOf,
+  holdValue,
 } from '@/packages/luna-core/src/helper/input'
-import type { Field, Select, CommonProps } from '@/packages/luna-core/src/type'
+import type {
+  CommonProps,
+  Date as DateField,
+  Field,
+  Select,
+} from '@/packages/luna-core/src/type'
 
 describe('Input Helper', () => {
   test('should return defaultChecked for checkbox fields', () => {
@@ -501,6 +508,132 @@ describe('Input Helper', () => {
 
         expect(buildCommon(field)).not.toHaveProperty('step')
       }
+    )
+  })
+})
+
+// A date travels as `yyyy-MM-dd` between the form and its component, on the
+// server and in the browser alike, and its format travels apart as an
+// attribute the component reads to show it.
+describe('date fields', () => {
+  const field: DateField = {
+    name: 'check_in',
+    type: 'input/date',
+    advanced: { format: 'dd/MM/yyyy' },
+  }
+
+  test('should put the format on the props both render paths build', () => {
+    expect(buildCommon(field)).toMatchObject({
+      'data-format': 'dd/MM/yyyy',
+      type: 'date',
+    })
+  })
+
+  test('should put the default format on a date that declares none', () => {
+    expect(buildCommon({ name: 'd', type: 'input/date' })).toMatchObject({
+      'data-format': 'MMMM d, yyyy',
+    })
+  })
+
+  // The component is told the format the schema reads with, so what it shows
+  // and what the form accepts cannot disagree.
+  test('should put the default format on a date whose format is unknown', () => {
+    const unknown = JSON.parse(
+      '{"name":"d","type":"input/date","advanced":{"format":"DD/MM/YYYY"}}'
+    ) as DateField
+    expect(buildCommon(unknown)).toMatchObject({
+      'data-format': 'MMMM d, yyyy',
+    })
+  })
+
+  test('should put the format on a time field beside its step', () => {
+    expect(buildCommon({ name: 't', type: 'input/time' })).toMatchObject({
+      'data-format': 'HH:mm',
+      step: '60',
+    })
+  })
+
+  test('should hand the component a host value in yyyy-MM-dd as it is', () => {
+    const { defaultValue } = prepareInputProps(
+      field,
+      buildCommon(field),
+      null,
+      {
+        check_in: '2024-06-15',
+      }
+    )
+
+    expect(defaultValue).toBe('2024-06-15')
+    expect(prepareInputValue(field, defaultValue)).toEqual({
+      value: '2024-06-15',
+    })
+  })
+
+  test('should read a host value still in the display format', () => {
+    const { defaultValue } = prepareInputProps(
+      field,
+      buildCommon(field),
+      null,
+      {
+        check_in: '15/06/2024',
+      }
+    )
+
+    expect(defaultValue).toBe('2024-06-15')
+  })
+
+  test('should hand on text that is no day as it is', () => {
+    const { defaultValue } = prepareInputProps(
+      field,
+      buildCommon(field),
+      null,
+      {
+        check_in: 'next tuesday',
+      }
+    )
+
+    expect(defaultValue).toBe('next tuesday')
+  })
+
+  test('should give the format of a date and nothing else', () => {
+    expect(dateFormatOf(field)).toBe('dd/MM/yyyy')
+    expect(dateFormatOf({ name: 'n', type: 'input/text' })).toBe(undefined)
+    expect(dateFormatOf(undefined)).toBe(undefined)
+  })
+})
+
+// Every way a value reaches a date field -- the host, a default, typing, a
+// change event, a list row -- goes through here, so a field holds one shape
+// whoever wrote it.
+describe('holdValue', () => {
+  const field: DateField = {
+    name: 'check_in',
+    type: 'input/date',
+    advanced: { format: 'dd/MM/yyyy' },
+  }
+
+  test('should hold a day as yyyy-MM-dd in either shape it arrives in', () => {
+    expect(holdValue(field, '2024-06-15')).toBe('2024-06-15')
+    expect(holdValue(field, '15/06/2024')).toBe('2024-06-15')
+  })
+
+  test('should keep text that is no day, so the schema can judge it', () => {
+    expect(holdValue(field, 'next tuesday')).toBe('next tuesday')
+    expect(holdValue(field, '')).toBe('')
+  })
+
+  test('should keep a year being typed as text rather than read a day in it', () => {
+    expect(holdValue(field, '15/06/2')).toBe('15/06/2')
+  })
+
+  test('should leave a value that is not text untouched', () => {
+    expect(holdValue(field, null)).toBe(null)
+    expect(holdValue(field, ['2024-06-15'])).toEqual(['2024-06-15'])
+  })
+
+  test('should leave the value of a field that is not a date untouched', () => {
+    expect(holdValue({ name: 'n', type: 'input/text' }, '15/06/2024')).toBe(
+      '15/06/2024'
     )
   })
 })

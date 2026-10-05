@@ -2,6 +2,7 @@ import { applyCustomValidation } from '@/packages/luna-core/src/util/schema'
 import { describe, expect, test } from 'vitest'
 import {
   buildSchema,
+  getDateSchema,
   getEmail,
   getMonthSchema,
   getNumber,
@@ -10,7 +11,11 @@ import {
   getYearSchema,
 } from '@/packages/luna-core/src/util/schema'
 import { z } from 'zod'
-import type { Field, Input } from '@/packages/luna-core/src/type'
+import type {
+  Date as DateField,
+  Field,
+  Input,
+} from '@/packages/luna-core/src/type'
 
 describe('Schema Utility', () => {
   test('should create an email schema with required validation', () => {
@@ -1028,5 +1033,69 @@ describe('Schema Utility', () => {
     const result = schema.safeParse('not-an-email')
     expect(result.success).toBe(false)
     expect(result.error?.issues[0].message).toBe('Formato de correo inválido')
+  })
+})
+
+// A day is checked as `yyyy-MM-dd` however it arrived, and leaves the schema in
+// that shape: what the submit sends is what this returns.
+describe('date schema', () => {
+  const date = (extra: Partial<DateField> = {}): DateField => ({
+    name: 'check_in',
+    type: 'input/date',
+    advanced: { format: 'dd/MM/yyyy' },
+    ...extra,
+  })
+
+  test('should read a day typed in the field format as yyyy-MM-dd', () => {
+    expect(getDateSchema(date()).parse('15/01/2024')).toBe('2024-01-15')
+  })
+
+  test('should read a day already in yyyy-MM-dd', () => {
+    expect(getDateSchema(date()).parse('2024-01-15')).toBe('2024-01-15')
+  })
+
+  test('should be the schema getSchema gives an input/date', () => {
+    expect(getSchema(date()).parse('15/01/2024')).toBe('2024-01-15')
+  })
+
+  test('should hold back text that is no day', () => {
+    const result = getDateSchema(date()).safeParse('next tuesday')
+
+    expect(result.success).toBe(false)
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      'Invalid date',
+    ])
+  })
+
+  test('should hold back a day that does not exist with its own message', () => {
+    const result = getDateSchema(
+      date({ validation: { date: 'Write it as 15/01/2024' } })
+    ).safeParse('30/02/2026')
+
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      'Write it as 15/01/2024',
+    ])
+  })
+
+  test('should leave an optional date nobody gave out of the result', () => {
+    const schema = getDateSchema(date())
+
+    expect(schema.parse('')).toBeUndefined()
+    expect(schema.parse('   ')).toBeUndefined()
+    expect(schema.parse(undefined)).toBeUndefined()
+    expect(schema.parse(null)).toBeUndefined()
+  })
+
+  test('should ask for a required date with its message', () => {
+    const schema = getDateSchema(
+      date({ required: true, validation: { required: 'Pick a day' } })
+    )
+
+    for (const empty of ['', '   ', undefined, null]) {
+      const result = schema.safeParse(empty)
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+        'Pick a day',
+      ])
+    }
   })
 })

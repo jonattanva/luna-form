@@ -13,6 +13,11 @@ import {
 } from '@luna-form/core'
 import type { AlertProps, Config, InputConfig } from '../type'
 
+// For whoever writes the component a date field renders with: it reads back
+// what the form put on its props. Exported beside `defineCustomInput`, which is
+// where that component is registered.
+export { readDateProps, type DateProps } from '@luna-form/core'
+
 const DEFAULT_VALIDATION = {
   blur: true,
   change: true,

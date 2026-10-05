@@ -28,6 +28,14 @@ const sections = [
         type: 'input/text',
         disabled: true,
       },
+      {
+        // `advanced.data` names the same attribute the form writes for the
+        // format; the form's value has to win on the server too.
+        label: 'Check-in',
+        name: 'check_in',
+        type: 'input/date',
+        advanced: { format: 'dd/MM/yyyy', data: { format: 'yyyy' } },
+      },
     ],
   },
 ]

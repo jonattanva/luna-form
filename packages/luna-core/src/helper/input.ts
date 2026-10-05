@@ -1,4 +1,11 @@
-import { MAX, MAX_LENGTH, MIN, MIN_LENGTH, OPTIONS } from '../util/constant'
+import {
+  DATA_FORMAT,
+  MAX,
+  MAX_LENGTH,
+  MIN,
+  MIN_LENGTH,
+  OPTIONS,
+} from '../util/constant'
 import {
   buildNumberStep,
   buildOptions,
@@ -6,7 +13,6 @@ import {
   isArraySource,
 } from '../util/build'
 import {
-  fromNativeDate,
   getConvert,
   getCurrentYear,
   getDateFormat,
@@ -43,7 +49,6 @@ import { isObject, isString } from '../util/is-type'
 import { translateOptions, type BuiltInKey } from '../util/translate'
 import type {
   Chips,
-  Date as DateField,
   CommonProps,
   DataSource,
   Field,
@@ -53,7 +58,6 @@ import type {
   Select,
   Time,
   Value,
-  TimeFormat,
   DateFormat,
   Localization,
 } from '../type'
@@ -174,6 +178,7 @@ function defineInput(input: Input) {
 
   return {
     ...defineTime(input),
+    ...defineDate(input),
     ...defineAutoComplete(input),
     ...defineNumberLimits(copy),
     ...defineNumberStep(copy),
@@ -226,16 +231,26 @@ function defineNumberLimits(input: Input): Partial<CommonProps> {
   return {}
 }
 
+// What a temporal field tells the component that renders it, the same on the
+// server and in the browser: these props are built here, where both render
+// paths build theirs. The format attribute says how to show the value, never
+// the shape of the value itself. For a date, `readDateProps` reads it back.
 function defineTime(field: Field) {
   if (isTime(field)) {
     const format = getTimeFormat(field)
     const withSeconds = format === 'HH:mm:ss' || format === 'hh:mm:ss a'
 
     return {
+      [DATA_FORMAT]: format,
       step: withSeconds ? '1' : '60',
     }
   }
   return {}
+}
+
+function defineDate(field: Field) {
+  const format = dateFormatOf(field)
+  return format ? { [DATA_FORMAT]: format } : {}
 }
 
 function defineLength(input: Input): Partial<CommonProps> {
@@ -292,7 +307,7 @@ export function getInputValue<K>(field: Field, value?: Nullable<K>) {
   }
 
   if (isDate(field) && isValidValue(effectiveValue)) {
-    return getDateValue(field, effectiveValue)
+    return holdValue(field, effectiveValue)
   }
 
   return effectiveValue
@@ -390,12 +405,6 @@ export function prepareInputValue<T>(field: Field, value?: Nullable<T>) {
     return { value: Array.isArray(value) ? value : [] }
   }
 
-  if (isDate(field)) {
-    if (isString(value) && isValidValue(value)) {
-      return { value: fromNativeDate(value, getDateFormat(field)) }
-    }
-  }
-
   if (isSelectActive(field)) {
     return { value: isValidValue(value) ? String(value) : '' }
   }
@@ -415,19 +424,23 @@ export function prepareDefaultValue<T>(field: Field, value?: Nullable<T>) {
   return { defaultValue: value }
 }
 
-function getDateValue(field: DateField, currentValue?: Value) {
-  const format = getDateFormat(field)
-  return isString(currentValue)
-    ? toNativeDate(currentValue, format)
-    : currentValue
-}
-
-export function getFormatProps(
-  dateFormat: Nullable<DateFormat>,
-  timeFormat: Nullable<TimeFormat>
-) {
-  const format = dateFormat ?? timeFormat
-  return format ? { 'data-format': format } : {}
+/**
+ * What a field holds for a value it is given, and the one door every value
+ * comes in by: the host's, a `defaultValue`, what the user types, what a change
+ * event writes and the rows assigned to a list.
+ *
+ * A date is held as `yyyy-MM-dd` whichever shape it arrived in, so everything
+ * that reads the store -- a description's `{value}`, a `when`, the events the
+ * field fires -- sees one shape. Text that is no day is held as it came: the
+ * field shows what was typed and the schema says what is wrong with it,
+ * instead of the field quietly going blank. Any other field holds its value
+ * as it came.
+ */
+export function holdValue<T>(field: Field, value: T): T | string {
+  const format = dateFormatOf(field)
+  return format && isString(value)
+    ? toNativeDate(value, format) || value
+    : value
 }
 
 function normalizePreviewOptions(
@@ -439,6 +452,7 @@ function normalizePreviewOptions(
       out.push(item)
       continue
     }
+
     if (
       isObject(item) &&
       'value' in item &&
@@ -463,6 +477,7 @@ export function getPreviewOptions(
   const builtIn = isChips(field)
     ? buildOptionChips(field, localization)
     : buildOptionSelect(field, localization)
+
   if (Array.isArray(builtIn)) {
     const flat = normalizePreviewOptions(builtIn)
     return flat.length > 0 ? flat : undefined
@@ -478,6 +493,13 @@ export function getPreviewOptions(
   }
 
   return undefined
+}
+
+// The format a field shows a day in, or `undefined` when it is not a date. What
+// the component is told, what a value is read with on its way in, and what a
+// row's preview shows its day in all ask here.
+export function dateFormatOf(field?: Field): DateFormat | undefined {
+  return field && isDate(field) ? getDateFormat(field) : undefined
 }
 
 export function resolveOptionLabel(

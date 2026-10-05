@@ -33,12 +33,17 @@ about interpolation is one being read as the other.
 dot notation for anything nested:
 
 ```tsx
-<Form
-  sections={sections}
-  config={config}
-  context={{ user: { firstName: 'Jane' }, plan: 'pro' }}
-/>
+const context = { user: { firstName: 'Jane' }, plan: 'pro' }
+
+export function Page() {
+  return <Form sections={sections} config={config} context={context} />
+}
 ```
+
+Keep `context` the same object while nothing in it changes, as here, or with
+`useMemo` when it comes from state: every field renders again when it is a new
+one. See
+[What the host knows](../structure/definition.md#what-the-host-knows-context).
 
 ```json
 {

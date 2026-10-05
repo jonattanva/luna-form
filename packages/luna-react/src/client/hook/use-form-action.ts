@@ -12,11 +12,8 @@ import {
 import {
   buildSchema,
   flatten,
-  getDateFormat,
   getFormData,
-  isDate,
   logger,
-  toNativeDate,
   translateBuiltIn,
   unflatten,
   type Field,
@@ -78,9 +75,10 @@ export function useFormState<T, F = Record<string, unknown>>(
         return prevState
       }
 
+      // A date leaves the schema as `yyyy-MM-dd` whatever the field showed, so
+      // what is sent below is what the schema returns, not what was submitted.
       const form = getFormData(formData)
-      const normalized = normalizeDateFields(form, fields)
-      const validated = schema.safeParse(normalized)
+      const validated = schema.safeParse(form)
 
       if (!validated.success) {
         const errors = flatten(validated.error)
@@ -196,27 +194,4 @@ function failure<T>(
     error,
     success: false,
   }
-}
-
-function normalizeDateFields(
-  form: Record<string, unknown>,
-  fields: Field[]
-): Record<string, unknown> {
-  const result = { ...form }
-  for (const field of fields) {
-    if (
-      isDate(field) &&
-      typeof result[field.name] === 'string' &&
-      result[field.name]
-    ) {
-      const native = toNativeDate(
-        result[field.name] as string,
-        getDateFormat(field)
-      )
-      if (native) {
-        result[field.name] = native
-      }
-    }
-  }
-  return result
 }

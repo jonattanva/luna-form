@@ -1,13 +1,9 @@
 import { createInput } from './input-create'
-import { useFormat } from '../hook/use-format'
 import { useWriteOnlySource } from '../hook/use-write-only-source'
 import {
-  fromNativeDate,
   fromNativeTime,
-  getDateFormat,
-  getFormatProps,
   getTimeFormat,
-  isDate,
+  holdValue,
   isString,
   isTime,
   isValidValue,
@@ -16,19 +12,14 @@ import {
 export const InputDateable = createInput({
   useSource: useWriteOnlySource,
 
-  useExtraProps: (field) => {
-    const { dateFormat, timeFormat } = useFormat(field)
-    return getFormatProps(dateFormat, timeFormat)
-  },
-
   getValue: (event, field) => {
     const raw = event.target.value
 
-    // Both conversions below read the native control's text (`yyyy-MM-dd`,
-    // `HH:mm`) and parse it. A date or time field holds one moment and never a
-    // list, so anything that is not text is not a date this can reformat: hand
-    // it back untouched rather than let `String()` turn it into a date nobody
-    // entered.
+    // Both conversions below read text: the native control's (`yyyy-MM-dd`,
+    // `HH:mm`) or what a person typed. A date or time field holds one moment
+    // and never a list, so anything that is not text is not a date this can
+    // read: hand it back untouched rather than let `String()` turn it into a
+    // date nobody entered.
     if (!isString(raw)) {
       return raw
     }
@@ -39,13 +30,9 @@ export const InputDateable = createInput({
       return fromNativeTime(raw, timeFormat)
     }
 
-    const dateFormat = isDate(field) ? getDateFormat(field) : null
-    if (dateFormat !== null) {
-      const converted = fromNativeDate(raw, dateFormat)
-      return converted || raw
-    }
-
-    return raw
+    // A day is held as `yyyy-MM-dd`, whether a calendar picked it or a person
+    // typed it in the field's format. See `holdValue`.
+    return holdValue(field, raw)
   },
 
   shouldSkipChange: ({ shouldSkipOnChange, inputValue, valueRef }) =>

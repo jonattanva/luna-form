@@ -1,8 +1,10 @@
 import {
+  dateFormatOf,
   evaluateCondition,
   flattenListFields,
   getPreviewOptions,
   translate,
+  type DateFormat,
   type Option,
 } from '@luna-form/core'
 import { FieldPreviewItem } from './field-preview-item'
@@ -16,6 +18,7 @@ type NormalizedPreview = Exclude<PreviewItem, string>
 type Entry =
   | { key: string; staticLabel: string }
   | {
+      dateFormat?: DateFormat
       key: string
       previewName: string
       initialValue: unknown
@@ -115,6 +118,7 @@ function PreviewEntries({
         : undefined
 
       result.push({
+        dateFormat: dateFormatOf(childField),
         key: `${index}:${item.field}`,
         initialValue,
         options,
@@ -136,6 +140,7 @@ function PreviewEntries({
       {visibleItems.map((item, index) => (
         <FieldPreviewItem
           className={className}
+          dateFormat={'dateFormat' in item ? item.dateFormat : undefined}
           initialValue={'initialValue' in item ? item.initialValue : undefined}
           key={item.key}
           name={'previewName' in item ? item.previewName : undefined}
