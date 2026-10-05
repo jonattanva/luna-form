@@ -57,11 +57,17 @@ function comboboxFor(page: Page, label: string) {
 
 // The editor renders `select` as a listbox, not a native element, so choosing
 // is open-click-close rather than `selectOption`.
+//
+// Returns once the select has finished closing. The popup unmounts after an
+// exit animation and Radix hands focus back to the trigger a task later; a
+// `fill` that starts before that loses its keystrokes.
 async function choose(page: Page, label: string, option: string) {
-  await comboboxFor(page, label).click()
+  const combobox = comboboxFor(page, label)
+  await combobox.click()
   await page.getByRole('option', { name: option }).click()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('listbox')).toBeHidden()
+  await expect(combobox).toBeFocused()
 }
 
 test.describe('Transient field', { tag: ['@e2e'] }, () => {

@@ -276,6 +276,13 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     const yearOption = page.getByRole('option', { name: '2028' })
     await yearOption.click()
 
+    // The popup plays an exit animation before it unmounts, and Radix hands
+    // focus back to the trigger a task after that. A fill that starts in
+    // between loses its keystrokes to the closing popup or the trigger, so
+    // wait for both before typing.
+    await expect(page.getByRole('listbox')).toBeHidden()
+    await expect(yearInput).toBeFocused()
+
     await page.getByLabel('CVV').fill('123')
     await page.getByRole('button', { name: 'Submit' }).click()
 
