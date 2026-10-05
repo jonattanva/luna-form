@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791219818061,
+  "lastUpdate": 1791219847132,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "572c11783ea0d4239321d83fb1e7ea7fbc9bf06d",
-          "message": "docs: update and expand field documentation including select, specialized selectors and markdown support",
-          "timestamp": "2026-05-20T19:52:53-05:00",
-          "tree_id": "7f4325a787a7f282f855c70f7149c3204e2e4f61",
-          "url": "https://github.com/jonattanva/luna-form/commit/572c11783ea0d4239321d83fb1e7ea7fbc9bf06d"
-        },
-        "date": 1779324858432,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 351,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 135,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "ab99b00c45af2cc8a3bc2f5a9d17769d7fd82448",
           "message": "fix(react): apply defaultValue silently to avoid skipping first user change and update CI workflow concurrency",
           "timestamp": "2026-05-22T09:38:52-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 436,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1364ef26c2f44487b37b1fae8e4cb9f1cd77fa79",
+          "message": "Merge pull request #118 from jonattanva/claude/date-language\n\nfeat(i18n): a form speaks one language, its lang",
+          "timestamp": "2026-10-05T12:02:34-05:00",
+          "tree_id": "3437f801e35f10c0a14a8b883807123d21ff6cd8",
+          "url": "https://github.com/jonattanva/luna-form/commit/1364ef26c2f44487b37b1fae8e4cb9f1cd77fa79"
+        },
+        "date": 1791219847078,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 340,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 631,
             "unit": "ms"
           }
         ]
