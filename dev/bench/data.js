@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791223616793,
+  "lastUpdate": 1791223638894,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "c65ce54f0c91792090d6bfb500e6adc4a4d18169",
-          "message": "fix(react): apply defaultValue silently in onCurrentValueChange fallback\n\nWhen the form receives a value prop that does not include this specific\nfield but the field has a defaultValue, the fallback inside\nonCurrentValueChange armed the skip flag on mount, causing the first\nuser interaction to be silently dropped on select/active and other\nSelectable-strategy fields (chips, etc.).\n\nCo-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>",
-          "timestamp": "2026-05-22T16:13:03-05:00",
-          "tree_id": "f6ffa5505fba750e7b1a1b8fda1c9a01a1271e75",
-          "url": "https://github.com/jonattanva/luna-form/commit/c65ce54f0c91792090d6bfb500e6adc4a4d18169"
-        },
-        "date": 1779484472071,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 254,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 554,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "7e7eb979f883e1605f52d62d5ccbad0241389c20",
           "message": "fix chips double selection",
           "timestamp": "2026-05-28T20:27:59-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 637,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b535b42862833180a0007f81734450e39cebc60",
+          "message": "Merge pull request #120 from jonattanva/fix/field-own-disabled\n\ntest(e2e): type only once a select has finished closing",
+          "timestamp": "2026-10-05T13:06:16-05:00",
+          "tree_id": "729afb5c508e8f8f4307dde160ddb0046706d160",
+          "url": "https://github.com/jonattanva/luna-form/commit/4b535b42862833180a0007f81734450e39cebc60"
+        },
+        "date": 1791223638859,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 193,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 101,
             "unit": "ms"
           }
         ]
