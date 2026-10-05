@@ -1467,6 +1467,72 @@ describe('a date rule the form cannot read', () => {
   })
 })
 
+// An address is text, and its bounds count its characters: the ones the input
+// is handed as `minLength` and `maxLength` are the ones the schema checks.
+describe('an email held between two lengths', () => {
+  const messagesOf = (result: { error?: z.ZodError }) =>
+    result.error?.issues.map((issue) => issue.message)
+
+  const email = (field: Partial<Input> = {}): Input => ({
+    name: 'email',
+    type: 'input/email',
+    advanced: { length: { min: 8, max: 16 } },
+    ...field,
+    validation: {
+      length: { min: 'At least 8 characters', max: 'At most 16 characters' },
+      ...field.validation,
+    },
+  })
+
+  // An optional email is an address or nothing. An address out of its bounds
+  // fails the one and is not the other, and must still say which bound it is
+  // out of, not that it matched neither.
+  test('should hold an optional address between its bounds', () => {
+    const schema = getEmail(email())
+
+    expect(messagesOf(schema.safeParse('a@b.co'))).toEqual([
+      'At least 8 characters',
+    ])
+    expect(messagesOf(schema.safeParse('ana.maria@example.com'))).toEqual([
+      'At most 16 characters',
+    ])
+    expect(schema.parse('ana@example.co')).toBe('ana@example.co')
+  })
+
+  test('should let an optional email left empty pass', () => {
+    const schema = getEmail(email())
+
+    expect(schema.parse('')).toBe('')
+    expect(schema.parse(null)).toBeNull()
+    expect(schema.parse(undefined)).toBeUndefined()
+  })
+
+  test('should hold a required address between its bounds and still ask for one', () => {
+    const schema = getEmail(
+      email({ required: true, validation: { required: 'Write your email' } })
+    )
+
+    expect(messagesOf(schema.safeParse(''))).toEqual(['Write your email'])
+    expect(messagesOf(schema.safeParse('a@b.co'))).toEqual([
+      'At least 8 characters',
+    ])
+    expect(messagesOf(schema.safeParse('ana.maria@example.com'))).toEqual([
+      'At most 16 characters',
+    ])
+    expect(schema.parse('ana@example.co')).toBe('ana@example.co')
+  })
+
+  test('should say both that it is no address and that it is too short', () => {
+    expect(
+      messagesOf(
+        getEmail(
+          email({ validation: { email: 'Write an address' } })
+        ).safeParse('ana')
+      )
+    ).toEqual(['Write an address', 'At least 8 characters'])
+  })
+})
+
 // Outside the date family `advanced.length` is a number: characters for text,
 // the value itself for a number. A bound that is not one -- a day written on a
 // text field, a `$ref` nothing resolved -- is a rule the form cannot read, so

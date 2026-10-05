@@ -121,24 +121,22 @@ function optionalLeaf<T extends z.ZodType>(schema: T) {
 export function getEmail(input: Input, translations?: Record<string, string>) {
   // Bounds the form cannot read hold back an address as they hold back any
   // other text: whether it is an address is no longer the question.
-  if (buildLengthLimits(input).unreadable) {
+  const limits = buildLengthLimits(input)
+  if (limits.unreadable) {
     return getText(input, translations)
   }
 
   const baseSchema = z.string().trim()
+  const address = applyEmail(input, limits, translations)
 
   if (input.required) {
     const message = getRequiredMessage(input, translations)
-    const schema = baseSchema
-      .min(1, message)
-      .pipe(applyEmail(input, translations))
+    const schema = baseSchema.min(1, message).pipe(address)
 
     return z.preprocess((value) => (isEmpty(value) ? '' : value), schema)
   }
 
-  return optionalLeaf(
-    baseSchema.pipe(applyEmail(input, translations)).or(z.literal(''))
-  )
+  return optionalLeaf(baseSchema.pipe(address).or(z.literal('')))
 }
 
 function getBoolean(input: Input, translations?: Record<string, string>) {
@@ -453,12 +451,21 @@ function decimalsOf(value: number): number {
   return Math.max(0, fraction - Number(exponent))
 }
 
-function applyEmail(input: Input, translations?: Record<string, string>) {
+// The bounds are checks on the address itself, after the one that says it is
+// an address. When every option of a union fails, zod passes on the issues of
+// the one option whose failure did not abort, and says only `Invalid input`
+// otherwise. A pipe aborts when what it pipes fails, so bounds in front of the
+// address would leave an optional email out of them unable to say which one.
+function applyEmail(
+  input: Input,
+  limits: LengthLimits,
+  translations?: Record<string, string>
+) {
   const message = input.validation?.email
     ? translate(input.validation?.email, translations)
     : undefined
 
-  return z.email(message)
+  return applyMinAndMax(z.email(message), limits, input, translations)
 }
 
 // What a field whose bounds cannot be read says about any value it is given.
@@ -468,7 +475,7 @@ const UNREADABLE = 'This value cannot be checked'
 // The bounds are read by `buildLengthLimits`, the same reading
 // `defineConstraints` renders on the input, so the browser and the schema
 // check the same numbers.
-function applyMinAndMax<T extends Coerced>(
+function applyMinAndMax<T extends Coerced | z.ZodEmail>(
   schema: T,
   limits: LengthLimits,
   input: Input,

@@ -263,7 +263,7 @@ The `validation` object resolves form errors overriding generic defaults, mappin
 - **`required`** _(string)_: Specifies the error message exposed when the element is marked exactly as `required: true` and the field is empty.
 - **`email`** _(string)_: Error message specifically asserting an invalid email format.
 - **`date`** _(string)_: `input/date` only. The message shown when the field holds text that is no day. Without it, the message is `Invalid date`.
-- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, a number out of range, a day before the first or after the last.
+- **`length`** _({ min?: string, max?: string })_: Specific string messages shown when a value breaches `advanced.length`: a text too short or too long, the address of an `input/email` included, a number out of range, a day before the first or after the last. An address that is no address and is out of its bounds shows both messages, the `email` one first. An optional `input/email` left empty still passes.
 - **`reserved`** _(string)_: `input/date` only. The message shown for a day its `advanced.reserved` lists. Without it, the message is `This date is not available`.
 - **`range`** _(string)_: `input/date` ranges only. The message shown for a range with an end missing, or whose last day comes before its first. Without it, the message is `Invalid date range`.
 - **`step`** _(string)_: The message shown when an `input/number` is off its step: a decimal on a number that declares no step, or a value off the `advanced.step` it declares. The form's dictionary translates it, as it does every other message.
