@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791215387519,
+  "lastUpdate": 1791215415462,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "52853f0d62e13c92b720e6e5e494c9bc4f5a4579",
-          "message": "fix(core): improve value-event autofill handling and update dependencies",
-          "timestamp": "2026-05-14T22:27:26-05:00",
-          "tree_id": "a6937280c510711ee8017fff3b6d1d1fda77404b",
-          "url": "https://github.com/jonattanva/luna-form/commit/52853f0d62e13c92b720e6e5e494c9bc4f5a4579"
-        },
-        "date": 1778815729629,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 250,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 185,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "0948ac0d671737003f703b1b45338d9c8c94f16d",
           "message": "fix: support array conditions, improve auto-fill handling, and clear hidden field values",
           "timestamp": "2026-05-19T18:43:57-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 499,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5fc57d69f19186454fa3859063abe790e943cc6a",
+          "message": "Merge pull request #114 from jonattanva/claude/date-range\n\nfeat(date): a range of days in one field",
+          "timestamp": "2026-10-05T10:48:32-05:00",
+          "tree_id": "bfa1a35b25ee842c15cc5eda20e6300c23811b47",
+          "url": "https://github.com/jonattanva/luna-form/commit/5fc57d69f19186454fa3859063abe790e943cc6a"
+        },
+        "date": 1791215415384,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 322,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 607,
             "unit": "ms"
           }
         ]
