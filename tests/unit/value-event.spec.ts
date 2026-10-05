@@ -284,4 +284,21 @@ describe('handle value event', () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]).toEqual({ name: 'simple_body', value: rows })
   })
+
+  // A value payload is not given `config.env.locale`, unlike a label or a
+  // description: its filters format with the runtime default. The docs say so
+  // (interpolation/format-filters.md, "Locale resolution"), and change with it.
+  test('should format a filter with the runtime default locale', () => {
+    const { apply, calls } = createApply()
+
+    const events: ValueEvent[] = [
+      { action: 'value', value: { total: '{value | number}' } },
+    ]
+
+    handleValueEvent({ value: 1234567 }, events, apply)
+
+    expect(calls).toEqual([
+      { name: 'total', value: new Intl.NumberFormat().format(1234567) },
+    ])
+  })
 })

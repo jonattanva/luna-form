@@ -23,6 +23,12 @@ const sections = [
         required: true,
       },
       {
+        label: 'Code',
+        name: 'code',
+        type: 'input/text',
+        disabled: true,
+      },
+      {
         // `advanced.data` names the same attribute the form writes for the
         // format; the form's value has to win on the server too.
         label: 'Check-in',

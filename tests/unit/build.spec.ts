@@ -65,6 +65,31 @@ describe('Build', () => {
     expect(result).toBeUndefined()
   })
 
+  test('should keep the array source of a disabled select', () => {
+    const field = {
+      source: [{ label: 'USA', value: 'us' }],
+      type: 'select',
+      name: 'country',
+      disabled: true,
+    }
+
+    const result = buildSource(field)
+    expect(result).toEqual([{ label: 'USA', value: 'us' }])
+  })
+
+  // Nothing is fetched for a disabled field, so the value it holds stands in.
+  test('should leave out the remote source of a disabled select', () => {
+    const field = {
+      source: { url: '/api/countries' },
+      type: 'select',
+      name: 'country',
+      disabled: true,
+    } as Field
+
+    const result = buildSource(field)
+    expect(result).toBeUndefined()
+  })
+
   test('should build options for disabled select fields', () => {
     const field = {
       type: 'select',
@@ -166,6 +191,22 @@ describe('Build', () => {
       const field = { type: 'text', name: 'test' } as Field
       expect(buildDisabled(field)).toBe(false)
     })
+
+    test('should return true if the field declares disabled', () => {
+      const field = { type: 'text', name: 'test', disabled: true } as Field
+      expect(buildDisabled(field)).toBe(true)
+    })
+
+    // `false` is a form that is not read-only, which leaves the field its own.
+    test('should not let a form that is not read-only enable a disabled field', () => {
+      const field = { type: 'text', name: 'test', disabled: true } as Field
+      expect(buildDisabled(field, false)).toBe(true)
+    })
+
+    test('should let a read-only form lock a field that declares disabled false', () => {
+      const field = { type: 'text', name: 'test', disabled: false } as Field
+      expect(buildDisabled(field, true)).toBe(true)
+    })
   })
 
   describe('buildReadOnly', () => {
@@ -187,6 +228,19 @@ describe('Build', () => {
         disabled: true,
       } as Field
       expect(buildReadOnly(field)).toBe(false)
+    })
+
+    // What a `state` event that enables the field leaves it as: still locked,
+    // and sent again, as any read-only field is.
+    test('should submit a read-only field whose disabled is false', () => {
+      const field = {
+        type: 'text',
+        name: 'test',
+        readonly: true,
+        disabled: false,
+      } as Field
+      expect(buildDisabled(field)).toBe(true)
+      expect(buildReadOnly(field)).toBe(true)
     })
 
     test('should say nothing about a field that is not read-only', () => {
@@ -248,7 +302,7 @@ describe('Build', () => {
       expect(isArraySource(field)).toBe(false)
     })
 
-    test('should return false for a disabled select', () => {
+    test('should return true for a disabled select with an array source', () => {
       const field = {
         type: 'select',
         name: 'test',
@@ -256,7 +310,7 @@ describe('Build', () => {
         source,
       } as Field
 
-      expect(isArraySource(field)).toBe(false)
+      expect(isArraySource(field)).toBe(true)
     })
 
     test('should return false for specialized selectors without a source', () => {

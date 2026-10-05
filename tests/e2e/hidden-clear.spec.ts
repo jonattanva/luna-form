@@ -78,9 +78,23 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
       .first()
   }
 
+  // Returns once the select has finished closing, not when the option is
+  // clicked. The popup plays an exit animation before it unmounts, and on
+  // unmount Radix hands focus back to the trigger. The field the option
+  // reveals is on screen before that, so a `fill` that starts in between
+  // focuses the field, loses focus to the closing popup or its trigger, and
+  // types into neither: the field stays empty and the form is never told.
+  // Under load that window outlasts `toBeVisible`, which is how "keeps an
+  // input reverted ... that declares keepValue" failed in Firefox with the
+  // value never written.
+  //
+  // Both waits, because the second is the one that matters: the popup is
+  // gone first, and focus comes back a task later.
   const choose = async (page: Page, option: 'Show' | 'Hide') => {
     await getSelect(page).click()
     await page.getByRole('option', { name: option, exact: true }).click()
+    await expect(page.getByRole('listbox')).toBeHidden()
+    await expect(getSelect(page)).toBeFocused()
   }
 
   const note = (page: Page) => page.locator('input[name="note"]')
@@ -111,6 +125,12 @@ test.describe('Hidden target clearing', { tag: ['@e2e'] }, () => {
     await expect(note(page)).toBeVisible()
     await note(page).fill(NOTE)
     await item(page).fill(ITEM)
+
+    // What the fields hold before they are hidden. Without this a fill that
+    // never landed reads, three steps later, as a value the hide lost -- and
+    // every case that expects an empty field passes on it.
+    await expect(note(page)).toHaveValue(NOTE)
+    await expect(item(page)).toHaveValue(ITEM)
 
     await choose(page, 'Hide')
     await expect(note(page)).toHaveCount(0)
