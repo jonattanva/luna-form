@@ -133,6 +133,7 @@ function readLength(value: unknown): number | undefined {
 }
 
 const FIELD_BOUNDS: BoundRules = {
+  beyond: 'above',
   disordered: 'no value passes',
   kind: 'number',
   lost: 'the field takes no value',
@@ -140,6 +141,7 @@ const FIELD_BOUNDS: BoundRules = {
 }
 
 const LIST_BOUNDS: BoundRules = {
+  beyond: 'above',
   disordered: 'no list passes',
   kind: 'number',
   lost: 'no list passes',

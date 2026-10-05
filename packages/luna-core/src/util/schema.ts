@@ -53,7 +53,9 @@ import type {
 } from '../type'
 import { translate, translateOptional } from './translate'
 
-type Coerced<T = unknown> = z.ZodCoercedString<T> | z.ZodCoercedNumber<T>
+// What `advanced.length` bounds: the characters of a text or an address, the
+// value of a number.
+type Bounded = z.ZodString | z.ZodEmail | z.ZodCoercedNumber
 
 type SchemaChecker = (input: Input) => boolean
 type SchemaGetter = (
@@ -185,8 +187,8 @@ function getRadio(input: Input, translations?: Record<string, string>) {
 export function getText(input: Input, translations?: Record<string, string>) {
   const limits = buildLengthLimits(input)
   const text = z.coerce.string().trim()
-  // The bounds check what `text` made of the value, already trimmed text.
-  const read = z.coerce.string<string>()
+  // The bounds check what `text` made of the value: text, already trimmed.
+  const read = z.string()
   const bounded = limits.unreadable
     ? read.refine(() => false, UNREADABLE)
     : applyMinAndMax(read, limits, input, translations)
@@ -483,7 +485,7 @@ const UNREADABLE = 'This value cannot be checked'
 // The bounds are read by `buildLengthLimits`, the same reading
 // `defineConstraints` renders on the input, so the browser and the schema
 // check the same numbers.
-function applyMinAndMax<T extends Coerced | z.ZodEmail>(
+function applyMinAndMax<T extends Bounded>(
   schema: T,
   limits: LengthLimits,
   input: Input,

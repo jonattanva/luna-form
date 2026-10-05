@@ -223,6 +223,24 @@ describe('getListBounds', () => {
       warn.mockRestore()
     }
   })
+
+  test('names a minimum above the maximum', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      getListBounds({
+        name: 'rows',
+        type: 'list',
+        fields: [],
+        advanced: { length: { min: 3, max: 2 } },
+      })
+
+      expect(warn.mock.calls.map((call) => call.slice(1).join(' '))).toEqual([
+        'rows: advanced.length.min is above advanced.length.max, so no list passes',
+      ])
+    } finally {
+      warn.mockRestore()
+    }
+  })
 })
 
 describe('getAssignedCount', () => {

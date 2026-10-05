@@ -1684,7 +1684,7 @@ describe('a length bound the form cannot read', () => {
 
       expect(schema.safeParse('3').success).toBe(false)
       expect(warningsOf(warn)).toEqual([
-        'guests: advanced.length.min is after advanced.length.max, so no value passes',
+        'guests: advanced.length.min is above advanced.length.max, so no value passes',
       ])
     } finally {
       warn.mockRestore()
