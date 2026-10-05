@@ -183,11 +183,13 @@ const PROBES: Probe[] = [
     anchor: '    () => () => {\n      const values = store.get(valueAtom)',
     replacement: `    () => () => {\n      ${bump('handoff')}\n      const values = store.get(valueAtom)`,
   },
+  // The anchor stops before the closing parenthesis, so it matches the call
+  // both before and after `prepare` took the form's `context` as well.
   {
     name: 'prepare',
     file: `${LIB}/component/form.tsx`,
-    anchor: '  const sections = prepare(props.sections, props.definition)',
-    replacement: `  ${bump('prepare')}\n  const sections = prepare(props.sections, props.definition)`,
+    anchor: '  const sections = prepare(props.sections, props.definition',
+    replacement: `  ${bump('prepare')}\n  const sections = prepare(props.sections, props.definition`,
   },
   // A build of the timezone option list, not a call for it: the anchor is the
   // start of the work, so a cache in front of it stops the count.

@@ -175,7 +175,7 @@ interactive.
 | `readOnly`      | renders every field disabled                                                                                    |
 | `translations`  | per-locale strings for labels, options and messages                                                             |
 | `lang`          | the locale to resolve `translations` against                                                                    |
-| `context`       | arbitrary values available to interpolation                                                                     |
+| `context`       | arbitrary values available to interpolation, and to a `$ref` under `#/context/`                                 |
 | `definition`    | the JSON that [`$ref`](structure/definition.md) entries resolve against                                         |
 | `advanced.step` | numbers the [sections](structure/sections.md#advancedstep-numbers-the-sections)                                 |
 | `children`      | the form's control area — see [forms/submit.md](forms/submit.md#nothing-submits-without-a-control)              |

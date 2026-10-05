@@ -89,3 +89,43 @@ test.describe('List Collapsible - Preview', { tag: ['@e2e'] }, () => {
     await expect(page.locator('button').filter({ hasText: 'S1' })).toBeVisible()
   })
 })
+
+// A row holds a date as `yyyy-MM-dd`; its preview shows the day the way the
+// field does, in the label and in the tags alike.
+test.describe('List Collapsible - Date preview', { tag: ['@e2e'] }, () => {
+  test('a date in the preview is shown in its field format', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [{
+          "fields": [{
+            "label": "Stays",
+            "name": "stays",
+            "type": "list",
+            "advanced": {
+              "collapsed": true,
+              "preview": { "label": "check_in", "tags": ["check_out"] }
+            },
+            "fields": [
+              {
+                "name": "check_in",
+                "label": "Check-in",
+                "type": "input/date",
+                "advanced": { "format": "dd/MM/yyyy" }
+              },
+              { "name": "check_out", "label": "Check-out", "type": "input/date" }
+            ]
+          }]
+        }],
+        "value": { "stays": [{ "check_in": "2026-10-05", "check_out": "2026-10-09" }] }
+      }`
+    )
+    await page.goto('')
+
+    const card = page.locator('[data-slot="list-item-card"]')
+    await expect(card.getByText('05/10/2026')).toBeVisible()
+    await expect(card.getByText('October 9, 2026')).toBeVisible()
+  })
+})

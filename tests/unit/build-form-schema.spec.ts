@@ -398,3 +398,60 @@ describe('buildFormSchema (headless)', () => {
     })
   })
 })
+
+// The server validates with the same schema the form submits through, so a day
+// comes out of it as `yyyy-MM-dd` and a `$ref` into context reads what the host
+// passed, exactly as on the client.
+describe('buildFormSchema with dates and context', () => {
+  test('returns a date as yyyy-MM-dd whatever shape it was stored in', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            name: 'check_in',
+            type: 'input/date',
+            advanced: { format: 'dd/MM/yyyy' },
+          },
+        ],
+      },
+    ]
+
+    const schema = buildFormSchema(sections)
+
+    expect(schema.parse({ check_in: '15/06/2024' })).toEqual({
+      check_in: '2024-06-15',
+    })
+    expect(schema.parse({ check_in: '2024-06-15' })).toEqual({
+      check_in: '2024-06-15',
+    })
+  })
+
+  test('resolves a $ref into the context it is given', () => {
+    const sections = [
+      { fields: [{ $ref: '#/context/fields.email' }] },
+    ] as unknown as Sections
+    const context = {
+      fields: { email: { name: 'email', type: 'input/email', required: true } },
+    }
+
+    const result = buildFormSchema(
+      sections,
+      undefined,
+      undefined,
+      context
+    ).safeParse({})
+
+    expect(result.success).toBe(false)
+    expect(collectIssues(result.error!).map((issue) => issue.path)).toEqual([
+      'email',
+    ])
+  })
+
+  test('validates nothing that only a missing context would have declared', () => {
+    const sections = [
+      { fields: [{ $ref: '#/context/fields.email' }] },
+    ] as unknown as Sections
+
+    expect(buildFormSchema(sections).safeParse({}).success).toBe(true)
+  })
+})

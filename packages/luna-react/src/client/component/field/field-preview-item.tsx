@@ -1,8 +1,10 @@
 import { Fragment } from 'react'
 import {
+  displayDate,
   isEmpty,
   isObject,
   resolveOptionLabel,
+  type DateFormat,
   type Option,
 } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
@@ -10,6 +12,7 @@ import { useResolvedValue } from '../../hook/use-resolved-value'
 
 export function FieldPreviewItem({
   className,
+  dateFormat,
   initialValue,
   name,
   options,
@@ -17,6 +20,7 @@ export function FieldPreviewItem({
   staticLabel,
 }: Readonly<{
   className?: string
+  dateFormat?: DateFormat
   initialValue?: unknown
   name?: string
   options?: Array<Option | string>
@@ -74,7 +78,9 @@ export function FieldPreviewItem({
     }
   }
 
-  const displayValue = staticLabel ?? String(value)
+  const text = String(value)
+  const displayValue =
+    staticLabel ?? (dateFormat ? displayDate(text, dateFormat) : text)
 
   return (
     <div className="flex items-center gap-1.5 overflow-hidden">

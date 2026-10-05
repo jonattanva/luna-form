@@ -44,10 +44,12 @@ export function Input(
       horizontal={props.horizontal}
       translations={props.translations}
     >
+      {/* `advanced.data` first, as in the client: an attribute the form
+          writes for its own rules is the form's to say. */}
       <Component
+        {...props.dataAttributes}
         {...props.ariaAttributes}
         {...commonPropsWithOptions}
-        {...props.dataAttributes}
         {...defaultProps}
       />
     </InputGroup>

@@ -3,6 +3,7 @@ import {
   getInitialList,
   getListBounds,
   getListLeaves,
+  holdValue,
   isList,
   isValidValue,
   keepsValue,
@@ -383,8 +384,10 @@ export function useFieldList(
           continue
         }
 
+        // A leaf holds an assigned value the way it holds any other: a date
+        // as `yyyy-MM-dd`. See `holdValue`.
         const key = itemKey(field.name, stableId, leaf.name)
-        nextValues[key] = value
+        nextValues[key] = isList(leaf) ? value : holdValue(leaf, value)
 
         // A leaf that is a list cannot be written by writing it: its values are
         // keys one level deeper and its row count is state inside it, exactly

@@ -17,6 +17,7 @@ This page documents every key of the `validation` object plus the shared operato
 
 - **`required`** _(string)_: Message shown when a field marked `required: true` is empty.
 - **`email`** _(string)_: Message for an invalid email format (`input/email`).
+- **`date`** _(string)_: Message when an `input/date` holds text that is no day. See [Input](../fields/input.md#what-a-date-holds).
 - **`length`** _({ min?: string, max?: string })_: Messages when the value's length breaches `advanced.length`.
 - **`step`** _(string)_: Message when an `input/number` is off its step: a decimal on a whole number, or a value off `advanced.step`. See [Input](../fields/input.md).
 - **`custom`** _(CustomValidation | CustomValidation[])_: Cross-field comparison. See [Custom (cross-field)](#custom-cross-field).
@@ -260,20 +261,20 @@ if (!result.success) {
 }
 ```
 
-- **`buildFormSchema(sections, translations?, definition?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` resolves [`$ref` entries](../structure/definition.md), and has to be the same one the form renders with.
+- **`buildFormSchema(sections, translations?, definition?, context?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` and `context` resolve [`$ref` entries](../structure/definition.md), and have to be the same ones the form renders with. A date comes out of it as `yyyy-MM-dd`, as it does from the form's submit.
 - **`collectIssues(error)`** — flattens a `ZodError` into `{ path, message }` entries with **dotted paths** (e.g. `rules.0.value`), including nested list issues.
 
 ### What each path validates
 
-| Rule                                          | Rendered `<Form>` submit | `buildFormSchema` (headless) |
-| --------------------------------------------- | ------------------------ | ---------------------------- |
-| `required`, `email`, `length`, `step` (field) | ✅                       | ✅                           |
-| `custom`                                      | ✅                       | ✅                           |
-| `requiredWhen` (top-level)                    | ✅                       | ✅                           |
-| `pattern`                                     | ✅                       | ✅                           |
-| `rules` (top-level)                           | ✅                       | ✅                           |
-| `requiredWhen` **inside a list** (item scope) | —                        | ✅                           |
-| List `length`                                 | —                        | ✅                           |
+| Rule                                                  | Rendered `<Form>` submit | `buildFormSchema` (headless) |
+| ----------------------------------------------------- | ------------------------ | ---------------------------- |
+| `required`, `email`, `length`, `step`, `date` (field) | ✅                       | ✅                           |
+| `custom`                                              | ✅                       | ✅                           |
+| `requiredWhen` (top-level)                            | ✅                       | ✅                           |
+| `pattern`                                             | ✅                       | ✅                           |
+| `rules` (top-level)                                   | ✅                       | ✅                           |
+| `requiredWhen` **inside a list** (item scope)         | —                        | ✅                           |
+| List `length`                                         | —                        | ✅                           |
 
 The headless builder is the superset: item-scoped conditions and list length require the nested tree it produces.
 

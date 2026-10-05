@@ -6,6 +6,7 @@ import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import {
+  holdValue,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
@@ -21,7 +22,6 @@ export function InputBase(
 ) {
   const {
     useSource,
-    useExtraProps,
     getValue,
     shouldSkipChange,
     dispatchChange,
@@ -49,8 +49,6 @@ export function InputBase(
   } = useInputCore(props, { setValue, value, setSource })
 
   const { getField } = props
-
-  const extraProps = useExtraProps?.(props.field)
 
   const initialEventsProcessedRef = useRef(false)
 
@@ -107,9 +105,12 @@ export function InputBase(
 
       const resolvedValue = found ? hostValue : undefined
 
-      const hydratedValue = isValidValue(resolvedValue)
-        ? resolvedValue
-        : props.field.defaultValue
+      // Held the way the field holds it, so the events fired at mount see the
+      // same shape as the ones fired once the user has typed.
+      const hydratedValue = holdValue(
+        props.field,
+        isValidValue(resolvedValue) ? resolvedValue : props.field.defaultValue
+      )
 
       if (!isValidValue(hydratedValue)) {
         return
@@ -212,11 +213,12 @@ export function InputBase(
         horizontal={props.horizontal}
         translations={props.translations}
       >
+        {/* `advanced.data` first: an attribute the form writes for its own
+            rules, such as a date's format, is the form's to say. */}
         <Component
+          {...props.dataAttributes}
           {...controlProps}
           {...props.ariaAttributes}
-          {...props.dataAttributes}
-          {...extraProps}
           {...inputProps}
           onBlur={onBlur}
           onChange={onChange}
@@ -232,8 +234,7 @@ export function InputBase(
 // What a read-only field submits: its value from the field's state, in the
 // shape the control itself would have sent. That shape is `prepareInputValue`,
 // the same one the control is handed: a checkbox as "true" or "false", chips as
-// one entry each, and a date the way it is displayed, which is the way the
-// submit reads it back.
+// one entry each, and a date as `yyyy-MM-dd`, which the schema reads as it is.
 function SubmittedValue(
   props: Readonly<{
     checked?: boolean

@@ -54,6 +54,19 @@ export const VALUE = 'value'
 
 export const OPTIONS = 'options'
 
+// The formats an `input/date` can show a day in, and the only source of the
+// `DateFormat` type: a format added here is a format the type accepts and the
+// form reads, with nothing else to keep in step.
+export const DATE_FORMATS = [
+  'yyyy-MM-dd',
+  'MM/dd/yyyy',
+  'dd/MM/yyyy',
+  'MMMM d, yyyy',
+] as const
+
+// The prop a temporal field's format reaches its component in.
+export const DATA_FORMAT = 'data-format'
+
 export const TYPE_EMAIL = 'email'
 export const TYPE_NUMBER = 'number'
 export const TYPE_PASSWORD = 'password'

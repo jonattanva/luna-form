@@ -156,6 +156,7 @@ export function FormContent<
           action={action}
           advanced={props.advanced}
           config={props.config}
+          context={props.context}
           control={props.children}
           definition={props.definition}
           fieldSet={FieldSet}

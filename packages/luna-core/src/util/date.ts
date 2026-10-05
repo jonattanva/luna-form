@@ -1,4 +1,4 @@
-import { TIMEZONE_REGIONS } from './constant'
+import { DATA_FORMAT, DATE_FORMATS, TIMEZONE_REGIONS } from './constant'
 import { isValid, parse, format as fnsFormat } from 'date-fns'
 import type {
   Date as DateField,
@@ -11,6 +11,19 @@ import type {
 
 const REGEX_DIGITS = /^\d+$/
 const REF = new Date(2000, 0, 1)
+
+// A day the way the form exchanges it: what a native `<input type="date">`
+// takes, what a calendar emits, what the host gets back and what the submit
+// sends. `format` is only how a field shows it.
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+const ISO_FORMAT = 'yyyy-MM-dd'
+
+const DEFAULT_DATE_FORMAT: DateFormat = 'MMMM d, yyyy'
+
+// `yyyy` reads one to four digits, so without a floor every keystroke of a year
+// being typed is a different valid day -- `15/06/2` is the year 2 -- and
+// `15/06/24` is the year 24. A year is four digits here.
+const MIN_YEAR = 1000
 
 const getSupportedTimezones = (): string[] =>
   'supportedValuesOf' in Intl
@@ -215,17 +228,33 @@ export function getConvert(value: string | number, current?: number): number {
   return now
 }
 
-export function toNativeDate(value: string, fromFormat: DateFormat): string {
-  if (!value) {
-    return ''
+// The one reading of a day, for every way a date leaves this module.
+//
+// A day arrives in one of two shapes: `yyyy-MM-dd`, which is what a calendar
+// emits and what the form hands out, or the field's own `format`, which is
+// what a person types and what an older host may still hold. Both are read,
+// so whatever the form gave away can be given back. An impossible day, half a
+// date or a year that is not four digits is no day. Read in local time: a
+// `yyyy-MM-dd` is a day, not an instant.
+function readDay(value: string, format: DateFormat): Date | undefined {
+  const text = value.trim()
+  if (!text) {
+    return undefined
   }
 
   try {
-    const date = parse(value, fromFormat, REF)
-    return isValid(date) ? fnsFormat(date, 'yyyy-MM-dd') : ''
+    const day = parse(text, ISO_DATE.test(text) ? ISO_FORMAT : format, REF)
+    return isValid(day) && day.getFullYear() >= MIN_YEAR ? day : undefined
   } catch {
-    return ''
+    return undefined
   }
+}
+
+// A day as the form holds it, `yyyy-MM-dd`, or `''` when the text is no day
+// and the caller has to judge it.
+export function toNativeDate(value: string, fromFormat: DateFormat): string {
+  const day = value ? readDay(value, fromFormat) : undefined
+  return day ? fnsFormat(day, ISO_FORMAT) : ''
 }
 
 export function toNativeTime(value: string, fromFormat: TimeFormat): string {
@@ -259,26 +288,43 @@ export function fromNativeTime(
   }
 }
 
-export function fromNativeDate(
-  native: string,
-  toFormat: DateFormat = 'MMMM d, yyyy'
-): string {
-  if (!native) {
-    return ''
-  }
-
-  try {
-    const date = parse(native, 'yyyy-MM-dd', REF)
-    return isValid(date) ? fnsFormat(date, toFormat) : ''
-  } catch {
-    return ''
-  }
+// A value as a date field shows it: the day in the field's format, or the text
+// as it is when it is no day, which is what the field itself shows.
+export function displayDate(value: string, format: DateFormat): string {
+  const day = readDay(value, format)
+  return day ? fnsFormat(day, format) : value
 }
 
 export function getTimeFormat(field: Time): TimeFormat {
   return field.advanced?.format ?? 'HH:mm'
 }
 
+// A format is read once, here, from wherever it was written: one this module
+// does not know -- `DD/MM/YYYY`, a typo -- is the default, the same for the
+// field, for its schema and for its component, rather than an error thrown
+// from inside a render.
+function toDateFormat(value?: string): DateFormat {
+  return DATE_FORMATS.find((format) => format === value) ?? DEFAULT_DATE_FORMAT
+}
+
 export function getDateFormat(field: DateField): DateFormat {
-  return field.advanced?.format ?? 'MMMM d, yyyy'
+  return toDateFormat(field.advanced?.format)
+}
+
+export type DateProps = Readonly<{
+  format: DateFormat
+}>
+
+/**
+ * What a date component reads back from the props the form gave it.
+ *
+ * The form writes a date field's rules as attributes, so a native input and a
+ * calendar from any library can both carry them; this is the other half, and
+ * it lives here so an adapter never decodes an attribute the form chose how
+ * to encode.
+ */
+export function readDateProps(
+  props: Readonly<{ [DATA_FORMAT]?: string }>
+): DateProps {
+  return { format: toDateFormat(props[DATA_FORMAT]) }
 }

@@ -1,8 +1,10 @@
 import { MAX, MIN } from './constant'
 import { buildNumberStep } from './build'
+import { getDateFormat, toNativeDate } from './date'
 import {
   isCheckbox,
   isColumn,
+  isDate,
   isEmail,
   isList,
   isNumber,
@@ -49,6 +51,7 @@ type SchemaGetter = (
 
 const approach: Array<[SchemaChecker, SchemaGetter]> = [
   [isCheckbox, getBoolean],
+  [isDate, getDateSchema],
   [isEmail, getEmail],
   [isNumber, getNumber],
   [isRadio, getRadio],
@@ -171,14 +174,19 @@ export function getText(input: Input, translations?: Record<string, string>) {
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
   const schema = applyMinAndMax(z.coerce.number(), input, translations)
-  return numberLeaf(applyStep(schema, input, translations), input, translations)
+  return presentLeaf(
+    applyStep(schema, input, translations),
+    input,
+    translations,
+    normalize
+  )
 }
 
 export function getYearSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
-  return numberLeaf(z.coerce.number().int(), input, translations)
+  return presentLeaf(z.coerce.number().int(), input, translations, normalize)
 }
 
 export function getMonthSchema(
@@ -188,30 +196,68 @@ export function getMonthSchema(
   const message = getRequiredMessage(input, translations)
   const schema = z.coerce.number().int().min(1, message).max(12, message)
 
-  return numberLeaf(schema, input, translations)
+  return presentLeaf(schema, input, translations, normalize)
+}
+
+// A day is checked as `yyyy-MM-dd` however it arrived -- typed in the field's
+// own format, picked from a calendar, handed back by the host -- and it leaves
+// the schema in that shape. The submit sends what the schema returns, so this
+// is the one place a date is converted on its way out, and `buildFormSchema`
+// converts it the same way.
+export function getDateSchema(
+  input: Input,
+  translations?: Record<string, string>
+) {
+  const format = getDateFormat(input)
+  const message =
+    translateOptional(input.validation?.date, translations) ?? 'Invalid date'
+
+  const day = z.string().transform((text, context) => {
+    const native = toNativeDate(text, format)
+    if (!native) {
+      context.addIssue({ code: 'custom', message })
+      return z.NEVER
+    }
+    return native
+  })
+
+  return presentLeaf(day, input, translations, blankToAbsent)
+}
+
+// Blank text is no day, the way `required` reads whitespace on every other
+// field.
+function blankToAbsent(value: unknown) {
+  return value === null || (isString(value) && value.trim() === '')
+    ? undefined
+    : value
 }
 
 function normalize(value: unknown) {
   return value === null || value === '' ? undefined : value
 }
 
+// Absent until it is a value: an optional leaf nobody gave is not submitted at
+// all, and a required one asks for it. `absent` says what counts as nothing for
+// this kind of value.
+//
 // A number arrives as text, and as "" when nobody gave one: absent until it is
 // a value, never 0. "Required" means present, not "at least 1", so 0 and every
 // negative number pass it, and the bounds and the step only ever look at a
-// value that is there. A number, a year and a month read that text the same
-// way, so they share this.
-function numberLeaf(
-  schema: z.ZodType<number>,
+// value that is there. A number, a year, a month and a date all read their
+// text that way.
+function presentLeaf<T>(
+  schema: z.ZodType<T>,
   input: Input,
-  translations?: Record<string, string>
+  translations: Record<string, string> | undefined,
+  absent: (value: unknown) => unknown
 ) {
   if (!input.required) {
-    return z.preprocess(normalize, optionalLeaf(schema))
+    return z.preprocess(absent, optionalLeaf(schema))
   }
 
   const message = getRequiredMessage(input, translations)
   return z.preprocess(
-    normalize,
+    absent,
     z
       .unknown()
       // `boolean`, not the predicate TypeScript would infer: narrowing the
@@ -434,14 +480,16 @@ function getArraySchema(input: Input, translations?: Record<string, string>) {
 // lands in the next phase on top of this walker.
 // ---------------------------------------------------------------------------
 
+// `context` is what the host knows when it renders -- the same object the form
+// was given -- and a `$ref` into `#/context/` reads it. Pass it here as well,
+// or the server validates against values the form never saw.
 export function buildFormSchema(
   sections: Sections,
   translations?: Record<string, string>,
-  definition?: Definition
+  definition?: Definition,
+  context?: Record<string, unknown>
 ): z.ZodType {
-  const resolved = (
-    definition ? resolveRefs(sections, definition) : sections
-  ) as Sections
+  const resolved = resolveRefs(sections, definition, context) as Sections
 
   return buildObject(collectSectionFields(resolved), translations)
 }

@@ -91,5 +91,33 @@ test.describe(
         '"birth_date": "2024-09-20"'
       )
     })
+
+    test('should hold the submit back on text that is no date', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        `{
+        "sections": [{
+          "fields": [{
+            "label": "Birth Date",
+            "name": "birth_date",
+            "type": "input/date",
+            "validation": { "date": "Write the date as June 15, 2024" }
+          }]
+        }]
+      }`
+      )
+      await page.goto('')
+
+      await page.locator('input[name="birth_date"]').fill('next tuesday')
+      await page.getByRole('button', { name: 'Submit' }).click()
+
+      // Exact, or it matches the definition in the editor beside the form.
+      await expect(
+        page.getByText('Write the date as June 15, 2024', { exact: true }).first()
+      ).toBeVisible()
+      await expect(page.getByText('Form submitted successfully')).toBeHidden()
+    })
   }
 )

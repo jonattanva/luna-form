@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import { getDateFormat } from '@/packages/luna-core/src/util/date'
+import {
+  getDateFormat,
+  readDateProps,
+} from '@/packages/luna-core/src/util/date'
 import type { Date as DateField } from '@/packages/luna-core/src/type'
 
 describe('getDateFormat', () => {
@@ -38,5 +41,35 @@ describe('getDateFormat', () => {
       advanced: { format: 'dd/MM/yyyy' },
     }
     expect(getDateFormat(field)).toBe('dd/MM/yyyy')
+  })
+
+  // Regression: a format the form does not know reached date-fns as written,
+  // and `DD/MM/YYYY` threw a RangeError from inside a list's preview. A form
+  // is JSON, so the type does not stop one from arriving.
+  test('should return the default for a format the form does not know', () => {
+    const field = JSON.parse(
+      '{"name":"dob","type":"input/date","advanced":{"format":"DD/MM/YYYY"}}'
+    ) as DateField
+    expect(getDateFormat(field)).toBe('MMMM d, yyyy')
+  })
+})
+
+// The other half of what a date field puts on its component: an adapter reads
+// it back through this rather than parsing attributes of its own.
+describe('readDateProps', () => {
+  test('should read the format the field put on its props', () => {
+    expect(readDateProps({ 'data-format': 'dd/MM/yyyy' })).toEqual({
+      format: 'dd/MM/yyyy',
+    })
+  })
+
+  test('should fall back to the default format when there is none', () => {
+    expect(readDateProps({})).toEqual({ format: 'MMMM d, yyyy' })
+  })
+
+  test('should fall back to the default format for one the form does not know', () => {
+    expect(readDateProps({ 'data-format': 'DD/MM/YYYY' })).toEqual({
+      format: 'MMMM d, yyyy',
+    })
   })
 })

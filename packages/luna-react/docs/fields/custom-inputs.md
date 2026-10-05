@@ -44,15 +44,18 @@ Props are applied in this order:
 
 ```tsx
 <Component
-  {...commonProps} // id, name, placeholder, disabled, required
-  {...ariaAttributes} // aria-invalid, aria-errormessage
-  {...dataAttributes} // data-invalid, data-readonly
-  {...extraProps} // whatever the field family adds
+  {...dataAttributes} // advanced.data, as data-* attributes
+  {...commonProps} // id, name, placeholder, disabled, required, and what the field family adds
+  {...ariaAttributes} // advanced.aria, and aria-invalid, aria-errormessage
   {...inputProps} // the prepared value or defaultValue
   onBlur={onBlur}
   onChange={onChange}
 />
 ```
+
+`advanced.data` comes first, so an attribute the form writes for its own rules,
+such as the `data-format` of a date, keeps the form's value whatever
+`advanced.data` declares under the same name.
 
 `onChange` and `onBlur` are applied **last**, after every spread. A component
 that forwards its props unchanged gets them for free. A component that declares
@@ -122,6 +125,31 @@ The same registered component is used by both render paths. If your custom
 input needs browser APIs, state or effects, mark it `'use client'` as you would
 any other component — the library does not do it for you.
 
+## Date components
+
+A component registered for `input/date` receives the day as `yyyy-MM-dd`, in
+`value` from the client `Form` and in `defaultValue` from the server one, and
+the field's `format` as `data-format`. A control with a text box shows the day
+in that format; a native `<input type="date">` needs nothing and ignores it.
+
+Emit `onChange({ target: { value } })` with `yyyy-MM-dd` for a day the user
+picked, or with the text as the user typed it: the form reads text in the
+field's format, and keeps anything else as typed so that validation can say
+what is wrong with it.
+
+Read the props with `readDateProps` instead of by attribute name, so the
+component keeps working whatever the form puts on them next:
+
+```ts
+import { readDateProps } from 'react-luna-form/config'
+
+const { format } = readDateProps(props)
+```
+
+A `yyyy-MM-dd` value is a day, not an instant, so parse it in local time.
+`new Date("2026-10-02")` is midnight UTC, which is the day before anywhere west
+of Greenwich: a calendar fed that marks the wrong day.
+
 ## Checklist
 
 Before shipping a custom input:
@@ -130,3 +158,4 @@ Before shipping a custom input:
 - The `id` it receives reaches the focusable element
 - It forwards or calls the `onChange` and `onBlur` it receives
 - If it is a select variant, it does not rely on `''` to clear
+- If it renders `input/date`, it reads and emits `yyyy-MM-dd`
