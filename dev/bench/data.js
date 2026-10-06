@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791247937226,
+  "lastUpdate": 1791247970598,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "15c576f2034e315ab525d5f5bde89a9d59e28dac",
-          "message": "Merge pull request #39 from jonattanva/fix/grid-alignment-truncation\n\nfeat(luna-react): improve grid alignment with label truncation",
-          "timestamp": "2026-06-01T18:18:04-05:00",
-          "tree_id": "46326772d693068ff326708d65282d33fed8927b",
-          "url": "https://github.com/jonattanva/luna-form/commit/15c576f2034e315ab525d5f5bde89a9d59e28dac"
-        },
-        "date": 1780355949585,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 267,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 569,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 140,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "b15e15f4a49c7c29df637fc4fc3be8abbaa83c8f",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-10-05T19:51:37-05:00",
+          "tree_id": "3b21366fba9dfc02530c82b88825ed7a35b38442",
+          "url": "https://github.com/jonattanva/luna-form/commit/b15e15f4a49c7c29df637fc4fc3be8abbaa83c8f"
+        },
+        "date": 1791247970489,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 269,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 170,
             "unit": "ms"
           }
         ]
