@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791301580690,
+  "lastUpdate": 1791302126817,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "c976f9b6bf44b412e847a67fb83d056f36a83a8f",
-          "message": "fix list",
-          "timestamp": "2026-06-01T20:30:52-05:00",
-          "tree_id": "4bbf12e245066f8d3a476a0796b7de9fb7557048",
-          "url": "https://github.com/jonattanva/luna-form/commit/c976f9b6bf44b412e847a67fb83d056f36a83a8f"
-        },
-        "date": 1780363925641,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 285,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 601,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "1eb19d48002de67568788b80e995dd3377376497",
           "message": "upgrade dependencies",
           "timestamp": "2026-06-01T22:11:02-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 170,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "045eb22286fef22f030a6aae7a3d77326ce957d4",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-10-06T10:45:20-05:00",
+          "tree_id": "1e35390ed3b2dd4e48f9f5a3defa1e7965bc0cd4",
+          "url": "https://github.com/jonattanva/luna-form/commit/045eb22286fef22f030a6aae7a3d77326ce957d4"
+        },
+        "date": 1791302126736,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 318,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 218,
             "unit": "ms"
           }
         ]
