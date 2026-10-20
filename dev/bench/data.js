@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792513452687,
+  "lastUpdate": 1792513487554,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "1eb19d48002de67568788b80e995dd3377376497",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-06-01T22:11:02-05:00",
-          "tree_id": "eafe10d1700c03edbd39cc38a6b06250460fa53e",
-          "url": "https://github.com/jonattanva/luna-form/commit/1eb19d48002de67568788b80e995dd3377376497"
-        },
-        "date": 1780369951734,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 176,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "669ee12ec8312f5b5e84c6f68c164792a16104e2",
           "message": "fix list",
           "timestamp": "2026-06-02T10:26:36-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 218,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "df1df49e75c7e322d459947d44e35628e3b91407",
+          "message": "Merge pull request #122 from jonattanva/feat/list-fixed-and-parent-preview\n\nfeat(list): fixed lists, previews of the row above, and a badge that stays in",
+          "timestamp": "2026-10-20T11:23:21-05:00",
+          "tree_id": "7ea745167f4626b788e8a8e5351e71d898f97161",
+          "url": "https://github.com/jonattanva/luna-form/commit/df1df49e75c7e322d459947d44e35628e3b91407"
+        },
+        "date": 1792513487492,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 304,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 565,
             "unit": "ms"
           }
         ]
