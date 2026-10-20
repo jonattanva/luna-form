@@ -193,7 +193,10 @@ const PARENT_SCOPE_FIXTURE = `{
       },
       {
         "title": "Your request",
-        "field": [{ "label": "Details", "name": "details" }]
+        "field": [
+          { "label": "Details", "name": "details" },
+          { "label": "Urgency", "name": "urgency" }
+        ]
       }
     ]
   }
@@ -476,10 +479,30 @@ test.describe(
         page,
       }) => {
         const cards = page.locator('form [data-slot="list-item-card"]')
-        await expect(cards).toHaveCount(2)
+        await expect(cards).toHaveCount(3)
         await expect(cards.nth(0)).toContainText('About you')
         await expect(cards.nth(0)).not.toContainText('Your request')
         await expect(cards.nth(1)).toContainText('Your request')
+      })
+
+      // The outer rows draw no card, so the only thing between two sections'
+      // questions is the nested list itself. Unlabelled, it has no legend, and
+      // a legend box left empty used to push each section's first card down.
+      test('questions of different outer rows are as far apart as those of the same row', async ({
+        page,
+      }) => {
+        const cards = page.locator('form [data-slot="list-item-card"]')
+        await expect(cards).toHaveCount(3)
+
+        const [first, second, third] = await Promise.all(
+          [0, 1, 2].map((index) => cards.nth(index).boundingBox())
+        )
+        expect(first && second && third).toBeTruthy()
+        if (first && second && third) {
+          const across = second.y - (first.y + first.height)
+          const within = third.y - (second.y + second.height)
+          expect(across).toBeCloseTo(within, 0)
+        }
       })
 
       test('a long row of tags gives way to the badge instead of pushing it out of the card', async ({
