@@ -16,8 +16,10 @@ export function Column(
   const Description = props.description ?? DescriptionText
   const cols = getColumn(props.column?.advanced?.cols)
 
+  // A hidden field renders nothing, so a column whose fields are all hidden is
+  // an empty grid; left in the layout, it adds the form's gap twice over.
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-4 has-[>[data-slot=column]:empty]:hidden">
       <div
         data-slot="column"
         className={twMerge('grid grid-cols-1 gap-3 sm:gap-4', cols)}
