@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "jotai": {
+      "source": "jotaijs/jotai-skills",
+      "sourceType": "github",
+      "skillPath": "skills/jotai/SKILL.md",
+      "computedHash": "473e214576772e8f343f0b3d09546b3828604773b89bbd329c7fef3590f1cf52"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
