@@ -59,36 +59,39 @@ export function FieldList(props: ListProps) {
             {children(key)}
           </FieldListPreviewItem>
         ))}
-        <button
-          aria-disabled={!canAdd}
-          aria-label={
-            hasLimit ? `${action}, ${items.length} of ${max}` : action
-          }
-          className={twMerge(
-            ADD_BUTTON_BASE_CLASSES,
-            hasLimit ? 'justify-between' : 'justify-center',
-            !canAdd &&
-              'cursor-not-allowed opacity-50 hover:border-zinc-200 hover:text-zinc-500 dark:hover:border-zinc-800 dark:hover:text-zinc-400'
-          )}
-          disabled={!canAdd}
-          onClick={addItem}
-          type="button"
-        >
-          <span className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-base leading-none">
-              +
+        {/* A fixed list keeps its rows, so there is nothing to add. */}
+        {field.advanced?.fixed !== true && (
+          <button
+            aria-disabled={!canAdd}
+            aria-label={
+              hasLimit ? `${action}, ${items.length} of ${max}` : action
+            }
+            className={twMerge(
+              ADD_BUTTON_BASE_CLASSES,
+              hasLimit ? 'justify-between' : 'justify-center',
+              !canAdd &&
+                'cursor-not-allowed opacity-50 hover:border-zinc-200 hover:text-zinc-500 dark:hover:border-zinc-800 dark:hover:text-zinc-400'
+            )}
+            disabled={!canAdd}
+            onClick={addItem}
+            type="button"
+          >
+            <span className="flex items-center gap-2">
+              <span aria-hidden="true" className="text-base leading-none">
+                +
+              </span>
+              {action}
             </span>
-            {action}
-          </span>
-          {hasLimit && (
-            <span
-              aria-hidden="true"
-              className="text-zinc-400 tabular-nums dark:text-zinc-500"
-            >
-              {items.length} / {max}
-            </span>
-          )}
-        </button>
+            {hasLimit && (
+              <span
+                aria-hidden="true"
+                className="text-zinc-400 tabular-nums dark:text-zinc-500"
+              >
+                {items.length} / {max}
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </ListPathContext.Provider>
   )

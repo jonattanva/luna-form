@@ -26,6 +26,17 @@ type Entry =
       options?: Array<Option | string>
     }
 
+/**
+ * The row that holds the list `name` is a row of, or `undefined` for a
+ * top-level list, which has none. A row is `<list>.<index>`, and a nested list
+ * is named after its own row (`section.0.field`), so the row above is what is
+ * left once the index and the list's own name are taken off.
+ */
+function parentRowOf(name: string): string | undefined {
+  const segments = name.split('.')
+  return segments.length > 2 ? segments.slice(0, -2).join('.') : undefined
+}
+
 function normalize(item: PreviewItem): NormalizedPreview {
   if (typeof item === 'string') {
     return { field: item }
@@ -107,11 +118,19 @@ function PreviewEntries({
         continue
       }
 
-      const previewName = `${name}.${item.field}`
+      // A parent entry reads the row that holds this list; its field is not one
+      // of this list's leaves, so it has no options or date format to borrow.
+      const parentRow = item.scope === 'parent' ? parentRowOf(name) : name
+      if (parentRow === undefined) {
+        continue
+      }
+
+      const previewName = `${parentRow}.${item.field}`
       const initialValue =
         value != null ? resolveValue(previewName, value) : undefined
 
-      const childField = fieldLookup?.[item.field]
+      const childField =
+        item.scope === 'parent' ? undefined : fieldLookup?.[item.field]
       const options = childField
         ? getPreviewOptions(childField, localization)
         : undefined

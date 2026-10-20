@@ -59,6 +59,27 @@ const LIST_AT_MAX = `{
   ]
 }`
 
+// Rows created somewhere else and only corrected here: no add button and no
+// remove control, while each row stays editable.
+const FIXED_LIST = `{
+  "value": { "items": [{ "item": "first" }, { "item": "second" }] },
+  "sections": [
+    {
+      "fields": [
+        {
+          "label": "Items",
+          "name": "items",
+          "type": "list",
+          "advanced": { "fixed": true, "length": { "min": 0 } },
+          "fields": [
+            { "name": "item", "label": "Item", "type": "input/text" }
+          ]
+        }
+      ]
+    }
+  ]
+}`
+
 test.describe('List Add Button', { tag: ['@e2e'] }, () => {
   test('renders with 36px height, dashed border, and rounded-md corners', async ({
     page,
@@ -118,5 +139,21 @@ test.describe('List Add Button', { tag: ['@e2e'] }, () => {
 
     expect(after.border).toBe(before.border)
     expect(after.color).toBe(before.color)
+  })
+
+  test('a fixed list offers no add button and no remove control, and its rows stay editable', async ({
+    page,
+  }) => {
+    await inject(page, FIXED_LIST)
+    await page.goto('')
+
+    const form = page.locator('form')
+    await expect(form.locator('input[name^="items."]')).toHaveCount(2)
+    await expect(form.getByRole('button', { name: /Add item/ })).toHaveCount(0)
+    await expect(form.getByRole('button', { name: /^Remove/ })).toHaveCount(0)
+
+    const second = form.locator('input[name="items.1.item"]')
+    await second.fill('changed')
+    await expect(second).toHaveValue('changed')
   })
 })

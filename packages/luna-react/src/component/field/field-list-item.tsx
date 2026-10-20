@@ -91,7 +91,7 @@ export function FieldListItem(
               isOpen ? 'Collapse {label} {index}' : 'Expand {label} {index}'
             )}
             className={twMerge(
-              'group flex grow items-center gap-2 rounded p-1 text-left text-zinc-400',
+              'group flex min-w-0 grow items-center gap-2 rounded p-1 text-left text-zinc-400',
               'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',
               'dark:text-zinc-500'
             )}
