@@ -430,8 +430,11 @@ export function useFieldList(
     reportPendingRows(undefined)
   }, [pendingRows, reportPendingRows])
 
-  const canAdd = items.length < max
-  const canRemove = items.length > min
+  // A fixed list offers neither control. `addItem` and `handleRemove` still
+  // stop at the bounds, which a fixed list never reaches through the UI.
+  const fixed = field.advanced?.fixed === true
+  const canAdd = !fixed && items.length < max
+  const canRemove = !fixed && items.length > min
 
   return [
     items,

@@ -68,6 +68,14 @@ export type PreviewItem =
   | {
       field?: string
       label?: string
+      /**
+       * Where `field` is read from. Left out, it names a leaf of the row being
+       * previewed. `parent` reads it from the row that holds the list instead,
+       * one level up: a nested list's rows can then say which outer row they
+       * belong to, such as the section a question sits in. A top-level list has
+       * no row above it, so the entry is left out of the preview.
+       */
+      scope?: 'parent'
       when?: string | string[] | Condition
     }
 
@@ -76,6 +84,14 @@ export type List = {
     title?: string
     action?: string
     collapsed?: boolean
+    /**
+     * Whether the list keeps the rows it has: no add button and no remove
+     * control, while every row stays editable. For a list whose rows are
+     * created somewhere else and only corrected here. It says nothing about
+     * how many rows are valid -- that is still `length`, read the same way by
+     * the schema -- so the rows a list opens with are still clamped to `min`.
+     */
+    fixed?: boolean
     /**
      * Whether hiding this list leaves the values behind instead of taking
      * them. See `Field`'s, which this one is a statement about: a list holds

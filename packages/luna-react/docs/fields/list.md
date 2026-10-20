@@ -28,6 +28,8 @@ The `advanced` property customizes structural interaction rules and layout rende
   Each bound is a number, or a `$ref` the host resolves to one. A bound that is not, such as a `$ref` the context does not hold, is a rule the form cannot read: the list is held back with `This list cannot be checked`, an empty one included, since a list has no `required` of its own and `length.min` is how it asks for rows. Meanwhile it shows its rows as if that bound were not declared, a `min` of one or no `max` at all, and a development build names the bound in the console, as it does [for a field](input.md#a-bound-that-is-no-number).
 - **`collapsed`** _(boolean)_: When enabled, list items default to a visually collapsed representation upon mounting or adding.
   Collapsing only hides a row: its fields keep their values, still validate and are still submitted, and a submit that fails on one of them opens the row so the error can be seen.
+- **`fixed`** _(boolean)_: The list keeps the rows it has. It renders no add button and no remove control, and every row stays editable. Reach for it when the rows are created somewhere else and this form only corrects them.
+  It says nothing about how many rows are valid: that is still `length`, read the same way by the schema, and the rows a list opens with are still clamped to `min`. A fixed list that opens with no rows needs `"length": { "min": 0 }`, or it opens with an empty one it cannot remove.
 - **`keepValue`** _(boolean)_: If `true`, hiding the list leaves the values behind instead of taking them. A list holds nothing under its own name, so declaring it here is a statement about the rows: it covers every value they hold. See [Keeping a value through a hide](../events/change.md#keeping-a-value-through-a-hide).
 
 ### Collapsed Previews (`preview` object)
@@ -43,6 +45,7 @@ Previews can map seamlessly pointing out the desired child `name` simply as stri
 
 - **`field`** _(string)_: The child layout field name.
 - **`label`** _(string)_: Provides contextual prefix naming before mapping the preview value statically.
+- **`scope`** _(`"parent"`)_: Reads `field` from the row that holds this list rather than from the row being previewed, one level up. A nested list's rows can then name the outer row they belong to, such as the section a question sits in. In a top-level list there is no row above, and the entry is left out of the preview.
 - **`when`** _(string | string[] | Condition)_: Standard complex logical operators dictating runtime evaluation rules. When an **array** is provided, it performs an **OR match** against the field's current value.
 
 ---

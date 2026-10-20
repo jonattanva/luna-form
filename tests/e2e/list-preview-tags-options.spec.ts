@@ -140,6 +140,68 @@ const RADIO_FIXTURE = `{
   }
 }`
 
+// Questions grouped in sections, shown without the section rows: the outer
+// row holds a single nested list, so it draws no card of its own, and each
+// question names its section through a tag read from the row above.
+const PARENT_SCOPE_FIXTURE = `{
+  "sections": [
+    {
+      "fields": [
+        {
+          "name": "section",
+          "type": "list",
+          "advanced": { "fixed": true, "length": { "min": 0 } },
+          "fields": [
+            {
+              "name": "field",
+              "type": "list",
+              "advanced": {
+                "collapsed": true,
+                "fixed": true,
+                "length": { "min": 0 },
+                "preview": {
+                  "badge": {
+                    "when": { "field": "required", "operator": "eq", "value": "true" },
+                    "label": "Required"
+                  },
+                  "label": "label",
+                  "tags": ["name", "label", { "field": "title", "scope": "parent" }]
+                }
+              },
+              "fields": [
+                { "name": "label", "label": "Label", "type": "input/text" },
+                { "name": "required", "label": "Required", "type": "input/text" },
+                { "name": "name", "label": "Key", "type": "input/text" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "value": {
+    "section": [
+      {
+        "title": "About you",
+        "field": [
+          {
+            "label": "Full name of the person who is answering",
+            "required": "true",
+            "name": "a_technical_key_long_enough_to_push_the_badge_out"
+          }
+        ]
+      },
+      {
+        "title": "Your request",
+        "field": [
+          { "label": "Details", "name": "details" },
+          { "label": "Urgency", "name": "urgency" }
+        ]
+      }
+    ]
+  }
+}`
+
 test.describe(
   'List Preview Tags - Option-bearing fields',
   { tag: ['@e2e'] },
@@ -404,6 +466,60 @@ test.describe(
         const card = page.locator('[data-slot="list-item-card"]').first()
         await expect(card).toContainText('With secret key')
         await expect(card).not.toContainText('with-secret-key')
+      })
+    })
+
+    test.describe('Tags read from the row above', () => {
+      test.beforeEach(async ({ page }) => {
+        await inject(page, PARENT_SCOPE_FIXTURE)
+        await page.goto('')
+      })
+
+      test('each nested row names the outer row it belongs to', async ({
+        page,
+      }) => {
+        const cards = page.locator('form [data-slot="list-item-card"]')
+        await expect(cards).toHaveCount(3)
+        await expect(cards.nth(0)).toContainText('About you')
+        await expect(cards.nth(0)).not.toContainText('Your request')
+        await expect(cards.nth(1)).toContainText('Your request')
+      })
+
+      // The outer rows draw no card, so the only thing between two sections'
+      // questions is the nested list itself. Unlabelled, it has no legend, and
+      // a legend box left empty used to push each section's first card down.
+      test('questions of different outer rows are as far apart as those of the same row', async ({
+        page,
+      }) => {
+        const cards = page.locator('form [data-slot="list-item-card"]')
+        await expect(cards).toHaveCount(3)
+
+        const [first, second, third] = await Promise.all(
+          [0, 1, 2].map((index) => cards.nth(index).boundingBox())
+        )
+        expect(first && second && third).toBeTruthy()
+        if (first && second && third) {
+          const across = second.y - (first.y + first.height)
+          const within = third.y - (second.y + second.height)
+          expect(across).toBeCloseTo(within, 0)
+        }
+      })
+
+      test('a long row of tags gives way to the badge instead of pushing it out of the card', async ({
+        page,
+      }) => {
+        const card = page.locator('form [data-slot="list-item-card"]').first()
+        const badge = card.getByText('Required', { exact: true }).first()
+        await expect(badge).toBeVisible()
+
+        const cardBox = await card.boundingBox()
+        const badgeBox = await badge.boundingBox()
+        expect(cardBox && badgeBox).toBeTruthy()
+        if (cardBox && badgeBox) {
+          expect(badgeBox.x + badgeBox.width).toBeLessThanOrEqual(
+            cardBox.x + cardBox.width
+          )
+        }
       })
     })
   }
