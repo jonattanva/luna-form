@@ -95,7 +95,9 @@ test.describe(
       await expect(cards.nth(2)).toContainText('Phone')
 
       // Remove the middle item without editing anything.
-      await page.getByRole('button', { name: 'Remove Field item 2' }).click()
+      await page
+        .getByRole('button', { name: 'Remove Email (Field item 2)' })
+        .click()
 
       // Two cards remain: the survivors must still be First Name and Phone.
       await expect(cards).toHaveCount(2)
@@ -112,13 +114,15 @@ test.describe(
       await inject(page, HYDRATED_LIST)
       await page.goto('/reactive')
 
-      await page.getByRole('button', { name: 'Remove Field item 2' }).click()
+      await page
+        .getByRole('button', { name: 'Remove Email (Field item 2)' })
+        .click()
 
       // The trailing survivor stays keyed by stable id 2 (survivors are [0, 2]),
       // so its inputs are named `field.2.*`. Expanding re-hydrates from the parent
       // value, which is now the compacted [First Name, Phone] array -> `field.2.*`
       // is undefined -> inputs render empty.
-      await page.getByRole('button', { name: 'Expand Field 2' }).click()
+      await page.getByRole('button', { name: 'Expand Phone (Field 2)' }).click()
 
       await expect(page.locator('input[name="field.2.label"]')).toHaveValue(
         'Phone'
@@ -135,7 +139,9 @@ test.describe(
       const events = captureValueChanges(page)
       await page.goto('/reactive')
 
-      await page.getByRole('button', { name: 'Remove Field item 2' }).click()
+      await page
+        .getByRole('button', { name: 'Remove Email (Field item 2)' })
+        .click()
 
       await expect
         .poll(() => {

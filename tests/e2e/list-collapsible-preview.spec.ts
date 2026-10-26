@@ -58,7 +58,9 @@ test.describe('List Collapsible - Preview', { tag: ['@e2e'] }, () => {
     page,
   }) => {
     // Collapse the multi item so the preview renders inline in the header
-    await page.getByRole('button', { name: 'Collapse Multi List 1' }).click()
+    await page
+      .getByRole('button', { name: 'Collapse K1 (Multi List 1)' })
+      .click()
 
     const card = page.locator('[data-slot="list-item-card"]')
     await expect(card.getByText('K1')).toBeVisible()
@@ -68,11 +70,15 @@ test.describe('List Collapsible - Preview', { tag: ['@e2e'] }, () => {
   test('preview reflects edits made after expanding the item', async ({
     page,
   }) => {
-    await page.getByRole('button', { name: 'Expand Single List 1' }).click()
+    await page
+      .getByRole('button', { name: 'Expand S1 (Single List 1)' })
+      .click()
 
     await page.locator('input[name="single.0.item"]').fill('Edited')
 
-    await page.getByRole('button', { name: 'Collapse Single List 1' }).click()
+    await page
+      .getByRole('button', { name: 'Collapse Edited (Single List 1)' })
+      .click()
     await expect(page.getByText('Edited')).toBeVisible()
   })
 
@@ -84,7 +90,9 @@ test.describe('List Collapsible - Preview', { tag: ['@e2e'] }, () => {
     await expect(page.locator('button').filter({ hasText: 'S1' })).toBeVisible()
 
     // Expand and the header label remains
-    await page.getByRole('button', { name: 'Expand Single List 1' }).click()
+    await page
+      .getByRole('button', { name: 'Expand S1 (Single List 1)' })
+      .click()
     await expect(page.locator('input[name="single.0.item"]')).toBeVisible()
     await expect(page.locator('button').filter({ hasText: 'S1' })).toBeVisible()
   })

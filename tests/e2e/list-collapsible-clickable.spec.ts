@@ -76,26 +76,26 @@ test.describe('List Collapsible - Clickable Header', { tag: ['@e2e'] }, () => {
     page,
   }) => {
     const expanded = page.getByRole('button', {
-      name: 'Collapse Multi List 1',
+      name: 'Collapse K1 (Multi List 1)',
     })
     await expect(expanded).toHaveAttribute('aria-expanded', 'true')
 
     await expanded.click()
     await expect(
-      page.getByRole('button', { name: 'Expand Multi List 1' })
+      page.getByRole('button', { name: 'Expand K1 (Multi List 1)' })
     ).toHaveAttribute('aria-expanded', 'false')
   })
 
-  test('aria-label includes the list label and 1-based index', async ({
+  test('accessible name includes the row label, the list label and 1-based index', async ({
     page,
   }) => {
     // Multi list is expanded by default → "Collapse" prefix
     await expect(
-      page.getByRole('button', { name: 'Collapse Multi List 1' })
+      page.getByRole('button', { name: 'Collapse K1 (Multi List 1)' })
     ).toBeVisible()
     // Single list is collapsed by default → "Expand" prefix
     await expect(
-      page.getByRole('button', { name: 'Expand Single List 1' })
+      page.getByRole('button', { name: 'Expand S1 (Single List 1)' })
     ).toBeVisible()
   })
 })
