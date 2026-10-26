@@ -295,4 +295,93 @@ test.describe('Label component', { tag: ['@e2e'] }, () => {
     await expect(label).toHaveClass(/text-sm/)
     await expect(label).toHaveClass(/select-none/)
   })
+
+  test('should name a group of buttons after its label', async ({ page }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Priority",
+                "name": "priority",
+                "type": "chips",
+                "required": true,
+                "source": [
+                  { "label": "Low", "value": "low" },
+                  { "label": "High", "value": "high" }
+                ]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    // A `<label for>` names only an element it can label, and a row of
+    // buttons has none: the group is named through `aria-labelledby`.
+    const group = page.getByRole('group', { name: 'Priority', exact: true })
+    await expect(group).toBeVisible()
+    await expect(group.getByRole('button', { name: 'Low' })).toBeVisible()
+    await expect(group.getByRole('button', { name: 'High' })).toBeVisible()
+  })
+
+  test('should keep naming an input after its label', async ({ page }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Username",
+                "name": "username",
+                "type": "input/text",
+                "required": true
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(
+      page.getByRole('textbox', { name: 'Username', exact: true })
+    ).toBeVisible()
+  })
+
+  test('should let advanced.aria name the field instead of the label', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Priority",
+                "name": "priority",
+                "type": "chips",
+                "required": true,
+                "advanced": { "aria": { "label": "How urgent" } },
+                "source": [{ "label": "Low", "value": "low" }]
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(
+      page.getByRole('group', { name: 'How urgent', exact: true })
+    ).toBeVisible()
+  })
 })

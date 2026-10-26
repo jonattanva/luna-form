@@ -46,7 +46,7 @@ Props are applied in this order:
 <Component
   {...dataAttributes} // advanced.data, as data-* attributes
   {...commonProps} // id, name, placeholder, disabled, required, and what the field family adds
-  {...ariaAttributes} // advanced.aria, and aria-invalid, aria-errormessage
+  {...ariaAttributes} // advanced.aria, aria-labelledby, aria-invalid, aria-errormessage
   {...inputProps} // the prepared value or defaultValue
   onBlur={onBlur}
   onChange={onChange}
@@ -97,6 +97,34 @@ function PeoplePicker({ id, ...props }: React.ComponentProps<'input'>) {
 
 The same applies when you build on a component library: whatever primitive
 renders the focusable element is where the `id` belongs.
+
+## A group of controls takes its name from `aria-labelledby`
+
+A `<label for>` names only an element a label can name: an `input`, a `select`,
+a `textarea`, a `button`. A component drawn as several controls, such as a row
+of chips, has no one element the label belongs to, and putting the `id` on one
+of its buttons would rename that button after the field.
+
+So a field that renders a label also hands its component `aria-labelledby`,
+pointing at that label, whose `id` is the field's `name` followed by `-label`.
+Put it, with the `id`, on the element that holds the controls, and give that
+element a role that can carry a name:
+
+```tsx
+function Chips({ id, 'aria-labelledby': labelledBy, ...props }: ChipsProps) {
+  return (
+    <div aria-labelledby={labelledBy} id={id} role="group">
+      {/* one button per option */}
+    </div>
+  )
+}
+```
+
+A component that forwards its props to a single input gets it for free, and the
+input is named exactly as its `for` already named it. A field without a `label`
+or a `name` renders no label, and gets no `aria-labelledby`. An `aria.label` or
+`aria.labelledby` in `advanced` is the author's name for the field, and the form
+then sends that instead.
 
 ## Clearing a value on a select-family type
 
@@ -274,6 +302,8 @@ Before shipping a custom input:
 
 - Its `type` string matches `defineCustomInput` exactly, character for character
 - The `id` it receives reaches the focusable element
+- If it renders several controls, the `aria-labelledby` it receives reaches
+  the element that holds them, which has a role such as `group`
 - It forwards or calls the `onChange` and `onBlur` it receives
 - If it is a select variant, it does not rely on `''` to clear
 - If it renders `input/date`, it reads and emits `yyyy-MM-dd`, or `[from, to]`

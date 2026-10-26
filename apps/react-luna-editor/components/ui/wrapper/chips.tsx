@@ -8,16 +8,25 @@ type Option = {
 }
 
 export function Chips({
+  'aria-label': ariaLabel,
+  'aria-labelledby': labelledBy,
   disabled,
+  id,
   name,
   onChange,
   options = [],
   value = [],
   multiple = true,
 }: {
+  // A row of buttons has no one element a `<label for>` can name, so the
+  // group takes the label the form points it at, or the name `advanced.aria`
+  // gives it instead.
+  'aria-label'?: string
+  'aria-labelledby'?: string
   // A disabled field is neither changed nor sent: every button is disabled,
   // and so is every hidden input, which the browser then leaves out.
   disabled?: boolean
+  id?: string
   name?: string
   // Reports an array, and says so. The runtime reads nothing off a change but
   // `target.value` (`InputChangeEvent` in `input-strategies`), and its value is
@@ -42,7 +51,13 @@ export function Chips({
   }
 
   return (
-    <div className="flex w-full flex-wrap gap-2">
+    <div
+      aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
+      className="flex w-full flex-wrap gap-2"
+      id={id}
+      role="group"
+    >
       {name &&
         value.map((v) => (
           <input

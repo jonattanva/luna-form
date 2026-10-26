@@ -1,4 +1,5 @@
 import {
+  getLabelId,
   isCheckbox,
   isRadio,
   isString,
@@ -29,6 +30,7 @@ export function Label(
         'group-data-[readonly=true]:cursor-not-allowed group-data-[readonly=true]:opacity-50'
       )}
       htmlFor={props.field.name}
+      id={getLabelId(props.field)}
       title={isString(props.children) ? props.children : undefined}
     >
       <span className="[[data-slot=column]_&]:md:truncate">

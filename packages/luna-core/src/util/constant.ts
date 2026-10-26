@@ -77,6 +77,8 @@ export const TYPE_TEXT = 'text'
 
 export const ARIA_ERROR_MESSAGE = 'aria-errormessage'
 export const ARIA_INVALID = 'aria-invalid'
+export const ARIA_LABEL = 'aria-label'
+export const ARIA_LABELLEDBY = 'aria-labelledby'
 export const DATA_INVALID = 'data-invalid'
 export const DATA_READONLY = 'data-readonly'
 
