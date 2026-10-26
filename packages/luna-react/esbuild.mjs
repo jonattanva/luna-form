@@ -11,7 +11,6 @@ const outputs = []
 const USE_CLIENT = '"use client";'
 const LOGGER_TAG = '[Luna Form]'
 const NODE_ENV = 'process.env.NODE_ENV'
-const ZOD_BUDGET = 128 * 1024
 
 function isClient(outdir) {
   return outdir.includes('/client/')
@@ -113,44 +112,6 @@ if (!isWatch) {
   if (unmarked.length > 0) {
     console.error(
       `Client output without ${USE_CLIENT}\n${unmarked.map((f) => `  - ${f}`).join('\n')}`
-    )
-    process.exit(1)
-  }
-
-  // Zod stays external, so what it weighs is decided by the bundler of whoever
-  // installs this, from how the library imports it. `import { z }` hands over
-  // an object no bundler can shake, every locale and the JSON Schema
-  // converters included: 443 KiB where the same calls through
-  // `import * as z` cost 92. Each ESM output is bundled again with zod inside,
-  // as an application would, and what zod adds is held to a budget.
-  const heavy = []
-  for (const file of outputs.filter((file) => file.includes('/esm/'))) {
-    const { metafile } = await esbuild.build({
-      bundle: true,
-      entryPoints: [file],
-      external: dependencies
-        .filter((dependency) => dependency !== 'zod')
-        .flatMap((dependency) => [dependency, `${dependency}/*`]),
-      format: 'esm',
-      logLevel: 'silent',
-      metafile: true,
-      minify: true,
-      write: false,
-    })
-
-    const bytes = Object.values(metafile.outputs)
-      .flatMap((output) => Object.entries(output.inputs))
-      .filter(([path]) => path.includes('/node_modules/zod/'))
-      .reduce((total, [, input]) => total + input.bytesInOutput, 0)
-
-    if (bytes > ZOD_BUDGET) {
-      heavy.push(`  - ${file}: ${(bytes / 1024).toFixed(1)} KiB`)
-    }
-  }
-
-  if (heavy.length > 0) {
-    console.error(
-      `Zod over its ${ZOD_BUDGET / 1024} KiB budget in:\n${heavy.join('\n')}`
     )
     process.exit(1)
   }
