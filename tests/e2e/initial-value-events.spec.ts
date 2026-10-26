@@ -281,8 +281,13 @@ test.describe(
   'State events from a value the host changes',
   { tag: ['@e2e'] },
   () => {
-    /** One choice revealing one field per option, as an ending would. */
-    function endingForm(value: string): string {
+    /**
+     * One choice revealing one field per option, as an ending would.
+     *
+     * `addressDefault` gives the address a `defaultValue`: a value the form
+     * shows without the host ever being told about it.
+     */
+    function endingForm(value: string, addressDefault?: string): string {
       return `{
         "value": ${value},
         "sections": [
@@ -324,7 +329,12 @@ test.describe(
                 "advanced": { "data": { "testid": "address" } },
                 "label": "Address",
                 "name": "address",
-                "type": "input/text",
+                "type": "input/text",${
+                  addressDefault === undefined
+                    ? ''
+                    : `
+                "defaultValue": "${addressDefault}",`
+                }
                 "hidden": true
               }
             ]
@@ -370,6 +380,40 @@ test.describe(
       // Put back, not changed: the host already holds every value, and the
       // address held nothing to clear, so there is nothing to tell it.
       expect(changes).toEqual([])
+    })
+
+    // The address shows its default as soon as the redirect reveals it, and
+    // the host is never told: the default is the form's, not a value anyone
+    // wrote. Putting the message back hides it again, and announcing that
+    // clear would tell the host it lost a value it never had -- a write into
+    // a host that has just said what every field holds, which an undo stack
+    // records as a new step.
+    test('tells the host nothing about a default it never held', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        endingForm(`{ "ending": "message", "message": "Thanks" }`, 'https://')
+      )
+      await page.goto('/reactive')
+
+      const message = page.getByTestId('message')
+      const address = page.getByTestId('address')
+      await expect(message).toHaveValue('Thanks')
+
+      const onClick = captureValueChanges(page)
+      await page.getByLabel('Take them to another page').click()
+      await expect(address).toHaveValue('https://')
+      expect(onClick.some((change) => change.includes('address'))).toBe(false)
+
+      const onReset = captureValueChanges(page)
+      await page.getByRole('button', { name: 'Reset values' }).click()
+
+      await expect(page.getByLabel('Show a message')).toBeChecked()
+      await expect(message).toHaveValue('Thanks')
+      await expect(address).toHaveCount(0)
+
+      expect(onReset).toEqual([])
     })
 
     test('hides what a choice revealed when the host empties it', async ({

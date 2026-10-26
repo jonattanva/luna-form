@@ -439,6 +439,11 @@ choice, not those of the second.
   nothing: what it revealed is hidden again. A hidden target is cleared and
   reported as usual, but a target that holds nothing is not announced, so a
   host putting back values it already holds is told nothing.
+- **Only what the host holds is announced.** A target hidden by a value the
+  host put back is reported only when the host's own record carries a value for
+  it. A `defaultValue` the form showed without reporting it was never the
+  host's, so hiding it again tells the host nothing. A hide the user sets off
+  still reports every field it empties.
 
 ## Sequencing Actions
 

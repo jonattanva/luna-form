@@ -1,4 +1,5 @@
 import { fieldStateAtom } from '../lib/state-store'
+import { hostValueAtom } from '../lib/host-value-store'
 import { ListPathContext } from '../context/list-path-context'
 import { omitKey } from '../lib/store-helper'
 import { inputErrorAtom } from '../lib/error-store'
@@ -29,7 +30,9 @@ import {
   isInput,
   isMultiple,
   isRows,
+  isValidValue,
   keepsValue,
+  resolveEntry,
   resolveTarget,
   translate,
   type AriaAttributes,
@@ -220,7 +223,17 @@ export function useInputCore(
   //
   // Returns the keys it emptied: what those fields asserted about others through
   // their own `state` rules stops holding with them. See `withdrawStates`.
-  function clearTargets(targets: string[]): string[] {
+  //
+  // `fromHost` is a clear the host's own value set off -- an undo, a reset --
+  // rather than the user's choice. That host has just said what every field
+  // holds, so only what it holds is news to it: a key it does not carry, a
+  // `defaultValue` the form filled in without a word among them, was never the
+  // host's to lose. Announcing it anyway is a write into a host that only put
+  // its values back, and an undo stack records that write as a step of its own.
+  // A user's change keeps announcing everything it empties: the host may not
+  // have caught up with what the form reported a moment ago, and a value it
+  // missed would come back from it.
+  function clearTargets(targets: string[], fromHost: boolean): string[] {
     const previous = store.get(valueAtom) as Record<string, unknown>
 
     // A target takes everything under it with it. A group or a list keeps
@@ -244,11 +257,24 @@ export function useInputCore(
       return cleared
     }
 
+    const held = fromHost ? store.get(hostValueAtom) : null
+
     for (const key of cleared) {
+      if (held && !holds(held, key)) {
+        continue
+      }
+
       reportTarget(key, undefined)
     }
 
     return cleared
+  }
+
+  // Whether the host's record carries a value for a key, under the positional
+  // name the record uses. See `reportTarget`.
+  function holds(record: Record<string, unknown>, key: string): boolean {
+    const entry = resolveEntry(translateListPath(key), record)
+    return entry.found && isValidValue(entry.value)
   }
 
   // What one `state` rule decided, applied to its targets. `from` is the field
@@ -258,7 +284,8 @@ export function useInputCore(
     from: string,
     targets: string[],
     state: FieldState | undefined,
-    visited: Set<string>
+    visited: Set<string>,
+    fromHost: boolean
   ) {
     const newTargets = targets.map((target) => resolveTarget(target, from))
 
@@ -309,7 +336,7 @@ export function useInputCore(
     })
 
     if (targetsToClear.length > 0) {
-      withdrawStates(clearTargets(targetsToClear), visited)
+      withdrawStates(clearTargets(targetsToClear, fromHost), visited, fromHost)
     }
   }
 
@@ -329,7 +356,11 @@ export function useInputCore(
   // Only for what a hide emptied. A field that keeps its value through a hide
   // keeps what its rules decided, and one that held nothing had nothing
   // standing to withdraw.
-  function withdrawStates(names: string[], visited: Set<string>) {
+  function withdrawStates(
+    names: string[],
+    visited: Set<string>,
+    fromHost: boolean
+  ) {
     for (const name of names) {
       if (visited.has(name)) {
         continue
@@ -344,19 +375,27 @@ export function useInputCore(
 
       handleProxyEvent(events, ({ states }) => {
         handleStateEvent(null, states, (targets, state) => {
-          applyState(name, targets, state, visited)
+          applyState(name, targets, state, visited, fromHost)
         })
       })
     }
   }
 
   // What this field's own `state` rules decide for the value it now holds.
+  // `fromHost` says who put that value there; see `clearTargets`.
   function applyStates(
     selected: unknown,
-    states: Parameters<typeof handleStateEvent>[1]
+    states: Parameters<typeof handleStateEvent>[1],
+    fromHost: boolean
   ) {
     handleStateEvent(selected, states, (targets, state) => {
-      applyState(props.field.name, targets, state, new Set([props.field.name]))
+      applyState(
+        props.field.name,
+        targets,
+        state,
+        new Set([props.field.name]),
+        fromHost
+      )
     })
   }
 
@@ -422,7 +461,7 @@ export function useInputCore(
           language
         )
 
-        applyStates(selected, states)
+        applyStates(selected, states, false)
       })
 
       // Outside the transition on purpose. Everything above rearranges the
@@ -529,7 +568,7 @@ export function useInputCore(
 
     handleProxyEvent(events, ({ states }) => {
       startTransition(() => {
-        applyStates(selected, states)
+        applyStates(selected, states, true)
       })
     })
   })
