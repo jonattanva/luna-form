@@ -51,7 +51,11 @@ jobs:
           # hundreds of kB (date-fns took the total to 342 kB). The date
           # picker's bounds, reserved days, ranges, years and time zones are
           # the library's own code, about 35 kB over cjs and esm together.
-          LIMIT_KB=265
+          # Peer dependencies are external, so the total is that code alone:
+          # 265.9 kB after the list work of #127 to #129. The limit leaves
+          # room for that code to grow by a few kB (the field formats' own
+          # date parser among it) and still fails on a bundled dependency.
+          LIMIT_KB=285
           total=0
           rows=""
 
