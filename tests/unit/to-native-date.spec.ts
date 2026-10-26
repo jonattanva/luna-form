@@ -88,7 +88,19 @@ describe('toNativeDate in the languages the form writes', () => {
     ['octubre 2, 2026', 'MMMM d, yyyy', '2026-10-02'],
     ['ene 5, 2026', 'MMM d, yyyy', '2026-01-05'],
     ['October 2, 2026', 'MMMM d, yyyy', '2026-10-02'],
+    ['MAYO 11, 2026', 'MMMM d, yyyy', '2026-05-11'],
+    ['ene 5, 2026', 'MMMM d, yyyy', '2026-01-05'],
   ])('should read %s', (text, format, expected) => {
     expect(toNativeDate(text, format as DateFormat)).toBe(expected)
+  })
+})
+
+// One language at a time, and a short month reads no full name: `MAYO` is no
+// English `May` followed by an `O`, and `MMM` stops where the abbreviation does.
+describe('toNativeDate month names', () => {
+  test('should not read the full name where only the short one goes', () => {
+    expect(toNativeDate('octubre 2, 2026', 'MMM d, yyyy' as DateFormat)).toBe(
+      ''
+    )
   })
 })

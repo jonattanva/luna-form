@@ -38,6 +38,10 @@ describe('toNativeTime', () => {
     expect(toNativeTime('23:59:59', 'HH:mm:ss')).toBe('23:59:59')
   })
 
+  test('should read a meridiem written with periods', () => {
+    expect(toNativeTime('02:30 p.m.', 'hh:mm a')).toBe('14:30:00')
+  })
+
   test('should return empty string for invalid value', () => {
     expect(toNativeTime('not-a-time', 'HH:mm')).toBe('')
   })

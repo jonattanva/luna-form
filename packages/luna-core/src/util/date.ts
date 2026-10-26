@@ -10,9 +10,6 @@ import {
 import { isObject, isString } from './is-type'
 import { logger } from './logger'
 import { refOf } from './prepare'
-import { isValid, parse, parseISO, format as fnsFormat } from 'date-fns'
-import { enUS, es } from 'date-fns/locale'
-import type { Locale } from 'date-fns'
 import type {
   Date as DateField,
   DateFormat,
@@ -23,8 +20,6 @@ import type {
   TimezoneGroup,
   TimezoneItem,
 } from '../type'
-
-const REF = new Date(2000, 0, 1)
 
 // A day the way the form exchanges it: what a native `<input type="date">`
 // takes, what a calendar emits, what the host gets back and what the submit
@@ -307,7 +302,7 @@ function canonicalZone(text: string): string | undefined {
 
 // A date, a time and the offset that pins them to one instant.
 const ISO_INSTANT =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:?\d{2})$/
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?(?:Z|([+-])(\d{2}):?(\d{2}))$/
 
 /**
  * An instant as the host gives it in `context.now`: an ISO date, time and
@@ -316,12 +311,39 @@ const ISO_INSTANT =
  * clock the form keeps no more, so anything else is no instant.
  */
 export function readInstant(text?: string): Date | undefined {
-  if (text === undefined || !ISO_INSTANT.test(text)) {
+  const match = text === undefined ? null : ISO_INSTANT.exec(text)
+  if (!match) {
     return undefined
   }
 
-  const instant = parseISO(text)
-  return isValid(instant) ? instant : undefined
+  // A group the text leaves out, the seconds or the offset of `Z`, is zero.
+  const [year, month, day, hour, minute, , , , offsetHour, offsetMinute] = match
+    .slice(1)
+    .map((group) => Number(group ?? 0))
+  // The seconds with their fraction, which may run past the millisecond.
+  const seconds = Number(`${match[6] ?? 0}.${match[7] ?? 0}`)
+  const sign = match[8] === '-' ? -1 : 1
+
+  // ISO 8601 allows `24:00`, the end of a day, and nothing past it.
+  const endOfDay = hour === 24 && minute === 0 && seconds === 0
+  if (
+    !toDay({ day, month, year }) ||
+    (hour > 23 && !endOfDay) ||
+    minute > 59 ||
+    seconds >= 60 ||
+    offsetMinute > 59
+  ) {
+    return undefined
+  }
+
+  // Set field by field: `Date.UTC` reads a year below 100 as the 1900s.
+  const midnight = new Date(0)
+  midnight.setUTCFullYear(year, month - 1, day)
+  return new Date(
+    midnight.getTime() +
+      (hour * 60 + minute - sign * (offsetHour * 60 + offsetMinute)) * 60_000 +
+      seconds * 1_000
+  )
 }
 
 // A few lists, one per zone and instant a form suggests and is rendered at.
@@ -415,22 +437,22 @@ function buildTimezones(
 // emits and what the form hands out, or the field's own `format`, which is
 // what a person types and what an older host may still hold. Both are read,
 // so whatever the form gave away can be given back. An impossible day, half a
-// date or a year that is not four digits is no day. Read in local time: a
-// `yyyy-MM-dd` is a day, not an instant.
-function readDay(value: string, format: DateFormat): Date | undefined {
+// date or a year that is not four digits is no day. A `yyyy-MM-dd` is a day,
+// not an instant, so no clock or zone takes part.
+function readDay(value: string, format: DateFormat): Day | undefined {
   const text = value.trim()
   if (!text) {
     return undefined
   }
 
   if (ISO_DATE.test(text)) {
-    return parseDay(text, ISO_FORMAT)
+    return toDay(readParts(text, ISO_FORMAT))
   }
 
-  // In either language the form writes month and day names in: a form in
-  // Spanish shows `octubre 2, 2026`, and that is the text a person edits.
-  for (const locale of Object.values(DATE_FNS_LOCALES)) {
-    const day = parseDay(text, format, locale)
+  // A text is read in one language at a time: `MAYO` is no English `May`
+  // followed by an `O`, but it is the Spanish `mayo`.
+  for (const names of Object.values(MONTHS)) {
+    const day = toDay(readParts(text, format, names))
     if (day) {
       return day
     }
@@ -439,37 +461,284 @@ function readDay(value: string, format: DateFormat): Date | undefined {
   return undefined
 }
 
-function parseDay(
+// The formats are a closed list, so the form reads and writes them itself
+// rather than shipping a date library to every page that renders a form. The
+// tokens are date-fns's, which is what `format` is written in: a year, a month
+// as a number or a name, a day, and a time of day on either clock.
+const TOKENS = /(yyyy|MMMM|MMM|MM|M|dd|d|HH|hh|mm|ss|a)/
+
+type Day = Readonly<{ day: number; month: number; year: number }>
+type TimeOfDay = Readonly<{ hour: number; minute: number; second: number }>
+
+type Parts = {
+  day?: number
+  hour?: number
+  hour12?: number
+  minute?: number
+  month?: number
+  pm?: boolean
+  second?: number
+  year?: number
+}
+
+type MonthNames = Readonly<{ long: string[]; short: string[] }>
+
+// The month names the form writes, in the languages it writes them in, and
+// reads back in either: a form in Spanish shows `octubre 2, 2026`, and that is
+// the text a person edits. A language without names here writes English.
+const MONTHS: Record<string, MonthNames> = {
+  en: {
+    long: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
+    short: [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ],
+  },
+  es: {
+    long: [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ],
+    short: [
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
+    ],
+  },
+}
+
+// A month name at the start of `text`, case aside: `MMMM` takes the full name,
+// then the short one, `MMM` only the short one, and either falls back to the
+// first letter, which names the first month it starts: `J` is January.
+function readMonthName(
+  text: string,
+  token: string,
+  names: MonthNames
+): Readonly<{ length: number; month: number }> | undefined {
+  const lower = text.toLowerCase()
+  const widths = token === 'MMMM' ? [names.long, names.short] : [names.short]
+
+  for (const width of [...widths, names.long.map((name) => name[0])]) {
+    const month = width.findIndex((name) =>
+      lower.startsWith(name.toLowerCase())
+    )
+    if (month !== -1) {
+      return { length: width[month].length, month: month + 1 }
+    }
+  }
+  return undefined
+}
+
+// A meridiem at the start of `text`: `AM`, `pm`, `a.m.`, or its first letter.
+const MERIDIEM = /^([ap])(\.?\s?m\.?)?/i
+
+const YEAR_DIGITS = /^\d{1,4}/
+const DIGITS = /^\d{1,2}/
+
+type NumberPart = Exclude<keyof Parts, 'pm'>
+
+const NUMBER_TOKENS: Record<string, NumberPart> = {
+  yyyy: 'year',
+  MM: 'month',
+  M: 'month',
+  dd: 'day',
+  d: 'day',
+  HH: 'hour',
+  hh: 'hour12',
+  mm: 'minute',
+  ss: 'second',
+}
+
+// What `text` says in `pattern`, read token by token and with nothing left
+// over but blank space, month names in the language `names` gives. A number
+// takes as many digits as its token allows -- four for a year, two for the
+// rest -- and no fewer than one, so a year still being typed reads as one and
+// its floor, not its width, keeps it out.
+function readParts(
   text: string,
   pattern: string,
-  locale?: Locale
-): Date | undefined {
-  try {
-    const day = parse(text, pattern, REF, { locale })
-    return isValid(day) && day.getFullYear() >= MIN_YEAR ? day : undefined
-  } catch {
+  names: MonthNames = MONTHS.en
+): Parts | undefined {
+  const parts: Parts = {}
+  let rest = text
+
+  for (const [index, piece] of pattern.split(TOKENS).entries()) {
+    // `split` with a group alternates: text between tokens, then a token.
+    if (index % 2 === 0) {
+      if (!rest.startsWith(piece)) {
+        return undefined
+      }
+      rest = rest.slice(piece.length)
+      continue
+    }
+
+    if (piece === 'MMMM' || piece === 'MMM') {
+      const name = readMonthName(rest, piece, names)
+      if (!name) {
+        return undefined
+      }
+      parts.month = name.month
+      rest = rest.slice(name.length)
+      continue
+    }
+
+    if (piece === 'a') {
+      const meridiem = MERIDIEM.exec(rest)
+      if (!meridiem) {
+        return undefined
+      }
+      parts.pm = meridiem[1].toLowerCase() === 'p'
+      rest = rest.slice(meridiem[0].length)
+      continue
+    }
+
+    const digits = (piece === 'yyyy' ? YEAR_DIGITS : DIGITS).exec(rest)
+    if (!digits) {
+      return undefined
+    }
+    parts[NUMBER_TOKENS[piece]] = Number(digits[0])
+    rest = rest.slice(digits[0].length)
+  }
+
+  return rest.trim() === '' ? parts : undefined
+}
+
+// A day that exists: a year of four digits, and a date its month has.
+function toDay(parts: Parts | undefined): Day | undefined {
+  if (!parts) {
     return undefined
   }
+
+  const { day, month, year } = parts
+  if (
+    year === undefined ||
+    month === undefined ||
+    day === undefined ||
+    year < MIN_YEAR ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > new Date(Date.UTC(year, month, 0)).getUTCDate()
+  ) {
+    return undefined
+  }
+  return { day, month, year }
+}
+
+// A time on the clock: an hour of the day, or of either half of it with its
+// meridiem, and the minutes and seconds within it. Seconds a format does not
+// carry are none.
+function toTimeOfDay(parts: Parts | undefined): TimeOfDay | undefined {
+  if (!parts) {
+    return undefined
+  }
+
+  const { hour12, minute = -1, second = 0 } = parts
+  const hour =
+    hour12 === undefined
+      ? parts.hour
+      : hour12 >= 1 && hour12 <= 12
+        ? (hour12 % 12) + (parts.pm ? 12 : 0)
+        : undefined
+
+  if (
+    hour === undefined ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59 ||
+    second > 59
+  ) {
+    return undefined
+  }
+  return { hour, minute, second }
+}
+
+const pad = (value: number, length = 2) => String(value).padStart(length, '0')
+
+// `pattern` written with what a day and a time give it, month names in `lang`.
+function writeParts(
+  pattern: string,
+  day: Partial<Day>,
+  time: Partial<TimeOfDay>,
+  lang?: string
+): string {
+  const names = MONTHS[baseLanguage(lang)] ?? MONTHS.en
+  const { day: date = 1, month = 1, year = 0 } = day
+  const { hour = 0, minute = 0, second = 0 } = time
+
+  const written: Record<string, string> = {
+    yyyy: pad(year, 4),
+    MMMM: names.long[month - 1],
+    MMM: names.short[month - 1],
+    MM: pad(month),
+    M: String(month),
+    dd: pad(date),
+    d: String(date),
+    HH: pad(hour),
+    hh: pad(hour % 12 || 12),
+    mm: pad(minute),
+    ss: pad(second),
+    a: hour < 12 ? 'AM' : 'PM',
+  }
+
+  return pattern
+    .split(TOKENS)
+    .map((piece, index) => (index % 2 === 0 ? piece : written[piece]))
+    .join('')
 }
 
 // A day as the form holds it, `yyyy-MM-dd`, or `''` when the text is no day
 // and the caller has to judge it.
 export function toNativeDate(value: string, fromFormat: DateFormat): string {
   const day = value ? readDay(value, fromFormat) : undefined
-  return day ? fnsFormat(day, ISO_FORMAT) : ''
+  return day ? writeParts(ISO_FORMAT, day, {}) : ''
 }
 
 export function toNativeTime(value: string, fromFormat: TimeFormat): string {
-  if (!value) {
-    return ''
-  }
-
-  try {
-    const date = parse(value, fromFormat, REF)
-    return isValid(date) ? fnsFormat(date, 'HH:mm:ss') : ''
-  } catch {
-    return ''
-  }
+  const time = value ? toTimeOfDay(readParts(value, fromFormat)) : undefined
+  return time ? writeParts('HH:mm:ss', {}, time) : ''
 }
 
 export function fromNativeTime(
@@ -480,14 +749,9 @@ export function fromNativeTime(
     return ''
   }
 
-  try {
-    const format = native.split(':').length === 3 ? 'HH:mm:ss' : 'HH:mm'
-    const date = parse(native, format, REF)
-
-    return isValid(date) ? fnsFormat(date, toFormat) : ''
-  } catch {
-    return ''
-  }
+  const format = native.split(':').length === 3 ? 'HH:mm:ss' : 'HH:mm'
+  const time = toTimeOfDay(readParts(native, format))
+  return time ? writeParts(toFormat, {}, time) : ''
 }
 
 // A value as a date field shows it: the day in the field's format, or the text
@@ -498,19 +762,7 @@ export function displayDate(
   lang?: string
 ): string {
   const day = readDay(value, format)
-  return day ? fnsFormat(day, format, { locale: dateFnsLocale(lang) }) : value
-}
-
-// The languages date-fns writes month and day names in here. A pattern is
-// date-fns's to write, so a language it is not given names them in English.
-const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es }
-
-/**
- * The date-fns locale for a language, by its base: `es-CO` writes Spanish
- * names. English for a language the library does not ship.
- */
-export function dateFnsLocale(lang?: string): Locale | undefined {
-  return DATE_FNS_LOCALES[baseLanguage(lang)]
+  return day ? writeParts(format, day, {}, lang) : value
 }
 
 export function getTimeFormat(field: Time): TimeFormat {

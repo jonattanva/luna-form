@@ -5,9 +5,23 @@ import {
   isValid,
   parseISO,
 } from 'date-fns'
+import { enUS, es } from 'date-fns/locale'
+import type { Locale } from 'date-fns'
 import { isString } from './is-type'
 import { logger } from './logger'
-import { dateFnsLocale, readInstant, remember, toLocale } from './date'
+import { baseLanguage, readInstant, remember, toLocale } from './date'
+
+// The languages date-fns writes month and day names in here. A pattern is
+// date-fns's to write, so a language it is not given names them in English.
+const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es }
+
+/**
+ * The date-fns locale for a language, by its base: `es-CO` writes Spanish
+ * names. English for a language the library does not ship.
+ */
+function dateFnsLocale(lang?: string): Locale | undefined {
+  return DATE_FNS_LOCALES[baseLanguage(lang)]
+}
 
 // `now` is the instant a relative date is measured from, as the host gives it
 // in `context.now`: an ISO date, time and offset.
