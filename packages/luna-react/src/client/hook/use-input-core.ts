@@ -350,6 +350,16 @@ export function useInputCore(
     }
   }
 
+  // What this field's own `state` rules decide for the value it now holds.
+  function applyStates(
+    selected: unknown,
+    states: Parameters<typeof handleStateEvent>[1]
+  ) {
+    handleStateEvent(selected, states, (targets, state) => {
+      applyState(props.field.name, targets, state, new Set([props.field.name]))
+    })
+  }
+
   // A ref and not an Effect Event: `useEffectEvent` is for a callback an effect
   // calls, and this one is called from `onChange`. What the ref buys is the same
   // thing either way -- the latest props reachable from a handler that does not
@@ -412,14 +422,7 @@ export function useInputCore(
           language
         )
 
-        handleStateEvent(selected, states, (targets, state) => {
-          applyState(
-            props.field.name,
-            targets,
-            state,
-            new Set([props.field.name])
-          )
-        })
+        applyStates(selected, states)
       })
 
       // Outside the transition on purpose. Everything above rearranges the
@@ -512,6 +515,25 @@ export function useInputCore(
     })
   })
 
+  // The `state` rules alone, for a value the host put in the field rather than
+  // one the user chose: an undo, a reset. What is revealed and hidden has to
+  // follow the value whoever wrote it, or the form shows the fields of a choice
+  // it no longer holds. The other actions stay with a change: a `value` action
+  // would write into a host that has just said what every field holds, and a
+  // `source` fetches for a choice someone made, not for one put back.
+  const applyStateEventsRef = useLatest((selected: unknown) => {
+    const events = props.field.event?.change
+    if (!events) {
+      return
+    }
+
+    handleProxyEvent(events, ({ states }) => {
+      startTransition(() => {
+        applyStates(selected, states)
+      })
+    })
+  })
+
   // `Value`, not `string`: a `chips` field validates the array it holds, and
   // `getSchema` already builds it one that reads arrays (`getArraySchema`
   // coerces each entry and counts them for `required`). Stringifying it here to
@@ -593,6 +615,7 @@ export function useInputCore(
 
   return {
     applyChangeEventsRef,
+    applyStateEventsRef,
     commonProps,
     entity,
     hasClickable,

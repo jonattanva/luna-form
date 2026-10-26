@@ -30,7 +30,9 @@ export function InputBase(
     isInitialReady,
   } = props.strategies
 
-  const { setValue, shouldSkipOnChange, value } = useValue(props.field)
+  const { setValue, shouldSkipOnChange, takeHostChange, value } = useValue(
+    props.field
+  )
   const { data, setSource, isStaticSource } = useSource(
     props.field,
     props.config,
@@ -39,6 +41,7 @@ export function InputBase(
 
   const {
     applyChangeEventsRef,
+    applyStateEventsRef,
     commonProps,
     entity,
     hasClickable,
@@ -54,8 +57,9 @@ export function InputBase(
   const initialEventsProcessedRef = useRef(false)
 
   // Subscribed only to know when to look again: `found` flips once the host's
-  // record names this field, and that is what re-runs the effect below.
-  const { found: hostFound } = useHostEntry(props.field.name)
+  // record names this field, and that is what re-runs the effect below; the
+  // value is what re-runs the one after it.
+  const { found: hostFound, value: hostValue } = useHostEntry(props.field.name)
   const readHostEntry = useHostEntryReader(props.field.name)
 
   // Withheld when a `source` change event swapped the schema's array for a
@@ -151,6 +155,34 @@ export function InputBase(
     readHostEntry,
   ])
 
+  // After mount, a value the host puts in the field from outside -- an undo, a
+  // reset -- re-runs the field's `state` rules, so what they reveal follows
+  // the value as it does at mount and on a click. Declared after `useValue`,
+  // whose effect is the one that notices, so it reads this commit's answer.
+  // Until the mount-time run has happened, that run reads the host itself.
+  useEffect(() => {
+    const change = takeHostChange()
+    if (!change || !initialEventsProcessedRef.current) {
+      return
+    }
+
+    // Held nothing, the rules are undone as if the field were empty, the way a
+    // hide withdraws them. See `withdrawStates`.
+    applyStateEventsRef.current(
+      isValidValue(change.value)
+        ? buildInitialSelected(change.value, data, entity)
+        : null
+    )
+  }, [
+    applyStateEventsRef,
+    buildInitialSelected,
+    data,
+    entity,
+    hostFound,
+    hostValue,
+    takeHostChange,
+  ])
+
   const onChange = useCallback(
     (event: InputChangeEvent) => {
       if (locked) {
@@ -175,6 +207,12 @@ export function InputBase(
       if (props.config.validation.change) {
         validated(inputValue)
       }
+
+      // The user's change runs the events, so there is nothing left for the
+      // mount-time run to do -- and a field that mounted empty has now been
+      // through them, which is what lets a value the host puts back later
+      // undo what this change revealed.
+      initialEventsProcessedRef.current = true
 
       if (props.field.event?.change) {
         dispatchChange({

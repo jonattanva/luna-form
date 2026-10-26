@@ -5,6 +5,7 @@ import {
   isInput,
   isValidValue,
   type Field,
+  type Nullable,
 } from '@luna-form/core'
 import { useEntryAtom } from './use-entry-atom'
 import { valueAtom } from '../lib/value-store'
@@ -16,6 +17,10 @@ export function useValue(field: Field) {
   const { name } = field
 
   const skipNextOnChangeRef = useRef(false)
+
+  // What the host last put in this field that the field did not already hold,
+  // waiting for `takeHostChange`. Boxed, so a change to nothing is still one.
+  const hostChangeRef = useRef<Nullable<{ value: unknown }>>(null)
   const [value, setValue] = useAtom(useEntryAtom(valueAtom, name))
 
   // This field's entry, and nothing else.
@@ -36,8 +41,17 @@ export function useValue(field: Field) {
       ? applyTransform(held, field.advanced?.transform)
       : held
 
-    if (!silent && !deepEqual(value, transformedValue)) {
-      skipNextOnChangeRef.current = true
+    if (!deepEqual(value, transformedValue)) {
+      if (!silent) {
+        skipNextOnChangeRef.current = true
+      }
+
+      // Not the echo of a change the field made: that one reaches the store
+      // first, so by the time the host hands it back the two agree. This is
+      // the host changing its mind -- an undo, a record swapped underneath,
+      // a reset -- and what the field's `state` rules decided rested on the
+      // value it held before.
+      hostChangeRef.current = { value: held }
     }
 
     setValue(transformedValue)
@@ -81,9 +95,18 @@ export function useValue(field: Field) {
     return false
   }, [])
 
+  // Read once, from the effect after this hook's own: the field re-runs its
+  // `state` rules on what the host put back. See `input-base`.
+  const takeHostChange = useCallback(() => {
+    const change = hostChangeRef.current
+    hostChangeRef.current = null
+    return change
+  }, [])
+
   return {
     setValue,
     shouldSkipOnChange,
+    takeHostChange,
     value,
   } as const
 }

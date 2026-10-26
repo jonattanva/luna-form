@@ -421,6 +421,25 @@ Two details:
 A field that mounts empty and has no `defaultValue` does not run anything until
 it is edited.
 
+## When the host changes a value
+
+A host that holds the values can change one after mount without the user
+touching the field: an undo, a reset, a record swapped underneath the form.
+The field shows the new value, and its **`state` rules run again** on it, so
+what they reveal, hide, disable or describe follows the value whoever wrote it.
+Undoing a switch from one choice to another brings back the fields of the first
+choice, not those of the second.
+
+- **Only `state`.** A `value` action would write into a host that has just said
+  what every field holds, and a `source` fetches for a choice the user made, so
+  neither runs.
+- **Not for an echo.** A value the host hands back after the field reported it
+  is one the field already holds, and nothing runs again.
+- **A value emptied from outside** undoes the rules as if the field held
+  nothing: what it revealed is hidden again. A hidden target is cleared and
+  reported as usual, but a target that holds nothing is not announced, so a
+  host putting back values it already holds is told nothing.
+
 ## Sequencing Actions
 
 Because `change` takes an array, multiple different events can be sequenced together to build complex logic flows.
