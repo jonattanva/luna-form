@@ -545,8 +545,8 @@ one taken in the same sitting.
 | #76     | ms per keystroke        | `flat(15)` / `flat(100)`, dev               | 30.6 / 85.9           | **14.9 / 26.9**         | `291713e`   |
 | #76     | renders per keystroke   | `flat(15)` / `flat(100)`, production        | 15 / 100              | **1 / 1**               | `291713e`   |
 | #76     | ms per keystroke        | `flat(15)` / `flat(100)`, production        | 13.7 / 34.2           | **5.6 / 13.1**          | `291713e`   |
-| R-FP1   | list rows per keystroke | `nestedPreviewList(2)` / `(20)`, production | 3 / 21                | **0 / 0**               | this PR     |
-| R-FP1   | ms per keystroke        | `nestedPreviewList(2)` / `(20)`, production | 4.4, 4.0 / 11.9, 10.1 | **2.5, 4.2 / 4.4, 5.3** | this PR     |
+| R-FP1   | list rows per keystroke | `nestedPreviewList(2)` / `(20)`, production | 3 / 21                | **0 / 0**               | `b3936f1`   |
+| R-FP1   | ms per keystroke        | `nestedPreviewList(2)` / `(20)`, production | 4.4, 4.0 / 11.9, 10.1 | **2.5, 4.2 / 4.4, 5.3** | `b3936f1`   |
 
 Reading it:
 
