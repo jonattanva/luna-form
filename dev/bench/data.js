@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793036400279,
+  "lastUpdate": 1793036423174,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "0ef0640780905fa7e31eb621ccbf0f15ce61acd2",
-          "message": "fix error select",
-          "timestamp": "2026-07-02T22:43:04-05:00",
-          "tree_id": "112d98d2f2b51df8984bb821d08d8ad9317cbec6",
-          "url": "https://github.com/jonattanva/luna-form/commit/0ef0640780905fa7e31eb621ccbf0f15ce61acd2"
-        },
-        "date": 1783050277292,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 270,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 611,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 615,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0a6eb1ab2f278c89b047d100deb3e5ddef081ec9",
+          "message": "Merge pull request #129 from jonattanva/claude/list-rows-steady-5fad83\n\nperf(list): a keystroke in a row renders no row of the list",
+          "timestamp": "2026-10-26T12:39:18-05:00",
+          "tree_id": "ddea5ff8ac2078e453301462c7cd0439c3c378e3",
+          "url": "https://github.com/jonattanva/luna-form/commit/0a6eb1ab2f278c89b047d100deb3e5ddef081ec9"
+        },
+        "date": 1793036423131,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 214,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 173,
             "unit": "ms"
           }
         ]
