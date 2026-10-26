@@ -60,6 +60,19 @@ describe('Resolve Dictionary', () => {
     expect(resolveDictionary('es')?.Yes).toBe('Sí')
   })
 
+  test('should translate the row names of a list, keeping every placeholder', () => {
+    const es = resolveDictionary('es')
+    expect(es?.['Expand {name} ({label} {index})']).toBe(
+      'Expandir {name} ({label} {index})'
+    )
+    expect(es?.['Collapse {name} ({label} {index})']).toBe(
+      'Contraer {name} ({label} {index})'
+    )
+    expect(es?.['Remove {name} ({label} item {index})']).toBe(
+      'Eliminar {name} ({label} {index})'
+    )
+  })
+
   // The submit summary is copy no form can name in its schema, the same as
   // `(Optional)`: it is only reachable through the built-in dictionary.
   test('should return the built-in submit error summary', () => {

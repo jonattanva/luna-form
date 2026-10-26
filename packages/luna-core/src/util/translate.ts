@@ -15,9 +15,12 @@ export const BUILT_IN_KEYS = [
   'Add item',
   'An unexpected error occurred submitting the form.',
   'Collapse {label} {index}',
+  'Collapse {name} ({label} {index})',
   'Expand {label} {index}',
+  'Expand {name} ({label} {index})',
   'Please correct the errors and try again.',
   'Remove {label} item {index}',
+  'Remove {name} ({label} item {index})',
   'There were validation errors submitting the form.',
   'Unknown error',
   'No',
@@ -35,10 +38,13 @@ const BUILT_IN: Record<string, Record<BuiltInKey, string>> = {
     'An unexpected error occurred submitting the form.':
       'Ocurrió un error inesperado al enviar el formulario.',
     'Collapse {label} {index}': 'Contraer {label} {index}',
+    'Collapse {name} ({label} {index})': 'Contraer {name} ({label} {index})',
     'Expand {label} {index}': 'Expandir {label} {index}',
+    'Expand {name} ({label} {index})': 'Expandir {name} ({label} {index})',
     'Please correct the errors and try again.':
       'Corrige los errores e inténtalo de nuevo.',
     'Remove {label} item {index}': 'Eliminar {label} {index}',
+    'Remove {name} ({label} item {index})': 'Eliminar {name} ({label} {index})',
     'There were validation errors submitting the form.':
       'Se encontraron errores de validación al enviar el formulario.',
     'Unknown error': 'Error desconocido',

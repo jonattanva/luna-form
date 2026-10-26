@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
   interpolate,
   renderOptions,
+  splitTemplate,
 } from '@/packages/luna-core/src/util/string'
 
 describe('interpolate', () => {
@@ -173,5 +174,33 @@ describe('renderOptions', () => {
 
   test('should leave the language to the filters when the form has none', () => {
     expect(renderOptions()).toEqual({ locale: undefined, now: undefined })
+  })
+})
+
+describe('Split Template', () => {
+  test('should give back the text on each side of the placeholder', () => {
+    expect(splitTemplate('Expand {name} ({label} {index})', 'name')).toEqual([
+      'Expand ',
+      ' ({label} {index})',
+    ])
+  })
+
+  test('should give back empty sides when the placeholder is at an edge', () => {
+    expect(splitTemplate('{name} ausklappen', 'name')).toEqual([
+      '',
+      ' ausklappen',
+    ])
+    expect(splitTemplate('Expand {name}', 'name')).toEqual(['Expand ', ''])
+  })
+
+  test('should cut at the first placeholder only', () => {
+    expect(splitTemplate('{name} and {name}', 'name')).toEqual([
+      '',
+      ' and {name}',
+    ])
+  })
+
+  test('should return undefined when the template does not name the key', () => {
+    expect(splitTemplate('Expand {label} {index}', 'name')).toBeUndefined()
   })
 })

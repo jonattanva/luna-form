@@ -20,6 +20,7 @@ The `advanced` property customizes structural interaction rules and layout rende
 
 - **`title`** _(string)_: Names one item of the collection. The header of the second row then reads `Contact 2` and its controls announce `Collapse Contact 2` and `Remove Contact 2`.
   It falls back to the list's `label`, and then to its `name`, so a list called `contacts` with neither captions its rows `contacts 1`. A [`preview.label`](#collapsed-previews-preview-object) replaces the caption where it resolves; this stays the fallback for the rows where it does not.
+  A row with a `preview.label` is also named after it, so its controls announce `Collapse Ana (Contact 2)` and `Remove Ana (Contact item 2)`: the name holds the text the row shows, and two rows in different lists that share a title stay apart. The name follows the label as the user edits it. A row whose label comes out empty shows the caption instead, and its name repeats it: `Collapse Contact 2 (Contact 2)`.
   Like `action`, it is copy the form declares, so it is translated through the dictionary — see [Localization](#localization).
 - **`action`** _(string)_: A custom label applied strictly to the generic "Add item" button rendering at the end of the collection (e.g. `"Add email address"`).
   A custom label has to be translated by the form; the built-in `Add item` default is already translated by the library — see [Localization](#localization).
@@ -116,6 +117,7 @@ Every piece of copy a list renders goes through the `translations` dictionary, k
 
 - `Add item`, the add-button label when no `action` is declared.
 - `Expand {label} {index}`, `Collapse {label} {index}` and `Remove {label} item {index}`, the accessible names of the item controls.
+- `Expand {name} ({label} {index})`, `Collapse {name} ({label} {index})` and `Remove {name} ({label} item {index})`, the same names for a row that has a [`preview.label`](#collapsed-previews-preview-object); `{name}` is the text that label shows.
 
 ```json
 {
@@ -175,6 +177,8 @@ The accessible names are single keys carrying `{label}` and `{index}` placeholde
 ```
 
 Left untranslated, the template fills in to the same English text it replaced.
+
+`{name}` may sit anywhere in a translation, the same as the other placeholders. A translation of a `{name}` key that leaves `{name}` out is not used: the row is named with the matching key without it, `Expand {label} {index}` and so on, translated as that key is.
 
 ---
 

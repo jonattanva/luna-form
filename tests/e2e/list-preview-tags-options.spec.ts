@@ -400,7 +400,9 @@ test.describe(
         await inject(page, REACTIVITY_FIXTURE)
         await page.goto('')
 
-        const header = page.getByRole('button', { name: /Expand Schedule 1/ })
+        const header = page.getByRole('button', {
+          name: /Expand Shift \(Schedule 1\)/,
+        })
         await expect(header).toContainText('Activo')
 
         await header.click()
@@ -408,7 +410,9 @@ test.describe(
         const statusSelect = page.locator('select[name="schedule.0.status"]')
         await statusSelect.selectOption('inactive')
 
-        await page.getByRole('button', { name: /Collapse Schedule 1/ }).click()
+        await page
+          .getByRole('button', { name: /Collapse Shift \(Schedule 1\)/ })
+          .click()
 
         await expect(header).toContainText('Inactivo')
         await expect(header).not.toContainText('Activo')

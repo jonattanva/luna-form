@@ -1,9 +1,15 @@
 import { ChevronIcon } from '../chevron-icon'
 import { Collapsible } from '../collapsible'
 import { Group } from '../group'
-import { interpolate, translateBuiltIn, type BuiltInKey } from '@luna-form/core'
+import {
+  interpolate,
+  splitTemplate,
+  translateBuiltIn,
+  type BuiltInKey,
+} from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 import { useDisclosure } from '../../client/hook/use-disclosure'
+import { useId } from 'react'
 
 export function FieldListItem(
   props: Readonly<{
@@ -34,15 +40,77 @@ export function FieldListItem(
   // The whole accessible name is one dictionary key, placeholders included, so
   // a translation can reorder the parts instead of only renaming them. Left
   // untranslated the template fills in to the English text it replaced.
-  const accessibleName = (template: BuiltInKey) =>
-    interpolate(translateBuiltIn(template, props.translations), {
+  const fill = (template: string) =>
+    interpolate(template, {
       index: props.index + 1,
       label: props.label,
     })
 
+  // A row that shows a label of its own is named after it: the label is what
+  // the toggle displays (WCAG 2.5.3), and it tells rows apart where the list
+  // title and position do not. That label is a node, kept up to date as the
+  // user types, so the name points at it with aria-labelledby instead of
+  // copying its text. The words around it stay in the template, split at
+  // `{name}` and held in hidden spans, so a translation still orders them.
+  const id = useId()
+  const rowNameId = `${id}-name`
+  const hasRowName = isCollapsible && props.previewLabel != null
+
+  const accessibleName = (
+    slot: string,
+    template: BuiltInKey,
+    rowTemplate: BuiltInKey
+  ) => {
+    const parts = hasRowName
+      ? splitTemplate(translateBuiltIn(rowTemplate, props.translations), 'name')
+      : undefined
+
+    if (parts === undefined) {
+      return {
+        attributes: {
+          'aria-label': fill(translateBuiltIn(template, props.translations)),
+        },
+      }
+    }
+
+    const [before, after] = parts
+    const beforeId = `${id}-${slot}-before`
+    const afterId = `${id}-${slot}-after`
+
+    return {
+      attributes: {
+        'aria-labelledby': `${beforeId} ${rowNameId} ${afterId}`,
+      },
+      parts: (
+        <>
+          <span hidden id={beforeId}>
+            {fill(before)}
+          </span>
+          <span hidden id={afterId}>
+            {fill(after)}
+          </span>
+        </>
+      ),
+    }
+  }
+
+  const removeName = accessibleName(
+    'remove',
+    'Remove {label} item {index}',
+    'Remove {name} ({label} item {index})'
+  )
+
+  const toggleName = accessibleName(
+    'toggle',
+    isOpen ? 'Collapse {label} {index}' : 'Expand {label} {index}',
+    isOpen
+      ? 'Collapse {name} ({label} {index})'
+      : 'Expand {name} ({label} {index})'
+  )
+
   const removeButton = props.canRemove && props.onRemove != null && (
     <button
-      aria-label={accessibleName('Remove {label} item {index}')}
+      {...removeName.attributes}
       className={twMerge(
         'flex size-6 items-center justify-center rounded text-xl leading-none text-zinc-400',
         'transition-colors duration-150',
@@ -61,7 +129,7 @@ export function FieldListItem(
 
   const labelContent = (
     <div className="flex min-w-0 flex-col font-medium text-zinc-700 dark:text-zinc-400">
-      <span className="text-base">
+      <span className="text-base" id={rowNameId}>
         {props.previewLabel ?? (
           <>
             {props.label} {props.index + 1}
@@ -86,10 +154,8 @@ export function FieldListItem(
       {isCollapsible ? (
         <div className="flex min-w-0 grow items-center gap-2">
           <button
+            {...toggleName.attributes}
             aria-expanded={isOpen}
-            aria-label={accessibleName(
-              isOpen ? 'Collapse {label} {index}' : 'Expand {label} {index}'
-            )}
             className={twMerge(
               'group flex min-w-0 grow items-center gap-2 rounded p-1 text-left text-zinc-400',
               'focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:outline-none',
@@ -109,6 +175,8 @@ export function FieldListItem(
         labelContent
       )}
       {removeButton}
+      {toggleName.parts}
+      {removeButton && removeName.parts}
     </div>
   )
 

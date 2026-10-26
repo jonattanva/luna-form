@@ -65,6 +65,25 @@ export function renderOptions(
 }
 
 /**
+ * Cuts a template at one placeholder: what comes before the first `{key}` and
+ * what comes after it, or undefined when the template does not name it. For
+ * text that has to be pieced together around something a string cannot hold,
+ * such as a node the page renders and keeps up to date.
+ */
+export function splitTemplate(
+  template: string,
+  key: string
+): [string, string] | undefined {
+  const placeholder = `{${key}}`
+  const at = template.indexOf(placeholder)
+  if (at === -1) {
+    return undefined
+  }
+
+  return [template.slice(0, at), template.slice(at + placeholder.length)]
+}
+
+/**
  * Replaces placeholders in the format {key} with values from the provided object.
  * Supports nested objects using dot notation (e.g., {user.id}) and pipe filters
  * (e.g., {price | currency:USD}).
