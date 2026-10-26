@@ -5,6 +5,7 @@ import {
   countPerKeystroke,
   flat,
   nestedGroups,
+  nestedPreviewList,
   openScenario,
   plainAndList,
   readCounters,
@@ -121,6 +122,21 @@ const BUDGETS: Budget[] = [
     measure: async (page) => {
       await openScenario(page, plainAndList(30), '/')
       return countPerKeystroke(page, 'plain')
+    },
+  },
+  {
+    id: 'R-FP1',
+    title: 'a keystroke in a list row leaves every row alone',
+    // On the controlled route, a section holding twenty collapsed questions
+    // with a preview. The row typed in follows the keystroke through its own
+    // subscriptions, so no row -- that one, its siblings or the section around
+    // them -- has to render for it.
+    counts: { rowPreview: 0 },
+    target: { rowPreview: 0 },
+    measure: async (page) => {
+      await openScenario(page, nestedPreviewList(20), '/reactive')
+      await page.locator('button[aria-expanded="false"]').first().click()
+      return countPerKeystroke(page, 'section.0.field.0.label')
     },
   },
   {

@@ -10,7 +10,11 @@ import {
 import { FieldListItem } from './field-list-item'
 
 export type ListProps = Readonly<{
-  children: (index: number) => React.ReactNode
+  // A row by its stable id, and the value it starts from. See `SlotListField`.
+  children: (
+    index: number,
+    value?: Nullable<Record<string, unknown>>
+  ) => React.ReactNode
   field: List
   onValueChange?: (input: { name: string; value: unknown }) => void
   localization?: Localization
@@ -31,7 +35,7 @@ export function FieldList(props: ListProps) {
       label={label}
       translations={translations}
     >
-      {props.children(index)}
+      {props.children(index, props.value)}
     </FieldListItem>
   ))
 }

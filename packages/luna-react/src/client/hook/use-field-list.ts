@@ -74,7 +74,13 @@ export function useFieldList(
   // stable id after a non-last removal. This original snapshot keeps the
   // `stable id -> initial value` mapping resolvable for seeding and as a
   // serialization fallback.
-  const initialValueRef = useRef(value)
+  //
+  // It is also what every row starts from, for the same reason, and that is
+  // what lets a row hold still: the snapshot keeps its identity for the life of
+  // the list, where the live prop is a new object on every keystroke of a
+  // controlled host. State rather than a ref, because the rows read it while
+  // rendering.
+  const [initialValue] = useState(value)
 
   // A row's leaves, columns walked through, computed once per field. Kept as
   // the definitions rather than only the names because assigning has to tell a
@@ -143,8 +149,7 @@ export function useFieldList(
   // after a removal or after a user clears a field would resurrect stale values
   // from the snapshot, so it must run exactly once.
   const seedInitialValues = useEffectEvent(() => {
-    const initial = initialValueRef.current
-    if (!initial) {
+    if (!initialValue) {
       return
     }
 
@@ -158,7 +163,7 @@ export function useFieldList(
           continue
         }
 
-        const resolved = resolveValue(key, initial)
+        const resolved = resolveValue(key, initialValue)
         if (isValidValue(resolved)) {
           next[key] = resolved
           changed = true
@@ -187,11 +192,11 @@ export function useFieldList(
         {
           mounted: store.get(mountedListsAtom),
           values,
-          initial: initialValueRef.current,
+          initial: initialValue,
         }
       )
     },
-    [field.name, leafNames, store]
+    [field.name, initialValue, leafNames, store]
   )
 
   const emitChange = useCallback(
@@ -444,5 +449,6 @@ export function useFieldList(
     canRemove,
     max,
     translatePath,
+    initialValue,
   ] as const
 }
