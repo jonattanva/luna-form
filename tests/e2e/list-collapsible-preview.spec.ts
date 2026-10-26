@@ -129,3 +129,93 @@ test.describe('List Collapsible - Date preview', { tag: ['@e2e'] }, () => {
     await expect(card.getByText('October 9, 2026')).toBeVisible()
   })
 })
+
+test.describe('List Collapsible - Controlled host', { tag: ['@e2e'] }, () => {
+  test('on a controlled host, a nested row previews what is typed in it alone', async ({
+    page,
+  }) => {
+    // The host hands its value back on every keystroke, and a row no longer
+    // renders for it: the row typed in follows through its own subscriptions,
+    // and the rows beside it keep showing what they hold.
+    await inject(
+      page,
+      `{
+        "sections": [{
+          "fields": [{
+            "name": "section",
+            "label": "Section",
+            "type": "list",
+            "fields": [
+              { "name": "title", "label": "Title", "type": "input/text" },
+              {
+                "name": "field",
+                "label": "Question",
+                "type": "list",
+                "advanced": {
+                  "collapsed": true,
+                  "preview": { "label": "label", "tags": ["name"], "badge": "type" }
+                },
+                "fields": [
+                  { "name": "label", "label": "Label", "type": "input/text" },
+                  { "name": "name", "label": "Name", "type": "input/text" },
+                  { "name": "type", "label": "Type", "type": "input/text" }
+                ]
+              }
+            ]
+          }]
+        }],
+        "value": {
+          "section": [{
+            "title": "S",
+            "field": [
+              { "label": "First", "name": "first", "type": "text" },
+              { "label": "Second", "name": "second", "type": "email" }
+            ]
+          }]
+        }
+      }`
+    )
+    await page.goto('/reactive')
+
+    const rows = page.locator(
+      '[data-slot="list-item-card"] [data-slot="list-item-card"]'
+    )
+    await expect(rows).toHaveCount(2)
+
+    await rows.nth(0).locator('button[aria-expanded="false"]').click()
+    await page.locator('input[name="section.0.field.0.label"]').fill('Renamed')
+    await page.locator('input[name="section.0.field.0.name"]').fill('renamed')
+    await page.locator('input[name="section.0.field.0.type"]').fill('number')
+
+    // The label follows while the row is open, the tags and the badge once it
+    // is collapsed again.
+    await expect(
+      rows.nth(0).getByText('Renamed', { exact: true })
+    ).toBeVisible()
+    await rows.nth(0).locator('button[aria-expanded="true"]').click()
+    await expect(
+      rows.nth(0).getByText('renamed', { exact: true })
+    ).toBeVisible()
+    await expect(rows.nth(0).getByText('number', { exact: true })).toBeVisible()
+
+    await expect(rows.nth(1).getByText('Second', { exact: true })).toBeVisible()
+    await expect(rows.nth(1).getByText('second', { exact: true })).toBeVisible()
+    await expect(rows.nth(1).getByText('email', { exact: true })).toBeVisible()
+
+    // A row added after the host has handed its value back starts empty and
+    // previews what is typed into it.
+    await page.getByRole('button', { name: 'Add item' }).first().click()
+    await expect(rows).toHaveCount(3)
+    await rows.nth(2).locator('button[aria-expanded="false"]').click()
+    await page.locator('input[name="section.0.field.2.label"]').fill('Third')
+    await rows.nth(2).locator('button[aria-expanded="true"]').click()
+    await expect(rows.nth(2).getByText('Third', { exact: true })).toBeVisible()
+
+    // Removing the first row leaves the others previewing their own values.
+    await page.getByRole('button', { name: 'Remove Question item 1' }).click()
+    await expect(rows).toHaveCount(2)
+    await expect(rows.nth(0).getByText('Second', { exact: true })).toBeVisible()
+    await expect(rows.nth(0).getByText('email', { exact: true })).toBeVisible()
+    await expect(rows.nth(1).getByText('Third', { exact: true })).toBeVisible()
+  })
+})

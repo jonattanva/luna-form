@@ -159,6 +159,15 @@ const PROBES: Probe[] = [
     anchor: '  const name = `${field.name}.${itemKey}`',
     replacement: `  ${bump('rowPreview')}\n  const name = \`\${field.name}.\${itemKey}\``,
   },
+  // What a row draws, header and all, whether or not it shows a preview. A row
+  // that stops at its memo stops here too; one that renders, renders this.
+  {
+    name: 'rowItem',
+    file: `${LIB}/component/field/field-list-item.tsx`,
+    anchor:
+      '  const isCollapsible = props.isMultiField || props.collapsed != null',
+    replacement: `  ${bump('rowItem')}\n  const isCollapsible = props.isMultiField || props.collapsed != null`,
+  },
   // A row rescanning the whole value record for its own keys, where the scan
   // ran inside the hook's own `useMemo`.
   {

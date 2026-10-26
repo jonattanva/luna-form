@@ -35,7 +35,7 @@ export function ListSlot(props: ListProps) {
               </span>
             </div>
           )}
-          <Group>{props.children(index)}</Group>
+          <Group>{props.children(index, props.value)}</Group>
         </div>
       ))}
     </List>

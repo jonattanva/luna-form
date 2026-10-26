@@ -322,3 +322,57 @@ export const nestedGroups = {
     },
   ],
 }
+
+/**
+ * A list of sections, each row holding a collapsed list of questions with a
+ * label, tags and a badge in its preview -- the shape luna-flow's form trigger
+ * edits. One section, seeded with `rows` questions.
+ */
+export function nestedPreviewList(rows: number) {
+  return {
+    value: {
+      section: [
+        {
+          title: 'Section',
+          field: Array.from({ length: rows }, (_, n) => ({
+            label: `Question ${n + 1}`,
+            name: `q_${n + 1}`,
+            type: 'text',
+          })),
+        },
+      ],
+    },
+    sections: [
+      {
+        fields: [
+          {
+            name: 'section',
+            label: 'Section',
+            type: 'list',
+            fields: [
+              { name: 'title', label: 'Title', type: 'input/text' },
+              {
+                name: 'field',
+                label: 'Question',
+                type: 'list',
+                advanced: {
+                  collapsed: true,
+                  preview: {
+                    label: 'label',
+                    tags: ['name', 'type'],
+                    badge: 'type',
+                  },
+                },
+                fields: [
+                  { name: 'label', label: 'Label', type: 'input/text' },
+                  { name: 'name', label: 'Name', type: 'input/text' },
+                  { name: 'type', label: 'Type', type: 'input/text' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  }
+}

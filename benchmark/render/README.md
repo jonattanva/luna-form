@@ -24,6 +24,7 @@ Two halves:
 | `wrapper`    | one of the two wrappers around a field (`withState`, `withError`) renders |
 | `guard`      | a `VisibilityGuard` renders                                               |
 | `rowPreview` | a list row (`FieldListPreviewItem`) renders, preview or not               |
+| `rowItem`    | a list row's header and body (`FieldListItem`) renders                    |
 | `liveScan`   | a row rescans the value record for its own keys (`useLiveItemValue`)      |
 | `handoff`    | a list hands its value over as if it were unmounting                      |
 | `prepare`    | the form body calls `prepare`                                             |
@@ -157,6 +158,55 @@ window.__h = {
               fields: [
                 { label: 'A', name: 'a', type: 'input/text' },
                 { label: 'B', name: 'b', type: 'input/text' },
+              ],
+            },
+          ],
+        },
+      ],
+    }),
+    // A section holding `rows` collapsed questions with a preview, the shape
+    // luna-flow's form trigger edits. Open the first question before typing:
+    // `document.querySelector('button[aria-expanded="false"]').click()`.
+    nestedPreviewList: (rows) => ({
+      value: {
+        section: [
+          {
+            title: 'Section',
+            field: Array.from({ length: rows }, (_, n) => ({
+              label: `Question ${n + 1}`,
+              name: `q_${n + 1}`,
+              type: 'text',
+            })),
+          },
+        ],
+      },
+      sections: [
+        {
+          fields: [
+            {
+              name: 'section',
+              label: 'Section',
+              type: 'list',
+              fields: [
+                { name: 'title', label: 'Title', type: 'input/text' },
+                {
+                  name: 'field',
+                  label: 'Question',
+                  type: 'list',
+                  advanced: {
+                    collapsed: true,
+                    preview: {
+                      label: 'label',
+                      tags: ['name', 'type'],
+                      badge: 'type',
+                    },
+                  },
+                  fields: [
+                    { name: 'label', label: 'Label', type: 'input/text' },
+                    { name: 'name', label: 'Name', type: 'input/text' },
+                    { name: 'type', label: 'Type', type: 'input/text' },
+                  ],
+                },
               ],
             },
           ],
@@ -457,14 +507,15 @@ window.__h = {
 The definitions behind the results below. Load one with
 `__h.inject(__h.definitions.<name>(...))`, paste the harness again, then run it.
 
-| question                    | definition                                         | run                               | read                              |
-| --------------------------- | -------------------------------------------------- | --------------------------------- | --------------------------------- |
-| keystroke cost              | `flat(15)`, `flat(100)`                            | `await __h.type('field_2')`       | `perKeystroke.render`, `medianMs` |
-| schema builds               | `flat(10)`                                         | `await __h.type('field_2', 5, 0)` | `total.schema`                    |
-| schema builds beside a list | `plainAndList(4)`                                  | `await __h.type('plain', 5, 0)`   | `total.schema`                    |
-| `useValue` effect runs      | `plainAndList(30)`                                 | `await __h.type('plain', 5, 0)`   | `total.effect`                    |
-| field lookups               | `hiddenClear('revert')`, `hiddenClear('explicit')` | `await __h.hideAndShow(mode)`     | `lookups`                         |
-| cached atoms                | `churnList()`                                      | `await __h.churn()`               | `total`, `perFamily`              |
+| question                    | definition                                         | run                                               | read                                              |
+| --------------------------- | -------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| keystroke cost              | `flat(15)`, `flat(100)`                            | `await __h.type('field_2')`                       | `perKeystroke.render`, `medianMs`                 |
+| schema builds               | `flat(10)`                                         | `await __h.type('field_2', 5, 0)`                 | `total.schema`                                    |
+| schema builds beside a list | `plainAndList(4)`                                  | `await __h.type('plain', 5, 0)`                   | `total.schema`                                    |
+| `useValue` effect runs      | `plainAndList(30)`                                 | `await __h.type('plain', 5, 0)`                   | `total.effect`                                    |
+| field lookups               | `hiddenClear('revert')`, `hiddenClear('explicit')` | `await __h.hideAndShow(mode)`                     | `lookups`                                         |
+| cached atoms                | `churnList()`                                      | `await __h.churn()`                               | `total`, `perFamily`                              |
+| list rows per keystroke     | `nestedPreviewList(2)`, `nestedPreviewList(20)`    | `await __h.type('section.0.field.0.label', 5, 0)` | `perKeystroke.rowPreview`, `perKeystroke.rowItem` |
 
 `perFamily` is in creation order, and that order moves when a commit changes the
 order modules load. Tell the families apart with `__h.familyKeys()` instead:
@@ -479,21 +530,23 @@ exact and repeat between runs. Milliseconds are medians of 10 keystrokes and
 move by a few between runs of the same tree, so each time here is paired with
 one taken in the same sitting.
 
-| PR      | what                  | scenario                             | `main`         | after                   | measured on |
-| ------- | --------------------- | ------------------------------------ | -------------- | ----------------------- | ----------- |
-| #73     | schema builds         | `flat(10)`, 5 keystrokes             | 100            | **0**                   | `22d2e64`   |
-| #73     | schema builds         | `plainAndList(4)`, 5 keystrokes      | 90             | **0**                   | `2af28de`   |
-| #73     | schema builds         | `plainAndList(30)`, 5 keystrokes     | 610            | **0**                   | `2af28de`   |
-| #73     | field lookups         | `hiddenClear('revert')`              | 7              | **5**                   | `dda80c3`   |
-| #73     | field lookups         | `hiddenClear('explicit')`            | 12             | 12                      | `dda80c3`   |
-| #74     | effect runs           | `plainAndList(30)`, 5 keystrokes     | 305            | **5**                   | `1167310`   |
-| #75     | cached atoms          | `churnList()` at 1, 20, 14, 20 rows  | 6, 82, 82, 106 | 7, 102, **78**, **102** | `ffd8f5b`   |
-| #73-#75 | renders per keystroke | `flat(100)`, dev                     | 200            | 200                     | each tip    |
-| #73-#75 | ms per keystroke      | `flat(100)`, dev                     | 83.8           | 83.5, 83.7, 76.0        | each tip    |
-| #76     | renders per keystroke | `flat(15)` / `flat(100)`, dev        | 30 / 200       | **2 / 2**               | `291713e`   |
-| #76     | ms per keystroke      | `flat(15)` / `flat(100)`, dev        | 30.6 / 85.9    | **14.9 / 26.9**         | `291713e`   |
-| #76     | renders per keystroke | `flat(15)` / `flat(100)`, production | 15 / 100       | **1 / 1**               | `291713e`   |
-| #76     | ms per keystroke      | `flat(15)` / `flat(100)`, production | 13.7 / 34.2    | **5.6 / 13.1**          | `291713e`   |
+| PR      | what                    | scenario                                    | `main`                | after                   | measured on |
+| ------- | ----------------------- | ------------------------------------------- | --------------------- | ----------------------- | ----------- |
+| #73     | schema builds           | `flat(10)`, 5 keystrokes                    | 100                   | **0**                   | `22d2e64`   |
+| #73     | schema builds           | `plainAndList(4)`, 5 keystrokes             | 90                    | **0**                   | `2af28de`   |
+| #73     | schema builds           | `plainAndList(30)`, 5 keystrokes            | 610                   | **0**                   | `2af28de`   |
+| #73     | field lookups           | `hiddenClear('revert')`                     | 7                     | **5**                   | `dda80c3`   |
+| #73     | field lookups           | `hiddenClear('explicit')`                   | 12                    | 12                      | `dda80c3`   |
+| #74     | effect runs             | `plainAndList(30)`, 5 keystrokes            | 305                   | **5**                   | `1167310`   |
+| #75     | cached atoms            | `churnList()` at 1, 20, 14, 20 rows         | 6, 82, 82, 106        | 7, 102, **78**, **102** | `ffd8f5b`   |
+| #73-#75 | renders per keystroke   | `flat(100)`, dev                            | 200                   | 200                     | each tip    |
+| #73-#75 | ms per keystroke        | `flat(100)`, dev                            | 83.8                  | 83.5, 83.7, 76.0        | each tip    |
+| #76     | renders per keystroke   | `flat(15)` / `flat(100)`, dev               | 30 / 200              | **2 / 2**               | `291713e`   |
+| #76     | ms per keystroke        | `flat(15)` / `flat(100)`, dev               | 30.6 / 85.9           | **14.9 / 26.9**         | `291713e`   |
+| #76     | renders per keystroke   | `flat(15)` / `flat(100)`, production        | 15 / 100              | **1 / 1**               | `291713e`   |
+| #76     | ms per keystroke        | `flat(15)` / `flat(100)`, production        | 13.7 / 34.2           | **5.6 / 13.1**          | `291713e`   |
+| R-FP1   | list rows per keystroke | `nestedPreviewList(2)` / `(20)`, production | 3 / 21                | **0 / 0**               | this PR     |
+| R-FP1   | ms per keystroke        | `nestedPreviewList(2)` / `(20)`, production | 4.4, 4.0 / 11.9, 10.1 | **2.5, 4.2 / 4.4, 5.3** | this PR     |
 
 Reading it:
 
@@ -517,5 +570,17 @@ Reading it:
 The harness was checked against these rows before it was committed: `flat(10)`
 on `main` gives 100 schema builds, 100 renders and 50 effect runs, and
 `hiddenClear('revert')` and `churnList()` on `291713e` give 5 and 7, 102, 78, 102.
+
+The R-FP1 rows were measured 2026-10-26 on `main` at `2f24cee` and on the fix,
+in Chromium against `next start`, two runs each. Rows are counted by
+`rowPreview` and `rowItem`, which read the same: a section holding 2 questions
+is 3 rows, one holding 20 is 21. On `main` the host handing its value back
+rendered every one of them on every keystroke -- the section, the question typed
+in and all its siblings, header and preview included -- because each row was
+handed the host's live value and its fields already rendered. After the fix a
+row is memoized on the value its list was mounted with and on a steady callback
+for its fields, and none of them renders; the question typed in follows through
+its preview's own subscriptions. `guard` drops from 3 to 2 a keystroke with it:
+the guard of the list inside the section is no longer rendered from above.
 
 Development counts are doubled by StrictMode, as above.

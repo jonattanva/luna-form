@@ -11,11 +11,24 @@ import { FieldPreview } from './field-preview'
 import { FieldPreviewValue } from './field-preview-value'
 import { resolveValue } from '../../lib/resolve-value'
 import { useLiveItemValue } from '../../hook/use-live-item-value'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import type { DateFormat, List, Nullable, PreviewItem } from '@luna-form/core'
 import type { ReactNode } from 'react'
 
-export function FieldListPreviewItem({
+/**
+ * One row of a list, which renders when something it can see has changed and
+ * not because the host handed its value back.
+ *
+ * The default comparison, as for `Field`, and for the same reason: every prop
+ * reaching it is steady across a keystroke. The row is handed the value its
+ * list was mounted with rather than the host's live one, and the callback that
+ * renders its fields rather than the fields already rendered -- elements made
+ * by the list on each of its renders would be new every time, and the memo
+ * would never hold. What the user types reaches the row's preview through the
+ * preview's own subscriptions, by name, so the row typed in follows it without
+ * rendering and its siblings do not render at all.
+ */
+export const FieldListPreviewItem = memo(function FieldListPreviewItem({
   canRemove,
   children,
   field,
@@ -31,18 +44,21 @@ export function FieldListPreviewItem({
   value,
 }: {
   canRemove: boolean
-  children: ReactNode
+  children: (
+    index: number,
+    value?: Nullable<Record<string, unknown>>
+  ) => ReactNode
   field: List
   index: number
   isMultiField: boolean
-  itemKey: string | number
+  itemKey: number
   label: string
   localization?: Localization
   onRemove: (index: number) => void
   previewBadge?: PreviewItem
   previewLabel?: PreviewItem
   previewTags?: PreviewItem[]
-  value?: Nullable<Record<string, unknown> | unknown[]>
+  value?: Nullable<Record<string, unknown>>
 }) {
   const { lang, translations } = localization ?? {}
   const name = `${field.name}.${itemKey}`
@@ -99,10 +115,10 @@ export function FieldListPreviewItem({
       }
       translations={translations}
     >
-      {children}
+      {children(itemKey, value)}
     </FieldListItem>
   )
-}
+})
 
 type PreviewLabelProps = Readonly<{
   dateFormat?: DateFormat

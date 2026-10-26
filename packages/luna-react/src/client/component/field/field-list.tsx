@@ -17,8 +17,16 @@ export function FieldList(props: ListProps) {
   const { field, localization, onValueChange, value, children } = props
   const translations = localization?.translations
 
-  const [items, addItem, handleRemove, canAdd, canRemove, max, translatePath] =
-    useFieldList(field, value, onValueChange)
+  const [
+    items,
+    addItem,
+    handleRemove,
+    canAdd,
+    canRemove,
+    max,
+    translatePath,
+    initialValue,
+  ] = useFieldList(field, value, onValueChange)
 
   const label = translate(getLabel(field), translations)
 
@@ -54,9 +62,9 @@ export function FieldList(props: ListProps) {
             previewBadge={previewBadge}
             previewLabel={previewLabel}
             previewTags={previewTags}
-            value={value}
+            value={initialValue}
           >
-            {children(key)}
+            {children}
           </FieldListPreviewItem>
         ))}
         {/* A fixed list keeps its rows, so there is nothing to add. */}
