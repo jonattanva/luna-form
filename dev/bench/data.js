@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793039112400,
+  "lastUpdate": 1793039136307,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "bc510fb2f31ea7b72999417f7fc690daf858aa26",
-          "message": "Merge pull request #40 from jonattanva/feat/headless-form-schema\n\nHeadless form schema + declarative validation vocabulary",
-          "timestamp": "2026-07-10T14:43:14-05:00",
-          "tree_id": "e7887a7e5da5d7210be0d7cd19a9ff819aca017a",
-          "url": "https://github.com/jonattanva/luna-form/commit/bc510fb2f31ea7b72999417f7fc690daf858aa26"
-        },
-        "date": 1783712683582,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 315,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 684,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "62047155a3fc520f0b0f536e920a0635bc46f4e2",
           "message": "Merge pull request #41 from jonattanva/feat/nested-hidden-expression-schema\n\nfeat(schema): nested dotted names, @-expression patterns, hidden-awareness (0.0.70)",
           "timestamp": "2026-07-10T22:33:38-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 173,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "189adf91d31a9b4a6f24dfbb232e441c095cb9c6",
+          "message": "Merge pull request #127 from jonattanva/claude/label-names-group-fields\n\nfix(label): name a group of controls after its label",
+          "timestamp": "2026-10-26T13:24:17-05:00",
+          "tree_id": "8ce9c32710682fdcc7f1ca4c0466ddaeedf08b03",
+          "url": "https://github.com/jonattanva/luna-form/commit/189adf91d31a9b4a6f24dfbb232e441c095cb9c6"
+        },
+        "date": 1793039136257,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 296,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 572,
             "unit": "ms"
           }
         ]
