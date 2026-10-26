@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793035660537,
+  "lastUpdate": 1793035684135,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "67028e4d33317c662e66f20e707f37e8662c1441",
-          "message": "fix list",
-          "timestamp": "2026-06-20T13:25:20-05:00",
-          "tree_id": "0b32b138143ff645f718d0501eab5db9d2f66ad1",
-          "url": "https://github.com/jonattanva/luna-form/commit/67028e4d33317c662e66f20e707f37e8662c1441"
-        },
-        "date": 1781979999072,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 266,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 560,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "0ef0640780905fa7e31eb621ccbf0f15ce61acd2",
           "message": "fix error select",
           "timestamp": "2026-07-02T22:43:04-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 153,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a1ac253cdaa43846db1461e2a02f169ff2094dde",
+          "message": "Merge pull request #128 from jonattanva/claude/list-toggle-row-name-65ab62\n\nfix(list): name a row's toggle after the label it shows",
+          "timestamp": "2026-10-26T12:26:48-05:00",
+          "tree_id": "8490bfa70f44cefb447abfe2250dbb64d35502ce",
+          "url": "https://github.com/jonattanva/luna-form/commit/a1ac253cdaa43846db1461e2a02f169ff2094dde"
+        },
+        "date": 1793035684085,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 298,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 615,
             "unit": "ms"
           }
         ]
