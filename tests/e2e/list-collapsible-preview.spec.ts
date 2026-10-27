@@ -220,7 +220,11 @@ test.describe('List Collapsible - Controlled host', { tag: ['@e2e'] }, () => {
     await expect(rows.nth(2).getByText('Third', { exact: true })).toBeVisible()
 
     // Removing the first row leaves the others previewing their own values.
-    await page.getByRole('button', { name: 'Remove Question item 1' }).click()
+    await page
+      .getByRole('button', {
+        name: 'Remove Renamed (Question item 1)',
+      })
+      .click()
     await expect(rows).toHaveCount(2)
     await expect(rows.nth(0).getByText('Second', { exact: true })).toBeVisible()
     await expect(rows.nth(0).getByText('email', { exact: true })).toBeVisible()
