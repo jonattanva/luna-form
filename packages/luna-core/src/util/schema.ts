@@ -33,7 +33,7 @@ import { isInterpolated } from './string'
 import { logger } from './logger'
 import { operators } from './operator'
 import { resolveRefs } from './prepare'
-import { z } from 'zod'
+import * as z from 'zod'
 import type {
   AssertRule,
   CustomValidation,
