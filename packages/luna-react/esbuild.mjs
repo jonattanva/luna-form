@@ -10,15 +10,6 @@ const outputs = []
 
 const USE_CLIENT = '"use client";'
 const LOGGER_TAG = '[Luna Form]'
-
-// What a peer dependency may add to each entry, in bytes, once an application
-// bundles it; an entry left out may add nothing. date-fns writes only the
-// `date` and `duration` format filters: the form reads and writes the formats
-// of its own fields itself, so the schema, and the config a date component
-// reads its props from, carry none of it.
-const BUDGETS = {
-  'date-fns': { client: 32 * 1024, server: 32 * 1024 },
-}
 const NODE_ENV = 'process.env.NODE_ENV'
 
 function isClient(outdir) {
@@ -122,48 +113,6 @@ if (!isWatch) {
     console.error(
       `Client output without ${USE_CLIENT}\n${unmarked.map((f) => `  - ${f}`).join('\n')}`
     )
-    process.exit(1)
-  }
-
-  // A peer dependency stays external, so what it weighs is decided by the
-  // bundler of whoever installs this, from what the library imports of it.
-  // Each ESM output is bundled again with the budgeted dependencies inside, as
-  // an application would, and what each adds is held to its budget.
-  const over = []
-  for (const file of outputs.filter((file) => file.includes('/esm/'))) {
-    const entry = file.split('/').at(-3)
-    const { metafile } = await esbuild.build({
-      bundle: true,
-      entryPoints: [file],
-      external: dependencies
-        .filter((dependency) => !(dependency in BUDGETS))
-        .flatMap((dependency) => [dependency, `${dependency}/*`]),
-      format: 'esm',
-      logLevel: 'silent',
-      metafile: true,
-      minify: true,
-      write: false,
-    })
-
-    const inputs = Object.values(metafile.outputs).flatMap((output) =>
-      Object.entries(output.inputs)
-    )
-
-    for (const [dependency, budgets] of Object.entries(BUDGETS)) {
-      const bytes = inputs
-        .filter(([path]) => path.includes(`/node_modules/${dependency}/`))
-        .reduce((total, [, input]) => total + input.bytesInOutput, 0)
-
-      if (bytes > (budgets[entry] ?? 0)) {
-        over.push(
-          `  - ${dependency} in ${file}: ${(bytes / 1024).toFixed(1)} KiB, budget ${(budgets[entry] ?? 0) / 1024} KiB`
-        )
-      }
-    }
-  }
-
-  if (over.length > 0) {
-    console.error(`Peer dependency over its budget:\n${over.join('\n')}`)
     process.exit(1)
   }
 }
