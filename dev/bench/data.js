@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793062584905,
+  "lastUpdate": 1793062610751,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "fd2c2be44af1419b04a71848b51ed9795a8f972e",
-          "message": "fix tests",
-          "timestamp": "2026-07-11T12:33:04-05:00",
-          "tree_id": "c64473d8cac86ea364789cb74f64f3a8343e00e3",
-          "url": "https://github.com/jonattanva/luna-form/commit/fd2c2be44af1419b04a71848b51ed9795a8f972e"
-        },
-        "date": 1783791276653,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 207,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 136,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 180,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c1cf502bce3772403a392c0bda2d15ec6ed849e",
+          "message": "Merge pull request #133 from jonattanva/claude/stable-browser-benchmark\n\ntest(perf): measure the browser benchmark in-page, as a median",
+          "timestamp": "2026-10-26T19:55:53-05:00",
+          "tree_id": "9aaa6561902c2bd2537b3803ac02bfd8d2ad69b4",
+          "url": "https://github.com/jonattanva/luna-form/commit/6c1cf502bce3772403a392c0bda2d15ec6ed849e"
+        },
+        "date": 1793062610700,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 59.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.6,
             "unit": "ms"
           }
         ]
