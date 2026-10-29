@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793234875131,
+  "lastUpdate": 1793234899582,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "16d243217cba51e85af73dab72b6f7aff4500437",
-          "message": "Merge pull request #42 from jonattanva/fix/self-contained-schema-types\n\nfix(types): self-contained declarations (react-luna-form/schema no longer resolves to any) (0.0.71)",
-          "timestamp": "2026-07-11T13:23:02-05:00",
-          "tree_id": "99c5d2c03b021a5c0c9134d6a8582d260e40f0f2",
-          "url": "https://github.com/jonattanva/luna-form/commit/16d243217cba51e85af73dab72b6f7aff4500437"
-        },
-        "date": 1783794247730,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 307,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 245,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "29adaf5015234011ac7425e6ea6a226bad478686",
           "message": "Merge pull request #44 from jonattanva/fix/fields-union-types-0.0.73\n\nfix types",
           "timestamp": "2026-07-11T14:25:24-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 19.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9ad3679fa9350e6eaf1800e0ec38c2993505a814",
+          "message": "Merge pull request #134 from jonattanva/claude/built-in-select-mount-events\n\nfix(select): run a built-in selector's change events at mount",
+          "timestamp": "2026-10-28T19:47:08-05:00",
+          "tree_id": "58efbbc060b893a8f6b7b9c43b2e2ba71e07ace9",
+          "url": "https://github.com/jonattanva/luna-form/commit/9ad3679fa9350e6eaf1800e0ec38c2993505a814"
+        },
+        "date": 1793234899543,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 52.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 24,
             "unit": "ms"
           }
         ]
