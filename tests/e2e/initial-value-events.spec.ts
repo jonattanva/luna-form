@@ -270,6 +270,98 @@ test.describe('Initial value events', { tag: ['@e2e'] }, () => {
 
     await expect(passportNumber).toBeVisible()
   })
+
+  // A built-in selector carries its own options and declares no `source`, so
+  // nothing ever arrives to wait for: holding the run until options load left
+  // a saved Yes reading Yes with what it reveals still hidden.
+  test('reveals what a held Yes reveals on a select/active, with no source to wait for', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "accept_webhook": "true"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Accept webhook",
+                "name": "accept_webhook",
+                "type": "select/active",
+                "event": {
+                  "change": [
+                    {
+                      "action": "state",
+                      "target": "webhook_url",
+                      "state": { "hidden": false },
+                      "when": "true"
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Webhook URL",
+                "name": "webhook_url",
+                "type": "input/text",
+                "hidden": true
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(getSelect(page, 'Accept webhook')).toHaveText('Yes')
+    await expect(page.locator('input[name="webhook_url"]')).toBeVisible()
+  })
+
+  test('reveals what a held month reveals on a select/month', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "month": "12"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Month",
+                "name": "month",
+                "type": "select/month",
+                "event": {
+                  "change": [
+                    {
+                      "action": "state",
+                      "target": "holiday_note",
+                      "state": { "hidden": false },
+                      "when": "12"
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Holiday note",
+                "name": "holiday_note",
+                "type": "input/text",
+                "hidden": true
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    await expect(page.locator('input[name="holiday_note"]')).toBeVisible()
+  })
 })
 
 // The value a host passes can change after mount -- an undo, a record swapped

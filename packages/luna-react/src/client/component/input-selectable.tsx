@@ -62,6 +62,15 @@ export const InputSelectable = createInput({
     getEntity(toChangeValue(defaultValue), data, entity),
 
   isInitialReady: (field, defaultValue, data) =>
-    (!isOptions(field) || (!!data && data.length > 0)) &&
+    (!waitsForSource(field) || (!!data && data.length > 0)) &&
     isValidValue(defaultValue),
 })
+
+// Whether the mount-time replay has options to wait for: only a field that
+// declares a `source` gets them in `data`. A built-in selector
+// (`select/active`, `select/month`...) carries its own and never receives any,
+// so waiting on it held its change events forever, and a saved choice came
+// back without what it reveals.
+function waitsForSource(field: Field): boolean {
+  return isOptions(field) && field.source !== undefined
+}
