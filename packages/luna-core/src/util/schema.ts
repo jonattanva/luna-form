@@ -160,6 +160,7 @@ function toBoolean(value: unknown) {
 function getBoolean(input: Input, translations?: Record<string, string>) {
   const required = Boolean(input.required)
   const message = getRequiredMessage(input, translations)
+  const fallback = toBoolean(input.defaultValue)
 
   // A checkbox left unticked is an answer, «no»; a Yes/No left empty is none,
   // and must not reach the action as a `false` nobody chose.
@@ -173,11 +174,14 @@ function getBoolean(input: Input, translations?: Record<string, string>) {
       : schema
   }
 
+  // A Yes/No left empty takes the answer it shows by default, as a value saved
+  // before the field existed does; only one with no default is unanswered.
   // Not optional when required, so a key left out is checked too, and an
   // empty answer is asked for in the field's own words.
+  const read = (value: unknown) => toBoolean(value) ?? fallback
   return required
-    ? z.preprocess(toBoolean, z.boolean({ error: () => message }))
-    : z.preprocess(toBoolean, z.boolean().optional())
+    ? z.preprocess(read, z.boolean({ error: () => message }))
+    : z.preprocess(read, z.boolean().optional())
 }
 
 function getRadio(input: Input, translations?: Record<string, string>) {

@@ -100,5 +100,36 @@ describe('values the browser does not send', () => {
         agree: false,
       })
     })
+
+    test('should take its default when left empty, as a value saved before it existed', () => {
+      const withDefault = (defaultValue: string | boolean) =>
+        schemaOf({
+          name: 'agree',
+          type: 'select/active',
+          required: true,
+          defaultValue,
+        })
+
+      expect(withDefault('false').safeParse({}).data).toEqual({ agree: false })
+      expect(withDefault('true').safeParse({ agree: '' }).data).toEqual({
+        agree: true,
+      })
+      expect(withDefault(false).safeParse({ agree: null }).data).toEqual({
+        agree: false,
+      })
+      expect(withDefault('false').safeParse({ agree: 'true' }).data).toEqual({
+        agree: true,
+      })
+    })
+  })
+
+  test('should keep an unticked checkbox as No, whatever its default', () => {
+    const parsed = schemaOf({
+      name: 'agree',
+      type: 'checkbox',
+      defaultValue: true,
+    }).safeParse({})
+
+    expect(parsed.data).toEqual({ agree: false })
   })
 })
