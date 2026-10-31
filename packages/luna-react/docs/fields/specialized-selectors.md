@@ -123,6 +123,12 @@ A simple binary toggle, typically rendered as "Yes" and "No".
 }
 ```
 
+Left empty, it holds no answer: an optional one is left out of what the form
+submits, never sent as `false`, and a required one fails with its
+`validation.required` message, as a required text does. Only `true`/`false`
+(or `'true'`/`'false'`) are answers. A `checkbox` differs on purpose: left
+unticked, it answers `false`.
+
 ---
 
 ## specialized Chips

@@ -141,33 +141,43 @@ export function getEmail(input: Input, translations?: Record<string, string>) {
   return optionalLeaf(baseSchema.pipe(address).or(z.literal('')))
 }
 
-function getBoolean(input: Input, translations?: Record<string, string>) {
-  let schema = z.preprocess((value) => {
-    if (typeof value === 'string') {
-      if (value === 'true') {
-        return true
-      }
-
-      if (value === 'false') {
-        return false
-      }
-    }
-    return value
-  }, z.coerce.boolean())
-
-  if (input.required) {
-    if (isCheckbox(input)) {
-      schema = schema.refine((value) => value === true, {
-        message: getRequiredMessage(input, translations),
-      })
-    } else {
-      schema = schema.refine((value) => typeof value === 'boolean', {
-        message: getRequiredMessage(input, translations),
-      })
-    }
-    return z.preprocess((value) => (value === null ? false : value), schema)
+// What a Yes/No holds, read the way its select sends it: `'true'` and
+// `'false'` are the two answers, and an empty select is none at all. Any
+// other value is coerced, as before.
+function toBoolean(value: unknown) {
+  if (isEmpty(value)) {
+    return undefined
   }
-  return schema.nullable()
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  return Boolean(value)
+}
+
+function getBoolean(input: Input, translations?: Record<string, string>) {
+  const required = Boolean(input.required)
+  const message = getRequiredMessage(input, translations)
+
+  // A checkbox left unticked is an answer, «no»; a Yes/No left empty is none,
+  // and must not reach the action as a `false` nobody chose.
+  if (isCheckbox(input)) {
+    const schema = z.preprocess(
+      (value) => toBoolean(value) ?? false,
+      z.boolean()
+    )
+    return required
+      ? schema.refine((value) => value === true, { message })
+      : schema
+  }
+
+  // Not optional when required, so a key left out is checked too, and an
+  // empty answer is asked for in the field's own words.
+  return required
+    ? z.preprocess(toBoolean, z.boolean({ error: () => message }))
+    : z.preprocess(toBoolean, z.boolean().optional())
 }
 
 function getRadio(input: Input, translations?: Record<string, string>) {
