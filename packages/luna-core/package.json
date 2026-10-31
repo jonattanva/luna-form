@@ -1,6 +1,6 @@
 {
   "name": "@luna-form/core",
-  "version": "0.0.95",
+  "version": "0.0.96",
   "description": "Core utilities and types for Luna Form",
   "private": true,
   "main": "./src/index.ts",
@@ -21,7 +21,7 @@
   ],
   "peerDependencies": {
     "date-fns": "^4.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.0.6"
   },
   "license": "Apache-2.0",
   "repository": {
