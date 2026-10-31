@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793407712695,
+  "lastUpdate": 1793407737172,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "29adaf5015234011ac7425e6ea6a226bad478686",
-          "message": "Merge pull request #44 from jonattanva/fix/fields-union-types-0.0.73\n\nfix types",
-          "timestamp": "2026-07-11T14:25:24-05:00",
-          "tree_id": "37d64600fe232c294f01d07127c84d38e2c8a285",
-          "url": "https://github.com/jonattanva/luna-form/commit/29adaf5015234011ac7425e6ea6a226bad478686"
-        },
-        "date": 1783797997324,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 252,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 197,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 24,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "db4daedce9553614a79392caf4f8b453f8f662b8",
+          "message": "Merge pull request #135 from jonattanva/claude/yes-no-unanswered\n\nfix(schema): treat an unanswered Yes/No as no answer",
+          "timestamp": "2026-10-30T19:47:39-05:00",
+          "tree_id": "a448272a2da9383fe80c231da4b7c81a895220e9",
+          "url": "https://github.com/jonattanva/luna-form/commit/db4daedce9553614a79392caf4f8b453f8f662b8"
+        },
+        "date": 1793407737123,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 56.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.5,
             "unit": "ms"
           }
         ]
