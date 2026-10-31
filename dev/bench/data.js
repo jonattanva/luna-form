@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793424507836,
+  "lastUpdate": 1793424533801,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "f89ed82299b7ae98093b3993ae53825d87949950",
-          "message": "Merge pull request #49 from jonattanva/feat/translate-array-source-options\n\nfeat(source): translate option labels for array sources",
-          "timestamp": "2026-08-01T23:29:39-05:00",
-          "tree_id": "ba8335a5bf470f0b1f91f4d5e95b7dc0d4340105",
-          "url": "https://github.com/jonattanva/luna-form/commit/f89ed82299b7ae98093b3993ae53825d87949950"
-        },
-        "date": 1785645066862,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 277,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 635,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "3e61236a026f65e070993d036e1b080ee1e4a394",
           "message": "Merge pull request #50 from jonattanva/feat/locale-aware-specialized-selectors\n\nfeat(selectors): resolve built-in option labels through the form language",
           "timestamp": "2026-08-01T23:38:02-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 13.3,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "256a8a39830a2eab0bd54d1b54c3ee6a7527b878",
+          "message": "Merge pull request #136 from jonattanva/claude/yes-no-default\n\nfix(schema): read an empty Yes/No as its default answer",
+          "timestamp": "2026-10-31T00:27:43-05:00",
+          "tree_id": "584e4f0efe62bbf1f68078fcfd67c7f7780e0c17",
+          "url": "https://github.com/jonattanva/luna-form/commit/256a8a39830a2eab0bd54d1b54c3ee6a7527b878"
+        },
+        "date": 1793424533751,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 62.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.7,
             "unit": "ms"
           }
         ]
