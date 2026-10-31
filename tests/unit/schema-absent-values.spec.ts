@@ -65,4 +65,40 @@ describe('values the browser does not send', () => {
 
     expect(parsed.success).toBe(false)
   })
+
+  describe('a Yes/No (select/active)', () => {
+    const yesNo = (required = false) =>
+      schemaOf({
+        name: 'agree',
+        type: 'select/active',
+        required,
+        validation: { required: 'Choose Yes or No' },
+      })
+
+    test('should read an empty select as no answer, not as No', () => {
+      expect(yesNo().safeParse({ agree: '' }).data).toEqual({})
+      expect(yesNo().safeParse({}).data).toEqual({})
+    })
+
+    test('should ask for a required one left empty', () => {
+      for (const value of [{ agree: '' }, {}, { agree: null }]) {
+        const parsed = yesNo(true).safeParse(value)
+
+        expect(parsed.success).toBe(false)
+        expect(parsed.error?.issues[0]?.message).toBe('Choose Yes or No')
+      }
+    })
+
+    test('should still take Yes and No as the select sends them', () => {
+      expect(yesNo(true).safeParse({ agree: 'true' }).data).toEqual({
+        agree: true,
+      })
+      expect(yesNo(true).safeParse({ agree: 'false' }).data).toEqual({
+        agree: false,
+      })
+      expect(yesNo().safeParse({ agree: false }).data).toEqual({
+        agree: false,
+      })
+    })
+  })
 })
