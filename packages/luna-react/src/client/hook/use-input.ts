@@ -7,12 +7,13 @@ export function useInput(
   field: Field,
   onRegister: (name: string, schema: Schema, field: Field) => void,
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void,
-  translations?: Record<string, string>
+  translations?: Record<string, string>,
+  sourceTargets?: ReadonlySet<string>
 ) {
   const { name } = field
   const schema = useMemo(
-    () => getSchema(field, translations),
-    [field, translations]
+    () => getSchema(field, translations, sourceTargets),
+    [field, translations, sourceTargets]
   )
 
   // The field's own declaration ADDS to what it inherits, never replaces it:

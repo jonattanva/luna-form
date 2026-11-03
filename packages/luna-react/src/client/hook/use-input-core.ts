@@ -62,6 +62,7 @@ export type InputCoreProps = Readonly<{
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean
+  sourceTargets?: ReadonlySet<string>
 }>
 
 // Whether the user's caret is in this field right now.
@@ -115,7 +116,8 @@ export function useInputCore(
     props.field,
     props.onRegister,
     props.onUnmount,
-    translations
+    translations,
+    props.sourceTargets
   )
 
   const placeholder = translate(props.commonProps.placeholder, translations)

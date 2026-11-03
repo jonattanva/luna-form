@@ -19,6 +19,7 @@ This page documents every key of the `validation` object plus the shared operato
 - **`email`** _(string)_: Message for an invalid email format (`input/email`).
 - **`date`** _(string)_: Message when an `input/date` holds text that is no day. See [Input](../fields/input.md#what-a-date-holds).
 - **`length`** _({ min?: string, max?: string })_: Messages when the value breaches `advanced.length`: its length, a number's range, or a date's first and last day. See [Input](../fields/input.md#the-first-and-the-last-day).
+- **`option`** _(string)_: Message when a `select`, `radio` or `chips` holds a value its written options do not offer, required or not. See [Select](../fields/select.md#options-written-in-the-definition).
 - **`reserved`** _(string)_: Message when an `input/date` holds a day its `advanced.reserved` lists. See [Input](../fields/input.md#days-nobody-can-pick).
 - **`range`** _(string)_: Message when an `input/date` range has an end missing, or its last day before its first. See [Input](../fields/input.md#a-range-of-days).
 - **`step`** _(string)_: Message when an `input/number` is off its step: a decimal on a whole number, or a value off `advanced.step`. See [Input](../fields/input.md).

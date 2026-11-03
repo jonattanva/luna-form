@@ -277,6 +277,9 @@ export type Validation = {
   date?: string
   email?: string
   length?: Length<string>
+  // A `select`, `radio` or `chips` holding a value its written options do not
+  // offer.
+  option?: string
   required?: string
   // Field is required only when the condition(s) hold. Multiple rules OR together.
   requiredWhen?: WhenRule | Array<WhenRule>

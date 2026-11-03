@@ -66,11 +66,21 @@ const PROBES: Probe[] = [
     anchor: 'export function Field(props: FieldProps) {',
     replacement: `export function Field(props: FieldProps) {\n  ${bump('render')}`,
   },
+  // A field's schema took its translations only, until it also took the
+  // targets of the form's `source` events. One of the two applies on any
+  // commit.
+  {
+    name: 'schema (translations)',
+    file: `${LIB}/client/hook/use-input.ts`,
+    anchor: '() => getSchema(field, translations),',
+    legacy: true,
+    replacement: `() => { ${bump('schema')}; return getSchema(field, translations) },`,
+  },
   {
     name: 'schema',
     file: `${LIB}/client/hook/use-input.ts`,
-    anchor: '() => getSchema(field, translations),',
-    replacement: `() => { ${bump('schema')}; return getSchema(field, translations) },`,
+    anchor: '() => getSchema(field, translations, sourceTargets),',
+    replacement: `() => { ${bump('schema')}; return getSchema(field, translations, sourceTargets) },`,
   },
   // `useValue` read the host's record as a prop until it subscribed to its own
   // entry. The second anchor stops at the call, so it matches every shape the
