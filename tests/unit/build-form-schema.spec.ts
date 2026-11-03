@@ -810,3 +810,419 @@ describe('buildFormSchema with a text left empty', () => {
     ])
   })
 })
+
+// Options written in the definition are the answers the field takes: a value
+// outside them, from a stored config or a submit made by hand, answers no
+// question the form asks. Options the form only learns at run time -- fetched,
+// or installed by a `source` event -- are not known here, so they hold nothing
+// back.
+describe('buildFormSchema with options written in the definition', () => {
+  const NOT_OFFERED = 'This option is not available'
+
+  const fruits = [
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' },
+  ]
+
+  const issues = (schema: ReturnType<typeof buildFormSchema>, data: object) =>
+    collectIssues(schema.safeParse(data).error!)
+
+  // Every path a value takes through the rule: each kind, required or not,
+  // with a value it offers, one it does not, and none at all.
+  describe.each(['select', 'radio', 'chips'])('a %s', (type) => {
+    const isChips = type === 'chips'
+    const offered = isChips ? ['apple'] : 'apple'
+    const missing = isChips ? ['apple', 'cherry'] : 'cherry'
+    const empty = isChips ? [] : ''
+
+    const schema = (required: boolean) =>
+      buildFormSchema([
+        {
+          fields: [
+            {
+              name: 'fruit',
+              type,
+              required,
+              source: fruits,
+              validation: { required: 'Pick a fruit' },
+            },
+          ],
+        },
+      ])
+
+    test.each([true, false])(
+      'takes a value it offers (required: %s)',
+      (required) => {
+        expect(schema(required).safeParse({ fruit: offered }).success).toBe(
+          true
+        )
+      }
+    )
+
+    test.each([true, false])(
+      'holds back a value it does not offer (required: %s)',
+      (required) => {
+        expect(issues(schema(required), { fruit: missing })).toEqual([
+          { path: 'fruit', message: NOT_OFFERED },
+        ])
+      }
+    )
+
+    test('lets an optional one left empty pass', () => {
+      expect(schema(false).safeParse({ fruit: empty }).success).toBe(true)
+      expect(schema(false).safeParse({}).success).toBe(true)
+    })
+
+    test('asks a required one left empty for a value', () => {
+      expect(issues(schema(true), { fruit: empty })).toEqual([
+        { path: 'fruit', message: 'Pick a fruit' },
+      ])
+    })
+  })
+
+  test('checks options the host passes in context', () => {
+    const schema = buildFormSchema(
+      [
+        {
+          fields: [
+            {
+              name: 'fruit',
+              type: 'select',
+              source: { $ref: '#/context/fruits' },
+            } as unknown as Sections[number]['fields'][number],
+          ],
+        },
+      ],
+      undefined,
+      undefined,
+      { fruits }
+    )
+
+    expect(schema.safeParse({ fruit: 'apple' }).success).toBe(true)
+    expect(issues(schema, { fruit: 'cherry' })).toEqual([
+      { path: 'fruit', message: NOT_OFFERED },
+    ])
+  })
+
+  test('names the field a target aims at in a list inside a list', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'orders',
+            type: 'list',
+            fields: [
+              {
+                name: 'shipping',
+                type: 'list',
+                fields: [
+                  {
+                    name: 'country',
+                    type: 'select',
+                    source: [{ label: 'Peru', value: 'pe' }],
+                    event: {
+                      change: [
+                        {
+                          action: 'source',
+                          target: 'shipping/city',
+                          source: { url: '/api/cities?country={value}' },
+                        },
+                      ],
+                    },
+                  },
+                  { name: 'city', type: 'select', source: [] },
+                ],
+              },
+              { name: 'city', type: 'select', source: fruits },
+            ],
+          },
+        ],
+      },
+    ])
+
+    expect(
+      issues(schema, {
+        orders: [
+          { shipping: [{ country: 'pe', city: 'arequipa' }], city: 'x' },
+        ],
+      })
+    ).toEqual([{ path: 'orders.0.city', message: NOT_OFFERED }])
+  })
+
+  test('holds back a select value it does not offer', () => {
+    const schema = buildFormSchema([
+      { fields: [{ name: 'fruit', type: 'select', source: fruits }] },
+    ])
+
+    expect(schema.parse({ fruit: 'apple' })).toEqual({ fruit: 'apple' })
+    expect(issues(schema, { fruit: 'cherry' })).toEqual([
+      { path: 'fruit', message: NOT_OFFERED },
+    ])
+  })
+
+  test('says what is wrong in the words of `validation.option`', () => {
+    const schema = buildFormSchema(
+      [
+        {
+          fields: [
+            {
+              name: 'fruit',
+              type: 'select',
+              source: fruits,
+              validation: { option: 'fruit_missing' },
+            },
+          ],
+        },
+      ],
+      { fruit_missing: 'Pick a fruit from the list' }
+    )
+
+    expect(issues(schema, { fruit: 'cherry' })).toEqual([
+      { path: 'fruit', message: 'Pick a fruit from the list' },
+    ])
+  })
+
+  test('lets an optional field left empty pass', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          { name: 'fruit', type: 'select', source: fruits },
+          { name: 'pick', type: 'radio', source: fruits },
+          { name: 'tags', type: 'chips', source: fruits },
+        ],
+      },
+    ])
+
+    expect(schema.safeParse({}).success).toBe(true)
+    expect(schema.safeParse({ fruit: '', pick: '', tags: [] }).success).toBe(
+      true
+    )
+  })
+
+  test('asks a required field left empty for a value, in its own words', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'fruit',
+            type: 'radio',
+            required: true,
+            source: fruits,
+            validation: { required: 'Pick a fruit' },
+          },
+        ],
+      },
+    ])
+
+    expect(issues(schema, { fruit: '' })).toEqual([
+      { path: 'fruit', message: 'Pick a fruit' },
+    ])
+  })
+
+  test('holds back a chips selection with one value it does not offer', () => {
+    const schema = buildFormSchema([
+      { fields: [{ name: 'tags', type: 'chips', source: fruits }] },
+    ])
+
+    expect(schema.parse({ tags: ['apple', 'banana'] })).toEqual({
+      tags: ['apple', 'banana'],
+    })
+    expect(issues(schema, { tags: ['apple', 'cherry'] })).toEqual([
+      { path: 'tags', message: NOT_OFFERED },
+    ])
+  })
+
+  test('reads the value through `advanced.options` and as text', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'user',
+            type: 'radio',
+            source: [
+              { id: 101, name: 'John' },
+              { id: 102, name: 'Ada' },
+            ],
+            advanced: { options: { label: 'name', value: 'id' } },
+          },
+          { name: 'size', type: 'select', source: ['S', 'M'] },
+        ],
+      },
+    ])
+
+    expect(schema.safeParse({ user: 101, size: 'M' }).success).toBe(true)
+    expect(issues(schema, { user: '103', size: 'XL' })).toEqual([
+      { path: 'user', message: NOT_OFFERED },
+      { path: 'size', message: NOT_OFFERED },
+    ])
+  })
+
+  test('checks options a definition holds, once the reference resolves', () => {
+    const sections: Sections = [
+      {
+        fields: [
+          {
+            name: 'fruit',
+            type: 'select',
+            source: { $ref: '#/definition/fruits' },
+          } as unknown as Sections[number]['fields'][number],
+        ],
+      },
+    ]
+
+    expect(
+      issues(buildFormSchema(sections, undefined, { fruits }), {
+        fruit: 'cherry',
+      })
+    ).toEqual([{ path: 'fruit', message: NOT_OFFERED }])
+    // Left as written, the reference names no options to check against.
+    expect(
+      buildFormSchema(sections).safeParse({ fruit: 'cherry' }).success
+    ).toBe(true)
+  })
+
+  test('takes any value from options fetched at run time', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'country',
+            type: 'select',
+            source: { url: '/api/countries' },
+          },
+        ],
+      },
+    ])
+
+    expect(schema.safeParse({ country: 'anything' }).success).toBe(true)
+  })
+
+  test('takes any value from a field a `source` event aims at', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'country',
+            type: 'select',
+            source: [{ label: 'Peru', value: 'pe' }],
+            event: {
+              change: [
+                {
+                  action: 'source',
+                  target: 'city',
+                  source: { url: '/api/cities?country={value}' },
+                },
+              ],
+            },
+          },
+          {
+            name: 'city',
+            type: 'select',
+            source: [{ label: 'Lima', value: 'lim' }],
+          },
+        ],
+      },
+    ])
+
+    expect(schema.safeParse({ country: 'pe', city: 'cusco' }).success).toBe(
+      true
+    )
+    expect(issues(schema, { country: 'cl', city: 'cusco' })).toEqual([
+      { path: 'country', message: NOT_OFFERED },
+    ])
+  })
+
+  // `shipping/city` is the `city` of the same `shipping` row, as an event
+  // resolves it: a `city` elsewhere keeps the options it writes.
+  test('takes any value only from the field a `source` event aims at', () => {
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'shipping',
+            type: 'list',
+            fields: [
+              {
+                name: 'country',
+                type: 'select',
+                source: [{ label: 'Peru', value: 'pe' }],
+                event: {
+                  change: [
+                    {
+                      action: 'source',
+                      target: 'shipping/city',
+                      source: { url: '/api/cities?country={value}' },
+                    },
+                  ],
+                },
+              },
+              { name: 'city', type: 'select', source: [] },
+            ],
+          },
+          {
+            name: 'billing',
+            type: 'list',
+            fields: [{ name: 'city', type: 'select', source: fruits }],
+          },
+          { name: 'city', type: 'select', source: fruits },
+        ],
+      },
+    ])
+
+    expect(
+      issues(schema, {
+        shipping: [{ country: 'pe', city: 'arequipa' }],
+        billing: [{ city: 'xyz' }],
+        city: 'xyz',
+      })
+    ).toEqual([
+      { path: 'billing.0.city', message: NOT_OFFERED },
+      { path: 'city', message: NOT_OFFERED },
+    ])
+  })
+
+  // A row of a list declares the same options for each item, however deep
+  // the list sits: an option the deepest row does not offer cannot open a
+  // level the form does not have.
+  test('holds back a value a nested row does not offer', () => {
+    const kinds = [
+      { label: 'Text', value: 'text' },
+      { label: 'Group', value: 'group' },
+    ]
+    const schema = buildFormSchema([
+      {
+        fields: [
+          {
+            name: 'field',
+            type: 'list',
+            fields: [
+              { name: 'type', type: 'chips', source: kinds },
+              {
+                name: 'inner',
+                type: 'list',
+                fields: [
+                  {
+                    name: 'type',
+                    type: 'chips',
+                    source: [{ label: 'Text', value: 'text' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ])
+
+    expect(
+      schema.safeParse({
+        field: [{ type: ['group'], inner: [{ type: ['text'] }] }],
+      }).success
+    ).toBe(true)
+    expect(
+      issues(schema, {
+        field: [{ type: ['group'], inner: [{ type: ['group'] }] }],
+      })
+    ).toEqual([{ path: 'field.0.inner.0.type', message: NOT_OFFERED }])
+  })
+})

@@ -1,4 +1,4 @@
-import { MAX, MIN } from './constant'
+import { MAX, MIN, VALUE } from './constant'
 import { buildLengthLimits, buildNumberStep, type LengthLimits } from './build'
 import {
   buildDateLimits,
@@ -26,13 +26,16 @@ import {
   isChips,
   isChipsDays,
   isChipsMonths,
+  isField,
+  isOptions,
 } from './is-input'
-import { isEmpty, isObject, isString } from './is-type'
+import { isEmpty, isObject, isString, isValue } from './is-type'
 import { extract } from './extract'
 import { isInterpolated } from './string'
 import { logger } from './logger'
 import { operators } from './operator'
 import { resolveRefs } from './prepare'
+import { isTargetOf } from './path'
 import * as z from 'zod'
 import type {
   AssertRule,
@@ -101,7 +104,23 @@ export function flatten(error: z.ZodError<Record<string, unknown>>) {
   return results
 }
 
-export function getSchema(input: Input, translations?: Record<string, string>) {
+// A field's schema, wherever it is validated: the browser, on a change and on
+// a submit, and `buildFormSchema` on the server. `sourceTargets` are the
+// targets of the form's `source` events (see `collectSourceTargets`), whose
+// options are only known at run time.
+export function getSchema(
+  input: Input,
+  translations?: Record<string, string>,
+  sourceTargets?: ReadonlySet<string>
+) {
+  return applyOffered(
+    getLeafSchema(input, translations),
+    getOfferedValues(input, sourceTargets),
+    translateOptional(input.validation?.option, translations) ?? NOT_OFFERED
+  )
+}
+
+function getLeafSchema(input: Input, translations?: Record<string, string>) {
   for (const [check, getSchema] of approach) {
     if (check(input)) {
       return getSchema(input, translations)
@@ -642,8 +661,9 @@ export function buildFormSchema(
   context?: Record<string, unknown>
 ): z.ZodType {
   const resolved = resolveRefs(sections, definition, context) as Sections
+  const fields = collectSectionFields(resolved)
 
-  return buildObject(collectSectionFields(resolved), translations)
+  return buildObject(fields, translations, collectSourceTargets(fields), '')
 }
 
 // Sections are visual grouping only: every field shares one object namespace,
@@ -663,9 +683,15 @@ function collectSectionFields(sections: Sections): Fields {
 // (`validation.custom`) rules live in ONE place instead of being re-derived here.
 // Lists recurse into arrays of objects; columns are structural and merge their
 // children into the current level.
+//
+// `prefix` names a row the way the rendered form does (`shipping.0.`), so a
+// `source` target such as `shipping/city` matches the same field here as it
+// does there.
 function buildObject(
   fields: Fields,
-  translations?: Record<string, string>
+  translations: Record<string, string> | undefined,
+  sourceTargets: ReadonlySet<string>,
+  prefix: string
 ): z.ZodType {
   const shape: Schemas = {}
   const leaves: Field[] = []
@@ -676,7 +702,14 @@ function buildObject(
         visit(entry.fields)
       } else if (isList(entry)) {
         const items = applyListLength(
-          z.array(buildObject(entry.fields, translations)),
+          z.array(
+            buildObject(
+              entry.fields,
+              translations,
+              sourceTargets,
+              `${prefix}${entry.name}.0.`
+            )
+          ),
           entry,
           translations
         )
@@ -688,8 +721,8 @@ function buildObject(
         )
       } else {
         // Non-required leaves tolerate absent keys: stored configs are sparse
-        // (only fields the user touched). Matches luna-flow's `.optional()`
-        // config schemas; required leaves already fail on absence via getSchema.
+        // (only fields the user touched). Required leaves already fail on
+        // absence via getSchema.
         // A `hidden` field is only shown (and required) once an event reveals it,
         // so headless it is NOT structurally required — its conditional
         // requirement is expressed via `requiredWhen`/`rules`. Without this the
@@ -699,8 +732,9 @@ function buildObject(
         const field: Field = entry
         const required = Boolean(field.required) && !field.hidden
         const leaf = getSchema(
-          required ? field : { ...field, required: false },
-          translations
+          { ...field, name: `${prefix}${field.name}`, required },
+          translations,
+          sourceTargets
         )
         shape[field.name] = required ? leaf : leaf.optional()
         leaves.push(field)
@@ -712,6 +746,81 @@ function buildObject(
   // Dotted field names (`basicAuth.username`) become nested objects so the
   // schema matches the nested config the runtime persists (see `nestSchemas`).
   return buildSchema(nestSchemas(shape), leaves, translations)
+}
+
+const NOT_OFFERED = 'This option is not available'
+
+// The targets of every `source` event in the form, as written. The fields they
+// name take their options at run time, whatever the definition writes for
+// them. See `isTargetOf` for which field a target names.
+export function collectSourceTargets(fields: Fields): Set<string> {
+  const targets = new Set<string>()
+
+  const visit = (entries: Fields): void => {
+    for (const entry of entries) {
+      if (!isField(entry)) {
+        visit(entry.fields)
+        continue
+      }
+      for (const event of entry.event?.change ?? []) {
+        if (event.action === 'source') {
+          targets.add(event.target)
+        }
+      }
+    }
+  }
+
+  visit(fields)
+  return targets
+}
+
+// The values a `select`, `radio` or `chips` offers, when the definition writes
+// them: an inline array, or a reference that resolved to one. Read as the
+// field reads them -- through `advanced.options.value` -- and as text, the way
+// a selection is compared. `undefined` when the options are fetched or a
+// `source` event installs them: nothing here knows them.
+//
+// `field.name` is the whole name, a row's included (`shipping.3.city`).
+export function getOfferedValues(
+  field: Field,
+  sourceTargets?: ReadonlySet<string>
+): Set<string> | undefined {
+  if (!isOptions(field) || !Array.isArray(field.source)) {
+    return undefined
+  }
+  for (const target of sourceTargets ?? []) {
+    if (isTargetOf(field.name, target)) {
+      return undefined
+    }
+  }
+
+  const key = field.advanced?.options?.value ?? VALUE
+  const offered = new Set<string>()
+  for (const option of field.source) {
+    const value = isObject(option) ? extract(option, key) : option
+    if (isValue(value)) {
+      offered.add(String(value))
+    }
+  }
+  return offered
+}
+
+// Runs after the field's own schema, on what it made of the value: text for a
+// `select` or `radio`, an array of text for `chips`. Nothing picked is the
+// required rule's question, not this one.
+function applyOffered(
+  schema: z.ZodType,
+  offered: ReadonlySet<string> | undefined,
+  message: string
+): z.ZodType {
+  if (!offered) {
+    return schema
+  }
+
+  return schema.refine((value) => {
+    const picked = Array.isArray(value) ? value : [value]
+    return picked.every((item) => isEmpty(item) || offered.has(String(item)))
+  }, message)
 }
 
 // Groups dotted field names (e.g. `basicAuth.username`) into nested objects so

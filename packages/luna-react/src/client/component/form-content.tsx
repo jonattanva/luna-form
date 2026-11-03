@@ -5,7 +5,11 @@ import { Input } from './input'
 import { Slot } from './slot/slot'
 import { VisibilityGuard } from './guard/visibility-guard'
 import { renderIfExists } from '../../lib/render-If-exists'
-import { resolveDictionary } from '@luna-form/core'
+import {
+  collectSourceTargets,
+  prepare,
+  resolveDictionary,
+} from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
 import { useCallback, useEffect, useMemo } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
@@ -50,6 +54,20 @@ export function FormContent<
   const localization = useMemo(
     () => ({ lang: props.lang, translations }),
     [props.lang, translations]
+  )
+
+  // The fields whose options a `source` event installs, which no schema can
+  // hold to the options their definition writes. Read off the same resolved
+  // sections the form renders, which `prepare` hands back unchanged while
+  // nothing it reads changes.
+  const sourceTargets = useMemo(
+    () =>
+      collectSourceTargets(
+        prepare(props.sections, props.definition, props.context).flatMap(
+          (section) => section.fields ?? []
+        )
+      ),
+    [props.sections, props.definition, props.context]
   )
 
   const [getSchema, getField, onRegister, onUnmount] = useSchema()
@@ -107,9 +125,11 @@ export function FormContent<
         onRegister={onRegister}
         onUnmount={onUnmount}
         onValueChange={onValueChange}
+        sourceTargets={sourceTargets}
       />
     ),
     [
+      sourceTargets,
       getField,
       onRegister,
       onUnmount,

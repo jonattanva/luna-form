@@ -66,6 +66,7 @@ export type InputCoreProps = Readonly<{
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean
+  sourceTargets?: ReadonlySet<string>
 }>
 
 // Whether the user's caret is in this field right now.
@@ -116,12 +117,12 @@ export function useInputCore(
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
   const setHeldListRows = useSetAtom(heldListRowsAtom)
 
-  const schema = useInput(
-    props.field,
-    props.onRegister,
-    props.onUnmount,
-    translations
-  )
+  const schema = useInput(props.field, {
+    onRegister: props.onRegister,
+    onUnmount: props.onUnmount,
+    sourceTargets: props.sourceTargets,
+    translations,
+  })
 
   const placeholder = translate(props.commonProps.placeholder, translations)
 

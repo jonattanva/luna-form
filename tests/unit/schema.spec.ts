@@ -10,6 +10,7 @@ import {
   getText,
   getYearSchema,
 } from '@/packages/luna-core/src/util/schema'
+import { isTargetOf } from '@/packages/luna-core/src/util/path'
 import { z } from 'zod'
 import type {
   Date as DateField,
@@ -1762,5 +1763,84 @@ describe('a text left empty', () => {
     expect(messagesOf(schema.safeParse(null))).toEqual(['Write a name'])
     expect(messagesOf(schema.safeParse('ab'))).toEqual(['Three at least'])
     expect(schema.parse('abc')).toBe('abc')
+  })
+})
+
+// The rule a `select`, `radio` or `chips` holds its value to, wherever its
+// schema is built: the browser validates a field with it as the server does.
+describe('a value its written options do not offer', () => {
+  const NOT_OFFERED = 'This option is not available'
+  const cities = [
+    { label: 'Lima', value: 'lim' },
+    { label: 'Cusco', value: 'cus' },
+  ]
+
+  const messages = (schema: z.ZodType, value: unknown) =>
+    schema.safeParse(value).error?.issues.map((issue) => issue.message) ?? []
+
+  test.each([true, false])(
+    'holds it back whether the field is required or not (required: %s)',
+    (required) => {
+      const schema = getSchema({
+        name: 'city',
+        type: 'select',
+        required,
+        source: cities,
+      } as Field)
+
+      expect(schema.safeParse('lim').success).toBe(true)
+      expect(messages(schema, 'xyz')).toEqual([NOT_OFFERED])
+    }
+  )
+
+  test('holds back a radio and every value of a chips', () => {
+    const radio = getSchema({
+      name: 'city',
+      type: 'radio',
+      source: cities,
+    } as Field)
+    const chips = getSchema({
+      name: 'cities',
+      type: 'chips',
+      source: cities,
+    } as Field)
+
+    expect(messages(radio, 'xyz')).toEqual([NOT_OFFERED])
+    expect(chips.safeParse(['lim', 'cus']).success).toBe(true)
+    expect(messages(chips, ['lim', 'xyz'])).toEqual([NOT_OFFERED])
+  })
+
+  test('takes any value in a field a `source` event aims at', () => {
+    const field = {
+      name: 'shipping.3.city',
+      type: 'select',
+      source: cities,
+    } as Field
+
+    expect(
+      getSchema(field, undefined, new Set(['shipping/city'])).safeParse('xyz')
+        .success
+    ).toBe(true)
+    expect(
+      messages(getSchema(field, undefined, new Set(['billing/city'])), 'xyz')
+    ).toEqual([NOT_OFFERED])
+  })
+})
+
+// Which field an event's `target` names, the way `resolveTarget` reads it.
+describe('isTargetOf', () => {
+  test.each<[string, string, boolean]>([
+    ['city', 'city', true],
+    ['city', 'town', false],
+    ['basicAuth.username', 'basicAuth.username', true],
+    ['shipping.3.city', 'city', false],
+    ['shipping.3.city', 'shipping/city', true],
+    ['orders.0.shipping.7.city', 'shipping/city', true],
+    ['billing.3.city', 'shipping/city', false],
+    ['city', 'shipping/city', false],
+    ['shipping.city', 'shipping/city', false],
+    ['shipping.3.country', 'shipping/city', false],
+  ])('%s is named by %s: %s', (name, target, named) => {
+    expect(isTargetOf(name, target)).toBe(named)
   })
 })

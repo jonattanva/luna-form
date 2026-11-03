@@ -215,6 +215,39 @@ change the shape of the value, so it does not make a scalar default work.
 ## Validation
 
 - **`required`** _(string)_: Custom error message when no value is selected.
+- **`option`** _(string)_: Custom error message when the value is not one of the options the definition writes. See below.
+
+### Options written in the definition
+
+When `source` is an array, written inline or through a `$ref` that resolves to one, those options are the only answers the field takes, whether the field is required or not. Any other value is held back with `validation.option` as the message, or `This option is not available` when there is none. The rule is part of the field's schema, so [`buildFormSchema`](../validation/overview.md#headless-validation) and the rendered `<Form>` check it alike. This covers a stored configuration and a request made by hand, such as a value that was removed from the options after it was saved.
+
+```json
+{
+  "name": "fruit",
+  "type": "select",
+  "source": [
+    { "label": "Apple", "value": "apple" },
+    { "label": "Banana", "value": "banana" }
+  ],
+  "validation": { "option": "Pick a fruit from the list" }
+}
+```
+
+How the value is read:
+
+- **Through the mapping.** With `advanced.options.value`, the option's value is that key, so `{ "id": 101 }` offers `101`.
+- **As text.** `101` and `"101"` are the same answer, as they are when the field matches a selection.
+- **One by one for `chips`.** Every value in the array has to be offered.
+- **Empty is not this rule's question.** An empty value or an empty `chips` array passes here. `required` decides whether the field may be empty.
+
+Two kinds of field are not checked, because the definition does not know their options:
+
+- A field whose `source` is a remote `DataSource`, or a `$ref` that did not resolve.
+- A field that a [`source` change event](../events/change.md#3-source-action-sourceevent) aims at, even when it also writes an array. The target names one field, as it does for the event: `city` is the `city` at the top level, and `shipping/city` is the `city` of each `shipping` row. Any other field called `city` is still checked.
+
+A list declares its options once for every row, so each row is checked against them, however deep the list is.
+
+Writing the same values again in a [`rules`](../validation/overview.md#rules) `oneOf` assertion is no longer needed. If both are present, a value that is not offered gets both messages.
 
 ---
 
