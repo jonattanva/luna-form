@@ -284,7 +284,7 @@ describe('Input Helper', () => {
     const field: Field = { name: 'name', type: 'input/text' }
     const commonProps = { id: 'name-id' }
     const values = { name: 'John' }
-    const result = prepareInputProps(field, commonProps, undefined, values)
+    const result = prepareInputProps(field, commonProps, { value: values })
 
     expect(result).toEqual({
       commonPropsWithOptions: commonProps,
@@ -296,7 +296,7 @@ describe('Input Helper', () => {
     const field: Field = { name: 'country', type: 'select', required: true }
     const commonProps = { id: 'country-id' }
     const data = [{ label: 'USA', value: 'us' }]
-    const result = prepareInputProps(field, commonProps, data, undefined)
+    const result = prepareInputProps(field, commonProps, { data })
 
     expect(result).toEqual({
       commonPropsWithOptions: {
@@ -311,7 +311,7 @@ describe('Input Helper', () => {
     const field: Field = { name: 'country', type: 'select' }
     const commonProps = { id: 'country-id' }
     const data = { url: '/api/countries' }
-    const result = prepareInputProps(field, commonProps, data, undefined)
+    const result = prepareInputProps(field, commonProps, { data })
 
     expect(result).toEqual({
       commonPropsWithOptions: commonProps,
@@ -389,9 +389,7 @@ describe('Input Helper', () => {
       const result = prepareInputProps(
         field,
         { id: 'fruit-id' },
-        field.source as unknown[],
-        undefined,
-        translations
+        { data: field.source as unknown[], translations }
       )
 
       expect(result.commonPropsWithOptions).toEqual({
@@ -708,14 +706,10 @@ describe('date fields', () => {
   })
 
   test('should hand the component a host value in yyyy-MM-dd as it is', () => {
-    const { defaultValue } = prepareInputProps(
-      field,
-      buildCommon(field),
-      null,
-      {
-        check_in: '2024-06-15',
-      }
-    )
+    const { defaultValue } = prepareInputProps(field, buildCommon(field), {
+      data: null,
+      value: { check_in: '2024-06-15' },
+    })
 
     expect(defaultValue).toBe('2024-06-15')
     expect(prepareInputValue(field, defaultValue)).toEqual({
@@ -724,27 +718,19 @@ describe('date fields', () => {
   })
 
   test('should read a host value still in the display format', () => {
-    const { defaultValue } = prepareInputProps(
-      field,
-      buildCommon(field),
-      null,
-      {
-        check_in: '15/06/2024',
-      }
-    )
+    const { defaultValue } = prepareInputProps(field, buildCommon(field), {
+      data: null,
+      value: { check_in: '15/06/2024' },
+    })
 
     expect(defaultValue).toBe('2024-06-15')
   })
 
   test('should hand on text that is no day as it is', () => {
-    const { defaultValue } = prepareInputProps(
-      field,
-      buildCommon(field),
-      null,
-      {
-        check_in: 'next tuesday',
-      }
-    )
+    const { defaultValue } = prepareInputProps(field, buildCommon(field), {
+      data: null,
+      value: { check_in: 'next tuesday' },
+    })
 
     expect(defaultValue).toBe('next tuesday')
   })

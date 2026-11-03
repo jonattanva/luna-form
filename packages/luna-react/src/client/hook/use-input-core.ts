@@ -1,9 +1,13 @@
 import { fieldStateAtom } from '../lib/state-store'
 import { hostValueAtom } from '../lib/host-value-store'
 import { ListPathContext } from '../context/list-path-context'
-import { omitKey } from '../lib/store-helper'
+import { isUnder, omitKey, omitUnder } from '../lib/store-helper'
 import { inputErrorAtom } from '../lib/error-store'
-import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
+import {
+  heldListRowsAtom,
+  mountedListsAtom,
+  pendingListRowsAtom,
+} from '../lib/list-store'
 import {
   appliedAutoFillAtom,
   pendingAutoFillAtom,
@@ -47,6 +51,14 @@ import {
   type Localization,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
+
+// One run of `state` rules, from the change that started it to the last field
+// it emptied. `visited` holds each field whose rules ran, so a chain that loops
+// back on itself ends; `fromHost` says whether the host's own value set it off.
+type StatePass = Readonly<{
+  fromHost: boolean
+  visited: Set<string>
+}>
 
 export type InputCoreProps = Readonly<{
   ariaAttributes?: AriaAttributes
@@ -116,6 +128,7 @@ export function useInputCore(
   const setAppliedAutoFill = useSetAtom(appliedAutoFillAtom)
   const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
+  const setHeldListRows = useSetAtom(heldListRowsAtom)
 
   const schema = useInput(props.field, {
     onRegister: props.onRegister,
@@ -242,14 +255,13 @@ export function useInputCore(
   function clearTargets(targets: string[], fromHost: boolean): string[] {
     const previous = store.get(valueAtom) as Record<string, unknown>
 
-    // A target takes everything under it with it. A group or a list keeps
-    // nothing under its own name -- its values are flat `target.<leaf>` keys --
-    // so the prefix is the only way to reach them.
-    const cleared = Object.keys(previous).filter((key) => {
-      return targets.some((target) => {
-        return key === target || key.startsWith(`${target}.`)
-      })
-    })
+    // A target takes everything under it with it. See `isUnder`.
+    const cleared = Object.keys(previous).filter((key) => isUnder(key, targets))
+
+    // And the rows of every list it held, which are only worth keeping for as
+    // long as their values are: left standing, a list shown again would come
+    // back with rows for values that are gone. See `heldListRowsAtom`.
+    setHeldListRows((previous) => omitUnder(previous, targets))
 
     if (cleared.length === 0) {
       return cleared
@@ -285,13 +297,13 @@ export function useInputCore(
 
   // What one `state` rule decided, applied to its targets. `from` is the field
   // whose rule it is: a `list/field` target names a sibling in that field's
-  // row, so it has to be resolved against that field and no other.
+  // row, so it has to be resolved against that field and no other. `pass` is
+  // the run of rules this one belongs to; see `StatePass`.
   function applyState(
     from: string,
     targets: string[],
     state: FieldState | undefined,
-    visited: Set<string>,
-    fromHost: boolean
+    pass: StatePass
   ) {
     const newTargets = targets.map((target) => resolveTarget(target, from))
 
@@ -342,7 +354,7 @@ export function useInputCore(
     })
 
     if (targetsToClear.length > 0) {
-      withdrawStates(clearTargets(targetsToClear, fromHost), visited, fromHost)
+      withdrawStates(clearTargets(targetsToClear, pass.fromHost), pass)
     }
   }
 
@@ -354,7 +366,7 @@ export function useInputCore(
   //
   // So each emptied field's rules are run again as if it held nothing, which
   // it now does. That can hide and empty further fields, whose rules go the
-  // same way, as far down as the chain reaches. `visited` counts each field
+  // same way, as far down as the chain reaches. `pass.visited` counts each field
   // once, so a chain that loops back on itself still ends; the field whose own
   // change started it is in there from the start, because its rules are the
   // ones being applied.
@@ -362,17 +374,13 @@ export function useInputCore(
   // Only for what a hide emptied. A field that keeps its value through a hide
   // keeps what its rules decided, and one that held nothing had nothing
   // standing to withdraw.
-  function withdrawStates(
-    names: string[],
-    visited: Set<string>,
-    fromHost: boolean
-  ) {
+  function withdrawStates(names: string[], pass: StatePass) {
     for (const name of names) {
-      if (visited.has(name)) {
+      if (pass.visited.has(name)) {
         continue
       }
 
-      visited.add(name)
+      pass.visited.add(name)
 
       const events = props.getField(name)?.event?.change
       if (!events) {
@@ -381,7 +389,7 @@ export function useInputCore(
 
       handleProxyEvent(events, ({ states }) => {
         handleStateEvent(null, states, (targets, state) => {
-          applyState(name, targets, state, visited, fromHost)
+          applyState(name, targets, state, pass)
         })
       })
     }
@@ -395,13 +403,10 @@ export function useInputCore(
     fromHost: boolean
   ) {
     handleStateEvent(selected, states, (targets, state) => {
-      applyState(
-        props.field.name,
-        targets,
-        state,
-        new Set([props.field.name]),
-        fromHost
-      )
+      applyState(props.field.name, targets, state, {
+        fromHost,
+        visited: new Set([props.field.name]),
+      })
     })
   }
 

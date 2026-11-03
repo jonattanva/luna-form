@@ -31,11 +31,17 @@ import {
   ListPathContext,
   type TranslateListPath,
 } from '../context/list-path-context'
-import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
+import {
+  heldListRowsAtom,
+  mountedListsAtom,
+  pendingListRowsAtom,
+} from '../lib/list-store'
+import { useKeepsValue } from '../context/keep-value-context'
 import { resolveValue } from '../lib/resolve-value'
 import { useEntryAtom } from './use-entry-atom'
 import { useLatest } from './use-latest'
 import { valueAtom } from '../lib/value-store'
+import { omitUnder } from '../lib/store-helper'
 
 export function useFieldList(
   field: List,
@@ -44,8 +50,22 @@ export function useFieldList(
 ) {
   const { min, max } = getListBounds(field)
 
-  const [items, setItems] = useState<number[]>(() =>
-    getInitialList(field, value)
+  const store = useStore()
+
+  // The rows this list held the last time it was on screen, if what they held
+  // is still in the value atom. See `heldListRowsAtom`. A list that resumes is
+  // already there -- its rows, and the rows of every list inside them, under
+  // the same stable ids -- so it starts from there and from nothing else: the
+  // value it would otherwise be mounted with is the one its row was mounted
+  // with, and seeding or reading from that would put back what has been edited
+  // since.
+  const [resumed] = useState(() => {
+    const held = store.get(heldListRowsAtom)[field.name]
+    return held ? [...held] : undefined
+  })
+
+  const [items, setItems] = useState<number[]>(
+    () => resumed ?? getInitialList(field, value)
   )
 
   // The rows the last commit left, written from a layout effect rather than
@@ -58,11 +78,15 @@ export function useFieldList(
   // the rows without depending on them, or its effect would run on every row
   // added instead of only on the way out.
   const itemsRef = useLatest(items)
-  const nextId = useRef(items.length)
 
-  const store = useStore()
+  // After the last id handed out, not after the row count: a list that resumes
+  // can hold ids with gaps where rows were removed, and a new row given one of
+  // those would turn up holding a removed row's values.
+  const nextId = useRef(items.reduce((next, id) => Math.max(next, id + 1), 0))
+
   const setValues = useSetAtom(valueAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
+  const setHeldRows = useSetAtom(heldListRowsAtom)
 
   // The consumer's callback as the last commit left it, so `addItem` and
   // `handleRemove` keep their identity while still reporting to whoever is
@@ -80,7 +104,7 @@ export function useFieldList(
   // the list, where the live prop is a new object on every keystroke of a
   // controlled host. State rather than a ref, because the rows read it while
   // rendering.
-  const [initialValue] = useState(value)
+  const [initialValue] = useState(resumed ? undefined : value)
 
   // A row's leaves, columns walked through, computed once per field. Kept as
   // the definitions rather than only the names because assigning has to tell a
@@ -256,12 +280,14 @@ export function useFieldList(
       const stableId = itemsRef.current[index]
       const nextItems = itemsRef.current.filter((_, i) => i !== index)
 
+      // The row takes everything under it: its leaves, and the rows and values
+      // of every list inside it, which are keys further down its name and ids
+      // held under it. Leaving those would keep them for the life of the form.
+      // See `isUnder`.
+      const row = `${field.name}.${stableId}`
       const currentValues = store.get(valueAtom)
-      const nextValues = { ...currentValues }
-
-      for (const name of leafNames) {
-        delete nextValues[itemKey(field.name, stableId, name)]
-      }
+      const nextValues = omitUnder(currentValues, [row])
+      setHeldRows((previous) => omitUnder(previous, [row]))
 
       const previousRows = computeListValue(itemsRef.current, currentValues)
       const nextRows = computeListValue(nextItems, nextValues)
@@ -275,8 +301,8 @@ export function useFieldList(
       emitRows,
       field.name,
       itemsRef,
-      leafNames,
       min,
+      setHeldRows,
       setValues,
       store,
     ]
@@ -303,6 +329,16 @@ export function useFieldList(
       keepValue,
     })
   }, [field.hidden, keepValue, items, leafNames, reportMounted])
+
+  // Held exactly when the leaves keep their values on the way out, by the same
+  // rule they read. See `useKeepsValue`.
+  const keepsRows = useKeepsValue(field)
+  const holdRows = useSetAtom(useEntryAtom(heldListRowsAtom, field.name))
+  useEffect(() => {
+    if (keepsRows) {
+      holdRows(items)
+    }
+  }, [holdRows, items, keepsRows])
 
   // On the way out, leave what this list holds under its own name -- where a
   // list above it already looks -- and only then stop answering.
