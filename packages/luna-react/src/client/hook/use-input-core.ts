@@ -70,7 +70,12 @@ export type InputCoreProps = Readonly<{
   getField: (name: string) => Field | undefined
   horizontal?: boolean
   localization?: Localization
-  onRegister: (name: string, schema: Schema, field: Field) => void
+  onRegister: (
+    name: string,
+    schema: Schema,
+    field: Field,
+    offered?: ReadonlySet<string>
+  ) => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean

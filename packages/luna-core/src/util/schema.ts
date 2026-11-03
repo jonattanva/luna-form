@@ -817,10 +817,45 @@ function applyOffered(
     return schema
   }
 
-  return schema.refine((value) => {
-    const picked = Array.isArray(value) ? value : [value]
-    return picked.every((item) => isEmpty(item) || offered.has(String(item)))
-  }, message)
+  return schema.refine((value) => isOffered(offered, value), message)
+}
+
+// What a field holds that it offers options for: its whole name, the options
+// its definition writes, and the value in the form's state.
+export type HeldOption = Readonly<{
+  name: string
+  offered: ReadonlySet<string>
+  value: unknown
+}>
+
+// The data a submit validates. A `select`, `radio` or `chips` draws only the
+// options it offers, so a value it holds outside them is not on screen, and
+// what the browser sends for it is not what the field holds: a native select
+// behind the control sends its first option, an option nobody picked, and a
+// radio sends nothing. For such a value the data carries the value the field
+// holds, so the field's schema says it is not one of its options and nothing
+// is sent in its place. A value it offers, or none, is left as the control
+// sent it.
+export function withHeldOptions(
+  form: Record<string, unknown>,
+  held: ReadonlyArray<HeldOption>
+): Record<string, unknown> {
+  let data = form
+  for (const { name, offered, value } of held) {
+    if (!isOffered(offered, value)) {
+      data = data === form ? { ...form } : data
+      data[name] = value
+    }
+  }
+  return data
+}
+
+// Whether every value picked is one of `offered`: the text of a `select` or
+// `radio`, each entry of a `chips`. Nothing picked is the required rule's
+// question, not this one, so it is offered here.
+export function isOffered(offered: ReadonlySet<string>, value: unknown) {
+  const picked = Array.isArray(value) ? value : [value]
+  return picked.every((item) => isEmpty(item) || offered.has(String(item)))
 }
 
 // Groups dotted field names (e.g. `basicAuth.username`) into nested objects so

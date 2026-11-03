@@ -9,6 +9,8 @@ import {
   getSchema,
   getText,
   getYearSchema,
+  isOffered,
+  withHeldOptions,
 } from '@/packages/luna-core/src/util/schema'
 import { isTargetOf } from '@/packages/luna-core/src/util/path'
 import { z } from 'zod'
@@ -1842,5 +1844,69 @@ describe('isTargetOf', () => {
     ['shipping.3.country', 'shipping/city', false],
   ])('%s is named by %s: %s', (name, target, named) => {
     expect(isTargetOf(name, target)).toBe(named)
+  })
+})
+
+// Whether what a field holds is one of its options, which the submit asks of
+// the value the field holds.
+describe('isOffered', () => {
+  const offered = new Set(['lim', 'cus', '101'])
+
+  test.each<[unknown, boolean]>([
+    ['lim', true],
+    ['xyz', false],
+    [101, true],
+    ['', true],
+    [undefined, true],
+    [null, true],
+    [[], true],
+    [['lim', 'cus'], true],
+    [['lim', 'xyz'], false],
+    [['', 'lim'], true],
+  ])('%j: %s', (value, expected) => {
+    expect(isOffered(offered, value)).toBe(expected)
+  })
+})
+
+// The data a submit validates: what the browser sent, with the value a field
+// holds in its place when that value is not one of the field's options.
+describe('withHeldOptions', () => {
+  const offered = new Set(['lim', 'cus'])
+
+  test('carries a value the field does not offer in place of what was sent', () => {
+    expect(
+      withHeldOptions({ city: 'lim' }, [
+        { name: 'city', offered, value: 'xyz' },
+      ])
+    ).toEqual({ city: 'xyz' })
+    expect(
+      withHeldOptions({}, [{ name: 'orders.3.city', offered, value: 'xyz' }])
+    ).toEqual({ 'orders.3.city': 'xyz' })
+    expect(
+      withHeldOptions({ cities: ['lim', 'xyz'] }, [
+        { name: 'cities', offered, value: ['lim', 'xyz'] },
+      ])
+    ).toEqual({ cities: ['lim', 'xyz'] })
+  })
+
+  test('leaves what was sent for a value it offers, or none', () => {
+    const form = { city: '', other: 'x' }
+
+    expect(
+      withHeldOptions(form, [
+        { name: 'city', offered, value: 'lim' },
+        { name: 'town', offered, value: undefined },
+        { name: 'city', offered, value: '' },
+      ])
+    ).toBe(form)
+    expect(withHeldOptions(form, [])).toBe(form)
+  })
+
+  test('does not change the data it was given', () => {
+    const form = { city: 'lim' }
+
+    withHeldOptions(form, [{ name: 'city', offered, value: 'xyz' }])
+
+    expect(form).toEqual({ city: 'lim' })
   })
 })

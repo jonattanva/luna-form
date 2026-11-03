@@ -1,6 +1,6 @@
-import { useSetAtom } from 'jotai'
+import { useSetAtom, useStore } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
-import { clearAllValueAtom } from '../lib/value-store'
+import { clearAllValueAtom, valueAtom } from '../lib/value-store'
 import { requestFormReset } from 'react-dom'
 import {
   startTransition,
@@ -13,6 +13,7 @@ import {
   buildSchema,
   flatten,
   getFormData,
+  withHeldOptions,
   logger,
   translateBuiltIn,
   unflatten,
@@ -37,7 +38,11 @@ export type FormActionOptions<T> = {
 }
 
 export function useFormState<T, F = Record<string, unknown>>(
-  getSchema: () => readonly [Schemas, Field[]],
+  getSchema: () => readonly [
+    Schemas,
+    Field[],
+    Array<{ name: string; offered: ReadonlySet<string> }>,
+  ],
   action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
@@ -48,6 +53,7 @@ export function useFormState<T, F = Record<string, unknown>>(
     translations,
   } = options ?? {}
 
+  const store = useStore()
   const setError = useSetAtom(reportErrorAtom)
   const clearValues = useSetAtom(clearAllValueAtom)
 
@@ -65,7 +71,7 @@ export function useFormState<T, F = Record<string, unknown>>(
       prevState: FormState<T>,
       formData: FormData
     ): Promise<FormState<T>> => {
-      const [schemas, fields] = getSchema()
+      const [schemas, fields, options] = getSchema()
 
       const schema = buildSchema(schemas, fields, translations)
       if (validation === false) {
@@ -77,7 +83,15 @@ export function useFormState<T, F = Record<string, unknown>>(
 
       // A date leaves the schema as `yyyy-MM-dd` whatever the field showed, so
       // what is sent below is what the schema returns, not what was submitted.
-      const form = getFormData(formData)
+      const values = store.get(valueAtom)
+      const form = withHeldOptions(
+        getFormData(formData),
+        options.map(({ name, offered }) => ({
+          name,
+          offered,
+          value: values[name],
+        }))
+      )
       const validated = schema.safeParse(form)
 
       if (!validated.success) {
