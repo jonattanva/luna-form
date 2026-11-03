@@ -5,7 +5,9 @@ import {
   createContributionAtom,
   createEntryAtom,
   createNestedClearAtom,
+  isUnder,
   omitKey,
+  omitUnder,
 } from '@/packages/luna-react/src/client/lib/store-helper'
 
 describe('store-helper', () => {
@@ -394,6 +396,40 @@ describe('store-helper', () => {
       store.set(bulkReport, { a: 2 })
       expect(updates).toBe(1)
       expect(store.get(base)).toEqual({ a: 2 })
+    })
+  })
+
+  describe('isUnder', () => {
+    test('takes the target itself and every key it is a prefix of', () => {
+      expect(isUnder('field.0.inner', ['field.0.inner'])).toBe(true)
+      expect(isUnder('field.0.inner.2.label', ['field.0.inner'])).toBe(true)
+    })
+
+    test('does not take a sibling whose name only starts the same', () => {
+      expect(isUnder('field.0.innerNote', ['field.0.inner'])).toBe(false)
+      expect(isUnder('field.0', ['field.0.inner'])).toBe(false)
+    })
+  })
+
+  describe('omitUnder', () => {
+    test('drops the rows of every list under a target', () => {
+      const held = {
+        'field.0.inner': [0, 2],
+        'field.0.inner.2.deeper': [1],
+        'field.1.inner': [0],
+      }
+
+      expect(omitUnder(held, ['field.0.inner'])).toEqual({
+        'field.1.inner': [0],
+      })
+    })
+
+    // A write of the same record is no change to anyone subscribed to it,
+    // which is what lets the clear drop held rows on every hide for free.
+    test('returns the same record when nothing is under a target', () => {
+      const held = { 'field.1.inner': [0] }
+
+      expect(omitUnder(held, ['field.0.inner'])).toBe(held)
     })
   })
 })
