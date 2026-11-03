@@ -3,13 +3,18 @@ import { getSchema, keepsValue } from '@luna-form/core'
 import { use, useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
-export function useInput(
-  field: Field,
-  onRegister: (name: string, schema: Schema, field: Field) => void,
-  onUnmount: (name: string, options?: { keepValue?: boolean }) => void,
-  translations?: Record<string, string>,
+// What a field registers itself with, and what its schema is built from.
+// Read off one at a time below, so each memo and effect depends on the values
+// it uses and not on this object, which is a new one on every render.
+type InputOptions = Readonly<{
+  onRegister: (name: string, schema: Schema, field: Field) => void
+  onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   sourceTargets?: ReadonlySet<string>
-) {
+  translations?: Record<string, string>
+}>
+
+export function useInput(field: Field, options: InputOptions) {
+  const { onRegister, onUnmount, sourceTargets, translations } = options
   const { name } = field
   const schema = useMemo(
     () => getSchema(field, translations, sourceTargets),
