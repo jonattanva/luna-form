@@ -2,7 +2,13 @@ import { useCallback, useRef } from 'react'
 import { useStore } from './use-store'
 import type { Field, Schema } from '@luna-form/core'
 
-type Registration = Readonly<{ field: Field; schema: Schema }>
+// `offered` is what the field's definition writes for its options, when it
+// writes them. See `withHeldOptions`.
+type Registration = Readonly<{
+  field: Field
+  offered?: ReadonlySet<string>
+  schema: Schema
+}>
 
 export function useSchema() {
   const clear = useStore()
@@ -18,8 +24,13 @@ export function useSchema() {
   // read. A name registered before keeps its place: `Map` updates it where it
   // stands.
   const onRegister = useCallback(
-    (name: string, schema: Schema, field: Field) => {
-      registry.current.set(name, { field, schema })
+    (
+      name: string,
+      schema: Schema,
+      field: Field,
+      offered?: ReadonlySet<string>
+    ) => {
+      registry.current.set(name, { field, offered, schema })
     },
     []
   )
@@ -35,9 +46,10 @@ export function useSchema() {
     [clear]
   )
 
-  // What the submit validates: every schema by name, and the fields whose
-  // declarative rules apply. `Object.fromEntries` makes each name a property of
-  // its own, where an assignment named `__proto__` would reach a setter.
+  // What the submit validates: every schema by name, the fields whose
+  // declarative rules apply, and the options of the fields that write them.
+  // `Object.fromEntries` makes each name a property of its own, where an
+  // assignment named `__proto__` would reach a setter.
   const getSchema = useCallback(() => {
     const registrations = [...registry.current]
     return [
@@ -45,6 +57,9 @@ export function useSchema() {
         registrations.map(([name, { schema }]) => [name, schema])
       ),
       registrations.map(([, { field }]) => field),
+      registrations.flatMap(([name, { offered }]) =>
+        offered ? [{ name, offered }] : []
+      ),
     ] as const
   }, [])
 

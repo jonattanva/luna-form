@@ -1,11 +1,16 @@
 import { KeepValueContext } from '../context/keep-value-context'
-import { getSchema, keepsValue } from '@luna-form/core'
+import { getOfferedValues, getSchema, keepsValue } from '@luna-form/core'
 import { use, useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
   field: Field,
-  onRegister: (name: string, schema: Schema, field: Field) => void,
+  onRegister: (
+    name: string,
+    schema: Schema,
+    field: Field,
+    offered?: ReadonlySet<string>
+  ) => void,
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void,
   translations?: Record<string, string>,
   sourceTargets?: ReadonlySet<string>
@@ -14,6 +19,13 @@ export function useInput(
   const schema = useMemo(
     () => getSchema(field, translations, sourceTargets),
     [field, translations, sourceTargets]
+  )
+
+  // The options the definition writes, which the submit holds the field's
+  // value to. See `withHeldOptions`.
+  const offered = useMemo(
+    () => getOfferedValues(field, sourceTargets),
+    [field, sourceTargets]
   )
 
   // The field's own declaration ADDS to what it inherits, never replaces it:
@@ -34,9 +46,9 @@ export function useInput(
   // and the events read, and registering once per name kept the first.
   useEffect(() => {
     if (name) {
-      onRegister(name, schema, field)
+      onRegister(name, schema, field, offered)
     }
-  }, [name, schema, field, onRegister])
+  }, [name, schema, field, offered, onRegister])
 
   const onUnmountHandler = useEffectEvent((name: string) => {
     if (name) {
