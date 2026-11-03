@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793738313827,
+  "lastUpdate": 1793738345246,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "fa75fba7d5ce464b29f86723dfd028e912c8643a",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-08-02T00:29:54-05:00",
-          "tree_id": "a5df4033a8e96fd91c70e1d1a8dcd109e7721bd9",
-          "url": "https://github.com/jonattanva/luna-form/commit/fa75fba7d5ce464b29f86723dfd028e912c8643a"
-        },
-        "date": 1785648683675,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 279,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 520,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "860fecff25e23b8531b43b4b46156be5ba96f1ee",
           "message": "upgrade dependencies",
           "timestamp": "2026-08-02T01:21:54-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b92dbdff68a5bf0650eb88530d7e2028f4a34c6",
+          "message": "Merge pull request #141 from jonattanva/claude/held-options-to-main\n\nfix(form): check the value a field holds when its options cannot show it",
+          "timestamp": "2026-11-03T15:37:23-05:00",
+          "tree_id": "0de11970074337d8d59282c86e262626660b607b",
+          "url": "https://github.com/jonattanva/luna-form/commit/4b92dbdff68a5bf0650eb88530d7e2028f4a34c6"
+        },
+        "date": 1793738345214,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 37.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 21.1,
             "unit": "ms"
           }
         ]
