@@ -30,9 +30,11 @@ export function Input(
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
     props.commonProps,
-    source,
-    props.value,
-    props.localization?.translations
+    {
+      data: source,
+      translations: props.localization?.translations,
+      value: props.value,
+    }
   )
 
   const defaultProps = prepareDefaultValue(props.field, defaultValue)

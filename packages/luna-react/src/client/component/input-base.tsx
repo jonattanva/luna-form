@@ -67,9 +67,13 @@ export function InputBase(
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,
     commonProps,
-    data,
-    value,
-    isStaticSource ? props.localization?.translations : undefined
+    {
+      data,
+      translations: isStaticSource
+        ? props.localization?.translations
+        : undefined,
+      value,
+    }
   )
 
   const inputProps = prepareInputValue(props.field, defaultValue)
