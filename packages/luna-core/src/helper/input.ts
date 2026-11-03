@@ -397,12 +397,19 @@ export function getOptions<T>(
   return data
 }
 
+// What a field is rendered from besides its definition and common props: its
+// options, the value it holds, and the dictionary its inline options' labels
+// are read in.
+export type InputSource<T, K> = Readonly<{
+  data?: Nullable<DataSource | T[]>
+  translations?: Record<string, string>
+  value?: Nullable<K>
+}>
+
 export function prepareInputProps<T, K>(
   field: Field,
   commonProps: CommonProps,
-  data?: Nullable<DataSource | T[]>,
-  value?: Nullable<K>,
-  translations?: Record<string, string>
+  { data, translations, value }: InputSource<T, K>
 ) {
   const currentValue = getInputValue(field, value)
   const options = Array.isArray(data)

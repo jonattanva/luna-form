@@ -52,6 +52,14 @@ import {
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
 
+// One run of `state` rules, from the change that started it to the last field
+// it emptied. `visited` holds each field whose rules ran, so a chain that loops
+// back on itself ends; `fromHost` says whether the host's own value set it off.
+type StatePass = Readonly<{
+  fromHost: boolean
+  visited: Set<string>
+}>
+
 export type InputCoreProps = Readonly<{
   ariaAttributes?: AriaAttributes
   commonProps: CommonProps
@@ -284,13 +292,13 @@ export function useInputCore(
 
   // What one `state` rule decided, applied to its targets. `from` is the field
   // whose rule it is: a `list/field` target names a sibling in that field's
-  // row, so it has to be resolved against that field and no other.
+  // row, so it has to be resolved against that field and no other. `pass` is
+  // the run of rules this one belongs to; see `StatePass`.
   function applyState(
     from: string,
     targets: string[],
     state: FieldState | undefined,
-    visited: Set<string>,
-    fromHost: boolean
+    pass: StatePass
   ) {
     const newTargets = targets.map((target) => resolveTarget(target, from))
 
@@ -341,7 +349,7 @@ export function useInputCore(
     })
 
     if (targetsToClear.length > 0) {
-      withdrawStates(clearTargets(targetsToClear, fromHost), visited, fromHost)
+      withdrawStates(clearTargets(targetsToClear, pass.fromHost), pass)
     }
   }
 
@@ -353,7 +361,7 @@ export function useInputCore(
   //
   // So each emptied field's rules are run again as if it held nothing, which
   // it now does. That can hide and empty further fields, whose rules go the
-  // same way, as far down as the chain reaches. `visited` counts each field
+  // same way, as far down as the chain reaches. `pass.visited` counts each field
   // once, so a chain that loops back on itself still ends; the field whose own
   // change started it is in there from the start, because its rules are the
   // ones being applied.
@@ -361,17 +369,13 @@ export function useInputCore(
   // Only for what a hide emptied. A field that keeps its value through a hide
   // keeps what its rules decided, and one that held nothing had nothing
   // standing to withdraw.
-  function withdrawStates(
-    names: string[],
-    visited: Set<string>,
-    fromHost: boolean
-  ) {
+  function withdrawStates(names: string[], pass: StatePass) {
     for (const name of names) {
-      if (visited.has(name)) {
+      if (pass.visited.has(name)) {
         continue
       }
 
-      visited.add(name)
+      pass.visited.add(name)
 
       const events = props.getField(name)?.event?.change
       if (!events) {
@@ -380,7 +384,7 @@ export function useInputCore(
 
       handleProxyEvent(events, ({ states }) => {
         handleStateEvent(null, states, (targets, state) => {
-          applyState(name, targets, state, visited, fromHost)
+          applyState(name, targets, state, pass)
         })
       })
     }
@@ -394,13 +398,10 @@ export function useInputCore(
     fromHost: boolean
   ) {
     handleStateEvent(selected, states, (targets, state) => {
-      applyState(
-        props.field.name,
-        targets,
-        state,
-        new Set([props.field.name]),
-        fromHost
-      )
+      applyState(props.field.name, targets, state, {
+        fromHost,
+        visited: new Set([props.field.name]),
+      })
     })
   }
 

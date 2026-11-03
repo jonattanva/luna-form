@@ -16,7 +16,12 @@
     },
     "lint": {
       "dependsOn": ["transit"],
-      "inputs": ["src/**", "eslint.config.*"],
+      "inputs": [
+        "src/**",
+        "eslint.config.*",
+        "$TURBO_ROOT$/eslint.config.mjs",
+        "$TURBO_ROOT$/.config/eslint-*.mjs"
+      ],
       "outputs": []
     },
     "dev": {

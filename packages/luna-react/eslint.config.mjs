@@ -3,6 +3,7 @@ import eslintReactHooks from 'eslint-plugin-react-hooks'
 import eslintReactRefresh from 'eslint-plugin-react-refresh'
 import {
   baseConfig,
+  librarySourceConfig,
   tsWithJsxA11yConfig,
   eslintTypeScript,
   globals,
@@ -38,6 +39,7 @@ export default defineConfig([
     },
   },
   tsWithJsxA11yConfig(import.meta.dirname),
+  librarySourceConfig,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
