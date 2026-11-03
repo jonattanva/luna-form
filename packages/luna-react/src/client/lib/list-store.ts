@@ -84,3 +84,24 @@ export type MountedList = {
 const mountedLists = createAtomStore<MountedList>()
 
 export const mountedListsAtom = mountedLists.atom
+
+/**
+ * The stable ids of a list's rows, by the list's name, held for as long as the
+ * values in those rows are.
+ *
+ * A list that keeps its value through a hide still loses its rows: their ids
+ * are `useState`, and a hide unmounts it. What the rows held is still in the
+ * value atom, keyed by those ids, and a list nested in one of the rows is named
+ * after one of them -- so a list that came back numbering its rows afresh read
+ * none of it, and showed no rows, or the row count of the value its own row was
+ * mounted with, while the form went on reporting every row it had.
+ *
+ * Written while the list is on screen, by a list whose leaves keep their values
+ * when it goes, and dropped by the clear that takes those values: a hide that
+ * keeps nothing takes the ids with the values, under the same names. Written on
+ * the way out it would come too late -- that clear runs before the unmount, and
+ * the ids would be left standing over values that are gone.
+ */
+const heldRows = createAtomStore<readonly number[]>()
+
+export const heldListRowsAtom = heldRows.atom

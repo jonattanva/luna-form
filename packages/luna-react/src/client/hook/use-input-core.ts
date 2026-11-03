@@ -1,9 +1,13 @@
 import { fieldStateAtom } from '../lib/state-store'
 import { hostValueAtom } from '../lib/host-value-store'
 import { ListPathContext } from '../context/list-path-context'
-import { omitKey } from '../lib/store-helper'
+import { isUnder, omitKey, omitUnder } from '../lib/store-helper'
 import { inputErrorAtom } from '../lib/error-store'
-import { mountedListsAtom, pendingListRowsAtom } from '../lib/list-store'
+import {
+  heldListRowsAtom,
+  mountedListsAtom,
+  pendingListRowsAtom,
+} from '../lib/list-store'
 import {
   appliedAutoFillAtom,
   pendingAutoFillAtom,
@@ -110,6 +114,7 @@ export function useInputCore(
   const setAppliedAutoFill = useSetAtom(appliedAutoFillAtom)
   const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
+  const setHeldListRows = useSetAtom(heldListRowsAtom)
 
   const schema = useInput(
     props.field,
@@ -236,14 +241,13 @@ export function useInputCore(
   function clearTargets(targets: string[], fromHost: boolean): string[] {
     const previous = store.get(valueAtom) as Record<string, unknown>
 
-    // A target takes everything under it with it. A group or a list keeps
-    // nothing under its own name -- its values are flat `target.<leaf>` keys --
-    // so the prefix is the only way to reach them.
-    const cleared = Object.keys(previous).filter((key) => {
-      return targets.some((target) => {
-        return key === target || key.startsWith(`${target}.`)
-      })
-    })
+    // A target takes everything under it with it. See `isUnder`.
+    const cleared = Object.keys(previous).filter((key) => isUnder(key, targets))
+
+    // And the rows of every list it held, which are only worth keeping for as
+    // long as their values are: left standing, a list shown again would come
+    // back with rows for values that are gone. See `heldListRowsAtom`.
+    setHeldListRows((previous) => omitUnder(previous, targets))
 
     if (cleared.length === 0) {
       return cleared

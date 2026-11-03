@@ -10,6 +10,29 @@ export function omitKey<T extends Record<string, unknown>>(
   return rest as T
 }
 
+// Whether a key is one of the targets or lies under one. A group or a list
+// keeps nothing under its own name -- its values are flat `target.<leaf>` keys,
+// a list inside a list one level further down -- so a target that takes
+// everything it holds takes every key its name is a prefix of.
+export function isUnder(key: string, targets: readonly string[]): boolean {
+  return targets.some((target) => {
+    return key === target || key.startsWith(`${target}.`)
+  })
+}
+
+// The record without any key under the targets. The same record when there is
+// none, so a write of it is no change to anyone reading it.
+export function omitUnder<T>(
+  record: Record<string, T>,
+  targets: readonly string[]
+): Record<string, T> {
+  const keys = Object.keys(record).filter((key) => isUnder(key, targets))
+  if (keys.length === 0) {
+    return record
+  }
+  return keys.reduce((next, key) => omitKey(next, key), record)
+}
+
 // One entry of the record, as an atom of its own.
 //
 // Made by whoever reads it, in `useEntryAtom`, rather than cached by name for

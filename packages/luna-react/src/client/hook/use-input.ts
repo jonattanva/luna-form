@@ -1,6 +1,6 @@
-import { KeepValueContext } from '../context/keep-value-context'
-import { getSchema, keepsValue } from '@luna-form/core'
-import { use, useEffect, useEffectEvent, useMemo } from 'react'
+import { getSchema } from '@luna-form/core'
+import { useKeepsValue } from '../context/keep-value-context'
+import { useEffect, useEffectEvent, useMemo } from 'react'
 import type { Field, Schema } from '@luna-form/core'
 
 export function useInput(
@@ -15,17 +15,14 @@ export function useInput(
     [field, translations]
   )
 
-  // The field's own declaration ADDS to what it inherits, never replaces it:
-  // a field inside a collapsible is already kept, and its own `keepValue` must
-  // not be the thing that starts dropping it.
+  // Whether the field is kept is `useKeepsValue`'s question.
   //
   // Both clears have to honour the flag or it only half works. This one is the
   // quiet half -- it empties the form's copy without telling the consumer, so
   // on a controlled form the value comes back from the host anyway and the
   // flag looks unnecessary. On a form that holds its own values it is the only
   // clear there is.
-  const inherited = use(KeepValueContext)
-  const keepValue = inherited || keepsValue(field)
+  const keepValue = useKeepsValue(field)
 
   // Registered again whenever the definition changes, not only when the field
   // mounts. A definition replaced without a remount -- the editor swapping its
