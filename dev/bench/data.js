@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793737233056,
+  "lastUpdate": 1793737280186,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "2525ad2c64f500d6482f8e62fe2ba3575ff515da",
-          "message": "Merge pull request #51 from jonattanva/fix/benchmark-gh-pages-fetch\n\nfix(ci): stop the browser benchmark from refetching gh-pages",
-          "timestamp": "2026-08-02T00:20:12-05:00",
-          "tree_id": "09f3843251bb8479cc8e8009991c6dbfe177db72",
-          "url": "https://github.com/jonattanva/luna-form/commit/2525ad2c64f500d6482f8e62fe2ba3575ff515da"
-        },
-        "date": 1785648096279,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 208,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 149,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 21.3,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a02621cfaab50a0ca42bc4d5e25c11f2b47c46c",
+          "message": "Merge pull request #140 from jonattanva/claude/max-params\n\nchore(lint): hold the library's functions to four parameters",
+          "timestamp": "2026-11-03T15:18:36-05:00",
+          "tree_id": "c8eee4fbf1e896a4b1bb811fd101023b470f1fcf",
+          "url": "https://github.com/jonattanva/luna-form/commit/6a02621cfaab50a0ca42bc4d5e25c11f2b47c46c"
+        },
+        "date": 1793737280084,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 38.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.9,
             "unit": "ms"
           }
         ]
