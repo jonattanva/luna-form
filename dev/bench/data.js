@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793737163161,
+  "lastUpdate": 1793737205536,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "987649b543ee1ac1ba34b881c2e256bd260adeea",
-          "message": "Merge pull request #45 from jonattanva/fix/section-translation\n\nFix/section translation",
-          "timestamp": "2026-08-01T23:38:04-05:00",
-          "tree_id": "dbceddff403963f0c45874ed32bd2ac47ddb5e33",
-          "url": "https://github.com/jonattanva/luna-form/commit/987649b543ee1ac1ba34b881c2e256bd260adeea"
-        },
-        "date": 1785645565715,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 286,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 626,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "2525ad2c64f500d6482f8e62fe2ba3575ff515da",
           "message": "Merge pull request #51 from jonattanva/fix/benchmark-gh-pages-fetch\n\nfix(ci): stop the browser benchmark from refetching gh-pages",
           "timestamp": "2026-08-02T00:20:12-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 26.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ae9971acfc4e39193c70cb716e0b324fce6909b",
+          "message": "Merge pull request #138 from jonattanva/claude/fixed-options\n\nfeat(schema): hold a field to the options its definition writes",
+          "timestamp": "2026-11-03T15:18:23-05:00",
+          "tree_id": "c0fd7f71fdfc2cf5abb2ba00a9c6e51a123c0686",
+          "url": "https://github.com/jonattanva/luna-form/commit/1ae9971acfc4e39193c70cb716e0b324fce6909b"
+        },
+        "date": 1793737205452,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 77.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 21.3,
             "unit": "ms"
           }
         ]
