@@ -36,11 +36,12 @@ import {
   mountedListsAtom,
   pendingListRowsAtom,
 } from '../lib/list-store'
-import { KeepValueContext } from '../context/keep-value-context'
+import { useKeepsValue } from '../context/keep-value-context'
 import { resolveValue } from '../lib/resolve-value'
 import { useEntryAtom } from './use-entry-atom'
 import { useLatest } from './use-latest'
 import { valueAtom } from '../lib/value-store'
+import { omitUnder } from '../lib/store-helper'
 
 export function useFieldList(
   field: List,
@@ -85,6 +86,7 @@ export function useFieldList(
 
   const setValues = useSetAtom(valueAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
+  const setHeldRows = useSetAtom(heldListRowsAtom)
 
   // The consumer's callback as the last commit left it, so `addItem` and
   // `handleRemove` keep their identity while still reporting to whoever is
@@ -278,12 +280,14 @@ export function useFieldList(
       const stableId = itemsRef.current[index]
       const nextItems = itemsRef.current.filter((_, i) => i !== index)
 
+      // The row takes everything under it: its leaves, and the rows and values
+      // of every list inside it, which are keys further down its name and ids
+      // held under it. Leaving those would keep them for the life of the form.
+      // See `isUnder`.
+      const row = `${field.name}.${stableId}`
       const currentValues = store.get(valueAtom)
-      const nextValues = { ...currentValues }
-
-      for (const name of leafNames) {
-        delete nextValues[itemKey(field.name, stableId, name)]
-      }
+      const nextValues = omitUnder(currentValues, [row])
+      setHeldRows((previous) => omitUnder(previous, [row]))
 
       const previousRows = computeListValue(itemsRef.current, currentValues)
       const nextRows = computeListValue(nextItems, nextValues)
@@ -297,8 +301,8 @@ export function useFieldList(
       emitRows,
       field.name,
       itemsRef,
-      leafNames,
       min,
+      setHeldRows,
       setValues,
       store,
     ]
@@ -326,11 +330,9 @@ export function useFieldList(
     })
   }, [field.hidden, keepValue, items, leafNames, reportMounted])
 
-  // Held exactly when the leaves keep their values on the way out, which is the
-  // rule `useInput` reads -- what it inherits, or its own `keepValue`. Rows held
-  // for values that were dropped would come back empty; values kept without
-  // their rows would not come back at all.
-  const keepsRows = use(KeepValueContext) || keepsValue(field)
+  // Held exactly when the leaves keep their values on the way out, by the same
+  // rule they read. See `useKeepsValue`.
+  const keepsRows = useKeepsValue(field)
   const holdRows = useSetAtom(useEntryAtom(heldListRowsAtom, field.name))
   useEffect(() => {
     if (keepsRows) {

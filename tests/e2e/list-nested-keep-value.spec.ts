@@ -191,3 +191,256 @@ for (const [form, path] of [
     })
   })
 }
+
+// What the form sends, read off the request to the action: the page shows the
+// last answer until the new one renders.
+async function submitted(page: Page): Promise<unknown> {
+  const request = page.waitForRequest((sent) => sent.method() === 'POST')
+  await page.getByRole('button', { name: 'Submit' }).click()
+  const [sent] = JSON.parse((await request).postData() ?? '[]')
+  await expect(page.getByText('Form submitted successfully')).toBeVisible()
+  return sent
+}
+
+/** A `type` chips whose "Group" shows `target`. */
+const showsOn = (target: string) => ({
+  name: 'type',
+  type: 'chips',
+  advanced: { multiple: false, options: { label: 'name', value: 'id' } },
+  source: [
+    { id: 'text', name: 'Text' },
+    { id: 'group', name: 'Group' },
+  ],
+  event: {
+    change: [
+      { action: 'state', target, state: { hidden: false }, when: ['group'] },
+    ],
+  },
+})
+
+/** A list `showsOn` reveals, holding `fields`. */
+const kept = (name: string, fields: unknown[], keepValue = true) => ({
+  label: 'Inside',
+  name,
+  type: 'list',
+  hidden: true,
+  advanced: { action: `Add ${name}`, keepValue, length: { min: 0 } },
+  fields,
+})
+
+const LABEL = { label: 'Label', name: 'label', type: 'input/text' }
+
+/** Fills a new row of `list` at `nth`, after adding it. */
+async function addRow(page: Page, list: string, nth: number, text: string) {
+  await page.getByRole('button', { name: `Add ${list}` }).click()
+  const input = page.locator(`input[name*="${list}."][name$=".label"]`).nth(nth)
+  await input.fill(text)
+  await expect(input).toHaveValue(text)
+}
+
+test.describe(
+  'A kept list shown again sends what it held',
+  { tag: ['@e2e'] },
+  () => {
+    // Each one is run twice: once hidden and shown again before the submit, once
+    // not. The two have to send the same.
+    const run = async (
+      page: Page,
+      definition: unknown,
+      fill: (page: Page) => Promise<void>,
+      hideAndShow: (page: Page) => Promise<void>
+    ) => {
+      await inject(page, JSON.stringify(definition))
+      await page.goto('/reactive')
+      await fill(page)
+      await hideAndShow(page)
+      return submitted(page)
+    }
+
+    const none = async () => {}
+    const textThenGroup =
+      (nth = 0) =>
+      async (page: Page) => {
+        await chip(page, 'Text').nth(nth).click()
+        await chip(page, 'Group').nth(nth).click()
+      }
+
+    test('in a row of a list', async ({ page }) => {
+      const definition = {
+        sections: [
+          {
+            fields: [
+              {
+                name: 'field',
+                type: 'list',
+                advanced: { length: { min: 1 } },
+                fields: [showsOn('field/inner'), kept('inner', [LABEL])],
+              },
+            ],
+          },
+        ],
+      }
+      const fill = async (page: Page) => {
+        await chip(page, 'Group').click()
+        await addRow(page, 'inner', 0, 'Name')
+        await addRow(page, 'inner', 1, 'Phone')
+      }
+
+      const sent = await run(page, definition, fill, textThenGroup())
+
+      expect(sent).toEqual(await run(page, definition, fill, none))
+      expect(sent).toEqual({
+        field: [
+          { type: ['group'], inner: [{ label: 'Name' }, { label: 'Phone' }] },
+        ],
+      })
+    })
+
+    test('with an edit made after it was shown again', async ({ page }) => {
+      await inject(page, definition(true))
+      await page.goto('/reactive')
+      await groupWithRows(page, '/reactive')
+      await chip(page, 'Text').click()
+      await chip(page, 'Group').click()
+
+      await labels(page).nth(0).fill('Email')
+
+      expect(await submitted(page)).toEqual({
+        field: [
+          { type: ['group'], inner: [{ label: 'Email' }, { label: 'Phone' }] },
+        ],
+      })
+    })
+
+    test('three levels down', async ({ page }) => {
+      const definition = {
+        sections: [
+          {
+            fields: [
+              {
+                name: 'field',
+                type: 'list',
+                advanced: { length: { min: 1 } },
+                fields: [
+                  showsOn('field/inner'),
+                  kept('inner', [showsOn('inner/deep'), kept('deep', [LABEL])]),
+                ],
+              },
+            ],
+          },
+        ],
+      }
+      const fill = async (page: Page) => {
+        await chip(page, 'Group').nth(0).click()
+        await page.getByRole('button', { name: 'Add inner' }).click()
+        await chip(page, 'Group').nth(1).click()
+        await addRow(page, 'deep', 0, 'City')
+        await addRow(page, 'deep', 1, 'Street')
+      }
+
+      const sent = await run(page, definition, fill, textThenGroup(0))
+
+      expect(sent).toEqual(await run(page, definition, fill, none))
+      await expect(page.locator('input[name*=".deep."]')).toHaveCount(2)
+    })
+
+    test('at the top level', async ({ page }) => {
+      const definition = {
+        sections: [{ fields: [showsOn('items'), kept('items', [LABEL])] }],
+      }
+      const fill = async (page: Page) => {
+        await chip(page, 'Group').click()
+        await addRow(page, 'items', 0, 'One')
+        await addRow(page, 'items', 1, 'Two')
+      }
+
+      const sent = await run(page, definition, fill, async (page) => {
+        await textThenGroup()(page)
+        await expect(page.locator('input[name^="items."]')).toHaveCount(2)
+      })
+
+      expect(sent).toEqual(await run(page, definition, fill, none))
+    })
+
+    // `keepValue` on the outer list is inherited by the list inside its rows,
+    // which declares nothing of its own.
+    test('inside a list that keeps its value', async ({ page }) => {
+      const definition = {
+        sections: [
+          {
+            fields: [
+              showsOn('orders'),
+              kept('orders', [
+                showsOn('orders/inner'),
+                kept('inner', [LABEL], false),
+              ]),
+            ],
+          },
+        ],
+      }
+      const fill = async (page: Page) => {
+        await chip(page, 'Group').nth(0).click()
+        await page.getByRole('button', { name: 'Add orders' }).click()
+        await chip(page, 'Group').nth(1).click()
+        await addRow(page, 'inner', 0, 'Name')
+      }
+
+      const sent = await run(page, definition, fill, async (page) => {
+        await textThenGroup(0)(page)
+        await expect(page.locator('input[name*=".inner."]')).toHaveCount(1)
+      })
+
+      expect(sent).toEqual(await run(page, definition, fill, none))
+    })
+
+    // The host puts back a record of its own while the list is hidden: what it
+    // shows once shown again is what it shows if it had stayed on screen.
+    test('as it would have on screen, after the host puts back its own rows', async ({
+      page,
+    }) => {
+      const put = async (meanwhile: (page: Page) => Promise<void>) => {
+        await inject(
+          page,
+          JSON.stringify({
+            ...JSON.parse(definition(true)),
+            value: { field: [{ type: ['group'], inner: [{ label: 'A' }] }] },
+          })
+        )
+        await page.goto('/reactive')
+        await expect(labels(page).nth(0)).toHaveValue('A')
+        await labels(page).nth(0).fill('B')
+        await meanwhile(page)
+        await page.getByRole('button', { name: 'Reset values' }).click()
+        await expect(chip(page, 'Group')).toBeVisible()
+        return submitted(page)
+      }
+
+      const hide = (page: Page) => chip(page, 'Text').click()
+
+      expect(await put(hide)).toEqual(await put(async () => {}))
+    })
+
+    // A row removed takes the list inside it with it: the row added next starts
+    // with nothing, on screen and in what the form sends.
+    test('nothing of a removed row, in the row added after it', async ({
+      page,
+    }) => {
+      await inject(page, definition(true))
+      await page.goto('/reactive')
+      await page.getByRole('button', { name: 'Add item' }).click()
+      await chip(page, 'Group').nth(1).click()
+      await page.getByRole('button', { name: 'Add a field' }).click()
+      await page.locator('input[name^="field.1.inner."]').fill('Ghost')
+
+      await page
+        .getByRole('button', { name: /item 2$/ })
+        .first()
+        .click()
+      await page.getByRole('button', { name: 'Add item' }).click()
+      await chip(page, 'Group').nth(1).click()
+
+      await expect(page.locator('input[name*=".inner."]')).toHaveCount(0)
+      expect(JSON.stringify(await submitted(page))).not.toContain('Ghost')
+    })
+  }
+)
