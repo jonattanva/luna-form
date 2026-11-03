@@ -117,13 +117,12 @@ export function useInputCore(
   const setPendingAutoFill = useSetAtom(pendingAutoFillAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
 
-  const schema = useInput(
-    props.field,
-    props.onRegister,
-    props.onUnmount,
+  const schema = useInput(props.field, {
+    onRegister: props.onRegister,
+    onUnmount: props.onUnmount,
+    sourceTargets: props.sourceTargets,
     translations,
-    props.sourceTargets
-  )
+  })
 
   const placeholder = translate(props.commonProps.placeholder, translations)
 
