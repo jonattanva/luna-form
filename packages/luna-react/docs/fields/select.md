@@ -247,6 +247,14 @@ Two kinds of field are not checked, because the definition does not know their o
 
 A list declares its options once for every row, so each row is checked against them, however deep the list is.
 
+### A value the control cannot show
+
+A select, radio or chips draws only the options it offers, so a value it holds outside them, from the host or from a `value` event, is not on screen. The browser does not submit that value either: a native select behind the control submits its first option instead, an option nobody picked, and a radio submits nothing.
+
+The submit of the rendered `<Form>` therefore checks, for these fields, the value the field holds rather than what the browser sends. The field shows `validation.option`, or `This option is not available`, whether it is required or not, and nothing is sent until an option is picked. A field that holds one of its options, or nothing, is sent as the control sends it: a `select` with nothing picked sends `""`, and a `radio` sends nothing.
+
+A field a `source` event aims at is sent as it holds its value, since its options are only known at run time.
+
 Writing the same values again in a [`rules`](../validation/overview.md#rules) `oneOf` assertion is no longer needed. If both are present, a value that is not offered gets both messages.
 
 ---

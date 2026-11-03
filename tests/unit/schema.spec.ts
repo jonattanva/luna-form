@@ -9,6 +9,7 @@ import {
   getSchema,
   getText,
   getYearSchema,
+  isOffered,
 } from '@/packages/luna-core/src/util/schema'
 import { isTargetOf } from '@/packages/luna-core/src/util/path'
 import { z } from 'zod'
@@ -1842,5 +1843,26 @@ describe('isTargetOf', () => {
     ['shipping.3.country', 'shipping/city', false],
   ])('%s is named by %s: %s', (name, target, named) => {
     expect(isTargetOf(name, target)).toBe(named)
+  })
+})
+
+// Whether what a field holds is one of its options, which the submit asks of
+// the value the field holds.
+describe('isOffered', () => {
+  const offered = new Set(['lim', 'cus', '101'])
+
+  test.each<[unknown, boolean]>([
+    ['lim', true],
+    ['xyz', false],
+    [101, true],
+    ['', true],
+    [undefined, true],
+    [null, true],
+    [[], true],
+    [['lim', 'cus'], true],
+    [['lim', 'xyz'], false],
+    [['', 'lim'], true],
+  ])('%j: %s', (value, expected) => {
+    expect(isOffered(offered, value)).toBe(expected)
   })
 })

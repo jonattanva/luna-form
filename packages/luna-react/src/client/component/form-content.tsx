@@ -76,6 +76,7 @@ export function FormContent<
     props.action,
     {
       onSuccess: props.onSuccess,
+      sourceTargets,
       validation: props.config.validation.submit,
       translations,
     }

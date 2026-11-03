@@ -1,6 +1,6 @@
-import { useSetAtom } from 'jotai'
+import { useSetAtom, useStore } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
-import { clearAllValueAtom } from '../lib/value-store'
+import { clearAllValueAtom, valueAtom } from '../lib/value-store'
 import { requestFormReset } from 'react-dom'
 import {
   startTransition,
@@ -13,6 +13,8 @@ import {
   buildSchema,
   flatten,
   getFormData,
+  getOfferedValues,
+  isOffered,
   logger,
   translateBuiltIn,
   unflatten,
@@ -32,6 +34,7 @@ export type FormState<T> = {
 export type FormActionOptions<T> = {
   onSuccess?: (data: T) => void
   preserveValues?: boolean
+  sourceTargets?: ReadonlySet<string>
   translations?: Record<string, string>
   validation?: boolean
 }
@@ -44,10 +47,12 @@ export function useFormState<T, F = Record<string, unknown>>(
   const {
     onSuccess,
     preserveValues = false,
+    sourceTargets,
     validation = true,
     translations,
   } = options ?? {}
 
+  const store = useStore()
   const setError = useSetAtom(reportErrorAtom)
   const clearValues = useSetAtom(clearAllValueAtom)
 
@@ -77,7 +82,12 @@ export function useFormState<T, F = Record<string, unknown>>(
 
       // A date leaves the schema as `yyyy-MM-dd` whatever the field showed, so
       // what is sent below is what the schema returns, not what was submitted.
-      const form = getFormData(formData)
+      const form = withHeldOptions(
+        getFormData(formData),
+        fields,
+        store.get(valueAtom),
+        sourceTargets
+      )
       const validated = schema.safeParse(form)
 
       if (!validated.success) {
@@ -167,6 +177,32 @@ export function useFormState<T, F = Record<string, unknown>>(
   )
 
   return [formAction, state, isPending, onSubmit] as const
+}
+
+// A `select`, `radio` or `chips` whose options are written draws only those
+// options, so a value it holds outside them is not on screen, and what the
+// browser submits for it is not what the field holds: a native select behind
+// the control submits its first option, an option nobody picked, and a radio
+// submits nothing. For those fields the submit checks the value the field
+// holds, so the field says it is not one of its options and nothing is sent
+// in its place. A value it offers, or none, is on screen and sent as the
+// control sends it.
+function withHeldOptions(
+  form: Record<string, unknown>,
+  fields: Field[],
+  values: Record<string, unknown>,
+  sourceTargets?: ReadonlySet<string>
+): Record<string, unknown> {
+  let held = form
+  for (const field of fields) {
+    const value = values[field.name]
+    const offered = getOfferedValues(field, sourceTargets)
+    if (offered && !isOffered(offered, value)) {
+      held = held === form ? { ...form } : held
+      held[field.name] = value
+    }
+  }
+  return held
 }
 
 function buildError(error: unknown, translations?: Record<string, string>) {

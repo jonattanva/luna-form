@@ -817,10 +817,15 @@ function applyOffered(
     return schema
   }
 
-  return schema.refine((value) => {
-    const picked = Array.isArray(value) ? value : [value]
-    return picked.every((item) => isEmpty(item) || offered.has(String(item)))
-  }, message)
+  return schema.refine((value) => isOffered(offered, value), message)
+}
+
+// Whether every value picked is one of `offered`: the text of a `select` or
+// `radio`, each entry of a `chips`. Nothing picked is the required rule's
+// question, not this one, so it is offered here.
+export function isOffered(offered: ReadonlySet<string>, value: unknown) {
+  const picked = Array.isArray(value) ? value : [value]
+  return picked.every((item) => isEmpty(item) || offered.has(String(item)))
 }
 
 // Groups dotted field names (e.g. `basicAuth.username`) into nested objects so
