@@ -1,10 +1,8 @@
-import {
-  format as fnsFormat,
-  formatDuration,
-  intervalToDuration,
-  isValid,
-  parseISO,
-} from 'date-fns'
+import { format as fnsFormat } from 'date-fns/format'
+import { formatDuration } from 'date-fns/formatDuration'
+import { intervalToDuration } from 'date-fns/intervalToDuration'
+import { isValid } from 'date-fns/isValid'
+import { parseISO } from 'date-fns/parseISO'
 import { isString } from './is-type'
 import { logger } from './logger'
 import { dateFnsLocale, readInstant, remember, toLocale } from './date'
