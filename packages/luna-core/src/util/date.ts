@@ -10,8 +10,17 @@ import {
 import { isObject, isString } from './is-type'
 import { logger } from './logger'
 import { refOf } from './prepare'
-import { isValid, parse, parseISO, format as fnsFormat } from 'date-fns'
-import { enUS, es } from 'date-fns/locale'
+// Each function and locale by its own path, never from the package's index or
+// its locale index: those re-export everything, and without a bundler to drop
+// what is unused -- in Node, so on the server and in tests -- they load every
+// function and every locale for the few used here. A lint rule holds it; see
+// `librarySourceConfig`.
+import { format as fnsFormat } from 'date-fns/format'
+import { isValid } from 'date-fns/isValid'
+import { parse } from 'date-fns/parse'
+import { parseISO } from 'date-fns/parseISO'
+import { enUS } from 'date-fns/locale/en-US'
+import { es } from 'date-fns/locale/es'
 import type { Locale } from 'date-fns'
 import type {
   Date as DateField,
