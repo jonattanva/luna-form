@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793762137601,
+  "lastUpdate": 1793762163627,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "a8ece23edf88f8cd003335a0ca31f3fc3cf4d600",
-          "message": "Merge pull request #52 from jonattanva/feat/built-in-translations\n\nfeat(translations): resolve the library's own copy through the dictionary",
-          "timestamp": "2026-08-02T21:11:28-05:00",
-          "tree_id": "67ed2cdb8cd22ced323b6d50c8a5edc536e54b44",
-          "url": "https://github.com/jonattanva/luna-form/commit/a8ece23edf88f8cd003335a0ca31f3fc3cf4d600"
-        },
-        "date": 1785723167932,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 277,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 587,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "5398374c29c771fb4abe1ced646301ebad628e97",
           "message": "Merge pull request #53 from jonattanva/fix/value-event-focused-target\n\nfix(events): postpone an auto-fill into the field that has focus",
           "timestamp": "2026-08-03T09:30:48-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 20.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "12ef539bfd4ec4d64e42fe9372e72d74cb130ffa",
+          "message": "Merge pull request #142 from jonattanva/claude/date-fns-direct-imports\n\nperf(date): import each date-fns function and locale by its own path",
+          "timestamp": "2026-11-03T22:14:42-05:00",
+          "tree_id": "e362391e07e942b7b442c82771658323144adcc1",
+          "url": "https://github.com/jonattanva/luna-form/commit/12ef539bfd4ec4d64e42fe9372e72d74cb130ffa"
+        },
+        "date": 1793762163577,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 56.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 21.3,
             "unit": "ms"
           }
         ]
