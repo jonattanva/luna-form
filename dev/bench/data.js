@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794162072983,
+  "lastUpdate": 1794162097785,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "ef84050759f7c40de86ca479445e0debef662a67",
-          "message": "upgrade version",
-          "timestamp": "2026-08-03T09:45:28-05:00",
-          "tree_id": "f91fd40554bd3f6fd96710e707a401c6049ca2c8",
-          "url": "https://github.com/jonattanva/luna-form/commit/ef84050759f7c40de86ca479445e0debef662a67"
-        },
-        "date": 1785768423445,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 312,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 689,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 20.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "77d60399a4d77564a19cc6c8b2825bda2250248f",
+          "message": "Merge pull request #143 from jonattanva/claude/transform-typed-only\n\nfix(input): keep a value the form receives as it came",
+          "timestamp": "2026-11-08T13:20:24-05:00",
+          "tree_id": "63ceeba62485ce6564fc4244e0de302f9eeed266",
+          "url": "https://github.com/jonattanva/luna-form/commit/77d60399a4d77564a19cc6c8b2825bda2250248f"
+        },
+        "date": 1794162097724,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 53.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 24.4,
             "unit": "ms"
           }
         ]
