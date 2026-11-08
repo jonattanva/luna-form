@@ -23,10 +23,13 @@ const sections = [
         required: true,
       },
       {
+        // `{value}` is what the field is rendered holding, which the host
+        // passes below.
         label: 'Code',
         name: 'code',
         type: 'input/text',
         disabled: true,
+        description: 'Issued as {value}.',
       },
       {
         // `advanced.data` names the same attribute the form writes for the
@@ -55,11 +58,18 @@ const context = {
   zone: 'America/Bogota',
 }
 
+const value = { code: 'LF-0042' }
+
 export default function ServerPage() {
   return (
     <div className="flex h-full w-full items-start justify-center overflow-auto">
       <div className="w-full max-w-md p-8">
-        <Form config={config} context={context} sections={sections} />
+        <Form
+          config={config}
+          context={context}
+          sections={sections}
+          value={value}
+        />
       </div>
     </div>
   )

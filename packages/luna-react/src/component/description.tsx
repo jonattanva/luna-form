@@ -27,6 +27,9 @@ export type DescriptionTextProps = Readonly<{
   context?: Record<string, unknown>
   localization?: Localization
   text?: DescriptionType
+  // What `{value}` reads, in a field's description. A column's has no value in
+  // scope and leaves it out, so the placeholder stays as written there.
+  value?: unknown
 }>
 
 // A description as far as this tree can take it: the text, interpolated and
@@ -41,7 +44,7 @@ export function DescriptionText(props: DescriptionTextProps) {
 
   const interpolated = interpolateIfNeeded(
     message,
-    { context: props.context, env: props.config?.env },
+    { context: props.context, env: props.config?.env, value: props.value },
     renderOptions(props.localization?.lang, props.context)
   )
 

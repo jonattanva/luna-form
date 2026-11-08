@@ -35,13 +35,16 @@ export const FieldDescription = memo(function FieldDescription(
   const entryAtom = useEntryAtom(valueAtom, props.field.name)
   const value = useAtomValue(isInterpolated(text) ? entryAtom : NO_VALUE)
 
+  // A field that holds nothing has nothing to put in `{value}`, the same as one
+  // the user emptied. Handed over as missing, the placeholder stayed on screen
+  // as written until the first keystroke.
   return (
     <FormattedDescription
       config={props.config}
       context={props.context}
       localization={props.localization}
       text={text}
-      value={value}
+      value={value ?? ''}
     />
   )
 })

@@ -368,4 +368,54 @@ test.describe('FormattedDescription component', { tag: ['@e2e'] }, () => {
     const message = page.getByText('Detailed help here', { exact: true })
     await expect(message).toBeVisible()
   })
+
+  // A field that holds nothing has nothing to put in its description's
+  // `{value}`, filtered or not. Until the first keystroke the placeholder used
+  // to stay on screen as written, while the same field emptied by hand showed
+  // nothing.
+  test('should put nothing in {value} while the field holds nothing', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "label": "Nickname",
+                "name": "nickname",
+                "type": "input/text",
+                "description": "We will greet you as {value}."
+              },
+              {
+                "label": "Price",
+                "name": "price",
+                "type": "input/text",
+                "description": "Total to pay: {value | currency:USD}"
+              }
+            ]
+          }
+        ]
+      }`
+    )
+
+    await page.goto('')
+
+    const nickname = page.getByLabel('Nickname')
+    const greeting = page.getByText(/^We will greet you as/)
+    const total = page.getByText(/^Total to pay:/)
+
+    await expect(greeting).toHaveText('We will greet you as .')
+    await expect(total).toHaveText('Total to pay:')
+
+    await nickname.fill('Ada')
+    await expect(greeting).toHaveText('We will greet you as Ada.')
+
+    await page.getByLabel('Price').fill('12')
+    await expect(total).toHaveText('Total to pay: $12.00')
+
+    await nickname.fill('')
+    await expect(greeting).toHaveText('We will greet you as .')
+  })
 })

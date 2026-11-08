@@ -30,6 +30,9 @@ export const InputLabel = memo(function InputLabel(
     field: Field
     horizontal?: boolean
     localization?: Localization
+    // What the field is rendered holding, for the description beside a
+    // horizontal label. See `DescriptionProps`.
+    value?: unknown
   }>
 ) {
   const Description = props.description ?? StaticDescription
@@ -65,6 +68,7 @@ export const InputLabel = memo(function InputLabel(
           context={props.context}
           field={props.field}
           localization={props.localization}
+          value={props.value}
         />
       )}
     </div>
