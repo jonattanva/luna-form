@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { reportValue } from '@/lib/utils'
 
 export function Select({
   id,
@@ -19,17 +20,8 @@ export function Select({
   options?: Array<{ value: string; label: string }>
   placeholder?: string
 }) {
-  function handleValueChange(value: string) {
-    if (onChange) {
-      const event = {
-        target: { value },
-      } as React.ChangeEvent<HTMLInputElement>
-      onChange(event)
-    }
-  }
-
   return (
-    <Component onValueChange={handleValueChange} {...selectProps}>
+    <Component onValueChange={reportValue(onChange)} {...selectProps}>
       <SelectTrigger className="w-45" id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
