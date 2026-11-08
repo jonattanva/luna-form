@@ -51,7 +51,7 @@ async function typeWithoutFocusing(page: Page, name: string, text: string) {
 // a copy in flight observable at all. On a one-row form the decision and the
 // paint are too close together for anything to slip between them.
 //
-// `seeded` gives the form a `value` of its own, which only the tests on
+// `value` gives the form a value of its own, which only the tests on
 // `/reactive` want. That harness feeds every `onValueChange` back in as `value`,
 // and a changed `value` prop makes the field re-run its change events on the
 // spot, so there the copy lands about 17ms after the source is typed -- long
@@ -61,8 +61,12 @@ async function typeWithoutFocusing(page: Page, name: string, text: string) {
 function autoFillList({
   echo = false,
   rows = 1,
-  seeded = false,
-}: { echo?: boolean; rows?: number; seeded?: boolean } = {}) {
+  value,
+}: {
+  echo?: boolean
+  rows?: number
+  value?: { field: Array<Record<string, string>> }
+} = {}) {
   const copyToName = {
     action: 'value',
     onlyIfTargetEmpty: true,
@@ -109,11 +113,11 @@ function autoFillList({
         ],
       },
     ],
-    ...(seeded ? { value: { field: [{}] } } : {}),
+    ...(value ? { value } : {}),
   })
 }
 
-const AUTOFILL_LIST = autoFillList({ seeded: true })
+const AUTOFILL_LIST = autoFillList({ value: { field: [{}] } })
 const AUTOFILL_LIST_WITH_ECHO = autoFillList({ echo: true })
 
 test.describe(
@@ -359,6 +363,45 @@ test.describe(
 
         await expect(key).toHaveValue('customer_email')
       }
+    })
+
+    // A key stored the way the other app sends it, which the transform would
+    // rewrite. It is not empty, so the copy leaves it alone, when the form
+    // opens and when the label is edited.
+    //
+    // `echo` is written by the same batch, after the copy to `name`, so its
+    // report says the batch has run, and any report of `name` would have come
+    // first.
+    test('a stored key the transform would rewrite outlives an edit to its label', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        autoFillList({
+          echo: true,
+          value: {
+            field: [{ label: 'Customer email', name: 'customerEmail' }],
+          },
+        })
+      )
+      const events = captureValueChanges(page)
+      await page.goto('/reactive')
+
+      const nameInput = page.locator('input[name="field.0.name"]')
+
+      await expect
+        .poll(() => lastEventFor(events, 'field.0.echo')?.value)
+        .toBe('Customer email')
+      await expect(nameInput).toHaveValue('customerEmail')
+
+      await page.locator('input[name="field.0.label"]').fill('Customer e-mail')
+      await expect
+        .poll(() => lastEventFor(events, 'field.0.echo')?.value)
+        .toBe('Customer e-mail')
+      await expect(nameInput).toHaveValue('customerEmail')
+      expect(events.filter((event) => event.name === 'field.0.name')).toEqual(
+        []
+      )
     })
   }
 )
