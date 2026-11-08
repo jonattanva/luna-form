@@ -1,6 +1,10 @@
 import { createInput } from './input-create'
 import { deepEqual } from 'fast-equals'
-import { toChangeValue } from './input-strategies'
+import {
+  dispatchTypedChange,
+  hasInitialValue,
+  toChangeValue,
+} from './input-strategies'
 import { useWriteOnlySource } from '../hook/use-write-only-source'
 import {
   fromNativeTime,
@@ -8,7 +12,6 @@ import {
   holdValue,
   isString,
   isTime,
-  isValidValue,
 } from '@luna-form/core'
 
 export const InputDateable = createInput({
@@ -34,15 +37,11 @@ export const InputDateable = createInput({
   shouldSkipChange: ({ shouldSkipOnChange, inputValue, valueRef }) =>
     shouldSkipOnChange() && deepEqual(inputValue, valueRef.current),
 
-  dispatchChange: ({ applyChangeEventsRef, inputValue, setTimeoutRef }) => {
-    setTimeoutRef(() => {
-      applyChangeEventsRef.current({ value: inputValue })
-    }, 300)
-  },
+  dispatchChange: dispatchTypedChange,
 
   buildInitialSelected: (defaultValue) => ({
     value: toChangeValue(defaultValue),
   }),
 
-  isInitialReady: (_field, defaultValue) => isValidValue(defaultValue),
+  isInitialReady: hasInitialValue,
 })

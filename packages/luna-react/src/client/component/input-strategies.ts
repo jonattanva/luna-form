@@ -1,4 +1,4 @@
-import { isMultiple } from '@luna-form/core'
+import { isMultiple, isValidValue } from '@luna-form/core'
 import type { Config } from '../../type'
 import type { DataSource, Field, Nullable, Value } from '@luna-form/core'
 
@@ -76,3 +76,24 @@ export type InputStrategies = Readonly<{
     data: Nullable<unknown[]>
   ) => boolean
 }>
+
+/**
+ * What a field someone types into does with its change events, text and date
+ * alike: they wait until the typing stops, and read the value as `{ value }`,
+ * since there is no option behind it.
+ */
+export const dispatchTypedChange: InputStrategies['dispatchChange'] = ({
+  applyChangeEventsRef,
+  inputValue,
+  setTimeoutRef,
+}) => {
+  setTimeoutRef(() => {
+    applyChangeEventsRef.current({ value: inputValue })
+  }, 300)
+}
+
+/** A typed field has nothing to wait for at mount: a value is enough. */
+export const hasInitialValue: InputStrategies['isInitialReady'] = (
+  _field,
+  defaultValue
+) => isValidValue(defaultValue)

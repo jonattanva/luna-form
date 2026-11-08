@@ -1,5 +1,5 @@
 import { createInput } from './input-create'
-import { isValidValue } from '@luna-form/core'
+import { dispatchTypedChange, hasInitialValue } from './input-strategies'
 import { useWriteOnlySource } from '../hook/use-write-only-source'
 
 export const InputTextable = createInput({
@@ -10,13 +10,9 @@ export const InputTextable = createInput({
   shouldSkipChange: ({ shouldSkipOnChange, inputValue, valueRef }) =>
     shouldSkipOnChange() && inputValue === valueRef.current,
 
-  dispatchChange: ({ applyChangeEventsRef, inputValue, setTimeoutRef }) => {
-    setTimeoutRef(() => {
-      applyChangeEventsRef.current({ value: inputValue })
-    }, 300)
-  },
+  dispatchChange: dispatchTypedChange,
 
   buildInitialSelected: (defaultValue) => ({ value: String(defaultValue) }),
 
-  isInitialReady: (_field, defaultValue) => isValidValue(defaultValue),
+  isInitialReady: hasInitialValue,
 })
