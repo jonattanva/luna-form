@@ -7,9 +7,22 @@ import {
   type Field,
   type Localization,
 } from '@luna-form/core'
+import { memo } from 'react'
 import type { Config } from '../type'
 
-export function InputLabel(
+/**
+ * A field's label, which renders when the field's definition does and not
+ * because its value did.
+ *
+ * The input beside it renders on every keystroke -- it is subscribed to its own
+ * value -- and this was rendered along with it each time, label, optional mark
+ * and all, for text that reads nothing of the value: `{value}` is a
+ * description's, never a label's. Every prop here holds still across a
+ * keystroke, so the default comparison is enough. `memo` is one of the few
+ * things React exports under `react-server` as well, so the server entry still
+ * loads this tree.
+ */
+export const InputLabel = memo(function InputLabel(
   props: Readonly<{
     config?: Config
     context?: Record<string, unknown>
@@ -56,4 +69,4 @@ export function InputLabel(
       )}
     </div>
   )
-}
+})
