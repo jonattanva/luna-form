@@ -7,7 +7,6 @@ import type { DateRange } from 'react-day-picker'
 import { enUS, es, type DayPickerLocale } from 'react-day-picker/locale'
 import { readDateProps } from 'react-luna-form/config'
 
-import { Calendar } from '@/components/ui/calendar'
 import {
   InputGroup,
   InputGroupAddon,
@@ -19,6 +18,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { lazyComponent } from './lazy'
+
+// What the button opens, and most of what this input weighs: react-day-picker
+// is fetched when someone heads for a calendar, not with every date field on the
+// page -- a day can be typed as well as picked, and the field renders in full
+// without it. Pointing at the button or focusing it, or focusing the box, which
+// opens one with the down arrow, asks for it, so it is usually here by the time
+// the calendar opens and shows at once. See `lazyComponent`.
+const Calendar = lazyComponent(() =>
+  import('@/components/ui/calendar').then((mod) => mod.Calendar)
+)
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const ISO_FORMAT = 'yyyy-MM-dd'
@@ -86,6 +96,17 @@ export function DatePickerInput({
   const [from, to] = Array.isArray(current) ? current : []
 
   const [open, setOpen] = React.useState(false)
+
+  // Opens once the calendar is here, so that it shows whole. Opened while it
+  // is still loading, React would hold it back 300ms behind an empty popover,
+  // however fast it arrived. Usually it is here already: see `Calendar`.
+  function openCalendar(next: boolean) {
+    if (next && !Calendar.isLoaded()) {
+      void Calendar.preload().then(() => setOpen(true))
+      return
+    }
+    setOpen(next)
+  }
 
   // What the person is typing, while they type it. `null` shows the day the
   // field holds, in its format, so nothing has to copy the prop into state.
@@ -178,15 +199,16 @@ export function DatePickerInput({
         {...box}
         type="text"
         onBlur={handleBlur}
+        onFocus={Calendar.preload}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault()
-            setOpen(true)
+            openCalendar(true)
           }
         }}
       />
       <InputGroupAddon align="inline-end">
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={openCalendar}>
           <PopoverTrigger asChild>
             {/* Locked with the box: a read-only or disabled date offers no
                 calendar to pick another day from. */}
@@ -194,6 +216,8 @@ export function DatePickerInput({
               aria-label="Select date"
               disabled={props.disabled}
               id="date-picker"
+              onFocus={Calendar.preload}
+              onPointerEnter={Calendar.preload}
               size="icon-xs"
               variant="ghost"
             >
