@@ -1,5 +1,48 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator } from '@playwright/test'
 import { inject } from './support/inject'
+import { captureValueChanges, lastEventFor } from './support/value-changes'
+
+// Types `text` with the caret at `position`. The caret is put there directly,
+// because `End` does not reach the end of a text input in every engine (WebKit
+// on macOS), and the text goes through the keyboard, because
+// `pressSequentially` moves the caret to the start of an input it focuses.
+async function typeAt(input: Locator, position: number, text: string) {
+  await input.focus()
+  await input.evaluate(
+    (element: HTMLInputElement, at) => element.setSelectionRange(at, at),
+    position
+  )
+  await input.page().keyboard.type(text)
+}
+
+// A list of keys copied from a payload: the transform rewrites what is typed
+// into a key, and a key stored in camelCase has to survive it.
+function keysList(keys: string[]) {
+  return JSON.stringify({
+    value: { keys: keys.map((key) => ({ key })) },
+    sections: [
+      {
+        fields: [
+          {
+            label: 'Keys',
+            name: 'keys',
+            type: 'list',
+            advanced: { action: 'Add key' },
+            fields: [
+              {
+                name: 'key',
+                type: 'input/text',
+                advanced: {
+                  transform: ['remove-space', 'lowercase', 'remove-accent'],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  })
+}
 
 test.describe('Input Transform', { tag: ['@e2e'] }, () => {
   test('should apply uppercase transform on typing', async ({ page }) => {
@@ -29,7 +72,11 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
     await expect(input).toHaveValue('HELLO WORLD')
   })
 
-  test('should apply uppercase transform on initial value from JSON', async ({
+  // A transform rewrites what the user types and what a `value` event writes.
+  // A value the form receives was written by its host, as it is meant to be
+  // stored: it is shown the way it arrives, and rewritten whole once the user
+  // types into the field.
+  test('should keep an initial value from JSON as it arrives until the user types into it', async ({
     page,
   }) => {
     await inject(
@@ -56,8 +103,157 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
     await page.goto('')
 
     const input = page.locator('input[name="localUppercase"]')
-    // We expect the initial value to be transformed to uppercase
-    await expect(input).toHaveValue('HELLO WORLD')
+    await expect(input).toHaveValue('hello world')
+    await typeAt(input, 'hello world'.length, '!')
+    await expect(input).toHaveValue('HELLO WORLD!')
+  })
+
+  // Judged by what the form sends: a field shows its `defaultValue` as declared
+  // until it holds a value of its own, so the screen alone proves nothing.
+  test('should keep a defaultValue as the definition declares it', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "defaultValue": "hello world",
+                "name": "localUppercase",
+                "type": "input/text",
+                "advanced": {
+                  "transform": "uppercase"
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    await expect(page.locator('input[name="localUppercase"]')).toHaveValue(
+      'hello world'
+    )
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"localUppercase": "hello world"'
+    )
+  })
+
+  // Typing into a stored value rewrites all of it, the part the user did not
+  // type too. The caret stays where they typed, so the next key lands next to
+  // the last one and not at the end.
+  test('should keep the caret where the user types into a stored value', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "key": "customerEmail"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "name": "key",
+                "type": "input/text",
+                "advanced": {
+                  "transform": ["remove-space", "lowercase", "remove-accent"]
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="key"]')
+    await expect(input).toHaveValue('customerEmail')
+    await typeAt(input, 'customer'.length, 'primary')
+    await expect(input).toHaveValue('customerprimaryemail')
+  })
+
+  test('should keep the caret in place when the transform drops what was typed', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "name": "key",
+                "type": "input/text",
+                "advanced": {
+                  "transform": ["remove-space", "lowercase"]
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="key"]')
+    await input.fill('customeremail')
+    await typeAt(input, 'customer'.length, ' X')
+    await expect(input).toHaveValue('customerxemail')
+  })
+
+  // A list reports every row it holds when one is added or removed. A row the
+  // host stored in a shape the transform would rewrite, such as the camelCase
+  // key of a payload, has to reach the host as it was stored, not rewritten.
+  test('should keep a stored list row as it is when another row is added', async ({
+    page,
+  }) => {
+    const events = captureValueChanges(page)
+    await inject(page, keysList(['customerEmail']))
+    await page.goto('')
+
+    await expect(page.locator('input[name="keys.0.key"]')).toHaveValue(
+      'customerEmail'
+    )
+    await page.getByRole('button', { name: 'Add key' }).click()
+
+    await expect
+      .poll(() => lastEventFor(events, 'keys')?.value)
+      .toEqual([{ key: 'customerEmail' }, {}])
+    await expect(page.locator('input[name="keys.0.key"]')).toHaveValue(
+      'customerEmail'
+    )
+  })
+
+  // Removing also reports each row left by its position, and a host that feeds
+  // every report back, as `/reactive` does, hands each one in again.
+  test('should keep a stored list row as it is when another row is removed', async ({
+    page,
+  }) => {
+    const events = captureValueChanges(page)
+    await inject(page, keysList(['firstName', 'customerEmail']))
+    await page.goto('/reactive')
+
+    await expect(page.locator('input[name="keys.1.key"]')).toHaveValue(
+      'customerEmail'
+    )
+    await page.getByRole('button', { name: 'Remove Keys item 1' }).click()
+
+    await expect
+      .poll(() => lastEventFor(events, 'keys')?.value)
+      .toEqual([{ key: 'customerEmail' }])
+    await expect
+      .poll(() => lastEventFor(events, 'keys.0.key')?.value)
+      .toBe('customerEmail')
+    await expect(page.locator('input[name="keys.1.key"]')).toHaveValue(
+      'customerEmail'
+    )
   })
 
   test('should apply lowercase transform on typing', async ({ page }) => {

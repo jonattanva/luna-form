@@ -6,11 +6,14 @@ import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import {
+  applyTransform,
   holdValue,
   isDateRange,
+  isInput,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
+  type Field,
   type Nullable,
   type Value,
 } from '@luna-form/core'
@@ -207,6 +210,7 @@ export function InputBase(
         return
       }
 
+      keepCaret(event.target, props.field)
       onValueChangeRef.current(inputValue)
       if (props.config.validation.change) {
         validated(inputValue)
@@ -325,4 +329,33 @@ function SubmittedValue(
       value={props.value == null ? '' : String(props.value)}
     />
   )
+}
+
+// `advanced.transform` rewrites the whole text on every change, the part the
+// user did not type too. A control whose value changes under it puts the caret
+// at the end, so the next key would land there. Writing the rewritten text here,
+// with the caret after what the user typed, leaves the field rendering the text
+// the control already holds, and React does not touch the control.
+//
+// `email` and `number` controls report no caret, and are left as they were.
+function keepCaret(target: InputChangeEvent['target'], field: Field) {
+  if (!isInput(field) || !(target instanceof HTMLInputElement)) {
+    return
+  }
+
+  const transform = field.advanced?.transform
+  const caret = target.selectionStart
+  if (!transform || caret === null) {
+    return
+  }
+
+  const rewrite = (text: string) => String(applyTransform(text, transform))
+  const rewritten = rewrite(target.value)
+  if (rewritten === target.value) {
+    return
+  }
+
+  const position = rewrite(target.value.slice(0, caret)).length
+  target.value = rewritten
+  target.setSelectionRange(position, position)
 }

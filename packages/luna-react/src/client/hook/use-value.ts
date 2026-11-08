@@ -1,8 +1,6 @@
 import { deepEqual } from 'fast-equals'
 import {
-  applyTransform,
   holdValue,
-  isInput,
   isValidValue,
   type Field,
   type Nullable,
@@ -36,12 +34,13 @@ export function useValue(field: Field) {
   const applyValue = useEffectEvent((rawValue: unknown, silent = false) => {
     // The host's value and a `defaultValue` come in by the same door as
     // everything else a field holds: a date as `yyyy-MM-dd`. See `holdValue`.
+    //
+    // Not through `advanced.transform` (see `useInputCore`): a value that
+    // arrives is kept as it came, or a list, which reports every row when one
+    // is added or removed, would save it rewritten with nobody touching it.
     const held = holdValue(field, rawValue)
-    const transformedValue = isInput(field)
-      ? applyTransform(held, field.advanced?.transform)
-      : held
 
-    if (!deepEqual(value, transformedValue)) {
+    if (!deepEqual(value, held)) {
       if (!silent) {
         skipNextOnChangeRef.current = true
       }
@@ -54,7 +53,7 @@ export function useValue(field: Field) {
       hostChangeRef.current = { value: held }
     }
 
-    setValue(transformedValue)
+    setValue(held)
   })
 
   const onEntryChange = useEffectEvent((found: boolean, newValue: unknown) => {

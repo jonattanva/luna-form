@@ -62,6 +62,8 @@ These basic field types support extra manipulation properties inside the `advanc
   - `"remove-space"`
   - `"remove-accent"`
 
+  It rewrites the whole value each time the user changes the field, and what a [`value` event](../events/change.md#1-value-action-valueevent) writes into it. It leaves alone a value the form receives, through its `value` or a field's `defaultValue`, and the rows a `value` event assigns to a [list](list.md#filling-a-list-from-another-field): until the user edits the field, that value is shown, validated, submitted and reported as it came. It was written that way on purpose, and a list reports every row it holds when one is added or removed, so rewriting it on arrival would save a change nobody made. To store a value rewritten, or to check it against a `pattern` written for the rewritten shape, rewrite it before passing it in.
+
 ### Empty and required numbers
 
 A required `input/number` accepts `0` and negative numbers: required means a value is present, not that it is at least 1. An optional one left empty is not submitted at all, rather than submitted as `0`, and its `length` bounds only apply to a value that is there. `select/year` and `select/month` read an empty selection the same way.
