@@ -8,15 +8,63 @@ import {
   type Style,
 } from '@luna-form/core'
 
-// The sections of a form rendered on the server, where a collapsible one is
-// open and has no button to close it: opening and closing is state, and this
-// tree has none. The client renders the same section with its toggle.
+/** What a collapsible section is drawn from, once its text is translated. */
+export type CollapsibleFieldSetProps = Readonly<{
+  description?: string
+  group: React.ReactNode
+  section: Section
+  title?: string
+}>
+
+// A collapsible section rendered on the server: open, with no button to close
+// it, because opening and closing is state and this tree has none.
+function StaticCollapsibleFieldSet(props: CollapsibleFieldSetProps) {
+  const { fields = [] } = props.section
+
+  return (
+    <fieldset
+      data-slot="field-set"
+      data-advanced="true"
+      data-expanded={true}
+      data-empty={fields.length === 0}
+      className="flex flex-col"
+      id={props.section.id?.toString()}
+    >
+      <legend>
+        <span className="flex items-center gap-2 text-base font-medium text-zinc-600 dark:text-zinc-400">
+          {formatMarkdown(props.title)}
+        </span>
+      </legend>
+      <div
+        className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-zinc-300 pl-4 dark:border-zinc-600"
+        data-slot="field-set-content"
+      >
+        {props.description && (
+          <p className="text-sm leading-normal font-normal text-zinc-600 dark:text-zinc-400">
+            {formatMarkdown(props.description)}
+          </p>
+        )}
+        {props.group}
+      </div>
+    </fieldset>
+  )
+}
+
+// The sections of a form. A collapsible one is the only part that differs
+// between the two sides, and it is passed in the way the guard and the
+// description are: the client hands over the section that opens and closes,
+// and the server, which has no state, renders this file's own, open for good.
+//
+// The client used to keep a copy of this whole component to swap that one
+// branch, and both copies went into its bundle -- this one as the fallback it
+// never used.
 export function StaticFieldSet(
   props: Readonly<{
     advanced?: {
       step?: boolean
     }
     children?: React.ReactNode
+    collapsible?: React.ComponentType<CollapsibleFieldSetProps>
     section: Section
     step?: number
     style?: Style
@@ -42,32 +90,14 @@ export function StaticFieldSet(
   )
 
   if (props.section.advanced?.collapsible) {
+    const Collapsible = props.collapsible ?? StaticCollapsibleFieldSet
     return (
-      <fieldset
-        data-slot="field-set"
-        data-advanced="true"
-        data-expanded={true}
-        data-empty={fields.length === 0}
-        className="flex flex-col"
-        id={props.section.id?.toString()}
-      >
-        <legend>
-          <span className="flex items-center gap-2 text-base font-medium text-zinc-600 dark:text-zinc-400">
-            {formatMarkdown(title)}
-          </span>
-        </legend>
-        <div
-          className="mt-3 ml-1.5 flex flex-col gap-4 border-l-2 border-zinc-300 pl-4 dark:border-zinc-600"
-          data-slot="field-set-content"
-        >
-          {description && (
-            <p className="text-sm leading-normal font-normal text-zinc-600 dark:text-zinc-400">
-              {formatMarkdown(description)}
-            </p>
-          )}
-          {group}
-        </div>
-      </fieldset>
+      <Collapsible
+        description={description}
+        group={group}
+        section={props.section}
+        title={title}
+      />
     )
   }
 

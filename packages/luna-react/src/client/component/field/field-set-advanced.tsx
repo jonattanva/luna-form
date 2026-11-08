@@ -2,16 +2,11 @@ import { ChevronIcon } from '../../../component/chevron-icon'
 import { Collapsible } from '../../../component/collapsible'
 import { formatMarkdown } from '../../../lib/string'
 import { useDisclosure } from '../../hook/use-disclosure'
-import type { Section } from '@luna-form/core'
+import type { CollapsibleFieldSetProps } from '../../../component/field/field-set-static'
 
-export function FieldSetAdvanced(
-  props: Readonly<{
-    description?: string
-    group: React.ReactNode
-    section: Section
-    title?: string
-  }>
-) {
+// A collapsible section on the client, with the toggle that opens and closes
+// it. `StaticFieldSet` renders it in place of its own open one.
+export function FieldSetAdvanced(props: CollapsibleFieldSetProps) {
   const { fields = [] } = props.section
 
   const [isOpen, toggle, reveal] = useDisclosure()

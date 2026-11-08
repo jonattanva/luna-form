@@ -1,4 +1,3 @@
-import { FieldError } from './field-error'
 import { FieldGroup } from './field-group'
 import { InputBase } from '../input/input-base'
 import {
@@ -17,6 +16,12 @@ import type { Children } from '../../type'
 export type FieldProps = Readonly<{
   children: Children
   disabled?: boolean
+  // What lists the field's errors under it, which the client passes in: the
+  // one it has brings an error into view after a failed submit, an effect and a
+  // context this tree cannot hold, since the server renders it too -- and a
+  // form rendered there has no errors to list, as no value has been typed yet.
+  // The server leaves it out, which used to take a copy of this whole component.
+  error?: React.ComponentType<Readonly<{ errors?: string[]; name?: string }>>
   errors?: string[]
   field: Field
   // `context.now`, the instant a timezone select labels its zones for.
@@ -46,6 +51,8 @@ export function Field(props: FieldProps) {
   const disabled = buildDisabled(props.field, props.disabled)
   const readOnly = buildReadOnly(props.field, props.disabled)
 
+  const ErrorList = props.error
+
   return (
     <div className={twMerge('flex flex-col gap-3', getSpan(cols))}>
       <FieldGroup
@@ -66,7 +73,7 @@ export function Field(props: FieldProps) {
           {props.children}
         </InputBase>
       </FieldGroup>
-      <FieldError errors={errors} name={props.field.name} />
+      {ErrorList && <ErrorList errors={errors} name={props.field.name} />}
     </div>
   )
 }
