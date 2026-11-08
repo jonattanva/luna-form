@@ -24,7 +24,7 @@ export type GuardProps = Readonly<{
 // This is what keeps the server entry loadable under the `react-server`
 // condition: a tree shared by both sides cannot import an atom, because jotai
 // reaches for `createContext` as it loads and React does not export one there.
-export function StaticGuard(props: GuardProps) {
+function StaticGuard(props: GuardProps) {
   return isGuardHidden({}, props.fields) ? null : props.children
 }
 

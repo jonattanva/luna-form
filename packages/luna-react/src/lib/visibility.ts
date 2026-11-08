@@ -20,7 +20,7 @@ function isFieldHidden(
   return states[field.name]?.hidden ?? field.hidden ?? false
 }
 
-export function isEntryHidden(
+function isEntryHidden(
   entry: Fields[number],
   states: Record<string, FieldState>
 ): boolean {
