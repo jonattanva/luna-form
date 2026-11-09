@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plan WebMCP imperativo</title>
+    <meta
+      name="description"
+      content="Plan de desarrollo para exponer los formularios de luna-form como tools de WebMCP con la API imperativa."
+    />
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --surface: #ffffff;
+        --surface-2: #f5f5f4;
+        --text: #1c1917;
+        --muted: #57534e;
+        --border: #e7e5e4;
+        --accent: #4f46e5;
+        --accent-soft: #eef2ff;
+        --accent-text: #3730a3;
+        --code-bg: #f5f5f4;
+        --code-text: #292524;
+        --warn: #b45309;
+        --warn-soft: #fffbeb;
+        --ok: #047857;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.03);
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c0a09;
+          --surface: #161311;
+          --surface-2: #1c1917;
+          --text: #f5f5f4;
+          --muted: #a8a29e;
+          --border: #2a2523;
+          --accent: #a5b4fc;
+          --accent-soft: #1e1b4b;
+          --accent-text: #c7d2fe;
+          --code-bg: #1c1917;
+          --code-text: #e7e5e4;
+          --warn: #fbbf24;
+          --warn-soft: #2a2010;
+          --ok: #6ee7b7;
+          --shadow: none;
+          color-scheme: dark;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 24px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.65 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      code,
+      pre {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.86em;
+      }
+
+      :not(pre) > code {
+        background: var(--code-bg);
+        color: var(--code-text);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 0.08em 0.36em;
+        overflow-wrap: anywhere;
+      }
+
+      pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        line-height: 1.55;
+        margin: 14px 0 18px;
+      }
+
+      a {
+        color: var(--accent);
+        text-underline-offset: 2px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 16px 80px;
+      }
+
+      @media (min-width: 1100px) {
+        .layout {
+          grid-template-columns: 240px minmax(0, 1fr);
+          padding: 48px 32px 96px;
+        }
+      }
+
+      nav.toc {
+        font-size: 14px;
+      }
+
+      @media (min-width: 1100px) {
+        nav.toc {
+          position: sticky;
+          top: 24px;
+          align-self: start;
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+        }
+      }
+
+      nav.toc h2 {
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+
+      nav.toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav.toc li {
+        margin: 2px 0;
+      }
+
+      nav.toc a {
+        display: block;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border-left: 2px solid transparent;
+      }
+
+      nav.toc a:hover {
+        color: var(--text);
+        background: var(--surface-2);
+        border-left-color: var(--accent);
+      }
+
+      nav.toc ol ol a {
+        padding-left: 22px;
+        font-size: 13px;
+      }
+
+      main {
+        max-width: 820px;
+        min-width: 0;
+      }
+
+      header.doc {
+        margin-bottom: 28px;
+      }
+
+      .eyebrow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+      }
+
+      .chip.status {
+        background: var(--warn-soft);
+        color: var(--warn);
+        border-color: transparent;
+      }
+
+      h1 {
+        font-size: clamp(28px, 4vw, 38px);
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin: 0 0 14px;
+      }
+
+      .lead {
+        font-size: 18px;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      section {
+        border-top: 1px solid var(--border);
+        padding-top: 28px;
+        margin-top: 36px;
+      }
+
+      h2 {
+        font-size: 24px;
+        letter-spacing: -0.01em;
+        margin: 0 0 14px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin: 30px 0 10px;
+      }
+
+      h2 .num,
+      h3 .num {
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        margin-right: 6px;
+      }
+
+      p {
+        margin: 10px 0;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+        margin: 10px 0;
+      }
+
+      li {
+        margin: 6px 0;
+      }
+
+      li > ul,
+      li > ol {
+        margin: 6px 0;
+      }
+
+      strong {
+        font-weight: 650;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        margin: 16px 0;
+      }
+
+      @media (min-width: 760px) {
+        .grid-2 {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+      }
+
+      .card {
+        min-width: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .card h3,
+      .card h4 {
+        margin-top: 0;
+      }
+
+      .card h4 {
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+
+      .callout {
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        background: var(--accent-soft);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin: 16px 0;
+      }
+
+      .callout.warn {
+        border-left-color: var(--warn);
+        background: var(--warn-soft);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin: 14px 0 18px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14.5px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--surface-2);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      td:first-child {
+        min-width: 200px;
+      }
+
+      td code {
+        white-space: normal;
+      }
+
+      .flow {
+        display: grid;
+        gap: 12px;
+        margin: 16px 0 8px;
+      }
+
+      .flow-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .flow-row .label {
+        flex-basis: 100%;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .node {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+
+      .node.key {
+        background: var(--accent-soft);
+        color: var(--accent-text);
+        border-color: transparent;
+        font-weight: 600;
+      }
+
+      .node small {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      .arrow {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .phases {
+        display: grid;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .phase-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+
+      .phase-head h3 {
+        margin: 0;
+      }
+
+      .phase-head .chip {
+        background: var(--accent-soft);
+        color: var(--accent-text);
+        border-color: transparent;
+      }
+
+      ul.tasks {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      ul.tasks > li {
+        position: relative;
+        padding-left: 28px;
+      }
+
+      ul.tasks > li::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 0.42em;
+        width: 14px;
+        height: 14px;
+        border: 1.5px solid var(--muted);
+        border-radius: 4px;
+      }
+
+      ul.tasks ul {
+        list-style: disc;
+      }
+
+      footer.doc {
+        margin-top: 56px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media print {
+        nav.toc {
+          display: none;
+        }
+
+        .layout {
+          display: block;
+          padding: 0;
+        }
+
+        section {
+          break-inside: avoid-page;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="toc" aria-label="Contenido">
+        <h2>Contenido</h2>
+        <ol>
+          <li><a href="#api">1. Qué ofrece la API imperativa</a></li>
+          <li><a href="#objetivos">2. Objetivos y no objetivos</a></li>
+          <li>
+            <a href="#diseno">3. Diseño</a>
+            <ol>
+              <li><a href="#vista">3.1 Vista general</a></li>
+              <li><a href="#api-publica">3.2 API pública propuesta</a></li>
+              <li><a href="#esquema">3.3 Esquema de entrada</a></li>
+              <li><a href="#fill">3.4 Tool de rellenado</a></li>
+              <li><a href="#submit">3.5 Tool de envío</a></li>
+              <li><a href="#ciclo">3.6 Ciclo de vida</a></li>
+              <li><a href="#carga">3.7 Carga diferida</a></li>
+              <li><a href="#tipos">3.8 Tipos de TypeScript</a></li>
+              <li><a href="#seguridad">3.9 Seguridad y privacidad</a></li>
+            </ol>
+          </li>
+          <li><a href="#fases">4. Fases y tareas</a></li>
+          <li><a href="#pruebas">5. Pruebas</a></li>
+          <li><a href="#medicion">6. Medición antes y después</a></li>
+          <li><a href="#riesgos">7. Riesgos y preguntas abiertas</a></li>
+          <li><a href="#aceptacion">8. Criterios de aceptación</a></li>
+          <li><a href="#fuentes">Fuentes</a></li>
+        </ol>
+      </nav>
+
+      <main>
+        <header class="doc">
+          <div class="eyebrow">
+            <span class="chip status">Propuesta, sin implementar</span>
+            <span class="chip">8 de noviembre de 2026</span>
+            <span class="chip">luna-form</span>
+          </div>
+          <h1>Plan: WebMCP imperativo en luna-form</h1>
+          <p class="lead">
+            Que un formulario de luna pueda exponerse como herramientas
+            (<em>tools</em>) para agentes de IA con la API imperativa de WebMCP
+            (<code>document.modelContext.registerTool</code>), generadas desde
+            la misma definición JSON que ya lo renderiza y lo valida, sin código
+            extra por formulario y sin costo alguno donde el navegador no tiene
+            la API.
+          </p>
+        </header>
+
+        <section id="api">
+          <h2><span class="num">1.</span>Qué ofrece la API imperativa</h2>
+          <p>
+            Según la especificación (borrador de Community Group del 2 de
+            noviembre de 2026) y la documentación de Chrome:
+          </p>
+          <pre><code>partial interface Document {
+  [SecureContext, SameObject] readonly attribute ModelContext modelContext;
+};
+
+interface ModelContext : EventTarget {
+  Promise&lt;undefined&gt; registerTool(ModelContextTool tool, optional ModelContextRegisterToolOptions options = {});
+  Promise&lt;sequence&lt;RegisteredTool&gt;&gt; getTools(optional ModelContextGetToolOptions options = {});
+  Promise&lt;DOMString&gt; executeTool(RegisteredTool tool, optional object inputObject, optional ModelContextExecuteToolOptions options = {});
+  attribute EventHandler ontoolchange;
+  attribute EventHandler ontoolactivated;
+  attribute EventHandler ontoolcancel;
+};
+
+dictionary ModelContextTool {
+  required DOMString name;
+  USVString title;
+  required DOMString description;
+  object inputSchema;
+  object outputSchema;
+  required ToolExecuteCallback execute; // (inputObject, { signal }) =&gt; Promise&lt;any&gt;
+  ToolAnnotations annotations;          // readOnlyHint, untrustedContentHint, consequentialHint, debugging
+};</code></pre>
+          <p>Lo que importa para el diseño:</p>
+          <ul>
+            <li>
+              <strong>Desregistro:</strong> no hay
+              <code>unregisterTool()</code>. Se pasa <code>{ signal }</code> al
+              registrar y se aborta. Desde Chrome 153 abortar no corta una
+              ejecución en curso.
+            </li>
+            <li>
+              <strong>Resultado:</strong> <code>execute</code> devuelve
+              cualquier valor serializable. La guía de Chrome recomienda
+              devolver los errores recuperables como datos, no lanzar, para que
+              el agente se corrija.
+            </li>
+            <li>
+              <strong>Validación:</strong> no hay que contar con que el
+              navegador valide la entrada contra <code>inputSchema</code> ni
+              aplique valores por defecto. Se valida en <code>execute</code>.
+            </li>
+            <li>
+              <strong>Anotaciones:</strong> <code>consequentialHint</code> marca
+              acciones significativas o irreversibles, para que el agente o el
+              navegador pidan confirmación.
+              <code>untrustedContentHint</code> marca salidas con contenido
+              externo o de usuarios.
+            </li>
+            <li>
+              <strong>Restricciones:</strong> solo en contexto seguro (localhost
+              lo es). Permissions-Policy <code>tools</code>, por defecto
+              <code>self</code>. Los tools no son visibles desde otros orígenes
+              salvo con <code>exposedTo</code>.
+            </li>
+            <li>
+              <strong>Estado:</strong> origin trial desde Chrome 149. En local,
+              con <code>chrome://flags/#enable-webmcp-testing</code>. La API ya
+              cambió (de <code>navigator</code> a
+              <code>document.modelContext</code>, desregistro por
+              <code>AbortSignal</code>, deprecaciones en Chrome 155 y 156) y va
+              a seguir cambiando.
+            </li>
+          </ul>
+        </section>
+
+        <section id="objetivos">
+          <h2><span class="num">2.</span>Objetivos y no objetivos</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h4>Objetivos</h4>
+              <ol>
+                <li>
+                  Un <code>Form</code> del cliente registra, si el autor lo
+                  pide, dos tools: uno que rellena el formulario y otro que lo
+                  envía.
+                </li>
+                <li>
+                  El esquema de entrada sale de la definición: mismos nombres,
+                  tipos, opciones, obligatoriedad y límites que valida el
+                  submit.
+                </li>
+                <li>
+                  Los valores que escribe un agente pasan por el mismo camino
+                  que los del usuario: transformaciones, eventos
+                  <code>value</code>, <code>state</code> y <code>source</code>,
+                  validación y aviso al host con <code>onValueChange</code>.
+                </li>
+                <li>
+                  El agente recibe errores estructurados por campo y puede
+                  corregirse.
+                </li>
+                <li>
+                  Costo cero donde no se usa: sin la prop, o sin
+                  <code>document.modelContext</code>, no se descarga, no se
+                  registra nada y no cambia ningún render.
+                </li>
+              </ol>
+            </div>
+            <div class="card">
+              <h4>No objetivos, al menos en las fases 0 y 1</h4>
+              <ul>
+                <li>
+                  La API declarativa (atributos <code>toolname</code> en el
+                  <code>&lt;form&gt;</code>). Infiere el esquema de controles
+                  nativos y rellena el DOM, y la mayoría de los widgets de luna
+                  son personalizados. Queda como posible fase posterior para la
+                  entrada de servidor.
+                </li>
+                <li>
+                  Exponer tools a otros orígenes (<code>exposedTo</code>).
+                </li>
+                <li>
+                  Tools de autoría en el editor, como
+                  <code>set_definition</code>. Se evalúan en la fase 2.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="diseno">
+          <h2><span class="num">3.</span>Diseño</h2>
+
+          <h3 id="vista"><span class="num">3.1</span>Vista general</h3>
+          <div
+            class="flow"
+            role="img"
+            aria-label="Flujo de datos de los tools de WebMCP en luna-form"
+          >
+            <div class="flow-row">
+              <span class="label">Esquema</span>
+              <span class="node">definición JSON</span>
+              <span class="arrow">→</span>
+              <span class="node key">buildToolSchema <small>core</small></span>
+              <span class="arrow">→</span>
+              <span class="node">inputSchema</span>
+            </div>
+            <div class="flow-row">
+              <span class="label">Registro</span>
+              <span class="node">Form agent={…}</span>
+              <span class="arrow">→</span>
+              <span class="node key">useAgentTools <small>cliente</small></span>
+              <span class="arrow">→</span>
+              <span class="node">registerTool(&lt;name&gt;_fill)</span>
+              <span class="node">registerTool(&lt;name&gt;_submit)</span>
+            </div>
+            <div class="flow-row">
+              <span class="label">Rellenar</span>
+              <span class="node">execute(fill)</span>
+              <span class="arrow">→</span>
+              <span class="node key">registro de useSchema: apply(valor)</span>
+              <span class="arrow">→</span>
+              <span class="node">onChange de InputBase</span>
+              <span class="node">listas: pendingListRowsAtom</span>
+              <span class="arrow">→</span>
+              <span class="node">{ ok, applied, skipped, errors }</span>
+            </div>
+            <div class="flow-row">
+              <span class="label">Enviar</span>
+              <span class="node">execute(submit)</span>
+              <span class="arrow">→</span>
+              <span class="node key">&lt;form&gt;.requestSubmit()</span>
+              <span class="arrow">→</span>
+              <span class="node">useFormState: nuevo state</span>
+              <span class="arrow">→</span>
+              <span class="node">{ ok, data | error }</span>
+            </div>
+          </div>
+
+          <h3 id="api-publica">
+            <span class="num">3.2</span>API pública propuesta
+          </h3>
+          <p>
+            Una prop opcional en el <code>Form</code> del cliente
+            (<code>client/component/form.tsx</code>):
+          </p>
+          <pre><code>&lt;Form
+  sections={sections}
+  config={config}
+  action={action}
+  agent={{
+    name: 'signup', // prefijo de los tools: signup_fill y signup_submit
+    description: 'Crea una cuenta nueva con un email y una contraseña.',
+    consequential: true, // signup_submit lleva consequentialHint
+    submit: true, // por defecto: true si el Form tiene `action`
+  }}
+/&gt;</code></pre>
+          <ul>
+            <li>
+              <strong>Sin <code>agent</code></strong> no se registra nada, así
+              que es opt-in.
+            </li>
+            <li>
+              <strong><code>name</code></strong> debe ser único en la página:
+              dos formularios con el mismo nombre serían un error de autor, que
+              se avisa con <code>logger.warn</code>. Límite nominal de 128
+              caracteres según la spec.
+            </li>
+            <li>
+              <strong><code>description</code></strong> la escribe el autor. No
+              se arma con texto interpolado: ver <a href="#seguridad">3.9</a>.
+            </li>
+          </ul>
+          <p>
+            Opciones por campo, en la definición (cambio del contrato JSON, se
+            documenta):
+          </p>
+          <pre><code>{ "name": "password", "type": "input/password", "advanced": { "agent": false } }</code></pre>
+          <ul>
+            <li>
+              <code>advanced.agent: false</code> deja el campo fuera del tool,
+              por ejemplo para datos sensibles o personales que el agente no
+              debería pedir.
+            </li>
+            <li>
+              <code>advanced.agent: { "description": "…" }</code> reemplaza la
+              descripción que ve el agente.
+            </li>
+          </ul>
+
+          <h3 id="esquema">
+            <span class="num">3.3</span>Esquema de entrada:
+            <code>buildToolSchema</code> (core)
+          </h3>
+          <p>
+            Función pura nueva en
+            <code>packages/luna-core/src/util/tool-schema.ts</code>:
+          </p>
+          <pre><code>export function buildToolSchema(
+  sections: Sections,
+  options: Readonly&lt;{
+    context?: Record&lt;string, unknown&gt;
+    definition?: Definition
+    localization?: Localization
+  }&gt;
+): JsonSchemaObject</code></pre>
+          <ul>
+            <li>
+              Resuelve primero <code>$ref</code> y <code>definition</code> con
+              <code>prepare</code>, lo mismo que hace el render, y recorre
+              secciones, columnas y listas.
+            </li>
+            <li>
+              Devuelve JSON Schema 2020-12: <code>type: "object"</code>,
+              <code>properties</code>, <code>required</code> y
+              <code>additionalProperties: false</code>.
+            </li>
+            <li>
+              <code>title</code> sale de la etiqueta traducida y
+              <code>description</code> de la descripción del campo sin
+              interpolar, más las notas que agrega el mapeo.
+            </li>
+          </ul>
+          <p>Mapeo por tipo:</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo de campo</th>
+                  <th>JSON Schema</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <code>input</code>, <code>input/text</code>,
+                    <code>input/tel</code>, <code>textarea</code>
+                  </td>
+                  <td><code>string</code></td>
+                </tr>
+                <tr>
+                  <td><code>input/email</code></td>
+                  <td><code>string</code>, <code>format: "email"</code></td>
+                </tr>
+                <tr>
+                  <td><code>input/password</code></td>
+                  <td>
+                    fuera por defecto; incluido solo con
+                    <code>advanced.agent</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>input/number</code></td>
+                  <td><code>number</code></td>
+                </tr>
+                <tr>
+                  <td><code>input/date</code></td>
+                  <td>
+                    <code>string</code>, <code>format: "date"</code> (ISO
+                    <code>yyyy-MM-dd</code>). En modo rango, un array de 2
+                    fechas. Mínimo, máximo y días reservados se explican en
+                    <code>description</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>input/time</code></td>
+                  <td>
+                    <code>string</code>,
+                    <code>pattern: "^\\d{2}:\\d{2}$"</code> (HH:mm de 24 h)
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>checkbox</code></td>
+                  <td><code>boolean</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>select</code>, <code>radio</code> con
+                    <code>source</code> estático
+                  </td>
+                  <td>
+                    <code>oneOf: [{ const, title }]</code>, con títulos
+                    traducidos
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>select</code>, <code>radio</code> con
+                    <code>source</code> remoto
+                  </td>
+                  <td>
+                    <code>string</code>; la descripción dice de dónde salen las
+                    opciones
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>chips</code></td>
+                  <td>
+                    <code>array</code> de <code>oneOf</code>, con
+                    <code>uniqueItems</code>; <code>maxItems: 1</code> si
+                    <code>multiple: false</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>chips/day</code>, <code>chips/month</code></td>
+                  <td><code>array</code> de enum con los días o los meses</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>select/day</code>, <code>select/month</code>,
+                    <code>select/year</code>, <code>select/active</code>
+                  </td>
+                  <td>
+                    enum generado con los helpers de core que ya construyen esas
+                    opciones
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>select/timezone</code></td>
+                  <td>
+                    <code>string</code> con zona IANA y ejemplos en la
+                    descripción, para no enviar unas 400 opciones
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>list</code></td>
+                  <td>
+                    <code>array</code> de objetos (las hojas de la fila), con
+                    <code>minItems</code>/<code>maxItems</code> desde
+                    <code>advanced.length</code>; si es <code>fixed</code>,
+                    longitud exacta
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>column</code></td>
+                  <td>se aplana: sus campos van al mismo nivel</td>
+                </tr>
+                <tr>
+                  <td>tipos personalizados (<code>defineCustomInput</code>)</td>
+                  <td>
+                    <code>string</code>, salvo que el campo declare
+                    <code>advanced.agent.schema</code> (pregunta abierta en
+                    <a href="#riesgos">7</a>)
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h4>Reglas de validación</h4>
+              <ul>
+                <li>
+                  <strong>Se traducen a JSON Schema</strong> las que tienen
+                  equivalente directo: <code>required</code> pasa a
+                  <code>required</code>; <code>pattern</code> a
+                  <code>pattern</code>; <code>length</code> a
+                  <code>minLength</code>/<code>maxLength</code>; mínimo y máximo
+                  a <code>minimum</code>/<code>maximum</code>;
+                  <code>step</code> a <code>multipleOf</code>; y la aserción
+                  <code>oneOf</code> a un <code>enum</code>.
+                </li>
+                <li>
+                  <strong>Se describen en texto</strong> las condicionales o
+                  entre campos (<code>requiredWhen</code>,
+                  <code>rules</code> con <code>when</code>,
+                  <code>custom</code>). Quien manda es la validación en
+                  <code>execute</code>.
+                </li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Visibilidad</h4>
+              <ul>
+                <li>
+                  <strong>Se incluyen</strong> los campos que un evento
+                  <code>state</code> puede revelar, con una nota "solo aplica
+                  cuando …".
+                </li>
+                <li>
+                  <strong>Se excluyen</strong> los campos
+                  <code>hidden</code> que nada revela, los
+                  <code>transient</code> (solo disparan eventos) y los
+                  <code>disabled</code> o de solo lectura en la definición.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <p>
+            Pruebas: <code>tests/unit/tool-schema.spec.ts</code>, un caso por
+            fila de la tabla, más <code>$ref</code>, columnas, listas anidadas,
+            traducciones y exclusiones. Como verificación cruzada: todo valor
+            que <code>buildFormSchema</code> acepta debe cumplir el esquema del
+            tool.
+          </p>
+
+          <h3 id="fill">
+            <span class="num">3.4</span>Tool de rellenado:
+            <code>&lt;name&gt;_fill</code>
+          </h3>
+          <p>
+            El problema es escribir un valor desde fuera del campo pasando por
+            su propia lógica. La solución es el registro que ya existe.
+          </p>
+          <ul>
+            <li>
+              <strong>Puente en el registro:</strong> <code>useSchema</code>
+              (<code>client/hook/use-schema.ts</code>) guarda
+              <code>{ field, schema, offered }</code> por nombre. Se agrega
+              <code>apply(value)</code>, registrado por <code>InputBase</code>
+              (<code>client/component/input-base.tsx</code>) como
+              <code>onChange({ target: { value } })</code>. Para que tenga
+              identidad estable se pasa por <code>useLatest</code>. Es
+              exactamente el camino del usuario:
+              <ul>
+                <li>el bloqueo de <code>disabled</code> y de solo lectura;</li>
+                <li>
+                  <code>getValue</code> de la estrategia (por ejemplo
+                  <code>holdValue</code> para fechas);
+                </li>
+                <li><code>transform</code>;</li>
+                <li><code>setValue</code> y el aviso al host;</li>
+                <li>la validación en <code>change</code>;</li>
+                <li>los eventos de cambio.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Formato de entrada:</strong> el que se guarda
+              internamente: fechas ISO, horas <code>HH:mm</code>,
+              <code>chips</code> como array, <code>checkbox</code> como
+              booleano, <code>select</code> con el <code>value</code> de la
+              opción. El esquema de <a href="#esquema">3.3</a> ya lo declara
+              así.
+            </li>
+            <li>
+              <strong>Listas:</strong> se asignan como lo hace un evento
+              <code>value</code> dirigido a una lista, escribiendo
+              <code>pendingListRowsAtom</code>
+              (<code>client/lib/list-store.ts</code>). La lista aplica las filas
+              con <code>applyRows</code>, que normaliza, recorta a
+              <code>min</code>/<code>max</code>, siembra los valores y avisa al
+              host.
+            </li>
+            <li>
+              <strong>Campos condicionales, en varias pasadas:</strong>
+              <ol>
+                <li>Aplicar los valores de los campos registrados.</li>
+                <li>
+                  Esperar a que React confirme el commit y terminen las
+                  transiciones de los eventos <code>state</code>.
+                </li>
+                <li>
+                  Volver a aplicar los valores de los campos que acaban de
+                  aparecer.
+                </li>
+                <li>
+                  Repetir hasta que nada cambie o hasta un máximo de 5 pasadas.
+                </li>
+              </ol>
+            </li>
+            <li>
+              <strong>Espera del debounce:</strong> los campos de texto y fecha
+              corren sus eventos 300 ms después del último cambio
+              (<code>dispatchTypedChange</code>). El tool espera a que el hilo
+              quede libre después de ese plazo antes de validar y responder.
+              Alternativa a medir en la fase 1: un camino inmediato, sin
+              debounce, para valores aplicados por un tool.
+            </li>
+            <li>
+              <strong>Validación y errores:</strong> cada campo aplicado se
+              valida con su esquema del registro (más
+              <code>validation.custom</code>). Los errores se reportan en la UI
+              igual que en <code>blur</code>, para que el usuario los vea, y se
+              devuelven:
+            </li>
+          </ul>
+          <pre><code>{
+  "ok": false,
+  "applied": ["email", "country"],
+  "skipped": [{ "name": "frequency", "reason": "hidden" }],
+  "errors": { "email": ["Invalid email address"] }
+}</code></pre>
+          <ul>
+            <li>
+              <strong>Motivos de <code>skipped</code>:</strong>
+              <code>hidden</code> (no está visible al terminar),
+              <code>locked</code> (deshabilitado o de solo lectura),
+              <code>unknown</code> (no existe en la definición) y
+              <code>excluded</code> (<code>advanced.agent: false</code>).
+            </li>
+            <li>
+              <strong>Anotaciones:</strong> ninguna de las cuatro. No es de solo
+              lectura, porque cambia el estado del formulario, pero tampoco es
+              consecuencial: no envía nada.
+            </li>
+          </ul>
+
+          <h3 id="submit">
+            <span class="num">3.5</span>Tool de envío:
+            <code>&lt;name&gt;_submit</code>
+          </h3>
+          <ul>
+            <li>
+              <strong>El <code>&lt;form&gt;</code>:</strong>
+              <code>component/form.tsx</code> acepta una prop
+              <code>formRef</code> (en React 19 el <code>ref</code> es una prop
+              más) y <code>FormContent</code> le pasa la suya. En la entrada de
+              servidor no se pasa, así que no cambia nada ahí.
+            </li>
+            <li>
+              <strong><code>execute</code>:</strong> llama
+              <code>formRef.current.requestSubmit()</code>. Entra por el
+              <code>onSubmit</code> de
+              <code>useFormState</code>
+              (<code>client/hook/use-form-action.ts</code>), así que la
+              validación completa, la acción, el estado pendiente, los errores y
+              el reset ocurren como con un clic. Un <em>resolver</em> guardado
+              en un ref se completa en el efecto que observa el siguiente
+              <code>state</code> de <code>useActionState</code>:
+            </li>
+          </ul>
+          <pre><code>{ "ok": true, "data": { "…": "lo que devolvió la acción" } }
+{ "ok": false, "error": { "title": "…", "description": "…", "details": ["…"] }, "errors": { "email": ["…"] } }</code></pre>
+          <ul>
+            <li>
+              <strong>Anotaciones:</strong>
+              <code>consequentialHint: agent.consequential</code> y
+              <code>untrustedContentHint: true</code>, porque devuelve datos del
+              servidor que pueden traer contenido de usuarios.
+            </li>
+            <li>
+              <strong>Cancelación:</strong> si llega el <code>signal</code> de
+              <code>execute</code> abortado antes del commit, el tool responde
+              <code>{ ok: false, cancelled: true }</code>. No intenta deshacer
+              un envío que ya salió.
+            </li>
+            <li>
+              <strong><code>outputSchema</code>:</strong> se declara para los
+              dos tools.
+            </li>
+          </ul>
+
+          <h3 id="ciclo">
+            <span class="num">3.6</span>Ciclo de vida del registro
+          </h3>
+          <ul>
+            <li>
+              Hook nuevo <code>client/hook/use-agent-tools.ts</code>, llamado
+              desde <code>FormContent</code>. Corre en un efecto, nunca en el
+              servidor.
+            </li>
+            <li>
+              Un <code>AbortController</code> por registro. Se aborta al
+              desmontar, al cambiar <code>agent</code> y al cambiar el esquema
+              (memoizado sobre <code>sections</code>, <code>definition</code>,
+              <code>context</code> y la localización). El doble montaje de
+              StrictMode queda cubierto: aborta y vuelve a registrar.
+            </li>
+            <li>
+              Lo que leen los <code>execute</code> (store, registro,
+              <code>formRef</code>) va en refs, así los tools no se reconstruyen
+              en cada render y nada vuelve a registrarse por una tecla.
+            </li>
+            <li>
+              Si <code>registerTool</code> rechaza (nombre duplicado, política
+              de permisos), se avisa con <code>logger.warn</code> y el
+              formulario sigue igual.
+            </li>
+          </ul>
+
+          <h3 id="carga">
+            <span class="num">3.7</span>Carga diferida y costo cero
+          </h3>
+          <ul>
+            <li>
+              El efecto comprueba <code>'modelContext' in document</code> y solo
+              entonces hace <code>import('./agent-tools')</code>. Con
+              <code>splitting</code> de esbuild en ESM queda como un chunk
+              aparte.
+            </li>
+            <li>
+              El bundle CJS no divide código: ahí el módulo va incluido. Hay que
+              medir cuánto suma y decidir si se acepta.
+            </li>
+            <li>
+              Objetivo: el chunk principal crece menos de 0.5 kB gzip. Se mide
+              con <code>lib-size</code> antes y después y se compara contra el
+              límite de 285 kB del job <code>bundle-size</code>.
+            </li>
+          </ul>
+
+          <h3 id="tipos"><span class="num">3.8</span>Tipos de TypeScript</h3>
+          <p>
+            <code>lib.dom</code> todavía no incluye la API. Se declara un tipo
+            mínimo propio en <code>client/lib/model-context.ts</code>, a partir
+            del IDL de la <a href="#api">sección 1</a>, sin <code>any</code>.
+            Ejemplo: entrada <code>Record&lt;string, ToolValue&gt;</code>, donde
+            <code>ToolValue</code> es <code>Value</code>, un array de filas o
+            <code>null</code>. Si la API cambia, se cambia en ese único archivo.
+          </p>
+
+          <h3 id="seguridad">
+            <span class="num">3.9</span>Seguridad y privacidad
+          </h3>
+          <div class="callout warn">
+            La definición se trata como contenido de confianza del autor; lo que
+            manda el agente, como entrada de usuario.
+          </div>
+          <ul>
+            <li>
+              <strong>Inyección de instrucciones:</strong>
+              <code>description</code> y los textos de los campos se toman de la
+              definición <strong>sin interpolar</strong>.
+              <code>{context…}</code>, <code>{env…}</code> y
+              <code>{value}</code> pueden llevar datos del host o del usuario.
+              Se documenta que la definición es contenido de confianza del
+              autor.
+            </li>
+            <li>
+              <strong>Sobre-parametrización:</strong> la spec advierte que los
+              parámetros opcionales invitan al agente a aportar datos
+              personales. Por eso <code>input/password</code> queda fuera por
+              defecto y existe <code>advanced.agent: false</code>. La
+              documentación recomienda exponer solo lo que el formulario
+              necesita.
+            </li>
+            <li>
+              <strong>Acciones consecuenciales:</strong> el envío nunca es
+              implícito: rellenar no envía. Los formularios de pago o borrado
+              deben declarar <code>consequential: true</code>.
+            </li>
+            <li>
+              <strong>Entradas no confiables:</strong> los argumentos del agente
+              se tratan como entrada de usuario: pasan por el bloqueo de campos
+              y por la validación de Zod, igual que lo que se escribe a mano.
+            </li>
+            <li>
+              <strong>Desactivación:</strong> un sitio puede apagarlo con
+              <code>Permissions-Policy: tools=()</code> sin tocar luna.
+            </li>
+          </ul>
+        </section>
+
+        <section id="fases">
+          <h2><span class="num">4.</span>Fases y tareas</h2>
+          <div class="phases">
+            <div class="card">
+              <div class="phase-head">
+                <h3>Fase 0: prototipo en el editor, sin tocar la librería</h3>
+                <span class="chip">1 a 2 días</span>
+              </div>
+              <p>
+                Objetivo: medir el valor con un agente real y confirmar los
+                límites que justifican la fase 1.
+              </p>
+              <ul class="tasks">
+                <li>
+                  En
+                  <code
+                    >apps/react-luna-editor/app/reactive/reactive-form-preview.tsx</code
+                  >, registrar <code>fill_form</code> (llama
+                  <code>setValues</code>) y <code>submit_form</code> (<code
+                    >requestSubmit()</code
+                  >
+                  y espera <code>onSuccess</code>) cuando exista
+                  <code>document.modelContext</code>.
+                </li>
+                <li>
+                  Esquema con
+                  <code>z.toJSONSchema(buildFormSchema(form.sections))</code>.
+                  Requiere agregar <code>zod</code> como dependencia del editor,
+                  que hoy solo la tiene <code>luna-react</code> como peer.
+                </li>
+                <li>
+                  Probar con el flag de Chrome y la extensión Model Context Tool
+                  Inspector. Medir con un agente (<a href="#medicion"
+                    >sección 6</a
+                  >).
+                </li>
+                <li>
+                  Documentar los límites esperados:
+                  <ul>
+                    <li>
+                      los cambios del host no disparan eventos
+                      <code>value</code> (es intencional);
+                    </li>
+                    <li>
+                      una lista toma las filas del host solo al montarse
+                      (<code>useFieldList</code>);
+                    </li>
+                    <li>
+                      el host no se entera de los errores de validación, porque
+                      el <code>Form</code> no expone un <code>onError</code>.
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="phase-head">
+                <h3>Fase 1: librería</h3>
+                <span class="chip">aproximadamente 1 semana</span>
+              </div>
+              <ul class="tasks">
+                <li>
+                  <code>packages/luna-core/src/util/tool-schema.ts</code> con
+                  <code>buildToolSchema</code> (<a href="#esquema">3.3</a>),
+                  exportado también por <code>react-luna-form/schema</code> para
+                  quien quiera registrar tools propios. Más
+                  <code>tests/unit/tool-schema.spec.ts</code>.
+                </li>
+                <li>
+                  Registro: <code>apply</code> en <code>useSchema</code> y su
+                  registro desde <code>InputBase</code> (<a href="#fill">3.4</a
+                  >).
+                </li>
+                <li>
+                  <code>client/lib/agent-tools.ts</code>: los tools de rellenado
+                  (varias pasadas, listas, validación y respuesta) y de envío
+                  (<code>requestSubmit</code> y <em>resolver</em>).
+                </li>
+                <li>
+                  <code>client/hook/use-agent-tools.ts</code>: detección, import
+                  diferido, registro y <code>AbortController</code> (<a
+                    href="#ciclo"
+                    >3.6</a
+                  >, <a href="#carga">3.7</a>).
+                </li>
+                <li>
+                  Prop <code>agent</code> en el <code>Form</code> del cliente y
+                  <code>formRef</code> en <code>component/form.tsx</code>.
+                </li>
+                <li>
+                  <code>advanced.agent</code> en los tipos de core
+                  (<code>type.ts</code>).
+                </li>
+                <li>
+                  Documentación:
+                  <code>packages/luna-react/docs/agents/webmcp.md</code> y una
+                  fila en la tabla "Where to look" de
+                  <code>docs/index.md</code>. <code>CLAUDE.md</code> pide
+                  mantener los docs al día porque se publican con el paquete.
+                </li>
+                <li>
+                  e2e (<a href="#pruebas">sección 5</a>) y la medición
+                  antes/después (<a href="#medicion">sección 6</a>).
+                </li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="phase-head">
+                <h3>Fase 2: pulido</h3>
+                <span class="chip">3 a 5 días</span>
+              </div>
+              <ul class="tasks">
+                <li>
+                  Elegir, con mediciones, entre esperar el debounce o el camino
+                  inmediato (<a href="#fill">3.4</a>).
+                </li>
+                <li>
+                  Usar <code>toolactivated</code> y <code>toolcancel</code> para
+                  resaltar el formulario mientras un agente lo usa (por ejemplo
+                  con un atributo <code>data-agent-active</code>).
+                </li>
+                <li>
+                  Fuentes remotas: valorar un tercer tool de solo lectura
+                  (<code>&lt;name&gt;_options</code>,
+                  <code>readOnlyHint</code>) que devuelva las opciones ya
+                  cargadas.
+                </li>
+                <li>
+                  En el editor, tools de autoría (<code>set_definition</code>,
+                  <code>get_definition</code>) para armar formularios desde
+                  lenguaje natural.
+                </li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <div class="phase-head">
+                <h3>Fase 3: endurecimiento</h3>
+                <span class="chip">continuo</span>
+              </div>
+              <ul class="tasks">
+                <li>
+                  Revisión de seguridad contra los riesgos de la spec
+                  (inyección, intención mal representada,
+                  sobre-parametrización).
+                </li>
+                <li>
+                  Seguir los cambios de la API y del origin trial, versión por
+                  versión de Chrome.
+                </li>
+                <li>
+                  Opcional: atributos declarativos en
+                  <code>react-luna-form/server</code> para formularios simples
+                  sin JavaScript.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="pruebas">
+          <h2><span class="num">5.</span>Pruebas</h2>
+          <ul>
+            <li>
+              <strong>Unitarias (Vitest):</strong> el mapeo de
+              <a href="#esquema">3.3</a> completo. Y para el puente de
+              <code>apply</code>, las funciones puras que ordenan las pasadas y
+              arman la respuesta.
+            </li>
+            <li>
+              <strong>e2e (Playwright):</strong> un proyecto nuevo
+              <code>chromium-webmcp</code> con el flag de WebMCP activado.
+              Firefox y WebKit no lo tienen y se saltan esos specs, que deben
+              comprobar que sin la API no se registra nada ni aparece ningún
+              error.
+              <ul>
+                <li>
+                  Hay que confirmar el nombre de la <em>feature</em> de Chromium
+                  que corresponde a <code>#enable-webmcp-testing</code> para
+                  pasarlo en <code>launchOptions.args</code>.
+                </li>
+                <li>
+                  Los tools se ejecutan con
+                  <code>document.modelContext.getTools()</code> y
+                  <code>executeTool()</code> dentro de
+                  <code>page.evaluate</code>.
+                </li>
+                <li>
+                  Casos:
+                  <ul>
+                    <li>
+                      registro al montar y desregistro al desmontar y al cambiar
+                      la definición;
+                    </li>
+                    <li>
+                      rellenado de texto, email, número, fecha, hora, select,
+                      radio, checkbox, chips y una lista con filas;
+                    </li>
+                    <li>
+                      un evento <code>state</code> que revela un campo, en dos
+                      pasadas;
+                    </li>
+                    <li>
+                      autocompletado con un evento <code>value</code> y
+                      <code>transform</code>;
+                    </li>
+                    <li>
+                      un campo bloqueado reportado en <code>skipped</code>;
+                    </li>
+                    <li>errores estructurados;</li>
+                    <li>envío con éxito y con fallo de validación;</li>
+                    <li><code>consequentialHint</code> presente;</li>
+                    <li>sin la prop <code>agent</code>, cero tools.</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Render budgets:</strong> los 11 existentes siguen igual, y
+              uno nuevo comprueba que una tecla en un formulario con
+              <code>agent</code> no vuelve a registrar los tools.
+            </li>
+            <li>
+              <strong>Bundle:</strong> el job <code>bundle-size</code> sigue
+              bajo el límite, y el chunk principal no crece más de 0.5 kB gzip.
+            </li>
+          </ul>
+        </section>
+
+        <section id="medicion">
+          <h2><span class="num">6.</span>Medición antes y después</h2>
+          <ul>
+            <li>
+              <strong>Línea base:</strong> un agente (la extensión agéntica de
+              ejemplo de Chrome o un bucle propio con un LLM) llena tres
+              formularios de referencia con automatización del DOM:
+              <ol>
+                <li>uno simple de texto;</li>
+                <li>
+                  uno condicional, con un evento <code>state</code> y un
+                  autocompletado <code>value</code>;
+                </li>
+                <li>uno con una lista de filas, una fecha y un select.</li>
+              </ol>
+            </li>
+            <li>
+              <strong>Después:</strong> los mismos tres formularios con los
+              tools.
+            </li>
+            <li>
+              <strong>Métricas:</strong> tasa de éxito (valores correctos
+              enviados), tiempo total, tokens, número de acciones o llamadas y
+              número de reintentos.
+            </li>
+            <li>
+              <strong>Protocolo:</strong> 10 corridas por formulario y por modo,
+              alternadas, en el mismo modelo y la misma máquina.
+            </li>
+            <li>
+              <strong>Sin regresión para quien no lo usa:</strong> tamaño del
+              bundle con <code>lib-size</code>, render budgets e interacción con
+              <code>ab-timing</code>, con la prop presente y ausente.
+            </li>
+          </ul>
+        </section>
+
+        <section id="riesgos">
+          <h2><span class="num">7.</span>Riesgos y preguntas abiertas</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Riesgo</th>
+                  <th>Mitigación</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>La API cambia o el origin trial termina</td>
+                  <td>
+                    Opt-in, detección de soporte, tipos y llamadas aislados en
+                    dos archivos, sin dependencias externas
+                  </td>
+                </tr>
+                <tr>
+                  <td>Solo Chromium</td>
+                  <td>Mejora progresiva: sin la API no pasa nada</td>
+                </tr>
+                <tr>
+                  <td>El esquema no expresa reglas condicionales</td>
+                  <td>
+                    Descripción en texto y validación en
+                    <code>execute</code> con errores accionables
+                  </td>
+                </tr>
+                <tr>
+                  <td>Un agente rellena datos sensibles</td>
+                  <td>
+                    <code>input/password</code> fuera por defecto,
+                    <code>advanced.agent: false</code> y documentación
+                  </td>
+                </tr>
+                <tr>
+                  <td>Inyección vía textos interpolados</td>
+                  <td>
+                    Descripciones sin interpolar (<a href="#seguridad">3.9</a>)
+                  </td>
+                </tr>
+                <tr>
+                  <td>Los tools se registran de más por renders</td>
+                  <td>
+                    Esquema memoizado y <code>execute</code> leyendo refs;
+                    budget nuevo
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Preguntas abiertas</h3>
+          <ol>
+            <li>
+              ¿El nombre de la prop: <code>agent</code>, <code>tool</code> o
+              <code>webmcp</code>?
+            </li>
+            <li>
+              ¿El tool de rellenado debe mostrar los errores en la UI o solo
+              devolverlos?
+            </li>
+            <li>
+              ¿Los tipos personalizados de <code>defineCustomInput</code> deben
+              poder declarar su esquema (<code>advanced.agent.schema</code>) o
+              se registra en <code>defineConfig</code>?
+            </li>
+            <li>
+              ¿Un solo tool con <code>submit: boolean</code> en lugar de dos? La
+              guía comunitaria recomienda separarlos para poder marcar solo el
+              envío como consecuencial.
+            </li>
+            <li>
+              ¿Esperar el debounce de 300 ms o agregar un camino inmediato para
+              valores aplicados por un tool?
+            </li>
+            <li>
+              ¿Exportar <code>buildToolSchema</code> en
+              <code>react-luna-form/schema</code> desde la fase 1?
+            </li>
+          </ol>
+        </section>
+
+        <section id="aceptacion">
+          <h2><span class="num">8.</span>Criterios de aceptación</h2>
+          <ul class="tasks">
+            <li>
+              Sin la prop <code>agent</code>, o en un navegador sin WebMCP,
+              ningún tool registrado, ningún render extra y el chunk principal
+              crece menos de 0.5 kB gzip.
+            </li>
+            <li>
+              Con la prop:
+              <ul>
+                <li>
+                  <code>getTools()</code> devuelve
+                  <code>&lt;name&gt;_fill</code> y
+                  <code>&lt;name&gt;_submit</code> con el esquema de
+                  <a href="#esquema">3.3</a>;
+                </li>
+                <li>
+                  rellenar dispara las mismas transformaciones y eventos que
+                  escribir a mano;
+                </li>
+                <li>los errores llegan por campo;</li>
+                <li>enviar devuelve el resultado de la acción.</li>
+              </ul>
+            </li>
+            <li>
+              Tipos, lint, tests unitarios y e2e en verde, incluido el proyecto
+              <code>chromium-webmcp</code>.
+            </li>
+            <li>
+              La medición de la <a href="#medicion">sección 6</a> está publicada
+              con la tasa de éxito, el tiempo, los tokens y las acciones, por
+              formulario y por modo.
+            </li>
+            <li>
+              La documentación (<code>docs/agents/webmcp.md</code>) describe la
+              prop, <code>advanced.agent</code>, el mapeo de tipos y las
+              consideraciones de seguridad.
+            </li>
+          </ul>
+        </section>
+
+        <section id="fuentes">
+          <h2>Fuentes</h2>
+          <ul>
+            <li>
+              <a href="https://developer.chrome.com/docs/ai/webmcp?hl=es-419"
+                >WebMCP, Chrome for Developers</a
+              >
+            </li>
+            <li>
+              <a href="https://webmachinelearning.github.io/webmcp/"
+                >Especificación WebMCP, W3C Web Machine Learning Community
+                Group</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://developer.chrome.com/docs/ai/webmcp/imperative-api"
+                >WebMCP: API imperativa</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://developer.chrome.com/docs/ai/webmcp/declarative-api?hl=en"
+                >WebMCP: API declarativa</a
+              >
+            </li>
+            <li>
+              <a href="https://github.com/GoogleChromeLabs/use-webmcp-tool"
+                >GoogleChromeLabs/use-webmcp-tool</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://developer.chrome.com/docs/lighthouse/agentic-browsing/registered-webmcp-tools"
+                >Lighthouse: Registered WebMCP tools</a
+              >
+            </li>
+          </ul>
+        </section>
+
+        <footer class="doc">
+          Versión HTML de <code>plan/webmcp-imperativa.md</code>.
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>
