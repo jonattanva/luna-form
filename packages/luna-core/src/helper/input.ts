@@ -19,6 +19,7 @@ import {
   buildDateLimits,
   buildSuggestedZone,
   buildYearLimits,
+  displayDate,
   getDateFormat,
   getMonth,
   getTimeFormat,
@@ -51,7 +52,7 @@ import {
   isTime,
   isValidValue,
 } from '../util/is-input'
-import { isObject, isString } from '../util/is-type'
+import { isEmpty, isObject, isString } from '../util/is-type'
 import { translateOptions, type BuiltInKey } from '../util/translate'
 import type {
   Chips,
@@ -569,6 +570,25 @@ export function getPreviewOptions(
 // row's preview shows its day in all ask here.
 export function dateFormatOf(field?: Field): DateFormat | undefined {
   return field && isDate(field) ? getDateFormat(field) : undefined
+}
+
+/**
+ * The text a row's preview shows for a value, or nothing: empty for a value
+ * that is not one thing to read -- nothing at all, an object, a list -- and a
+ * date in the format its field shows it in. The row's label and its tags both
+ * read a value here, so the two cannot show the same leaf differently.
+ */
+export function previewText(
+  value: unknown,
+  dateFormat?: DateFormat,
+  lang?: string
+): string {
+  if (isEmpty(value) || isObject(value) || Array.isArray(value)) {
+    return ''
+  }
+
+  const text = String(value)
+  return dateFormat ? displayDate(text, dateFormat, lang) : text
 }
 
 export function resolveOptionLabel(

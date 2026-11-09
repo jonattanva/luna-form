@@ -44,7 +44,9 @@ English, on every machine. See
 
 - **Unknown filter name**: the entire placeholder is preserved literally (`{value | foo}` stays as `{value | foo}`).
 - **Invalid input** (NaN for numeric filters, unparseable date for date filters): the filter returns `String(value)` and the surrounding template still renders.
-- **Missing key**: the placeholder is preserved literally.
+- **Missing key**: the placeholder is preserved literally. A field's own
+  `{value}` in its description is never missing: a field that holds nothing
+  puts nothing there.
 
 ## Reference
 

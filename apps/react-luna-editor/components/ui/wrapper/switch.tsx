@@ -1,5 +1,6 @@
 import { Switch as Component } from '../switch'
 import { Switch as SwitchPrimitive } from 'radix-ui'
+import { reportValue } from '@/lib/utils'
 
 export function Switch({
   onChange,
@@ -7,14 +8,5 @@ export function Switch({
 }: React.ComponentProps<typeof SwitchPrimitive.Root> & {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 }) {
-  function handleCheckedChange(value: boolean | 'indeterminate') {
-    if (onChange) {
-      const event = {
-        target: { value },
-      } as React.ChangeEvent<HTMLInputElement>
-      onChange(event)
-    }
-  }
-
-  return <Component {...props} onCheckedChange={handleCheckedChange} />
+  return <Component {...props} onCheckedChange={reportValue(onChange)} />
 }

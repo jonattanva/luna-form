@@ -12,6 +12,7 @@ import {
   ComboboxCollection,
   ComboboxSeparator,
 } from '@/components/ui/combobox'
+import { reportValue } from '@/lib/utils'
 
 type OptionItem = { value: string; label: string }
 type OptionGroup = { label: string; items: OptionItem[] }
@@ -46,13 +47,10 @@ export function ComboboxWithGroup({
     return null
   }
 
+  const report = reportValue(onChange)
+
   function handleValueChange(label: string | null) {
-    if (onChange) {
-      const event = {
-        target: { value: getValue(label) },
-      } as React.ChangeEvent<HTMLInputElement>
-      onChange(event)
-    }
+    report(getValue(label))
   }
 
   return (

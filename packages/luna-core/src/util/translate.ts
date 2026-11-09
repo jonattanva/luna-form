@@ -5,29 +5,27 @@ import { isObject, isString } from './is-type'
 // in its schema — they are not in its JSON — so the library owns both the key
 // and its translations. English needs no entry: the source text is the key.
 //
-// This list is the single place they are named. Keys live as bare literals in
+// This type is the single place they are named. Keys live as bare literals in
 // the components that render them, and nothing but string equality connects the
 // two: a rename on either side would silently fall back to English instead of
-// failing. Deriving `BuiltInKey` from here closes that gap — a misspelled or
-// missing key stops the build.
-export const BUILT_IN_KEYS = [
-  '(Optional)',
-  'Add item',
-  'An unexpected error occurred submitting the form.',
-  'Collapse {label} {index}',
-  'Collapse {name} ({label} {index})',
-  'Expand {label} {index}',
-  'Expand {name} ({label} {index})',
-  'Please correct the errors and try again.',
-  'Remove {label} item {index}',
-  'Remove {name} ({label} item {index})',
-  'There were validation errors submitting the form.',
-  'Unknown error',
-  'No',
-  'Yes',
-] as const
-
-export type BuiltInKey = (typeof BUILT_IN_KEYS)[number]
+// failing. Typing every key against this closes that gap — a misspelled or
+// missing key stops the build. A type and not an array: the list was only ever
+// read for its type, and nothing at runtime asks which keys there are.
+export type BuiltInKey =
+  | '(Optional)'
+  | 'Add item'
+  | 'An unexpected error occurred submitting the form.'
+  | 'Collapse {label} {index}'
+  | 'Collapse {name} ({label} {index})'
+  | 'Expand {label} {index}'
+  | 'Expand {name} ({label} {index})'
+  | 'Please correct the errors and try again.'
+  | 'Remove {label} item {index}'
+  | 'Remove {name} ({label} item {index})'
+  | 'There were validation errors submitting the form.'
+  | 'Unknown error'
+  | 'No'
+  | 'Yes'
 
 // A language ships either every key or none: a half-translated dictionary would
 // mix two languages in one form, which reads worse than staying in English.

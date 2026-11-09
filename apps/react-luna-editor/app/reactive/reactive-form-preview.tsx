@@ -29,14 +29,21 @@ export function ReactiveFormPreview() {
   // let a test set one -- `env` holds the values a label can interpolate and
   // `style` is the form-wide layout default, and nothing else here can vary
   // either.
-  const formConfig =
-    form.env || form.style
-      ? {
-          ...config,
-          ...(form.env ? { env: form.env } : {}),
-          ...(form.style ? { style: form.style } : {}),
-        }
-      : config
+  //
+  // Memoized like `form`, and for the same reason: every field is memoized on
+  // the config it is handed, so a new one on each keystroke -- this page sets
+  // state on every one -- rendered every field of a form that declares either.
+  const formConfig = useMemo(
+    () =>
+      form.env || form.style
+        ? {
+            ...config,
+            ...(form.env ? { env: form.env } : {}),
+            ...(form.style ? { style: form.style } : {}),
+          }
+        : config,
+    [form.env, form.style]
+  )
 
   const [values, setValues] = useState<Record<string, unknown>>(
     () => (form.value as Record<string, unknown>) ?? {}

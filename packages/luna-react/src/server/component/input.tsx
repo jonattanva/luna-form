@@ -46,6 +46,7 @@ export function Input(
       field={props.field}
       horizontal={props.horizontal}
       localization={props.localization}
+      value={defaultValue}
     >
       {/* In the client's order: `advanced.data` first, so an attribute the
           form writes for its own rules is the form's to say. */}

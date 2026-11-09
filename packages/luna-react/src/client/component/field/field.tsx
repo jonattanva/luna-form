@@ -1,4 +1,5 @@
 import { Field as Component } from '../../../component/field/field'
+import { FieldError } from '../../../component/field/field-error'
 import { memo, useMemo } from 'react'
 import { fieldStateAtom } from '../../lib/state-store'
 import { inputErrorAtom } from '../../lib/error-store'
@@ -44,7 +45,9 @@ function FieldWithMeta(props: FieldProps) {
     return null
   }
 
-  return <Component {...props} errors={errors} field={field} />
+  return (
+    <Component {...props} error={FieldError} errors={errors} field={field} />
+  )
 }
 
 /**

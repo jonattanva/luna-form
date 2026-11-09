@@ -1,5 +1,8 @@
 import { Control as Action } from './control'
-import { StaticFieldSet } from './field/field-set-static'
+import {
+  StaticFieldSet,
+  type CollapsibleFieldSetProps,
+} from './field/field-set-static'
 import { Group } from './group'
 import { Separator } from './separator'
 import { isGuardHidden } from '../lib/visibility'
@@ -21,7 +24,7 @@ export type GuardProps = Readonly<{
 // This is what keeps the server entry loadable under the `react-server`
 // condition: a tree shared by both sides cannot import an atom, because jotai
 // reaches for `createContext` as it loads and React does not export one there.
-export function StaticGuard(props: GuardProps) {
+function StaticGuard(props: GuardProps) {
   return isGuardHidden({}, props.fields) ? null : props.children
 }
 
@@ -36,7 +39,7 @@ export function Form(
     context?: Record<string, unknown>
     control?: Control
     definition?: Definition
-    fieldSet?: React.ComponentType<React.ComponentProps<typeof StaticFieldSet>>
+    collapsible?: React.ComponentType<CollapsibleFieldSetProps>
     guard?: React.ComponentType<GuardProps>
     isPending?: boolean
     noValidate?: boolean
@@ -48,7 +51,6 @@ export function Form(
 ) {
   const sections = prepare(props.sections, props.definition, props.context)
   const Guard = props.guard ?? StaticGuard
-  const FieldSet = props.fieldSet ?? StaticFieldSet
 
   // The client form submits through `onSubmit`, which dispatches the action
   // itself so that React resets nothing after a failed submit. See
@@ -68,8 +70,9 @@ export function Form(
               key={`key-${section.id}-${index}`}
               fields={section.fields ?? []}
             >
-              <FieldSet
+              <StaticFieldSet
                 advanced={props.advanced}
+                collapsible={props.collapsible}
                 section={section}
                 step={index + 1}
                 style={props.config.style}
@@ -79,7 +82,7 @@ export function Form(
                   disabled: props.readOnly,
                   fields: section.fields,
                 })}
-              </FieldSet>
+              </StaticFieldSet>
               {section.advanced?.separator && <Separator />}
             </Guard>
           ))}

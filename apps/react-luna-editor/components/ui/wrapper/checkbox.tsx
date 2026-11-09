@@ -1,5 +1,6 @@
 import { Checkbox as Component } from '../checkbox'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
+import { reportValue } from '@/lib/utils'
 
 export function Checkbox({
   onChange,
@@ -7,14 +8,5 @@ export function Checkbox({
 }: React.ComponentProps<typeof CheckboxPrimitive.Root> & {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 }) {
-  function handleCheckedChange(value: boolean | 'indeterminate') {
-    if (onChange) {
-      const event = {
-        target: { value },
-      } as React.ChangeEvent<HTMLInputElement>
-      onChange(event)
-    }
-  }
-
-  return <Component {...props} onCheckedChange={handleCheckedChange} />
+  return <Component {...props} onCheckedChange={reportValue(onChange)} />
 }

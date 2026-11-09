@@ -160,6 +160,15 @@ export function useFieldList(
     [field.name, isTranslatePath, items, parentTranslate]
   )
 
+  // The same translation as the last commit left it, for the handlers below.
+  // They run after that commit -- a click, the effect that applies an
+  // assignment -- so this is the translation they would have read anyway, and
+  // reading it here is what lets them keep one identity while rows come and go.
+  // Closing over `translatePath` itself rebuilt `handleRemove` with every row
+  // added or removed, and every row is memoized on it: the whole list rendered
+  // again, rows that had not moved included.
+  const translatePathRef = useLatest(translatePath)
+
   // Hydrate the flat value atom up front, keyed by stable id, from the initial
   // value prop. Collapsed items live inside <Activity mode="hidden">, where the
   // leaf inputs' hydration effect is suspended, so without this their values are
@@ -226,11 +235,11 @@ export function useFieldList(
   const emitChange = useCallback(
     (rows: ListRows) => {
       onValueChangeRef.current?.({
-        name: translatePath(field.name),
+        name: translatePathRef.current(field.name),
         value: rows,
       })
     },
-    [field.name, onValueChangeRef, translatePath]
+    [field.name, onValueChangeRef, translatePathRef]
   )
 
   // Everything a rewrite of existing rows tells the consumer, in one place: the
@@ -251,12 +260,12 @@ export function useFieldList(
         return
       }
 
-      const base = translatePath(field.name)
+      const base = translatePathRef.current(field.name)
       for (const entry of positionalEntries(base, from, previous, next)) {
         report(entry)
       }
     },
-    [emitChange, field.name, onValueChangeRef, translatePath]
+    [emitChange, field.name, onValueChangeRef, translatePathRef]
   )
 
   const addItem = useCallback(() => {

@@ -72,6 +72,18 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
     )
   })
 
+  // A field's description reads `{value}` on the server too: what the field is
+  // rendered holding, which comes from the host. It used to stay as written,
+  // whatever the host passed.
+  test("should put the value the host passes in a field's description", async ({
+    request,
+  }) => {
+    const html = await (await request.get('/server')).text()
+
+    expect(html).toContain('Issued as LF-0042.')
+    expect(html).not.toContain('{value}')
+  })
+
   // The server tree has no field state, so a field's own `disabled` is the
   // only thing that can lock it there. Read from the body for the same reason
   // as above: the markup is what the server decided.

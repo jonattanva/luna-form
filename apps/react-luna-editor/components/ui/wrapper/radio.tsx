@@ -1,6 +1,7 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { RadioGroup, RadioGroupItem } from '../radio-group'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '../field'
+import { reportValue } from '@/lib/utils'
 
 export function Radio({
   onChange,
@@ -9,17 +10,8 @@ export function Radio({
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> & {
   options?: Array<{ value: string; label: string; description?: string }>
 }) {
-  function handleValueChange(value: string) {
-    if (onChange) {
-      const event = {
-        target: { value },
-      } as React.ChangeEvent<HTMLInputElement>
-      onChange(event)
-    }
-  }
-
   return (
-    <RadioGroup {...props} onValueChange={handleValueChange}>
+    <RadioGroup {...props} onValueChange={reportValue(onChange)}>
       {options?.map((option, index) => (
         <Field orientation="horizontal" key={index}>
           <RadioGroupItem value={option.value} id={option.value} />

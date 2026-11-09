@@ -19,7 +19,7 @@ function isUnsafePath(name: string): boolean {
 // `in` is true for whatever an object inherits -- `toString`, `constructor`,
 // and anything a polluted prototype carries -- and an inherited member is not
 // data. Every walk over a dotted name asks this instead.
-export function hasOwn(value: object, key: string): boolean {
+function hasOwn(value: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key)
 }
 

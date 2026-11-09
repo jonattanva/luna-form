@@ -58,7 +58,10 @@ Three details decide most of what you will hit:
 
 - **`{value}` is a description's, not a label's.** A description is rendered
   with the field's current value in scope, so `{value}` there tracks what the
-  user typed. A label is not: the same placeholder in a `label` resolves to
+  user typed. A field that holds nothing puts nothing there, filtered or not,
+  the same before the first keystroke as after the user empties it. On the
+  server it reads what the field is rendered holding, which is the host's
+  `value`. A label is not: the same placeholder in a `label` resolves to
   nothing and stays on screen as the literal `{value}`.
 - **Interpolation runs first, translation second.** The resolved string is what
   gets looked up in the [`translations`](../fields/list.md#localization)

@@ -1,7 +1,6 @@
 import './globals.css'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { cn } from '@/lib/utils'
-import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import type { Metadata } from 'next'
@@ -39,7 +38,6 @@ export default function RootLayout({
         >
           {children}
           <ThemeToggle />
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

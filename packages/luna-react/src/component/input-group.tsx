@@ -12,6 +12,9 @@ export function InputGroup(
     field: Field
     horizontal?: boolean
     localization?: Localization
+    // What the field is rendered holding, for the description. See
+    // `DescriptionProps`.
+    value?: unknown
   }>
 ) {
   // What the client passes, or the definition's own text. See
@@ -28,6 +31,7 @@ export function InputGroup(
           field={props.field}
           horizontal={props.horizontal}
           localization={props.localization}
+          value={props.value}
         />
       )}
       {props.children}
@@ -37,6 +41,7 @@ export function InputGroup(
           context={props.context}
           field={props.field}
           localization={props.localization}
+          value={props.value}
         />
       )}
     </>

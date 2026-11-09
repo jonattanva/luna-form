@@ -1,5 +1,5 @@
 import { FailedSubmitContext } from '../context/failed-submit-context'
-import { FieldSet } from './field/field-set'
+import { FieldSetAdvanced } from './field/field-set-advanced'
 import { Form as Body } from '../../component/form'
 import { Input } from './input'
 import { Slot } from './slot/slot'
@@ -184,7 +184,7 @@ export function FormContent<
           context={props.context}
           control={props.children}
           definition={props.definition}
-          fieldSet={FieldSet}
+          collapsible={FieldSetAdvanced}
           guard={VisibilityGuard}
           isPending={isPending}
           noValidate

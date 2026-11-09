@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@/lib/utils'
+import { cn, toggleSelection } from '@/lib/utils'
 
 type Option = {
   label: string
@@ -38,16 +38,9 @@ export function Chips({
   multiple?: boolean
 }) {
   function toggleDay(dayValue: string) {
-    let next: string[]
-    if (multiple) {
-      next = value.includes(dayValue)
-        ? value.filter((v) => v !== dayValue)
-        : [...value, dayValue]
-    } else {
-      next = value.includes(dayValue) ? [] : [dayValue]
-    }
-
-    onChange?.({ target: { value: next } })
+    onChange?.({
+      target: { value: toggleSelection(value, dayValue, multiple) },
+    })
   }
 
   return (
