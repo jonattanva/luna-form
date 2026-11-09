@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794250973832,
+  "lastUpdate": 1794250996202,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "51189b9dfc99ac440946d246a79d10f11dd17ccd",
-          "message": "Merge pull request #55 from jonattanva/fix/empty-value-from-value-prop\n\nfix(value): empty a form from the value prop, and ship the submit summary",
-          "timestamp": "2026-08-04T10:27:13-05:00",
-          "tree_id": "e7d0d74347eea8ceb5d0de65ca148b00f3512438",
-          "url": "https://github.com/jonattanva/luna-form/commit/51189b9dfc99ac440946d246a79d10f11dd17ccd"
-        },
-        "date": 1785857342503,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 272,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 605,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "718ea3d96a2b62ec265cd65b12128f05700f0a22",
           "message": "Merge pull request #56 from jonattanva/feat/interpolate-whole-placeholder\n\nfeat(list): let a value change event assign a list",
           "timestamp": "2026-08-12T11:05:07-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 19.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6720fe726252828cf8663d7d2c0f13c0b6102b73",
+          "message": "Merge pull request #145 from jonattanva/claude/transform-typed-text\n\nfix(input): rewrite only what the user types, not the text it kept",
+          "timestamp": "2026-11-09T14:02:09-05:00",
+          "tree_id": "d1fd4ac967e91fe92ffef37f483c66140ba497a9",
+          "url": "https://github.com/jonattanva/luna-form/commit/6720fe726252828cf8663d7d2c0f13c0b6102b73"
+        },
+        "date": 1794250996031,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 42.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 17.2,
             "unit": "ms"
           }
         ]
