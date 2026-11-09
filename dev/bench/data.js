@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794242060917,
+  "lastUpdate": 1794242085203,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "b4bc9394c4e3a0e28c90d1c1302220753f4e8f7c",
-          "message": "upgrade version",
-          "timestamp": "2026-08-03T15:33:40-05:00",
-          "tree_id": "ce8c5963b2bc05a005f0046b84cbc426cd1d29af",
-          "url": "https://github.com/jonattanva/luna-form/commit/b4bc9394c4e3a0e28c90d1c1302220753f4e8f7c"
-        },
-        "date": 1785789324249,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 290,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 625,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 20.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e8c61ac5ecb5e60cd614e329175f22d8a9727bf7",
+          "message": "Merge pull request #144 from jonattanva/claude/render-bundle-cleanup\n\nperf: cut renders and up-front JavaScript the form does not need, and remove duplicate and dead code",
+          "timestamp": "2026-11-09T11:33:36-05:00",
+          "tree_id": "1869a3353ff1d59cc75ccfa46f54f2b2ad6dfcf1",
+          "url": "https://github.com/jonattanva/luna-form/commit/e8c61ac5ecb5e60cd614e329175f22d8a9727bf7"
+        },
+        "date": 1794242085151,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 65.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 19.7,
             "unit": "ms"
           }
         ]
