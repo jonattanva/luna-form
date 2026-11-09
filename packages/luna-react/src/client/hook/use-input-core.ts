@@ -22,6 +22,7 @@ import { useSetAtom, useStore } from 'jotai'
 import { useTimeout } from './use-timeout'
 import {
   applyTransform,
+  applyTransformToChange,
   handleProxyEvent,
   handleSourceEvent,
   handleStateEvent,
@@ -419,9 +420,11 @@ export function useInputCore(
   // `Value`, not `unknown`: what a field reports is what it holds, and for a
   // multi-value field that is the array itself -- stored as an array and handed
   // to the consumer as one. Nothing below narrows it back to text:
-  // `applyTransform` only runs for an `input/*` field, and only on a string
-  // even then, so an array reaches `setValue` exactly as it arrived.
-  const onValueChangeRef = useLatest((value: Value) => {
+  // `applyTransformToChange` only runs for an `input/*` field, and only on a
+  // string even then, so an array reaches `setValue` exactly as it arrived.
+  // `shown` is the text the control held before the change: only what the
+  // change wrote is rewritten, and the text it kept stays as it was.
+  const onValueChangeRef = useLatest((value: Value, shown?: string) => {
     // A transient field acts and keeps nothing: neither its own stored value
     // nor a word to the consumer. Its change events still go out -- they are
     // the only reason it exists -- so this returns before the two writes and
@@ -436,7 +439,7 @@ export function useInputCore(
     }
 
     const newValue = isInput(props.field)
-      ? applyTransform(value, props.field.advanced?.transform)
+      ? applyTransformToChange(shown, value, props.field.advanced?.transform)
       : value
 
     setValue(newValue)

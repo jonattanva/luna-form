@@ -5,14 +5,17 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
+import { useLatest } from '../hook/use-latest'
 import {
-  applyTransform,
+  applyTransformToChange,
   holdValue,
   isDateRange,
   isInput,
+  isString,
   isValidValue,
   prepareInputProps,
   prepareInputValue,
+  transformCaret,
   type Field,
   type Nullable,
   type Value,
@@ -80,6 +83,8 @@ export function InputBase(
   )
 
   const inputProps = prepareInputValue(props.field, defaultValue)
+  // The text the control holds before a change, which a transform leaves alone.
+  const shownRef = useLatest(isString(defaultValue) ? defaultValue : undefined)
 
   // Disabled or read-only, the field is locked, and the value is the form's to
   // keep: a component that does not honour `disabled` -- a calendar button left
@@ -210,8 +215,9 @@ export function InputBase(
         return
       }
 
-      keepCaret(event.target, props.field)
-      onValueChangeRef.current(inputValue)
+      const shown = shownRef.current
+      keepCaret(event.target, props.field, shown)
+      onValueChangeRef.current(inputValue, shown)
       if (props.config.validation.change) {
         validated(inputValue)
       }
@@ -246,6 +252,7 @@ export function InputBase(
       setTimeoutRef,
       shouldSkipChange,
       shouldSkipOnChange,
+      shownRef,
       validated,
       valueRef,
     ]
@@ -331,14 +338,19 @@ function SubmittedValue(
   )
 }
 
-// `advanced.transform` rewrites the whole text on every change, the part the
-// user did not type too. A control whose value changes under it puts the caret
-// at the end, so the next key would land there. Writing the rewritten text here,
-// with the caret after what the user typed, leaves the field rendering the text
-// the control already holds, and React does not touch the control.
+// `advanced.transform` rewrites what the user types or pastes, and leaves the
+// rest of the text as it was (`applyTransformToChange`). A control whose value
+// changes under it puts the caret at the end, so the next key would land there.
+// Writing the rewritten text here, with the caret after what the user typed,
+// leaves the field rendering the text the control already holds, and React
+// does not touch the control.
 //
 // `email` and `number` controls report no caret, and are left as they were.
-function keepCaret(target: InputChangeEvent['target'], field: Field) {
+function keepCaret(
+  target: InputChangeEvent['target'],
+  field: Field,
+  shown: string | undefined
+) {
   if (!isInput(field) || !(target instanceof HTMLInputElement)) {
     return
   }
@@ -349,13 +361,14 @@ function keepCaret(target: InputChangeEvent['target'], field: Field) {
     return
   }
 
-  const rewrite = (text: string) => String(applyTransform(text, transform))
-  const rewritten = rewrite(target.value)
+  const rewritten = String(
+    applyTransformToChange(shown, target.value, transform)
+  )
   if (rewritten === target.value) {
     return
   }
 
-  const position = rewrite(target.value.slice(0, caret)).length
+  const position = transformCaret(shown, target.value, caret, transform)
   target.value = rewritten
   target.setSelectionRange(position, position)
 }

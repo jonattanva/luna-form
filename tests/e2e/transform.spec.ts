@@ -74,9 +74,9 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
 
   // A transform rewrites what the user types and what a `value` event writes.
   // A value the form receives was written by its host, as it is meant to be
-  // stored: it is shown the way it arrives, and rewritten whole once the user
-  // types into the field.
-  test('should keep an initial value from JSON as it arrives until the user types into it', async ({
+  // stored: it is shown the way it arrives, and what the user types into it is
+  // rewritten while the rest stays as it came.
+  test('should keep an initial value from JSON as it arrives, and rewrite only what the user types', async ({
     page,
   }) => {
     await inject(
@@ -104,8 +104,8 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
 
     const input = page.locator('input[name="localUppercase"]')
     await expect(input).toHaveValue('hello world')
-    await typeAt(input, 'hello world'.length, '!')
-    await expect(input).toHaveValue('HELLO WORLD!')
+    await typeAt(input, 'hello world'.length, 'x')
+    await expect(input).toHaveValue('hello worldX')
   })
 
   // Judged by what the form sends: a field shows its `defaultValue` as declared
@@ -144,8 +144,8 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
     )
   })
 
-  // Typing into a stored value rewrites all of it, the part the user did not
-  // type too. The caret stays where they typed, so the next key lands next to
+  // Typing into a stored value rewrites what the user types and leaves the rest
+  // as it was. The caret stays where they typed, so the next key lands next to
   // the last one and not at the end.
   test('should keep the caret where the user types into a stored value', async ({
     page,
@@ -175,8 +175,81 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
 
     const input = page.locator('input[name="key"]')
     await expect(input).toHaveValue('customerEmail')
-    await typeAt(input, 'customer'.length, 'primary')
-    await expect(input).toHaveValue('customerprimaryemail')
+    await typeAt(input, 'customer'.length, 'Primary')
+    await expect(input).toHaveValue('customerprimaryEmail')
+  })
+
+  // A key the host stored in camelCase, touched without changing it: a letter
+  // typed and erased. Rewriting the whole text would store `customeremail`,
+  // which no longer matches what the other app sends.
+  test('should keep a stored value as it was once a letter is typed and erased', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "value": {
+          "key": "customerEmail"
+        },
+        "sections": [
+          {
+            "fields": [
+              {
+                "name": "key",
+                "type": "input/text",
+                "advanced": {
+                  "transform": ["remove-space", "lowercase", "remove-accent"]
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="key"]')
+    await typeAt(input, 'customerEmail'.length, 'X')
+    await expect(input).toHaveValue('customerEmailx')
+    await page.keyboard.press('Backspace')
+    await expect(input).toHaveValue('customerEmail')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('pre code')).toContainText(
+      '"key": "customerEmail"'
+    )
+  })
+
+  // A `defaultValue` is the text the field shows, so what the user types into
+  // it is rewritten and the declared text is not.
+  test('should rewrite only what the user types after a defaultValue', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      `{
+        "sections": [
+          {
+            "fields": [
+              {
+                "defaultValue": "hello world",
+                "name": "localUppercase",
+                "type": "input/text",
+                "advanced": {
+                  "transform": "uppercase"
+                }
+              }
+            ]
+          }
+        ]
+      }`
+    )
+    await page.goto('')
+
+    const input = page.locator('input[name="localUppercase"]')
+    await typeAt(input, 'hello world'.length, 'x')
+    await expect(input).toHaveValue('hello worldX')
   })
 
   test('should keep the caret in place when the transform drops what was typed', async ({
