@@ -7,8 +7,9 @@ import { Form } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
+import { useAgentTools } from '@/lib/agent-tools'
 import { useAtomValue } from 'jotai'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 export function ReactiveFormPreview() {
   const code = useAtomValue(codeAtom)
@@ -55,6 +56,18 @@ export function ReactiveFormPreview() {
     setValues((form.value as Record<string, unknown>) ?? {})
   }
 
+  // An agent fills this form through the same `values` a person's changes
+  // land in, and submits it through the form on the page. Phase 0 of
+  // plan/webmcp-imperativa.md: see `useAgentTools`.
+  const container = useRef<HTMLDivElement>(null)
+  const agent = useAgentTools({
+    container,
+    context: form.context,
+    definition: form.definition,
+    sections: form.sections,
+    setValues,
+  })
+
   function handleValueChange(input: { name: string; value: unknown }) {
     console.log('Form values changed:', input)
     setValues((prev) => ({ ...prev, [input.name]: input.value }))
@@ -73,10 +86,11 @@ export function ReactiveFormPreview() {
     form: Record<string, unknown>
   }) {
     setResult(response)
+    agent.onSuccess(response)
   }
 
   return (
-    <div className="w-full max-w-md p-6">
+    <div className="w-full max-w-md p-6" ref={container}>
       {result && (
         <div className="mb-4">
           <p>{result.message}</p>

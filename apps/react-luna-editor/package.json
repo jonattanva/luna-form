@@ -27,7 +27,8 @@
     "react-dom": "19.3.1",
     "react-luna-form": "workspace:*",
     "sonner": "2.0.8",
-    "tailwind-merge": "3.7.0"
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
