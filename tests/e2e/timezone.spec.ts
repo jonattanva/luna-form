@@ -130,6 +130,26 @@ test.describe('Timezone select', { tag: ['@e2e'] }, () => {
     await expect(combobox).toHaveValue(/New York/)
   })
 
+  // The combobox shows a zone by its city, and what reaches the action is the
+  // zone. It used to send the city: "New York" where the field holds
+  // "America/New_York". A read-only zone was never affected, because its value
+  // travels in an input the library adds.
+  test("should submit the zone's id, not its label", async ({ page }) => {
+    await inject(page, BARE)
+    await page.goto('')
+
+    const combobox = page.getByRole('combobox', { name: /Timezone/ })
+    await combobox.click()
+    await page.getByRole('option', { name: 'New York', exact: true }).click()
+    await expect(combobox).toHaveValue('New York')
+
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+    const sent = JSON.parse(await page.locator('pre code').innerText())
+    expect(sent.timezone).toBe('America/New_York')
+  })
+
   test('should select Africa/Abidjan and reflect it in the form', async ({
     page,
   }) => {
