@@ -1,7 +1,7 @@
 # Plan: WebMCP imperativo en luna-form
 
-Estado: propuesta, sin implementar. Escrito el 2026-11-08. Revisado el
-2026-11-12.
+Estado: la fase 0 está hecha; las fases 1 a 3, sin implementar. Escrito el
+2026-11-08. Revisado el 2026-11-12.
 
 Objetivo: que un formulario de luna pueda exponerse como herramientas
 (_tools_) para agentes de IA, generadas desde la misma definición JSON que ya
@@ -27,8 +27,14 @@ Revisión del 2026-11-12:
   - listas grandes;
   - cola acotada.
 - **Contrato versionado,** con códigos de error estables (3.15).
-- **Medición:** un arnés propio, dos familias de modelos y un formulario grande
-  (sección 6).
+- **Fase 0 hecha:** probada en Chrome con WebMCP. Sus resultados cambian
+  cuatro puntos del diseño (sección 4):
+  - el esquema de `<name>_fill` va sin `required`;
+  - las pasadas esperan a que el formulario se quede quieto;
+  - `values` sale del store;
+  - un test comprueba que la acción recibe lo que reporta `values`.
+- **Medición en el navegador:** sin arnés ni APIs de modelos; la hace una
+  sesión con un agente sobre la página (sección 6).
 
 ## 1. Qué ofrece la API imperativa
 
@@ -246,8 +252,12 @@ export function buildToolSchema(
 - **Entrada:** lee la misma definición preparada que el render. `prepare` la
   devuelve sin recalcular mientras nada de lo que lee cambia
   (`client/component/form-content.tsx:66`).
-- **Salida:** un objeto con `properties`, `required` y
-  `additionalProperties: false`, en el orden de la definición.
+- **Salida:** un objeto con `properties` y `additionalProperties: false`, en
+  el orden de la definición, y aparte la lista de campos obligatorios.
+  - El esquema de `<name>_fill` no lleva `required`: un rellenado puede ser
+    parcial, y lo que no nombra conserva su valor.
+  - Los obligatorios se nombran en la descripción del tool (3.8), y el envío
+    los valida.
 - **Textos:** `title` sale de la etiqueta traducida y `description` de la
   descripción del campo sin interpolar, más las notas que agrega el mapeo.
 
@@ -369,6 +379,10 @@ Detalles:
     - `setValue` y el aviso al host;
     - los eventos de cambio.
   - La validación en `change` se deja para el final de la llamada (paso 6).
+  - Por qué no los valores del host, como en la fase 0: un formulario sin
+    `value` no tiene dónde recibirlos. Y después de un envío exitoso el
+    formulario se reinicia pero el host conserva sus valores, así que repetir
+    uno de ellos no llega al campo.
 - **Secciones colapsadas:** no hace falta abrirlas. `Collapsible` oculta su
   contenido con `hidden` sin desmontarlo (`component/collapsible.tsx:36`), así
   que sus campos siguen registrados.
@@ -389,7 +403,9 @@ Detalles:
 - **Campos condicionales, en varias pasadas:**
   1. Aplicar los valores de los campos registrados.
   2. Esperar a que React confirme el commit y terminen las transiciones de los
-     eventos `state`.
+     eventos `state`: hasta que el store deje de cambiar, no un número fijo de
+     frames. En la fase 0, dos frames no alcanzaron para que apareciera un
+     campo revelado.
   3. Volver a aplicar los valores de los campos que acaban de aparecer.
   4. Repetir hasta que nada cambie o hasta un máximo de 5 pasadas.
 - **Debounce:** los campos de texto y fecha corren sus eventos 300 ms después
@@ -440,6 +456,9 @@ Respuesta:
 - **`revealed`:** los que aparecieron durante la llamada por eventos `state`.
 - **`values`:** el valor final de cada campo que cambió durante la llamada,
   incluidos los que llenaron los eventos `value` (en el ejemplo, `city`).
+  - Sale del store, en el formato del contrato. Lo que el formulario pone en el
+    envío viene en el formato de pantalla (`09/12/1906` para una fecha), y la
+    fase 0, que lo leía de ahí, se lo devolvía así al agente.
   - Puede diferir de lo enviado por `transform`.
   - El estado completo está en `<name>_read`; así la respuesta trae solo lo que
     importa para el siguiente paso.
@@ -551,7 +570,8 @@ como mínimo. Las de luna dicen:
 - **`<name>_fill`:** pasa en una sola llamada todos los valores que conozcas.
   La respuesta trae los valores finales y los errores, así que no hace falta
   leer después. Un campo que aparece por otro se puede incluir desde la primera
-  llamada.
+  llamada. Nombra los campos que el envío necesita, que el esquema no marca
+  como obligatorios (3.3).
 - **`<name>_submit`:** llámalo una sola vez, cuando los valores estén bien.
 - **`<name>_read` y `<name>_options`:** cuándo hacen falta, y que
   `<name>_fill` ya devuelve lo que cambió.
@@ -628,13 +648,11 @@ const result = await callTool(call.name, call.input)
 
 - **Dónde corre el modelo:** el bucle suele correr en el servidor, porque la
   clave de la API no va al navegador. El host lleva cada llamada a la página y
-  devuelve el resultado. En el arnés de medición ese puente es `page.evaluate`
-  (sección 6).
+  devuelve el resultado.
 - **Por qué:** WebMCP sigue en origin trial y solo existe en Chromium. Con estas
   dos funciones:
   - los tools sirven hoy en cualquier navegador;
-  - se prueban en los tres navegadores de Playwright;
-  - la medición no necesita el flag.
+  - se prueban en los tres navegadores de Playwright.
 
 ### 3.10 Ciclo de vida, cola y permisos
 
@@ -813,28 +831,59 @@ Códigos:
 
 ## 4. Fases y tareas
 
-### Fase 0: prototipo en el editor, sin tocar la librería (2 a 3 días)
+### Fase 0: prototipo en el editor, sin tocar la librería (hecha)
 
-Objetivo: medir el valor con un agente real y confirmar los límites que
-justifican la fase 1.
+Objetivo: probar los tools con un agente real y confirmar los límites que
+justifican la fase 1. Está en `apps/react-luna-editor/lib/agent-tools.ts`, y se
+probó en Chrome con WebMCP (`document.modelContext.executeTool`).
 
-- [ ] En `apps/react-luna-editor/app/reactive/reactive-form-preview.tsx`, armar
-      `fill_form` (llama `setValues`) y `submit_form` (`requestSubmit()` y
-      espera `onSuccess`).
-  - Registrarlos en `document.modelContext` cuando exista.
-  - Solo en desarrollo, exponerlos en `window` para el arnés de medición.
-- [ ] Esquema con `z.toJSONSchema(buildFormSchema(form.sections))`. Requiere
-      agregar `zod` como dependencia del editor, que hoy solo la tiene
-      `luna-react` como peer.
-- [ ] Arnés de medición propio (sección 6): un script de Node con Playwright y
-      un bucle de tool use con un adaptador por proveedor. Lleva cada llamada a
-      `page.evaluate` y no necesita el flag de Chrome.
-- [ ] Probar también con el flag y la extensión Model Context Tool Inspector.
-- [ ] Documentar los límites esperados:
-  - los cambios del host no disparan eventos `value` (es intencional);
-  - una lista toma las filas del host solo al montarse (`useFieldList`);
-  - el host no se entera de los errores de validación, porque el `Form` no
-    expone un `onError`.
+- [x] `fill_form` y `submit_form` en la vista previa reactiva
+      (`app/reactive/reactive-form-preview.tsx`).
+  - `fill_form` escribe los valores del host y responde con lo que el
+    formulario enviaría por cada campo.
+  - `submit_form` envía el formulario de la página y espera `onSuccess`. Si la
+    validación lo detiene, lee los errores de la página.
+  - Se registran en `document.modelContext` cuando existe. Solo en desarrollo,
+    también en `window.__lunaTools`.
+- [x] Esquema con `z.toJSONSchema(buildFormSchema(...))`, sin su `required` de
+      primer nivel. `zod` pasó a ser dependencia del editor.
+- [x] Prueba en Chrome con WebMCP: rellenar y enviar de punta a punta. Un envío
+      exitoso tarda 1,15 s, de los que 1 s es la acción del editor.
+
+Resultados:
+
+- **Los valores del host sí disparan eventos.** Un `checkbox` con un evento
+  `state` reveló su campo. Una lista tomó las filas del host después de
+  montarse, con el autocompletado de su evento `value`. El plan esperaba lo
+  contrario.
+- **Los valores del host no alcanzan.** Después de un envío exitoso el
+  formulario se reinicia, pero el host conserva sus valores. Repetir uno de
+  ellos no llega al campo, y el tool lo reportaba como escrito. De ahí el
+  puente por el camino de cada campo (3.4).
+- **Dos frames no alcanzan** para la transición de un evento `state`: el campo
+  revelado apareció después de que el tool leyera los valores. Las pasadas
+  esperan a que el store deje de cambiar (3.4).
+- **El esquema de Zod no basta.** `z.toJSONSchema`:
+  - no trae etiquetas;
+  - deja la fecha sin tipo;
+  - no lista las opciones;
+  - escribe los campos opcionales como `anyOf` anidados con `const`.
+
+  De ahí `buildToolSchema` (3.3).
+
+- **El envío lleva el formato de pantalla** (`09/12/1906`): por eso `values`
+  sale del store (3.4).
+- **Un componente propio enviaba la etiqueta.**
+  - El combobox de zona horaria del editor mandaba la ciudad (`New York`) en
+    lugar de la zona (`America/New_York`), también cuando la elegía una
+    persona.
+  - Está corregido en `components/ui/wrapper/combobox.tsx`, con un test en
+    `tests/e2e/timezone.spec.ts`.
+  - De ahí un e2e de contrato: la acción recibe lo que reporta `values`
+    (sección 5).
+- **Por revisar:** después de un envío exitoso, la lista quedó con dos filas
+  vacías; y los mensajes de campo obligatorio salieron en inglés en un
+  formulario en español (sección 7).
 
 ### Fase 1: librería (1 a 2 semanas)
 
@@ -908,8 +957,12 @@ justifican la fase 1.
     lista de opciones;
   - las funciones puras que ordenan las pasadas, resuelven las rutas de hoja y
     arman la respuesta.
-- **Contrato:** cada respuesta de cada tool se valida contra su `outputSchema`,
-  y cada código de la tabla de 3.15 tiene al menos un caso.
+- **Contrato:**
+  - cada respuesta de cada tool se valida contra su `outputSchema`;
+  - cada código de la tabla de 3.15 tiene al menos un caso;
+  - un e2e por tipo de campo comprueba que lo que recibe la acción es lo que
+    reportó `values`. En la fase 0, un componente enviaba la etiqueta de la
+    opción en lugar de su valor.
 - **e2e de los tools (Playwright, Chromium, Firefox y WebKit):** por
   `listTools()` y `callTool()`, que no necesitan WebMCP. Casos:
   - rellenado de texto, email, número, fecha, hora, select, radio, checkbox,
@@ -926,6 +979,8 @@ justifican la fase 1.
   - envío con éxito, con fallo de validación, `pending` por tiempo y un segundo
     envío mientras el primero sigue en curso;
   - once llamadas a la vez: diez en orden y una `busy`;
+  - un rellenado después de un envío exitoso escribe el campo aunque repita el
+    valor que tenía antes;
   - sin `submit: true`, no existe `<name>_submit`.
 - **e2e del registro (proyecto nuevo `chromium-webmcp`):** con el flag de
   WebMCP activado.
@@ -952,10 +1007,13 @@ justifican la fase 1.
 
 ## 6. Medición antes y después
 
-- **Línea base:** un agente llena los formularios de referencia con
-  herramientas de navegador basadas en Playwright: el árbol de accesibilidad de
-  la página (`ariaSnapshot()`), clic, escribir y elegir opción. Los
-  formularios:
+La medición no usa un arnés ni llamadas pagas a APIs de modelos. La hace una
+sesión con un agente sobre la página, en el navegador: por ejemplo, Claude Code
+con la extensión de Chrome, o el agente del propio navegador.
+
+- **Línea base:** el agente llena los formularios de referencia como lo haría
+  una persona, con las herramientas del navegador: leer la página, hacer clic,
+  escribir y elegir opción. Los formularios:
   1. uno simple: cambiar un nombre y unas notificaciones, y guardar;
   2. uno condicional, con un evento `state` y un autocompletado `value`;
   3. uno con una lista de filas, una fecha y un select con muchas opciones;
@@ -964,22 +1022,17 @@ justifican la fase 1.
   Además, una página con cinco formularios, para decidir el modo agrupado
   (3.14).
 
-- **Después:** los mismos, con los tools de luna: por `callTool()` en el arnés
-  y, en Chromium con el flag, por WebMCP.
+- **Después:** los mismos, con los tools de luna, por WebMCP.
 - **Métricas:**
   - tasa de éxito (valores correctos enviados);
   - tiempo total;
-  - tokens de entrada y de salida;
-  - número de llamadas a tools;
-  - caracteres que devuelven los tools;
+  - número de llamadas a herramientas;
+  - caracteres que devuelven las herramientas;
   - número de reintentos;
-  - de escala: tamaño del esquema en caracteres y en tokens, latencia de un
-    rellenado y commits por rellenado.
-- **Protocolo:**
-  - 10 corridas por formulario y por modo, alternadas, en la misma máquina.
-  - El mismo modelo dentro de cada comparación.
-  - Al menos dos familias de modelos (por ejemplo, Claude y OpenAI o Gemini),
-    para comprobar que el resultado no depende de un proveedor.
+  - de escala: tamaño del esquema en caracteres, latencia de un rellenado y
+    commits por rellenado.
+- **Protocolo:** 3 corridas por formulario y por modo, alternadas, en la misma
+  sesión y la misma máquina.
 - **Referencia externa:** sección 9.
 - **Sin regresión para quien no lo usa:** tamaño del bundle con `lib-size`,
   render budgets e interacción con `ab-timing`, con la prop presente y ausente.
@@ -1002,6 +1055,7 @@ Riesgos:
 | Muchos formularios en una página                          | El modo agrupado, si la medición lo pide (3.14)                                                    |
 | El agente pisa lo que escribe la persona                  | `revision` en la fase 2 (3.14)                                                                     |
 | Los tools se registran de más                             | Esquema comparado por contenido, `execute` leyendo refs y un budget nuevo                          |
+| Un componente propio envía algo distinto del valor        | El e2e de contrato: la acción recibe lo que reporta `values` (sección 5)                           |
 
 Preguntas resueltas en la revisión del 12 de noviembre:
 
@@ -1022,10 +1076,13 @@ Preguntas abiertas:
 2. ¿`<name>_options` como tool aparte o como parámetro de `<name>_read`? Menos
    tools ayudan a elegir; separados, cada uno tiene una descripción simple.
 3. Con una fuente remota que todavía no cargó, ¿`<name>_options` la pide?
-4. ¿Qué dos familias de modelos usa la medición?
-5. ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos en
+4. ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos en
    `<name>_read`, 24 kB de esquema. Se confirman con la medición.
-6. ¿Con cuántos formularios en una página conviene el modo agrupado?
+5. ¿Con cuántos formularios en una página conviene el modo agrupado?
+6. De la fase 0, por revisar en luna:
+   - ¿Por qué una lista quedó con dos filas vacías después de un envío exitoso?
+   - ¿Por qué los mensajes de campo obligatorio salieron en inglés en un
+     formulario en español?
 
 ## 8. Criterios de aceptación
 
@@ -1042,6 +1099,7 @@ Preguntas abiertas:
   - Rellenar dispara las mismas transformaciones y eventos que escribir a mano.
   - La respuesta trae `values`, `revealed`, `adjusted`, `skipped` y `errors`,
     con los códigos de 3.15. Un valor que no es una opción lista las válidas.
+  - Lo que recibe la acción es lo que reportó `values`.
   - `allow` puede rechazar o esperar a una persona.
   - Enviar devuelve el resultado de la acción, o `pending` pasado el tiempo
     límite, y nunca envía dos veces a la vez.
@@ -1049,12 +1107,11 @@ Preguntas abiertas:
       formularios de referencia cumple su presupuesto.
 - [ ] Tipos, lint, tests unitarios, de contrato y e2e en verde en los tres
       navegadores, incluido el proyecto `chromium-webmcp`.
-- [ ] La medición de la sección 6 está publicada por formulario, por modo y por
-      familia de modelos, con:
+- [ ] La medición de la sección 6 está publicada por formulario y por modo,
+      con:
   - la tasa de éxito;
   - el tiempo;
-  - los tokens;
-  - las llamadas a tools;
+  - las llamadas a herramientas;
   - los caracteres devueltos;
   - las métricas de escala.
 - [ ] La documentación (`docs/agents/tools.md`) describe:

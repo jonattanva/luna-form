@@ -472,6 +472,23 @@
         list-style: disc;
       }
 
+      ul.tasks > li.done::before {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      ul.tasks > li.done::after {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: calc(0.42em + 2px);
+        width: 4px;
+        height: 8px;
+        border: solid var(--bg);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+
       footer.doc {
         margin-top: 56px;
         padding-top: 18px;
@@ -536,7 +553,7 @@
       <main>
         <header class="doc">
           <div class="eyebrow">
-            <span class="chip status">Propuesta, sin implementar</span>
+            <span class="chip status">Fase 0 hecha</span>
             <span class="chip">8 de noviembre de 2026</span>
             <span class="chip">Revisado el 12 de noviembre</span>
             <span class="chip">luna-form</span>
@@ -607,8 +624,30 @@
                 estables (<a href="#contrato">3.15</a>).
               </li>
               <li>
-                <strong>Medición:</strong> un arnés propio, dos familias de
-                modelos y un formulario grande (<a href="#medicion">sección 6</a
+                <strong>Fase 0 hecha:</strong> probada en Chrome con WebMCP. Sus
+                resultados cambian cuatro puntos del diseño (<a href="#fases"
+                  >sección 4</a
+                >):
+                <ul>
+                  <li>
+                    el esquema de <code>&lt;name&gt;_fill</code> va sin
+                    <code>required</code>;
+                  </li>
+                  <li>
+                    las pasadas esperan a que el formulario se quede quieto;
+                  </li>
+                  <li><code>values</code> sale del store;</li>
+                  <li>
+                    un test comprueba que la acción recibe lo que reporta
+                    <code>values</code>.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <strong>Medición en el navegador:</strong> sin arnés ni APIs de
+                modelos; la hace una sesión con un agente sobre la página (<a
+                  href="#medicion"
+                  >sección 6</a
                 >).
               </li>
             </ul>
@@ -1086,9 +1125,22 @@ dictionary ModelContextTool {
               (<code>client/component/form-content.tsx:66</code>).
             </li>
             <li>
-              <strong>Salida:</strong> un objeto con <code>properties</code>,
-              <code>required</code> y <code>additionalProperties: false</code>,
-              en el orden de la definición.
+              <strong>Salida:</strong> un objeto con <code>properties</code> y
+              <code>additionalProperties: false</code>, en el orden de la
+              definición, y aparte la lista de campos obligatorios.
+              <ul>
+                <li>
+                  El esquema de <code>&lt;name&gt;_fill</code> no lleva
+                  <code>required</code>: un rellenado puede ser parcial, y lo
+                  que no nombra conserva su valor.
+                </li>
+                <li>
+                  Los obligatorios se nombran en la descripción del tool (<a
+                    href="#descripciones"
+                    >3.8</a
+                  >), y el envío los valida.
+                </li>
+              </ul>
             </li>
             <li>
               <strong>Textos:</strong> <code>title</code> sale de la etiqueta
@@ -1451,6 +1503,13 @@ dictionary ModelContextTool {
                   La validación en <code>change</code> se deja para el final de
                   la llamada (paso 6).
                 </li>
+                <li>
+                  Por qué no los valores del host, como en la fase 0: un
+                  formulario sin <code>value</code> no tiene dónde recibirlos. Y
+                  después de un envío exitoso el formulario se reinicia pero el
+                  host conserva sus valores, así que repetir uno de ellos no
+                  llega al campo.
+                </li>
               </ul>
             </li>
             <li>
@@ -1501,7 +1560,10 @@ dictionary ModelContextTool {
                 <li>Aplicar los valores de los campos registrados.</li>
                 <li>
                   Esperar a que React confirme el commit y terminen las
-                  transiciones de los eventos <code>state</code>.
+                  transiciones de los eventos <code>state</code>: hasta que el
+                  store deje de cambiar, no un número fijo de frames. En la fase
+                  0, dos frames no alcanzaron para que apareciera un campo
+                  revelado.
                 </li>
                 <li>
                   Volver a aplicar los valores de los campos que acaban de
@@ -1580,6 +1642,12 @@ dictionary ModelContextTool {
               que cambió durante la llamada, incluidos los que llenaron los
               eventos <code>value</code> (en el ejemplo, <code>city</code>).
               <ul>
+                <li>
+                  Sale del store, en el formato del contrato. Lo que el
+                  formulario pone en el envío viene en el formato de pantalla
+                  (<code>09/12/1906</code> para una fecha), y la fase 0, que lo
+                  leía de ahí, se lo devolvía así al agente.
+                </li>
                 <li>Puede diferir de lo enviado por <code>transform</code>.</li>
                 <li>
                   El estado completo está en <code>&lt;name&gt;_read</code>; así
@@ -1798,7 +1866,8 @@ dictionary ModelContextTool {
               llamada todos los valores que conozcas. La respuesta trae los
               valores finales y los errores, así que no hace falta leer después.
               Un campo que aparece por otro se puede incluir desde la primera
-              llamada.
+              llamada. Nombra los campos que el envío necesita, que el esquema
+              no marca como obligatorios (<a href="#esquema">3.3</a>).
             </li>
             <li>
               <strong><code>&lt;name&gt;_submit</code>:</strong> llámalo una
@@ -1970,19 +2039,14 @@ const result = await callTool(call.name, call.input)</code></pre>
             <li>
               <strong>Dónde corre el modelo:</strong> el bucle suele correr en
               el servidor, porque la clave de la API no va al navegador. El host
-              lleva cada llamada a la página y devuelve el resultado. En el
-              arnés de medición ese puente es <code>page.evaluate</code> (<a
-                href="#medicion"
-                >sección 6</a
-              >).
+              lleva cada llamada a la página y devuelve el resultado.
             </li>
             <li>
               <strong>Por qué:</strong> WebMCP sigue en origin trial y solo
               existe en Chromium. Con estas dos funciones:
               <ul>
                 <li>los tools sirven hoy en cualquier navegador;</li>
-                <li>se prueban en los tres navegadores de Playwright;</li>
-                <li>la medición no necesita el flag.</li>
+                <li>se prueban en los tres navegadores de Playwright.</li>
               </ul>
             </li>
           </ul>
@@ -2543,63 +2607,118 @@ const result = await callTool(call.name, call.input)</code></pre>
             <div class="card">
               <div class="phase-head">
                 <h3>Fase 0: prototipo en el editor, sin tocar la librería</h3>
-                <span class="chip">2 a 3 días</span>
+                <span class="chip">hecha</span>
               </div>
               <p>
-                Objetivo: medir el valor con un agente real y confirmar los
-                límites que justifican la fase 1.
+                Objetivo: probar los tools con un agente real y confirmar los
+                límites que justifican la fase 1. Está en
+                <code>apps/react-luna-editor/lib/agent-tools.ts</code>, y se
+                probó en Chrome con WebMCP
+                (<code>document.modelContext.executeTool</code>).
               </p>
               <ul class="tasks">
-                <li>
-                  En
-                  <code
-                    >apps/react-luna-editor/app/reactive/reactive-form-preview.tsx</code
-                  >, armar <code>fill_form</code> (llama <code>setValues</code>)
-                  y <code>submit_form</code> (<code>requestSubmit()</code> y
-                  espera <code>onSuccess</code>).
+                <li class="done">
+                  <code>fill_form</code> y <code>submit_form</code> en la vista
+                  previa reactiva
+                  (<code>app/reactive/reactive-form-preview.tsx</code>).
                   <ul>
                     <li>
-                      Registrarlos en <code>document.modelContext</code> cuando
-                      exista.
+                      <code>fill_form</code> escribe los valores del host y
+                      responde con lo que el formulario enviaría por cada campo.
                     </li>
                     <li>
-                      Solo en desarrollo, exponerlos en <code>window</code> para
-                      el arnés de medición.
+                      <code>submit_form</code> envía el formulario de la página
+                      y espera <code>onSuccess</code>. Si la validación lo
+                      detiene, lee los errores de la página.
+                    </li>
+                    <li>
+                      Se registran en <code>document.modelContext</code> cuando
+                      existe. Solo en desarrollo, también en
+                      <code>window.__lunaTools</code>.
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Esquema con
-                  <code>z.toJSONSchema(buildFormSchema(form.sections))</code>.
-                  Requiere agregar <code>zod</code> como dependencia del editor,
-                  que hoy solo la tiene <code>luna-react</code> como peer.
+                  <code>z.toJSONSchema(buildFormSchema(...))</code>, sin su
+                  <code>required</code> de primer nivel. <code>zod</code> pasó a
+                  ser dependencia del editor.
+                </li>
+                <li class="done">
+                  Prueba en Chrome con WebMCP: rellenar y enviar de punta a
+                  punta. Un envío exitoso tarda 1,15 s, de los que 1 s es la
+                  acción del editor.
+                </li>
+              </ul>
+              <h4>Resultados</h4>
+              <ul>
+                <li>
+                  <strong>Los valores del host sí disparan eventos.</strong> Un
+                  <code>checkbox</code> con un evento <code>state</code> reveló
+                  su campo. Una lista tomó las filas del host después de
+                  montarse, con el autocompletado de su evento
+                  <code>value</code>. El plan esperaba lo contrario.
                 </li>
                 <li>
-                  Arnés de medición propio (<a href="#medicion">sección 6</a>):
-                  un script de Node con Playwright y un bucle de tool use con un
-                  adaptador por proveedor. Lleva cada llamada a
-                  <code>page.evaluate</code> y no necesita el flag de Chrome.
+                  <strong>Los valores del host no alcanzan.</strong> Después de
+                  un envío exitoso el formulario se reinicia, pero el host
+                  conserva sus valores. Repetir uno de ellos no llega al campo,
+                  y el tool lo reportaba como escrito. De ahí el puente por el
+                  camino de cada campo (<a href="#fill">3.4</a>).
                 </li>
                 <li>
-                  Probar también con el flag y la extensión Model Context Tool
-                  Inspector.
+                  <strong>Dos frames no alcanzan</strong> para la transición de
+                  un evento <code>state</code>: el campo revelado apareció
+                  después de que el tool leyera los valores. Las pasadas esperan
+                  a que el store deje de cambiar (<a href="#fill">3.4</a>).
                 </li>
                 <li>
-                  Documentar los límites esperados:
+                  <strong>El esquema de Zod no basta.</strong>
+                  <code>z.toJSONSchema</code>:
                   <ul>
+                    <li>no trae etiquetas;</li>
+                    <li>deja la fecha sin tipo;</li>
+                    <li>no lista las opciones;</li>
                     <li>
-                      los cambios del host no disparan eventos
-                      <code>value</code> (es intencional);
-                    </li>
-                    <li>
-                      una lista toma las filas del host solo al montarse
-                      (<code>useFieldList</code>);
-                    </li>
-                    <li>
-                      el host no se entera de los errores de validación, porque
-                      el <code>Form</code> no expone un <code>onError</code>.
+                      escribe los campos opcionales como
+                      <code>anyOf</code> anidados con <code>const</code>.
                     </li>
                   </ul>
+                  De ahí <code>buildToolSchema</code> (<a href="#esquema">3.3</a
+                  >).
+                </li>
+                <li>
+                  <strong>El envío lleva el formato de pantalla</strong>
+                  (<code>09/12/1906</code>): por eso <code>values</code> sale
+                  del store (<a href="#fill">3.4</a>).
+                </li>
+                <li>
+                  <strong>Un componente propio enviaba la etiqueta.</strong>
+                  <ul>
+                    <li>
+                      El combobox de zona horaria del editor mandaba la ciudad
+                      (<code>New York</code>) en lugar de la zona
+                      (<code>America/New_York</code>), también cuando la elegía
+                      una persona.
+                    </li>
+                    <li>
+                      Está corregido en
+                      <code>components/ui/wrapper/combobox.tsx</code>, con un
+                      test en <code>tests/e2e/timezone.spec.ts</code>.
+                    </li>
+                    <li>
+                      De ahí un e2e de contrato: la acción recibe lo que reporta
+                      <code>values</code> (<a href="#pruebas">sección 5</a>).
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Por revisar:</strong> después de un envío exitoso, la
+                  lista quedó con dos filas vacías; y los mensajes de campo
+                  obligatorio salieron en inglés en un formulario en español (<a
+                    href="#riesgos"
+                    >sección 7</a
+                  >).
                 </li>
               </ul>
             </div>
@@ -2806,9 +2925,23 @@ const result = await callTool(call.name, call.input)</code></pre>
               </ul>
             </li>
             <li>
-              <strong>Contrato:</strong> cada respuesta de cada tool se valida
-              contra su <code>outputSchema</code>, y cada código de la tabla de
-              <a href="#contrato">3.15</a> tiene al menos un caso.
+              <strong>Contrato:</strong>
+              <ul>
+                <li>
+                  cada respuesta de cada tool se valida contra su
+                  <code>outputSchema</code>;
+                </li>
+                <li>
+                  cada código de la tabla de <a href="#contrato">3.15</a> tiene
+                  al menos un caso;
+                </li>
+                <li>
+                  un e2e por tipo de campo comprueba que lo que recibe la acción
+                  es lo que reportó <code>values</code>. En la fase 0, un
+                  componente enviaba la etiqueta de la opción en lugar de su
+                  valor.
+                </li>
+              </ul>
             </li>
             <li>
               <strong
@@ -2857,6 +2990,10 @@ const result = await callTool(call.name, call.input)</code></pre>
                 </li>
                 <li>
                   once llamadas a la vez: diez en orden y una <code>busy</code>;
+                </li>
+                <li>
+                  un rellenado después de un envío exitoso escribe el campo
+                  aunque repita el valor que tenía antes;
                 </li>
                 <li>
                   sin <code>submit: true</code>, no existe
@@ -2931,12 +3068,18 @@ const result = await callTool(call.name, call.input)</code></pre>
 
         <section id="medicion">
           <h2><span class="num">6.</span>Medición antes y después</h2>
+          <p>
+            La medición no usa un arnés ni llamadas pagas a APIs de modelos. La
+            hace una sesión con un agente sobre la página, en el navegador: por
+            ejemplo, Claude Code con la extensión de Chrome, o el agente del
+            propio navegador.
+          </p>
           <ul>
             <li>
-              <strong>Línea base:</strong> un agente llena los formularios de
-              referencia con herramientas de navegador basadas en Playwright: el
-              árbol de accesibilidad de la página (<code>ariaSnapshot()</code>),
-              clic, escribir y elegir opción. Los formularios:
+              <strong>Línea base:</strong> el agente llena los formularios de
+              referencia como lo haría una persona, con las herramientas del
+              navegador: leer la página, hacer clic, escribir y elegir opción.
+              Los formularios:
               <ol>
                 <li>
                   uno simple: cambiar un nombre y unas notificaciones, y
@@ -2959,39 +3102,26 @@ const result = await callTool(call.name, call.input)</code></pre>
               agrupado (<a href="#escala">3.14</a>).
             </li>
             <li>
-              <strong>Después:</strong> los mismos, con los tools de luna: por
-              <code>callTool()</code> en el arnés y, en Chromium con el flag,
-              por WebMCP.
+              <strong>Después:</strong> los mismos, con los tools de luna, por
+              WebMCP.
             </li>
             <li>
               <strong>Métricas:</strong>
               <ul>
                 <li>tasa de éxito (valores correctos enviados);</li>
                 <li>tiempo total;</li>
-                <li>tokens de entrada y de salida;</li>
-                <li>número de llamadas a tools;</li>
-                <li>caracteres que devuelven los tools;</li>
+                <li>número de llamadas a herramientas;</li>
+                <li>caracteres que devuelven las herramientas;</li>
                 <li>número de reintentos;</li>
                 <li>
-                  de escala: tamaño del esquema en caracteres y en tokens,
-                  latencia de un rellenado y commits por rellenado.
+                  de escala: tamaño del esquema en caracteres, latencia de un
+                  rellenado y commits por rellenado.
                 </li>
               </ul>
             </li>
             <li>
-              <strong>Protocolo:</strong>
-              <ul>
-                <li>
-                  10 corridas por formulario y por modo, alternadas, en la misma
-                  máquina.
-                </li>
-                <li>El mismo modelo dentro de cada comparación.</li>
-                <li>
-                  Al menos dos familias de modelos (por ejemplo, Claude y OpenAI
-                  o Gemini), para comprobar que el resultado no depende de un
-                  proveedor.
-                </li>
-              </ul>
+              <strong>Protocolo:</strong> 3 corridas por formulario y por modo,
+              alternadas, en la misma sesión y la misma máquina.
             </li>
             <li>
               <strong>Referencia externa:</strong>
@@ -3113,6 +3243,13 @@ const result = await callTool(call.name, call.input)</code></pre>
                     leyendo refs y un budget nuevo
                   </td>
                 </tr>
+                <tr>
+                  <td>Un componente propio envía algo distinto del valor</td>
+                  <td>
+                    El e2e de contrato: la acción recibe lo que reporta
+                    <code>values</code> (<a href="#pruebas">sección 5</a>)
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -3200,7 +3337,6 @@ const result = await callTool(call.name, call.input)</code></pre>
               >
               la pide?
             </li>
-            <li>¿Qué dos familias de modelos usa la medición?</li>
             <li>
               ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos
               en <code>&lt;name&gt;_read</code>, 24 kB de esquema. Se confirman
@@ -3208,6 +3344,19 @@ const result = await callTool(call.name, call.input)</code></pre>
             </li>
             <li>
               ¿Con cuántos formularios en una página conviene el modo agrupado?
+            </li>
+            <li>
+              De la fase 0, por revisar en luna:
+              <ul>
+                <li>
+                  ¿Por qué una lista quedó con dos filas vacías después de un
+                  envío exitoso?
+                </li>
+                <li>
+                  ¿Por qué los mensajes de campo obligatorio salieron en inglés
+                  en un formulario en español?
+                </li>
+              </ul>
             </li>
           </ol>
         </section>
@@ -3257,6 +3406,9 @@ const result = await callTool(call.name, call.input)</code></pre>
                   lista las válidas.
                 </li>
                 <li>
+                  Lo que recibe la acción es lo que reportó <code>values</code>.
+                </li>
+                <li>
                   <code>allow</code> puede rechazar o esperar a una persona.
                 </li>
                 <li>
@@ -3277,12 +3429,11 @@ const result = await callTool(call.name, call.input)</code></pre>
             </li>
             <li>
               La medición de la <a href="#medicion">sección 6</a> está publicada
-              por formulario, por modo y por familia de modelos, con:
+              por formulario y por modo, con:
               <ul>
                 <li>la tasa de éxito;</li>
                 <li>el tiempo;</li>
-                <li>los tokens;</li>
-                <li>las llamadas a tools;</li>
+                <li>las llamadas a herramientas;</li>
                 <li>los caracteres devueltos;</li>
                 <li>las métricas de escala.</li>
               </ul>
