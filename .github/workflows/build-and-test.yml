@@ -52,10 +52,13 @@ jobs:
           # picker's bounds, reserved days, ranges, years and time zones are
           # the library's own code, about 35 kB over cjs and esm together.
           # Peer dependencies are external, so the total is that code alone:
-          # 265.9 kB after the list work of #127 to #129. The limit leaves
-          # room for that code to grow by a few kB (the field formats' own
-          # date parser among it) and still fails on a bundled dependency.
-          LIMIT_KB=285
+          # 265.9 kB after the list work of #127 to #129. `buildToolSchema`
+          # in the schema entry adds about 15 kB more over cjs and esm
+          # together, 291.6 kB in all; an application that does not import
+          # it does not ship it (`sideEffects: false`). The limit leaves room
+          # for that code to grow by a few kB and still fails on a bundled
+          # dependency.
+          LIMIT_KB=300
           total=0
           rows=""
 

@@ -1,4 +1,4 @@
-import { MAX, MIN, VALUE } from './constant'
+import { LABEL, MAX, MIN, VALUE } from './constant'
 import { buildLengthLimits, buildNumberStep, type LengthLimits } from './build'
 import {
   buildDateLimits,
@@ -774,35 +774,59 @@ export function collectSourceTargets(fields: Fields): Set<string> {
   return targets
 }
 
-// The values a `select`, `radio` or `chips` offers, when the definition writes
+/** An option a field offers, as text: what is submitted, and what is shown. */
+export type OfferedOption = Readonly<{ label?: string; value: string }>
+
+// The options a `select`, `radio` or `chips` offers, when the definition writes
 // them: an inline array, or a reference that resolved to one. Read as the
-// field reads them -- through `advanced.options.value` -- and as text, the way
-// a selection is compared. `undefined` when the options are fetched or a
+// field reads them -- through `advanced.options` -- and as text, the way a
+// selection is compared. `undefined` when the options are fetched or a
 // `source` event installs them: nothing here knows them.
 //
-// `field.name` is the whole name, a row's included (`shipping.3.city`).
-export function getOfferedValues(
+// `name` is the whole name, a row's included (`shipping.3.city`); the field's
+// own unless the caller names the slot otherwise.
+export function getOfferedOptions(
   field: Field,
-  sourceTargets?: ReadonlySet<string>
-): Set<string> | undefined {
+  sourceTargets?: ReadonlySet<string>,
+  name: string = field.name
+): OfferedOption[] | undefined {
   if (!isOptions(field) || !Array.isArray(field.source)) {
     return undefined
   }
   for (const target of sourceTargets ?? []) {
-    if (isTargetOf(field.name, target)) {
+    if (isTargetOf(name, target)) {
       return undefined
     }
   }
 
-  const key = field.advanced?.options?.value ?? VALUE
-  const offered = new Set<string>()
-  for (const option of field.source) {
-    const value = isObject(option) ? extract(option, key) : option
-    if (isValue(value)) {
-      offered.add(String(value))
+  const keys = field.advanced?.options
+  return field.source.flatMap((option) => {
+    const value = isObject(option)
+      ? extract(option, keys?.value ?? VALUE)
+      : option
+    if (!isValue(value)) {
+      return []
     }
-  }
-  return offered
+
+    const label = isObject(option)
+      ? extract(option, keys?.label ?? LABEL)
+      : option
+    return [
+      {
+        ...(isValue(label) && { label: String(label) }),
+        value: String(value),
+      },
+    ]
+  })
+}
+
+// The values of `getOfferedOptions`, which the submit holds a selection to.
+export function getOfferedValues(
+  field: Field,
+  sourceTargets?: ReadonlySet<string>
+): Set<string> | undefined {
+  const options = getOfferedOptions(field, sourceTargets)
+  return options && new Set(options.map((option) => option.value))
 }
 
 // Runs after the field's own schema, on what it made of the value: text for a

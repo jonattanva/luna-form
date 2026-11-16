@@ -17,6 +17,21 @@ import { reportValue } from '@/lib/utils'
 type OptionItem = { value: string; label: string }
 type OptionGroup = { label: string; items: OptionItem[] }
 
+// Two options are the same when their values are: the list is built again
+// when what labels it changes (the instant, the suggested zone), and the
+// option held may come from the list before.
+function isSameItem(item: OptionItem, selected: OptionItem) {
+  return item.value === selected.value
+}
+
+function toLabel(item: OptionItem) {
+  return item.label
+}
+
+function toValue(item: OptionItem) {
+  return item.value
+}
+
 export function ComboboxWithGroup({
   onChange,
   options = [],
@@ -29,35 +44,33 @@ export function ComboboxWithGroup({
   placeholder?: string
   value?: string | null
 }) {
-  function getLabel(val: string | null): string | null {
+  // The combobox holds the option itself, which it shows by its label and
+  // submits by its value. It used to hold the label, and the input it keeps
+  // for the form under the field's `name` then sent the city ("New York")
+  // where the field holds the zone ("America/New_York").
+  function findItem(val: string | null): OptionItem | null {
     if (!val) return null
     for (const group of options) {
       const found = group.items.find((item) => item.value === val)
-      if (found) return found.label
-    }
-    return null
-  }
-
-  function getValue(label: string | null): string | null {
-    if (!label) return null
-    for (const group of options) {
-      const found = group.items.find((item) => item.label === label)
-      if (found) return found.value
+      if (found) return found
     }
     return null
   }
 
   const report = reportValue(onChange)
 
-  function handleValueChange(label: string | null) {
-    report(getValue(label))
+  function handleValueChange(item: OptionItem | null) {
+    report(item?.value ?? null)
   }
 
   return (
     <Combobox
       items={options}
-      value={getLabel(value ?? null)}
+      value={findItem(value ?? null)}
       onValueChange={handleValueChange}
+      isItemEqualToValue={isSameItem}
+      itemToStringLabel={toLabel}
+      itemToStringValue={toValue}
       {...selectProps}
     >
       <ComboboxInput placeholder={placeholder} />
@@ -69,7 +82,7 @@ export function ComboboxWithGroup({
               <ComboboxLabel>{group.label}</ComboboxLabel>
               <ComboboxCollection>
                 {(item: OptionItem) => (
-                  <ComboboxItem key={item.value} value={item.label}>
+                  <ComboboxItem key={item.value} value={item}>
                     {item.label}
                   </ComboboxItem>
                 )}

@@ -4,7 +4,7 @@ export const INPUT_EMAIL = 'input/email'
 export const INPUT_NUMBER = 'input/number'
 export const INPUT_TIME = 'input/time'
 
-const INPUT_PASSWORD = 'input/password'
+export const INPUT_PASSWORD = 'input/password'
 const INPUT_TEL = 'input/tel'
 const INPUT_TEXT = 'input/text'
 

@@ -7,8 +7,9 @@ import { Form, withDeclaredFields } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
+import { useAgentTools } from '@/lib/agent-tools'
 import { useAtomValue } from 'jotai'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 type Container = Record<string, unknown> | unknown[]
 
@@ -130,6 +131,20 @@ export function ReactiveFormPreview() {
     [declared, form.definition, form.sections, values]
   )
 
+  // In development, an agent fills this form through the same `values` a
+  // person's changes land in, and submits it through the form on the page.
+  // See `useAgentTools`.
+  const container = useRef<HTMLDivElement>(null)
+  const agent = useAgentTools({
+    container,
+    context: form.context,
+    definition: form.definition,
+    lang: form.lang,
+    sections: form.sections,
+    setValues,
+    translations: form.translations,
+  })
+
   function handleValueChange(input: { name: string; value: unknown }) {
     console.log('Form values changed:', input)
     setValues((prev) =>
@@ -152,10 +167,11 @@ export function ReactiveFormPreview() {
     form: Record<string, unknown>
   }) {
     setResult(response)
+    agent.onSuccess(response)
   }
 
   return (
-    <div className="w-full max-w-md p-6">
+    <div className="w-full max-w-md p-6" ref={container}>
       {result && (
         <div className="mb-4">
           <p>{result.message}</p>

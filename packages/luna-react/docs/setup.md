@@ -64,7 +64,7 @@ these slots cover the scaffolding around them.
 | `react-luna-form`        | `Form` (client), `withDeclaredFields`, and the `Sections`, `Source` and `ZodSchema` types |
 | `react-luna-form/server` | `Form` (server) and `Fallback`, usable under the `react-server` condition                 |
 | `react-luna-form/config` | `defineConfig` and the `define*` registration helpers                                     |
-| `react-luna-form/schema` | `buildFormSchema` and `collectIssues`                                                     |
+| `react-luna-form/schema` | `buildFormSchema`, `buildToolSchema` and `collectIssues`                                  |
 
 The client bundle is published carrying a `'use client'` directive, so an App
 Router project imports `Form` straight from a Server Component and needs no
@@ -262,3 +262,7 @@ shape from drifting apart. `collectIssues(error)` flattens a Zod error into
 
 Use them to validate on the server against the same rules the form applies in
 the browser.
+
+`buildToolSchema(sections)` derives, from the same descriptors, the JSON Schema
+of a tool an AI agent fills the form with. See
+[agents/tools.md](agents/tools.md).

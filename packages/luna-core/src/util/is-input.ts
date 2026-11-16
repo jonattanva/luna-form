@@ -9,6 +9,7 @@ import {
   INPUT_DATE,
   INPUT_EMAIL,
   INPUT_NUMBER,
+  INPUT_PASSWORD,
   INPUT_TIME,
   LIST,
   RADIO,
@@ -83,6 +84,10 @@ export const isText = createTypeChecker<Input>(
 
 export const isEmail = createTypeChecker<Input>(INPUT_EMAIL, TYPE_EMAIL)
 export const isNumber = createTypeChecker<Input>(INPUT_NUMBER, TYPE_NUMBER)
+export const isPassword = createTypeChecker<Input>(
+  INPUT_PASSWORD,
+  TYPE_PASSWORD
+)
 
 export function isClickable(field: Field): boolean {
   return isRadio(field) || isCheckbox(field)
