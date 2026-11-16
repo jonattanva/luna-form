@@ -62,6 +62,10 @@ A field with more than 25 options, or with options that are fetched or that a
 A month, a year and a Yes/No are numbers and a boolean here, while the form
 stores them as text: a tool that writes them converts them.
 
+Two fields under one name hold one value, as they do in the form: the schema
+describes it once, by the first of them an agent may write, and lists it in
+`required` once when either is required.
+
 ## What an agent cannot write
 
 These fields are not in the schema, and a tool should refuse them:
@@ -89,7 +93,10 @@ These fields are not in the schema, and a tool should refuse them:
 - A field's `title` is its translated label, and its `description` is the
   field's own description followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
-  a hidden one, a `requiredWhen`.
+  a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
+- A field whose `advanced.length` the form cannot read, such as `"min": "x"`,
+  has no bounds in the schema, and its description says the submit refuses any
+  value for it.
 - A label or a description that interpolates a value, with a
   [`{placeholder}`](../interpolation/overview.md), is left out: the agent would
   read the placeholder, or a value someone typed.

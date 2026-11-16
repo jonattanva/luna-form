@@ -1,5 +1,4 @@
 import { buildLengthLimits, buildNumberStep } from './build'
-import { LABEL, VALUE } from './constant'
 import {
   buildDateLimits,
   buildYearLimits,
@@ -7,7 +6,6 @@ import {
   getTimeFormat,
   getWeekDays,
 } from './date'
-import { extract } from './extract'
 import {
   isCheckbox,
   isChips,
@@ -29,11 +27,10 @@ import {
   isSelectYear,
   isTime,
 } from './is-input'
-import { isObject, isValue } from './is-type'
 import { getListBounds } from './list'
-import { isTargetOf, resolveTarget } from './path'
+import { resolveTarget } from './path'
 import { prepare } from './prepare'
-import { collectSourceTargets } from './schema'
+import { collectSourceTargets, getOfferedOptions } from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
@@ -101,14 +98,18 @@ const INLINE_OPTIONS = 25
 const LOOKUP =
   'Its options are not listed here: find them with the options tool of this form.'
 
+// A bound the form cannot read refuses whatever is written, and lets an
+// optional field through only empty.
+const UNREADABLE =
+  'The form cannot read its bounds, so the submit refuses any value for it.'
+
 // A `state` event that makes a slot available: shows it, unlocks it, or both.
-// `target` is the slot it reaches, by the name the form resolves the event's
+// Kept under the slot it reaches, by the name the form resolves the event's
 // target to from `source`, the field whose change fires it.
 type Revealer = Readonly<{
   field: Field
   shows: boolean
   source: string
-  target: string
   unlocks: boolean
 }>
 
@@ -116,18 +117,23 @@ type Revealer = Readonly<{
 type Walk = Readonly<{
   dictionary?: Record<string, string>
   lang?: string
-  lookup: string[]
-  revealers: readonly Revealer[]
+  lookup: Set<string>
+  // By the slot they reach.
+  revealers: ReadonlyMap<string, readonly Revealer[]>
   sourceTargets: ReadonlySet<string>
   types?: Readonly<Record<string, ToolSchema>>
   // The slots whose writability is being decided, so that two fields that
   // reveal each other answer no instead of asking forever.
   visiting: Set<string>
+  // What `isWritable` decided for each slot. See there.
+  writable: Map<Field | List, boolean>
 }>
 
+// Keyed in a `Map`: a field named `__proto__` assigned to a plain object
+// reaches its prototype's setter instead of becoming a property.
 type Level = Readonly<{
-  properties: Record<string, ToolSchema>
-  required: string[]
+  properties: Map<string, ToolSchema>
+  required: Set<string>
 }>
 
 /**
@@ -157,20 +163,21 @@ export function buildToolSchema(
   const walk: Walk = {
     dictionary: options.localization?.translations,
     lang: options.localization?.lang,
-    lookup: [],
+    lookup: new Set(),
     revealers: collectRevealers(fields),
     sourceTargets: collectSourceTargets(fields),
     types: options.types,
     visiting: new Set(),
+    writable: new Map(),
   }
 
   const level = buildLevel(fields, walk, '')
   return {
-    lookup: walk.lookup,
-    required: level.required,
+    lookup: [...walk.lookup],
+    required: [...level.required],
     schema: {
       additionalProperties: false,
-      properties: level.properties,
+      properties: Object.fromEntries(level.properties),
       type: 'object',
     },
   }
@@ -179,9 +186,12 @@ export function buildToolSchema(
 // One level of the form: the top, or a list's row. `prefix` names a row the
 // way the rendered form does (`shipping.0.`), so an event's target matches the
 // same field here as it does there.
+//
+// Two fields under one name hold one value, as they do in the form: the first
+// the agent may write describes it, and it is required when either is.
 function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
-  const properties: Record<string, ToolSchema> = {}
-  const required: string[] = []
+  const properties = new Map<string, ToolSchema>()
+  const required = new Set<string>()
 
   const visit = (entries: Fields): void => {
     for (const entry of prepare(entries)) {
@@ -195,20 +205,25 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
         continue
       }
 
+      const described = properties.has(entry.name)
       if (isList(entry)) {
         const list = buildList(entry, walk, name)
-        properties[entry.name] = list.schema
+        if (!described) {
+          properties.set(entry.name, list.schema)
+        }
         if (list.required) {
-          required.push(entry.name)
+          required.add(entry.name)
         }
         continue
       }
 
-      properties[entry.name] = buildLeaf(entry, walk, name)
+      if (!described) {
+        properties.set(entry.name, buildLeaf(entry, walk, name))
+      }
       // A field nothing shows or unlocks yet is not required yet, as the submit
       // reads it. Its note says when it will be.
       if (entry.required && !entry.hidden && !entry.disabled) {
-        required.push(entry.name)
+        required.add(entry.name)
       }
     }
   }
@@ -220,11 +235,30 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
 // Whether an agent may write the slot: it is not kept from it, it holds a
 // value of its own that a person could change, and it is on screen and
 // unlocked, or a field the agent may write can make it so.
+//
+// Asked again for each revealer, each note and each slot that names the same
+// source, so the answer is kept. Only an answer reached with nothing else being
+// decided, though: one reached inside a loop of revealers counts the slot that
+// started it as not writable, which it may yet turn out to be.
 function isWritable(slot: Field | List, walk: Walk, name: string): boolean {
+  const known = walk.writable.get(slot)
+  if (known !== undefined) {
+    return known
+  }
+
   if (walk.visiting.has(name)) {
     return false
   }
 
+  const outermost = walk.visiting.size === 0
+  const writable = decideWritable(slot, walk, name)
+  if (outermost) {
+    walk.writable.set(slot, writable)
+  }
+  return writable
+}
+
+function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
   walk.visiting.add(name)
   try {
     if (slot.advanced?.agent === false) {
@@ -258,12 +292,12 @@ function findRevealer(
   name: string,
   does: 'shows' | 'unlocks'
 ): Revealer | undefined {
-  return walk.revealers.find(
-    (revealer) =>
-      revealer[does] &&
-      revealer.target === name &&
-      isWritable(revealer.field, walk, revealer.source)
-  )
+  return walk.revealers
+    .get(name)
+    ?.find(
+      (revealer) =>
+        revealer[does] && isWritable(revealer.field, walk, revealer.source)
+    )
 }
 
 // A list as rows. The rendered list always holds `min` rows, one when it
@@ -287,8 +321,8 @@ function buildList(
     {
       items: {
         additionalProperties: false,
-        properties: row.properties,
-        ...(row.required.length > 0 && { required: row.required }),
+        properties: Object.fromEntries(row.properties),
+        ...(row.required.size > 0 && { required: [...row.required] }),
         type: 'object',
       },
       ...(Number.isFinite(max) && { maxItems: max }),
@@ -301,7 +335,7 @@ function buildList(
   )
 
   return {
-    required: !list.hidden && min > 0 && row.required.length > 0,
+    required: !list.hidden && min > 0 && row.required.size > 0,
     schema,
   }
 }
@@ -322,7 +356,12 @@ function describeValue(
   name: string,
   notes: string[]
 ): ToolSchema {
+  // A required checkbox is a box someone has to tick: the submit takes `true`
+  // only. A Yes/No answers either way.
   if (isCheckbox(field) || isSelectActive(field)) {
+    if (isCheckbox(field) && field.required) {
+      notes.push('Required to be true.')
+    }
     return { type: 'boolean' }
   }
 
@@ -370,7 +409,7 @@ function describeValue(
   }
 
   if (isSelectTimezone(field)) {
-    walk.lookup.push(name)
+    walk.lookup.add(name)
     notes.push('A time zone by its IANA name, such as America/Bogota.', LOOKUP)
     return { type: 'string' }
   }
@@ -390,14 +429,20 @@ function describeValue(
     return describeChoice(field, walk, name, notes)
   }
 
-  return walk.types?.[field.type] ?? describeText(field, notes)
+  // Only a type the host names itself: `toString` is no schema.
+  const types = walk.types
+  return types && Object.prototype.hasOwnProperty.call(types, field.type)
+    ? types[field.type]
+    : describeText(field, notes)
 }
 
 function describeDate(field: DateField, notes: string[]): ToolSchema {
-  const { max, min, reserved } = buildDateLimits(field)
+  const { max, min, reserved, unreadable } = buildDateLimits(field)
   const range = isDateRange(field)
 
-  if (min !== undefined || max !== undefined) {
+  if (unreadable) {
+    notes.push(UNREADABLE)
+  } else if (min !== undefined || max !== undefined) {
     notes.push(
       `Days ${[min && `from ${min}`, max && `until ${max}`]
         .filter(Boolean)
@@ -434,7 +479,9 @@ function describeNumber(field: Field, notes: string[]): ToolSchema {
   const whole =
     step === undefined || (Number.isInteger(step) && Number.isInteger(min ?? 0))
 
-  if (step !== undefined) {
+  if (unreadable) {
+    notes.push(UNREADABLE)
+  } else if (step !== undefined) {
     notes.push(`In steps of ${step}${min === undefined ? '' : ` from ${min}`}.`)
   }
 
@@ -447,6 +494,9 @@ function describeNumber(field: Field, notes: string[]): ToolSchema {
 
 function describeText(field: Field, notes: string[]): ToolSchema {
   const { max, min, unreadable } = buildLengthLimits(field)
+  if (unreadable) {
+    notes.push(UNREADABLE)
+  }
   const pattern = readPattern(field, notes)
   return {
     ...(!unreadable && min !== undefined && { minLength: min }),
@@ -493,7 +543,7 @@ function describeChoice(
 
   let choice: ToolSchema
   if (options === undefined || options.length > INLINE_OPTIONS) {
-    walk.lookup.push(name)
+    walk.lookup.add(name)
     notes.push(LOOKUP)
     choice = { type: 'string' }
   } else if (options.length === 0) {
@@ -518,43 +568,32 @@ function describeChoice(
 
 type Choice = Readonly<{ label: string; value: string }>
 
-// The options the definition writes for the field, read the way the field
-// reads them -- through `advanced.options` -- once each, with their labels
-// translated. `undefined` when they are fetched, or when a `source` event
-// installs them: nothing here knows them.
+// The options the definition writes for the field, as the submit reads them
+// (`getOfferedOptions`), once each, with their labels translated. `undefined`
+// when they are fetched, or when a `source` event installs them: nothing here
+// knows them.
 function readOptions(
   field: Select,
   walk: Walk,
   name: string
 ): Choice[] | undefined {
-  if (!Array.isArray(field.source)) {
+  const offered = getOfferedOptions(field, walk.sourceTargets, name)
+  if (!offered) {
     return undefined
   }
-  for (const target of walk.sourceTargets) {
-    if (isTargetOf(name, target)) {
-      return undefined
-    }
-  }
 
-  const keys = field.advanced?.options
   const choices: Choice[] = []
   const seen = new Set<string>()
-  for (const option of field.source) {
-    const value = isObject(option)
-      ? extract(option, keys?.value ?? VALUE)
-      : option
-    const label = isObject(option)
-      ? extract(option, keys?.label ?? LABEL)
-      : option
-    if (!isValue(value) || seen.has(`${value}`)) {
+  for (const { label, value } of offered) {
+    if (seen.has(value)) {
       continue
     }
 
-    seen.add(`${value}`)
-    const text = isValue(label) ? `${label}` : `${value}`
+    seen.add(value)
+    const text = label ?? value
     choices.push({
       label: translateOptional(text, walk.dictionary) ?? text,
-      value: `${value}`,
+      value,
     })
   }
   return choices
@@ -665,8 +704,8 @@ function readText(
 // form, with their targets resolved the way the form resolves them: a target
 // in a list's row (`items/note`) reaches the row the change happened in, and
 // from outside any row it reaches the top-level field of that name.
-function collectRevealers(fields: Fields): Revealer[] {
-  const revealers: Revealer[] = []
+function collectRevealers(fields: Fields): Map<string, Revealer[]> {
+  const revealers = new Map<string, Revealer[]>()
 
   const visit = (entries: Fields, prefix: string): void => {
     for (const entry of entries) {
@@ -695,13 +734,10 @@ function collectRevealers(fields: Fields): Revealer[] {
           ? event.target
           : [event.target]
         for (const target of targets) {
-          revealers.push({
-            field: entry,
-            shows,
-            source,
-            target: resolveTarget(target, source),
-            unlocks,
-          })
+          const resolved = resolveTarget(target, source)
+          const reaching = revealers.get(resolved) ?? []
+          reaching.push({ field: entry, shows, source, unlocks })
+          revealers.set(resolved, reaching)
         }
       }
     }

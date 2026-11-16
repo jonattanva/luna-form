@@ -774,6 +774,116 @@ describe('buildToolSchema', () => {
     })
   })
 
+  describe('names, bounds and types the form cannot take as written', () => {
+    test('should describe a name held by two fields once, by the first the agent may write', () => {
+      const result = build([
+        {
+          label: 'Locked',
+          name: 'contact',
+          readonly: true,
+          type: 'input/text',
+        },
+        {
+          label: 'Open',
+          name: 'contact',
+          required: true,
+          type: 'input/email',
+        },
+        { name: 'contact', required: true, type: 'input/text' },
+      ])
+
+      expect(result.schema.properties?.contact).toEqual({
+        format: 'email',
+        title: 'Open',
+        type: 'string',
+      })
+      expect(result.required).toEqual(['contact'])
+    })
+
+    test('should keep a field named __proto__ as a property of its own', () => {
+      const fields: Fields = JSON.parse(
+        '[{ "name": "__proto__", "required": true, "type": "input/text" }]'
+      )
+      const result = build(fields)
+
+      expect(namesOf(fields)).toEqual(['__proto__'])
+      expect(JSON.stringify(result.schema.properties)).toBe(
+        '{"__proto__":{"type":"string"}}'
+      )
+      expect(result.required).toEqual(['__proto__'])
+    })
+
+    test('should say a required checkbox has to be ticked', () => {
+      expect(
+        propertyOf(
+          [{ name: 'terms', required: true, type: 'checkbox' }],
+          'terms'
+        )
+      ).toEqual({ description: 'Required to be true.', type: 'boolean' })
+      expect(
+        propertyOf([{ name: 'terms', type: 'checkbox' }], 'terms')
+      ).toEqual({ type: 'boolean' })
+    })
+
+    test('should say a field whose bounds cannot be read takes no value', () => {
+      const fields: Fields = JSON.parse(`[
+        { "advanced": { "length": { "min": "x" } }, "name": "code", "type": "input/text" },
+        { "advanced": { "length": { "max": "y" } }, "name": "age", "type": "input/number" },
+        { "advanced": { "length": { "min": "z" } }, "name": "day", "type": "input/date" }
+      ]`)
+      const { properties } = build(fields).schema
+      const unreadable =
+        'The form cannot read its bounds, so the submit refuses any value for it.'
+
+      expect(properties?.code).toEqual({
+        description: unreadable,
+        type: 'string',
+      })
+      expect(properties?.age).toEqual({
+        description: unreadable,
+        type: 'integer',
+      })
+      expect(properties?.day?.description).toBe(
+        `${unreadable} A day as yyyy-MM-dd.`
+      )
+    })
+
+    test('should not take what an object inherits for the schema of a type', () => {
+      expect(
+        propertyOf([{ name: 'note', type: 'toString' }], 'note', {
+          types: {},
+        })
+      ).toEqual({ type: 'string' })
+    })
+
+    // `a` is asked first. Deciding it asks `b`, which only `a` reveals and is
+    // still being decided, so `b` reads as not writable there; `d` then makes
+    // `a` writable after all, and `b` with it.
+    test('should not keep an answer reached inside a loop of revealers', () => {
+      expect(
+        namesOf([
+          {
+            hidden: true,
+            event: reveal('b', { hidden: false }),
+            name: 'a',
+            type: 'input/text',
+          },
+          {
+            hidden: true,
+            event: reveal('a', { hidden: false }),
+            name: 'b',
+            type: 'input/text',
+          },
+          {
+            event: reveal('a', { hidden: false }),
+            name: 'd',
+            type: 'input/text',
+          },
+        ])
+      ).toEqual(['a', 'b', 'd'])
+    })
+  })
+
   describe('what every consumer reads', () => {
     const fields: Fields = [
       { name: 'name', required: true, type: 'input/text' },
