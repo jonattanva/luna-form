@@ -56,16 +56,18 @@ export function ReactiveFormPreview() {
     setValues((form.value as Record<string, unknown>) ?? {})
   }
 
-  // An agent fills this form through the same `values` a person's changes
-  // land in, and submits it through the form on the page. Phase 0 of
-  // plan/webmcp-imperativa.md: see `useAgentTools`.
+  // In development, an agent fills this form through the same `values` a
+  // person's changes land in, and submits it through the form on the page.
+  // Phase 0 of plan/webmcp-imperativa.md: see `useAgentTools`.
   const container = useRef<HTMLDivElement>(null)
   const agent = useAgentTools({
     container,
     context: form.context,
     definition: form.definition,
+    lang: form.lang,
     sections: form.sections,
     setValues,
+    translations: form.translations,
   })
 
   function handleValueChange(input: { name: string; value: unknown }) {
