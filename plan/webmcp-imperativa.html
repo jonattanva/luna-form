@@ -553,7 +553,7 @@
       <main>
         <header class="doc">
           <div class="eyebrow">
-            <span class="chip status">Fase 0 hecha</span>
+            <span class="chip status">Fase 1 en curso</span>
             <span class="chip">8 de noviembre de 2026</span>
             <span class="chip">Revisado el 12 de noviembre</span>
             <span class="chip">luna-form</span>
@@ -1106,17 +1106,42 @@ dictionary ModelContextTool {
             <code>buildToolSchema</code> (core)
           </h3>
           <p>
-            Función pura nueva en
-            <code>packages/luna-core/src/util/tool-schema.ts</code>:
+            Función pura en
+            <code>packages/luna-core/src/util/tool-schema.ts</code> (hecha):
           </p>
           <pre><code>export function buildToolSchema(
   sections: Sections,
-  options: Readonly&lt;{
+  options?: Readonly&lt;{
     context?: Record&lt;string, unknown&gt;
     definition?: Definition
     localization?: Localization
+    types?: Readonly&lt;Record&lt;string, ToolSchema&gt;&gt;
   }&gt;
-): JsonSchemaObject</code></pre>
+): Readonly&lt;{
+  lookup: readonly string[]
+  required: readonly string[]
+  schema: ToolSchema
+}&gt;</code></pre>
+          <ul>
+            <li>
+              <strong><code>ToolSchema</code></strong> es el subconjunto
+              portable como tipo: TypeScript no deja escribir
+              <code>oneOf</code>, <code>const</code> ni <code>$ref</code>.
+            </li>
+            <li>
+              <strong><code>types</code>:</strong> el esquema de cada tipo
+              propio, el que declara <code>defineCustomInput</code>.
+            </li>
+            <li>
+              <strong><code>required</code>:</strong> los campos que el envío
+              necesita, para la descripción del tool.
+            </li>
+            <li>
+              <strong><code>lookup</code>:</strong> los campos cuyas opciones se
+              buscan con <code>&lt;name&gt;_options</code>. Si está vacío, ese
+              tool no se registra.
+            </li>
+          </ul>
           <ul>
             <li>
               <strong>Entrada:</strong> lee la misma definición preparada que el
@@ -1246,7 +1271,11 @@ dictionary ModelContextTool {
                 </tr>
                 <tr>
                   <td><code>input/number</code></td>
-                  <td><code>number</code>; el paso va en la descripción</td>
+                  <td>
+                    <code>integer</code>; <code>number</code> si el
+                    <code>step</code>, o la cota desde la que cuenta, es
+                    fraccionario. El paso va en la descripción
+                  </td>
                 </tr>
                 <tr>
                   <td><code>input/date</code></td>
@@ -1321,10 +1350,10 @@ dictionary ModelContextTool {
                 <tr>
                   <td><code>list</code></td>
                   <td>
-                    <code>array</code> de objetos (las hojas de la fila), con
-                    <code>minItems</code>/<code>maxItems</code> desde
-                    <code>advanced.length</code>; si es <code>fixed</code>,
-                    longitud exacta
+                    <code>array</code> de objetos (las hojas de la fila).
+                    <code>minItems</code> son las filas que la lista siempre
+                    tiene (<code>length.min</code>, o 1); obligatoria si sus
+                    filas tienen hojas obligatorias
                   </td>
                 </tr>
                 <tr>
@@ -1372,14 +1401,33 @@ dictionary ModelContextTool {
               <ul>
                 <li>
                   <strong>Se incluyen</strong> los campos que un evento
-                  <code>state</code> puede revelar, con una nota "solo aplica
-                  cuando …".
+                  <code>state</code> muestra o desbloquea, cuando lo dispara un
+                  campo que el agente puede escribir.
+                  <ul>
+                    <li>
+                      El destino se resuelve como lo resuelve el formulario:
+                      <code>items/note</code> desde una fila llega a esa fila, y
+                      desde fuera de las filas llega al campo de primer nivel.
+                    </li>
+                    <li>La descripción dice qué campo lo hace disponible.</li>
+                  </ul>
                 </li>
                 <li>
-                  <strong>Se excluyen</strong> los campos
-                  <code>hidden</code> que nada revela, los
-                  <code>transient</code> (solo disparan eventos) y los
-                  <code>disabled</code> o de solo lectura en la definición.
+                  <strong>Se excluyen:</strong>
+                  <ul>
+                    <li>
+                      los <code>hidden</code> o <code>disabled</code> que nada
+                      muestra o desbloquea;
+                    </li>
+                    <li>
+                      los <code>transient</code>, que solo disparan eventos;
+                    </li>
+                    <li>los de solo lectura;</li>
+                    <li>las contraseñas;</li>
+                    <li>
+                      los marcados con <code>advanced.agent: false</code>.
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>
@@ -1391,12 +1439,14 @@ dictionary ModelContextTool {
               listas anidadas, traducciones y exclusiones;
             </li>
             <li>el esquema usa solo el subconjunto portable;</li>
-            <li>la misma definición da los mismos bytes;</li>
-            <li>
-              verificación cruzada: todo valor que
-              <code>buildFormSchema</code> acepta cumple el esquema del tool.
-            </li>
+            <li>la misma definición da los mismos bytes.</li>
           </ul>
+          <p>
+            No hay verificación cruzada con <code>buildFormSchema</code>: los
+            dos esquemas difieren a propósito. El tool pide el mes y el año como
+            números, y un Yes/No como booleano; el formulario los guarda como
+            texto, y el tool los convierte al escribirlos.
+          </p>
 
           <h3 id="fill">
             <span class="num">3.4</span>Tool de rellenado:
@@ -2632,22 +2682,43 @@ const result = await callTool(call.name, call.input)</code></pre>
                       detiene, lee los errores de la página.
                     </li>
                     <li>
-                      Se registran en <code>document.modelContext</code> cuando
-                      existe. Solo en desarrollo, también en
-                      <code>window.__lunaTools</code>.
+                      Solo en desarrollo, se registran en
+                      <code>document.modelContext</code> cuando existe y en
+                      <code>window.__lunaTools</code>. El build de producción no
+                      los incluye.
                     </li>
                   </ul>
                 </li>
                 <li class="done">
-                  Esquema con
-                  <code>z.toJSONSchema(buildFormSchema(...))</code>, sin su
-                  <code>required</code> de primer nivel. <code>zod</code> pasó a
-                  ser dependencia del editor.
+                  Esquema: primero
+                  <code>z.toJSONSchema(buildFormSchema(...))</code>; desde el
+                  paso 1 de la fase 1, <code>buildToolSchema</code>. El editor
+                  ya no depende de <code>zod</code>.
                 </li>
                 <li class="done">
                   Prueba en Chrome con WebMCP: rellenar y enviar de punta a
                   punta. Un envío exitoso tarda 1,15 s, de los que 1 s es la
                   acción del editor.
+                </li>
+                <li class="done">
+                  Revisión de código (2026-11-13). Se corrigieron los casos
+                  peligrosos:
+                  <ul>
+                    <li>
+                      un error viejo en pantalla se leía como fallo del envío
+                      nuevo, y el agente reenviaba;
+                    </li>
+                    <li>dos envíos se solapaban;</li>
+                    <li>
+                      el tool escribía campos de solo lectura y devolvía
+                      contraseñas;
+                    </li>
+                    <li>una acción fallida se reportaba como en curso.</li>
+                  </ul>
+                  Ahora el resultado sale de <code>onSuccess</code> o de un
+                  cambio en el aviso o en los errores de la página, y las
+                  esperas usan timers, que siguen corriendo en una pestaña en
+                  segundo plano.
                 </li>
               </ul>
               <h4>Resultados</h4>
@@ -2720,22 +2791,44 @@ const result = await callTool(call.name, call.input)</code></pre>
                     >sección 7</a
                   >).
                 </li>
+                <li>
+                  <strong>Límites que quedan</strong>, propios de escribir por
+                  los valores del host; los resuelve la fase 1:
+                  <ul>
+                    <li>
+                      una hora en un formato distinto de <code>HH:mm</code> y un
+                      <code>transform</code> no se aplican;
+                    </li>
+                    <li>
+                      un valor del host pierde contra una clave plana que ya
+                      escribió una persona;
+                    </li>
+                    <li>
+                      un envío que falla igual que el anterior no cambia la
+                      página, y el tool responde <code>pending</code> a los 15
+                      s.
+                    </li>
+                  </ul>
+                </li>
               </ul>
             </div>
 
             <div class="card">
               <div class="phase-head">
                 <h3>Fase 1: librería</h3>
-                <span class="chip">1 a 2 semanas</span>
+                <span class="chip">en curso</span>
               </div>
               <ul class="tasks">
-                <li>
+                <li class="done">
                   <code>packages/luna-core/src/util/tool-schema.ts</code> con
                   <code>buildToolSchema</code> (<a href="#esquema">3.3</a>):
                   subconjunto portable, opciones en línea hasta 25 y salida
                   determinista. Exportado también por
                   <code>react-luna-form/schema</code>. Más
-                  <code>tests/unit/tool-schema.spec.ts</code>.
+                  <code>tests/unit/tool-schema.spec.ts</code>, con 45 casos.
+                  Corregido tras la revisión de código: números enteros, filas
+                  mínimas de una lista, campos que un evento desbloquea y
+                  destinos resueltos como en el formulario.
                 </li>
                 <li>
                   Registro: <code>apply(value)</code> en
@@ -2796,7 +2889,11 @@ const result = await callTool(call.name, call.input)</code></pre>
                   <code>docs/index.md</code>.
                   <ul>
                     <li>
-                      Cubre la prop, <code>listTools()</code> y
+                      Iniciada: ya describe <code>buildToolSchema</code> y
+                      <code>advanced.agent</code>, con su fila en el índice.
+                    </li>
+                    <li>
+                      Falta la prop, <code>listTools()</code> y
                       <code>callTool()</code>, WebMCP y el contrato.
                     </li>
                     <li>

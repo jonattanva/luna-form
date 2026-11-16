@@ -1,7 +1,7 @@
 # Plan: WebMCP imperativo en luna-form
 
-Estado: la fase 0 está hecha; las fases 1 a 3, sin implementar. Escrito el
-2026-11-08. Revisado el 2026-11-12.
+Estado: la fase 0 está hecha y la fase 1 en curso; las fases 2 y 3, sin
+implementar. Escrito el 2026-11-08. Revisado el 2026-11-12.
 
 Objetivo: que un formulario de luna pueda exponerse como herramientas
 (_tools_) para agentes de IA, generadas desde la misma definición JSON que ya
@@ -236,18 +236,32 @@ Opción por campo, en la definición (cambio del contrato JSON, se documenta):
 
 ### 3.3 Esquema de entrada: `buildToolSchema` (core)
 
-Función pura nueva en `packages/luna-core/src/util/tool-schema.ts`:
+Función pura en `packages/luna-core/src/util/tool-schema.ts` (hecha):
 
 ```ts
 export function buildToolSchema(
   sections: Sections,
-  options: Readonly<{
+  options?: Readonly<{
     context?: Record<string, unknown>
     definition?: Definition
     localization?: Localization
+    types?: Readonly<Record<string, ToolSchema>>
   }>
-): JsonSchemaObject
+): Readonly<{
+  lookup: readonly string[]
+  required: readonly string[]
+  schema: ToolSchema
+}>
 ```
+
+- **`ToolSchema`** es el subconjunto portable como tipo: TypeScript no deja
+  escribir `oneOf`, `const` ni `$ref`.
+- **`types`:** el esquema de cada tipo propio, el que declara
+  `defineCustomInput`.
+- **`required`:** los campos que el envío necesita, para la descripción del
+  tool.
+- **`lookup`:** los campos cuyas opciones se buscan con `<name>_options`. Si
+  está vacío, ese tool no se registra.
 
 - **Entrada:** lee la misma definición preparada que el render. `prepare` la
   devuelve sin recalcular mientras nada de lo que lee cambia
@@ -292,25 +306,25 @@ más:
 
 Mapeo por tipo:
 
-| Tipo de campo                                  | JSON Schema                                                                                                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `input`, `input/text`, `input/tel`, `textarea` | `string`                                                                                                                                          |
-| `input/email`                                  | `string`, `format: "email"`                                                                                                                       |
-| `input/password`                               | fuera siempre                                                                                                                                     |
-| `input/number`                                 | `number`; el paso va en la descripción                                                                                                            |
-| `input/date`                                   | `string`, `format: "date"` (ISO `yyyy-MM-dd`). En modo rango, un array de 2 fechas. Mínimo, máximo y días reservados se explican en `description` |
-| `input/time`                                   | `string`, `pattern: "^\\d{2}:\\d{2}$"` (HH:mm de 24 h)                                                                                            |
-| `checkbox`, `select/active`                    | `boolean`                                                                                                                                         |
-| `select`, `radio`                              | `enum` con los `value` y las etiquetas en la descripción; con más de 25 opciones o fuente remota, `string` y `<name>_options`                     |
-| `chips`                                        | `array` cuyos `items` siguen la regla de `select`; `maxItems: 1` si `multiple: false`; sin repetidos, dicho en la descripción                     |
-| `chips/day`, `chips/month`                     | `array` de `enum` con los días o los meses                                                                                                        |
-| `select/day`                                   | `enum` con los 7 días de la semana                                                                                                                |
-| `select/month`                                 | `integer` de 1 a 12, con los nombres de los meses en la descripción                                                                               |
-| `select/year`                                  | `integer` con `minimum` y `maximum` de `buildYearLimits`, en lugar de una opción por año                                                          |
-| `select/timezone`                              | `string` con la zona IANA; se buscan con `<name>_options`                                                                                         |
-| `list`                                         | `array` de objetos (las hojas de la fila), con `minItems`/`maxItems` desde `advanced.length`; si es `fixed`, longitud exacta                      |
-| `column`                                       | se aplana: sus campos van al mismo nivel                                                                                                          |
-| tipos personalizados                           | el esquema que el tipo declara una vez: `defineCustomInput(types, input, { agent: { schema } })`. Sin él, `string`                                |
+| Tipo de campo                                  | JSON Schema                                                                                                                                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input`, `input/text`, `input/tel`, `textarea` | `string`                                                                                                                                                               |
+| `input/email`                                  | `string`, `format: "email"`                                                                                                                                            |
+| `input/password`                               | fuera siempre                                                                                                                                                          |
+| `input/number`                                 | `integer`; `number` si el `step`, o la cota desde la que cuenta, es fraccionario. El paso va en la descripción                                                         |
+| `input/date`                                   | `string`, `format: "date"` (ISO `yyyy-MM-dd`). En modo rango, un array de 2 fechas. Mínimo, máximo y días reservados se explican en `description`                      |
+| `input/time`                                   | `string`, `pattern: "^\\d{2}:\\d{2}$"` (HH:mm de 24 h)                                                                                                                 |
+| `checkbox`, `select/active`                    | `boolean`                                                                                                                                                              |
+| `select`, `radio`                              | `enum` con los `value` y las etiquetas en la descripción; con más de 25 opciones o fuente remota, `string` y `<name>_options`                                          |
+| `chips`                                        | `array` cuyos `items` siguen la regla de `select`; `maxItems: 1` si `multiple: false`; sin repetidos, dicho en la descripción                                          |
+| `chips/day`, `chips/month`                     | `array` de `enum` con los días o los meses                                                                                                                             |
+| `select/day`                                   | `enum` con los 7 días de la semana                                                                                                                                     |
+| `select/month`                                 | `integer` de 1 a 12, con los nombres de los meses en la descripción                                                                                                    |
+| `select/year`                                  | `integer` con `minimum` y `maximum` de `buildYearLimits`, en lugar de una opción por año                                                                               |
+| `select/timezone`                              | `string` con la zona IANA; se buscan con `<name>_options`                                                                                                              |
+| `list`                                         | `array` de objetos (las hojas de la fila). `minItems` son las filas que la lista siempre tiene (`length.min`, o 1); obligatoria si sus filas tienen hojas obligatorias |
+| `column`                                       | se aplana: sus campos van al mismo nivel                                                                                                                               |
+| tipos personalizados                           | el esquema que el tipo declara una vez: `defineCustomInput(types, input, { agent: { schema } })`. Sin él, `string`                                                     |
 
 Reglas de validación:
 
@@ -323,19 +337,30 @@ Reglas de validación:
 
 Visibilidad:
 
-- **Se incluyen:** los campos que un evento `state` puede revelar, con una nota
-  "solo aplica cuando …".
-- **Se excluyen:** los campos `hidden` que nada revela, los `transient` (solo
-  disparan eventos) y los `disabled` o de solo lectura en la definición.
+- **Se incluyen:** los campos que un evento `state` muestra o desbloquea,
+  cuando lo dispara un campo que el agente puede escribir.
+  - El destino se resuelve como lo resuelve el formulario: `items/note` desde
+    una fila llega a esa fila, y desde fuera de las filas llega al campo de
+    primer nivel.
+  - La descripción dice qué campo lo hace disponible.
+- **Se excluyen:**
+  - los `hidden` o `disabled` que nada muestra o desbloquea;
+  - los `transient`, que solo disparan eventos;
+  - los de solo lectura;
+  - las contraseñas;
+  - los marcados con `advanced.agent: false`.
 
 Pruebas en `tests/unit/tool-schema.spec.ts`:
 
 - un caso por fila de la tabla, más `$ref`, columnas, listas anidadas,
   traducciones y exclusiones;
 - el esquema usa solo el subconjunto portable;
-- la misma definición da los mismos bytes;
-- verificación cruzada: todo valor que `buildFormSchema` acepta cumple el
-  esquema del tool.
+- la misma definición da los mismos bytes.
+
+No hay verificación cruzada con `buildFormSchema`: los dos esquemas difieren a
+propósito. El tool pide el mes y el año como números, y un Yes/No como
+booleano; el formulario los guarda como texto, y el tool los convierte al
+escribirlos.
 
 ### 3.4 Tool de rellenado: `<name>_fill`
 
@@ -843,12 +868,22 @@ probó en Chrome con WebMCP (`document.modelContext.executeTool`).
     formulario enviaría por cada campo.
   - `submit_form` envía el formulario de la página y espera `onSuccess`. Si la
     validación lo detiene, lee los errores de la página.
-  - Se registran en `document.modelContext` cuando existe. Solo en desarrollo,
-    también en `window.__lunaTools`.
-- [x] Esquema con `z.toJSONSchema(buildFormSchema(...))`, sin su `required` de
-      primer nivel. `zod` pasó a ser dependencia del editor.
+  - Solo en desarrollo, se registran en `document.modelContext` cuando existe
+    y en `window.__lunaTools`. El build de producción no los incluye.
+- [x] Esquema: primero `z.toJSONSchema(buildFormSchema(...))`; desde el paso 1
+      de la fase 1, `buildToolSchema`. El editor ya no depende de zod.
 - [x] Prueba en Chrome con WebMCP: rellenar y enviar de punta a punta. Un envío
       exitoso tarda 1,15 s, de los que 1 s es la acción del editor.
+- [x] Revisión de código (2026-11-13). Se corrigieron los casos peligrosos:
+  - un error viejo en pantalla se leía como fallo del envío nuevo, y el agente
+    reenviaba;
+  - dos envíos se solapaban;
+  - el tool escribía campos de solo lectura y devolvía contraseñas;
+  - una acción fallida se reportaba como en curso.
+
+  Ahora el resultado sale de `onSuccess` o de un cambio en el aviso o en los
+  errores de la página, y las esperas usan timers, que siguen corriendo en una
+  pestaña en segundo plano.
 
 Resultados:
 
@@ -884,13 +919,22 @@ Resultados:
 - **Por revisar:** después de un envío exitoso, la lista quedó con dos filas
   vacías; y los mensajes de campo obligatorio salieron en inglés en un
   formulario en español (sección 7).
+- **Límites que quedan**, propios de escribir por los valores del host; los
+  resuelve la fase 1:
+  - una hora en un formato distinto de `HH:mm` y un `transform` no se aplican;
+  - un valor del host pierde contra una clave plana que ya escribió una
+    persona;
+  - un envío que falla igual que el anterior no cambia la página, y el tool
+    responde `pending` a los 15 s.
 
-### Fase 1: librería (1 a 2 semanas)
+### Fase 1: librería (en curso)
 
-- [ ] `packages/luna-core/src/util/tool-schema.ts` con `buildToolSchema` (3.3):
+- [x] `packages/luna-core/src/util/tool-schema.ts` con `buildToolSchema` (3.3):
       subconjunto portable, opciones en línea hasta 25 y salida determinista.
       Exportado también por `react-luna-form/schema`. Más
-      `tests/unit/tool-schema.spec.ts`.
+      `tests/unit/tool-schema.spec.ts`, con 45 casos. Corregido tras la
+      revisión de código: números enteros, filas mínimas de una lista, campos
+      que un evento desbloquea y destinos resueltos como en el formulario.
 - [ ] Registro: `apply(value)` en `useSchema` y su registro desde `InputBase`
       (3.4).
 - [ ] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
@@ -911,7 +955,9 @@ Resultados:
       (3.4).
 - [ ] Documentación: `packages/luna-react/docs/agents/tools.md` y una fila en
       la tabla "Where to look" de `docs/index.md`.
-  - Cubre la prop, `listTools()` y `callTool()`, WebMCP y el contrato.
+  - Iniciada: ya describe `buildToolSchema` y `advanced.agent`, con su fila en
+    el índice.
+  - Falta la prop, `listTools()` y `callTool()`, WebMCP y el contrato.
   - `CLAUDE.md` pide mantener los docs al día porque se publican con el
     paquete.
 - [ ] e2e y tests de contrato (sección 5), y la medición antes y después
