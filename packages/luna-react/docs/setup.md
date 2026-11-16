@@ -226,6 +226,29 @@ Naming the field is the difference between saying nothing about it and saying it
 holds nothing, and only the second empties the input. Wrapping the value is the
 opt-in: pass the result and the object becomes the form's state.
 
+A [`list`](fields/list.md) is completed row by row. Each row the value holds
+gets the fields the list declares that the row leaves out, so a host that keeps
+the rows as objects can lose a key inside one the same way: an undo, or a field
+in the row reported empty. It matters most when a row that is not the last is
+removed. Every row below it moves up a position, and until the host answers,
+each moved row reads what the row it replaced held. An answer that names the
+fields the moved row does not have empties them; one that leaves them out lets
+the moved row keep the other row's values, and report them the next time the
+list does.
+
+A field the form brings in through a [`$ref`](structure/definition.md) has no
+name until the reference is resolved, so pass the same `definition` the form
+gets, and its `context` if a `$ref` reads from there:
+
+```tsx
+;<Form
+  sections={sections}
+  config={config}
+  definition={definition}
+  value={withDeclaredFields(sections, value, definition)}
+/>
+```
+
 Absence is resolved with the same lookup the form uses, so a name that is a path
 (`basicAuth.username` against a nested object) is handled correctly rather than
 shadowed by a flat key.
