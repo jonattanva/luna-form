@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794862955949,
+  "lastUpdate": 1794862979255,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "0e9dd1cf951c049d47145c42efeb38f23db17c92",
-          "message": "Merge pull request #57 from jonattanva/fix/nested-list-outer-clobber\n\nfix(list): read a nested list from the list, not from a snapshot",
-          "timestamp": "2026-08-14T08:21:32-05:00",
-          "tree_id": "8e36d437ce2686316579d19e85a6a23d00d9521d",
-          "url": "https://github.com/jonattanva/luna-form/commit/0e9dd1cf951c049d47145c42efeb38f23db17c92"
-        },
-        "date": 1786713787465,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 282,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 614,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "6f6c04c4af4ba92599be2c483fc63fe02b1a8383",
           "message": "Merge pull request #58 from jonattanva/fix/nested-list-value-assignment\n\nfix(list): assign the lists inside the rows, not just the rows",
           "timestamp": "2026-08-15T14:15:38-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 14.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9930285de1c8591d36674c0adca373c80b24431",
+          "message": "Merge pull request #147 from jonattanva/claude/agent-tools\n\nAgent tools: plan, phase 0 prototype and the tool schema",
+          "timestamp": "2026-11-16T16:01:49-05:00",
+          "tree_id": "1a389f9b69a854f97704d7d460c63db1b7a603c5",
+          "url": "https://github.com/jonattanva/luna-form/commit/a9930285de1c8591d36674c0adca373c80b24431"
+        },
+        "date": 1794862979202,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 59.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.7,
             "unit": "ms"
           }
         ]
