@@ -81,6 +81,9 @@ export type PreviewItem =
 
 export type List = {
   advanced?: {
+    // See `Field`'s: `false` leaves the list, and every row it holds, out of
+    // the tools an agent fills the form with.
+    agent?: false
     title?: string
     action?: string
     collapsed?: boolean
@@ -297,6 +300,13 @@ export type Validation = {
 
 export type Field = CommonProps & {
   advanced?: {
+    /**
+     * `false` leaves the field out of the tools an agent fills the form with
+     * (`buildToolSchema`): not in their schema, never read back, and reported
+     * as unknown if an agent names it, so nothing says it exists. For data an
+     * agent should not be the one to ask for. A password is always left out.
+     */
+    agent?: false
     aria?: AriaAttributes
     autocomplete?: string
     cols?: number
