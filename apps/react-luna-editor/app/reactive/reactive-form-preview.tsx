@@ -3,12 +3,71 @@
 import config from '@/luna.config'
 import { Button } from '../../components/ui/button'
 import { Code } from '../../components/ui/code'
-import { Form } from 'react-luna-form'
+import { Form, withDeclaredFields } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { useAtomValue } from 'jotai'
 import { useMemo, useState } from 'react'
+
+type Container = Record<string, unknown> | unknown[]
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function childOf(container: Container, key: string): unknown {
+  return Array.isArray(container) ? container[Number(key)] : container[key]
+}
+
+function setChild(container: Container, key: string, value: unknown): void {
+  if (Array.isArray(container)) {
+    container[Number(key)] = value
+  } else {
+    container[key] = value
+  }
+}
+
+// How a host that keeps the shape the form declares writes one report: `items`
+// an array of row objects, `items.0.label` a route into it rather than a key of
+// its own. A field reported empty loses its key, the way a store that only
+// holds what was written behaves, and a clear aimed at a row that is gone
+// builds nothing.
+function writeNested(
+  record: Record<string, unknown>,
+  name: string,
+  value: unknown
+): Record<string, unknown> {
+  const keys = name.split('.')
+  const root: Record<string, unknown> = { ...record }
+  let parent: Container = root
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const current = childOf(parent, keys[i])
+    let next: Container
+    if (Array.isArray(current)) {
+      next = [...current]
+    } else if (isRecord(current)) {
+      next = { ...current }
+    } else if (value === undefined) {
+      return record
+    } else {
+      next = /^\d+$/.test(keys[i + 1]) ? [] : {}
+    }
+    setChild(parent, keys[i], next)
+    parent = next
+  }
+
+  const last = keys[keys.length - 1]
+  if (value !== undefined) {
+    setChild(parent, last, value)
+  } else if (Array.isArray(parent)) {
+    parent.splice(Number(last), 1)
+  } else {
+    delete parent[last]
+  }
+  return root
+}
 
 export function ReactiveFormPreview() {
   const code = useAtomValue(codeAtom)
@@ -55,9 +114,29 @@ export function ReactiveFormPreview() {
     setValues((form.value as Record<string, unknown>) ?? {})
   }
 
+  // The page keeps every report under its own name, a flat record. A test that
+  // needs the other kind of host says so in the injected JSON: `host.nested`
+  // keeps the declared shape (see `writeNested`), and `host.declared` hands the
+  // form that record through `withDeclaredFields`, as such a host is told to.
+  const { host, ...formProps } = form
+  const nested = host?.nested === true
+  const declared = host?.declared === true
+
+  const formValue = useMemo(
+    () =>
+      declared
+        ? withDeclaredFields(form.sections ?? [], values, form.definition)
+        : values,
+    [declared, form.definition, form.sections, values]
+  )
+
   function handleValueChange(input: { name: string; value: unknown }) {
     console.log('Form values changed:', input)
-    setValues((prev) => ({ ...prev, [input.name]: input.value }))
+    setValues((prev) =>
+      nested
+        ? writeNested(prev, input.name, input.value)
+        : { ...prev, [input.name]: input.value }
+    )
   }
 
   // A host putting its own state back the way it was, which is the one thing
@@ -84,8 +163,8 @@ export function ReactiveFormPreview() {
         </div>
       )}
       <Form
-        {...form}
-        value={values}
+        {...formProps}
+        value={formValue}
         config={formConfig}
         action={action}
         onSuccess={handleSuccess}
