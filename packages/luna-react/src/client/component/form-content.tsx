@@ -14,6 +14,7 @@ import { useFormState, type FormState } from '../hook/use-form-action'
 import { useCallback, useEffect, useMemo } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useLatest } from '../hook/use-latest'
+import { useApplyRegistry } from '../hook/use-apply'
 import { useSchema } from '../hook/use-schema'
 import { useSetAtom } from 'jotai'
 import type { Children, Config, Control } from '../../type'
@@ -71,6 +72,7 @@ export function FormContent<
   )
 
   const [getSchema, getField, onRegister, onUnmount] = useSchema()
+  const [onRegisterApply] = useApplyRegistry()
   const [action, state, isPending, onSubmit] = useFormState(
     getSchema,
     props.action,
@@ -123,6 +125,7 @@ export function FormContent<
         context={props.context}
         getField={getField}
         onRegister={onRegister}
+        onRegisterApply={onRegisterApply}
         onUnmount={onUnmount}
         onValueChange={onValueChange}
         sourceTargets={sourceTargets}
@@ -132,6 +135,7 @@ export function FormContent<
       sourceTargets,
       getField,
       onRegister,
+      onRegisterApply,
       onUnmount,
       onValueChange,
       props.config,

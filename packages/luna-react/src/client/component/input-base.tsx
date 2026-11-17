@@ -6,6 +6,8 @@ import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import { useLatest } from '../hook/use-latest'
+import { useRegisterApply, type ApplyOptions } from '../hook/use-apply'
+import { deepEqual } from 'fast-equals'
 import {
   applyTransformToChange,
   holdValue,
@@ -195,30 +197,43 @@ export function InputBase(
     takeHostChange,
   ])
 
-  const onChange = useCallback(
-    (event: InputChangeEvent) => {
+  // A change to the field, whoever makes it: the control's `onChange`, or a
+  // value written from outside (`apply` is set, see `useRegisterApply`), which
+  // hands the value in the control's own shape and goes through every step a
+  // person's change does. `true` when the field holds the value afterwards.
+  const change = useCallback(
+    (event: InputChangeEvent, apply?: ApplyOptions) => {
       if (locked) {
-        return
+        return false
       }
 
       const inputValue = getValue(event, props.field)
 
+      // A value written from outside is never the echo of the host's own
+      // write, which is all `shouldSkipOnChange` recognises: consuming it here
+      // would drop the write and leave the echo it waits for unskipped.
       if (
         shouldSkipChange({
           field: props.field,
-          shouldSkipOnChange,
+          shouldSkipOnChange: apply ? isNoEcho : shouldSkipOnChange,
           hasClickable,
           inputValue,
           valueRef,
         })
       ) {
-        return
+        return deepEqual(inputValue, valueRef.current)
+      }
+
+      // Written again from outside, the value the field holds changes nothing,
+      // and runs its events no second time.
+      if (apply && deepEqual(inputValue, valueRef.current)) {
+        return true
       }
 
       const shown = shownRef.current
       keepCaret(event.target, props.field, shown)
       onValueChangeRef.current(inputValue, shown)
-      if (props.config.validation.change) {
+      if (apply?.validate ?? props.config.validation.change) {
         validated(inputValue)
       }
 
@@ -228,15 +243,22 @@ export function InputBase(
       // undo what this change revealed.
       initialEventsProcessedRef.current = true
 
+      // Written from outside, the events run on the next task rather than
+      // once the typing stops: there is no typing to wait for. Still through
+      // the timer, so a change that follows clears the one before it.
       if (props.field.event?.change) {
         dispatchChange({
           applyChangeEventsRef,
           data,
           entity,
           inputValue,
-          setTimeoutRef,
+          setTimeoutRef: apply?.immediate
+            ? (callback) => setTimeoutRef(callback, 0)
+            : setTimeoutRef,
         })
       }
+
+      return true
     },
     [
       applyChangeEventsRef,
@@ -257,6 +279,15 @@ export function InputBase(
       valueRef,
     ]
   )
+
+  const onChange = useCallback(
+    (event: InputChangeEvent) => {
+      change(event)
+    },
+    [change]
+  )
+
+  useRegisterApply(props.field.name, change, props.onRegisterApply)
 
   // The form sends what the field holds whenever the control cannot. A
   // read-only field is locked the one way every control understands, by being
@@ -299,6 +330,12 @@ export function InputBase(
       {formSends && <SubmittedValue name={props.field.name} {...inputProps} />}
     </>
   ))
+}
+
+// What `change` hands a strategy for a value written from outside: no echo to
+// skip.
+function isNoEcho() {
+  return false
 }
 
 // What a read-only field submits: its value from the field's state, in the
