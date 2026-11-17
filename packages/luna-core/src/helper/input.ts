@@ -511,6 +511,28 @@ function holdDay(text: string, format: DateFormat) {
   return toNativeDate(text, format) || text
 }
 
+/**
+ * The options a control was handed, each as its label and value: a time zone's
+ * groups opened, and an option that is bare text labelled by itself. What the
+ * field offers someone who cannot see it.
+ */
+export function flattenOptions(items: readonly unknown[]): Option[] {
+  return items.flatMap((item): Option[] => {
+    if (isString(item)) {
+      return [{ label: item, value: item }]
+    }
+    if (!isObject(item)) {
+      return []
+    }
+    if (Array.isArray(item.items)) {
+      return flattenOptions(item.items)
+    }
+    return isString(item.label) && isString(item.value)
+      ? [{ label: item.label, value: item.value }]
+      : []
+  })
+}
+
 function normalizePreviewOptions(
   items: readonly unknown[]
 ): Array<Option | string> {

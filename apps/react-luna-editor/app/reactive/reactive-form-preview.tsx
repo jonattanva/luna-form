@@ -3,13 +3,33 @@
 import config from '@/luna.config'
 import { Button } from '../../components/ui/button'
 import { Code } from '../../components/ui/code'
-import { Form, withDeclaredFields } from 'react-luna-form'
+import {
+  Form,
+  callTool,
+  listTools,
+  withDeclaredFields,
+  type AgentOptions,
+} from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
-import { useAgentTools } from '@/lib/agent-tools'
 import { useAtomValue } from 'jotai'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+declare global {
+  interface Window {
+    __lunaTools?: Readonly<{ call: typeof callTool; list: typeof listTools }>
+  }
+}
+
+// The preview offered to an agent, submit included: the action only echoes
+// what it receives.
+const AGENT: AgentOptions = {
+  description:
+    'The form in the luna editor preview. Filling and submitting it changes nothing outside this page.',
+  name: 'preview',
+  submit: true,
+}
 
 type Container = Record<string, unknown> | unknown[]
 
@@ -131,19 +151,18 @@ export function ReactiveFormPreview() {
     [declared, form.definition, form.sections, values]
   )
 
-  // In development, an agent fills this form through the same `values` a
-  // person's changes land in, and submits it through the form on the page.
-  // See `useAgentTools`.
-  const container = useRef<HTMLDivElement>(null)
-  const agent = useAgentTools({
-    container,
-    context: form.context,
-    definition: form.definition,
-    lang: form.lang,
-    sections: form.sections,
-    setValues,
-    translations: form.translations,
-  })
+  // An agent reaches the form through WebMCP when the browser has it, and
+  // through `window.__lunaTools` when it drives the page instead -- an
+  // end-to-end test among them.
+  useEffect(() => {
+    const tools = { call: callTool, list: listTools }
+    window.__lunaTools = tools
+    return () => {
+      if (window.__lunaTools === tools) {
+        delete window.__lunaTools
+      }
+    }
+  }, [])
 
   function handleValueChange(input: { name: string; value: unknown }) {
     console.log('Form values changed:', input)
@@ -167,11 +186,10 @@ export function ReactiveFormPreview() {
     form: Record<string, unknown>
   }) {
     setResult(response)
-    agent.onSuccess(response)
   }
 
   return (
-    <div className="w-full max-w-md p-6" ref={container}>
+    <div className="w-full max-w-md p-6">
       {result && (
         <div className="mb-4">
           <p>{result.message}</p>
@@ -183,6 +201,7 @@ export function ReactiveFormPreview() {
         value={formValue}
         config={formConfig}
         action={action}
+        agent={AGENT}
         onSuccess={handleSuccess}
         onValueChange={handleValueChange}
       >

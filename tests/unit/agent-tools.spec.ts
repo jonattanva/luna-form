@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   createFormTools,
+  createQueue,
   type AgentOptions,
   type FieldStatus,
   type FormToolsHost,
@@ -220,14 +221,17 @@ function createForm(setup: Setup = {}) {
     },
     validate: (names) => {
       calls.validate.push(names)
+      const found: Record<string, string[]> = {}
       for (const name of names) {
         const message = setup.rules?.[name]?.(values.get(name) ?? null)
+        found[name] = message ? [message] : []
         if (message) {
           errors[name] = [message]
         } else {
           delete errors[name]
         }
       }
+      return found
     },
   }
 
@@ -244,7 +248,7 @@ function toolsOf(
     agent,
     buildToolSchema([{ fields: FIELDS }]),
     form.host,
-    signal
+    { signal }
   )
   return { ...form, tools }
 }
@@ -755,7 +759,7 @@ describe('createFormTools', () => {
           },
         ])
         expect(result.values).toEqual({
-          items: [{ sku: 'A1' }, { qty: '2', sku: 'B2' }],
+          items: [{ sku: 'A1' }, { qty: 2, sku: 'B2' }],
         })
       })
 
@@ -939,6 +943,36 @@ describe('createFormTools', () => {
       expect(calls.apply.map(([, value]) => value)).toEqual(['first', 'second'])
     })
 
+    test('should make tools built again for the same form wait for the ones before', async () => {
+      const queue = createQueue()
+      let release = () => {}
+      const order: string[] = []
+      const form = createForm()
+      const allow = (call: { values: ToolResult }) => {
+        order.push(String(call.values.email))
+        return call.values.email === 'first'
+          ? new Promise<boolean>((resolve) => {
+              release = () => resolve(true)
+            })
+          : true
+      }
+      const build = () =>
+        createFormTools(
+          { ...AGENT, allow },
+          buildToolSchema([{ fields: FIELDS }]),
+          form.host,
+          { queue }
+        )
+
+      const first = toolNamed(build(), 'fill').execute({ email: 'first' })
+      const second = toolNamed(build(), 'fill').execute({ email: 'second' })
+      await vi.waitFor(() => expect(order).toEqual(['first']))
+
+      release()
+      await Promise.all([first, second])
+      expect(order).toEqual(['first', 'second'])
+    })
+
     test('should answer busy past ten calls waiting', async () => {
       const allow = () => new Promise<boolean>(() => {})
       const { tools } = toolsOf({}, { ...AGENT, allow })
@@ -973,6 +1007,30 @@ describe('createFormTools', () => {
         locked: ['email'],
         submit: { status: 'idle' },
         values: { country: 'xx', email: 'ada@example.com' },
+      })
+    })
+
+    test('should read values in the shape the schema gives them, and only the leaves it has', async () => {
+      const { tools } = toolsOf({
+        values: {
+          active: 'true',
+          age: '42',
+          items: [{ pin: '1234', qty: '3', sku: 'A1' }],
+          month: '3',
+        },
+      })
+
+      expect(
+        (
+          await call(tools, 'read', {
+            fields: ['age', 'month', 'active', 'items'],
+          })
+        ).values
+      ).toEqual({
+        active: true,
+        age: 42,
+        items: [{ qty: 3, sku: 'A1' }],
+        month: 3,
       })
     })
 

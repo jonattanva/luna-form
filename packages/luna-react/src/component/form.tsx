@@ -9,7 +9,7 @@ import { isGuardHidden } from '../lib/visibility'
 import { prepare, type Definition, type Sections } from '@luna-form/core'
 import type { Config, Control, Slot } from '../type'
 import type { Fields } from '@luna-form/core'
-import type { FormEvent } from 'react'
+import type { FormEvent, Ref } from 'react'
 
 export type GuardProps = Readonly<{
   children: React.ReactNode
@@ -28,27 +28,30 @@ function StaticGuard(props: GuardProps) {
   return isGuardHidden({}, props.fields) ? null : props.children
 }
 
-export function Form(
-  props: Readonly<{
-    advanced?: {
-      step?: boolean
-    }
-    action?: (formData: FormData) => void
-    children: Slot
-    config: Config
-    context?: Record<string, unknown>
-    control?: Control
-    definition?: Definition
-    collapsible?: React.ComponentType<CollapsibleFieldSetProps>
-    guard?: React.ComponentType<GuardProps>
-    isPending?: boolean
-    noValidate?: boolean
-    onSubmit?: (event: FormEvent<HTMLFormElement>) => void
-    readOnly?: boolean
-    sections: Sections
-    translations?: Record<string, string>
-  }>
-) {
+export function Form({
+  formRef,
+  ...props
+}: Readonly<{
+  advanced?: {
+    step?: boolean
+  }
+  action?: (formData: FormData) => void
+  children: Slot
+  config: Config
+  context?: Record<string, unknown>
+  control?: Control
+  definition?: Definition
+  // The `<form>` itself, for the client to submit it as its button does.
+  formRef?: Ref<HTMLFormElement>
+  collapsible?: React.ComponentType<CollapsibleFieldSetProps>
+  guard?: React.ComponentType<GuardProps>
+  isPending?: boolean
+  noValidate?: boolean
+  onSubmit?: (event: FormEvent<HTMLFormElement>) => void
+  readOnly?: boolean
+  sections: Sections
+  translations?: Record<string, string>
+}>) {
   const sections = prepare(props.sections, props.definition, props.context)
   const Guard = props.guard ?? StaticGuard
 
@@ -60,6 +63,7 @@ export function Form(
   return (
     <div className="h-full w-full">
       <form
+        ref={formRef}
         noValidate={props.noValidate}
         action={props.action}
         onSubmit={props.onSubmit}

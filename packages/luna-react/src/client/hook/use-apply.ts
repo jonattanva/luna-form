@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useLatest } from './use-latest'
 import type { InputChangeEvent } from '../component/input-strategies'
-import type { Value } from '@luna-form/core'
+import type { Option, Value } from '@luna-form/core'
 
 /**
  * How a value written from outside a field goes through it.
@@ -25,36 +25,55 @@ export type ApplyOptions = Readonly<{
 export type Apply = (value: Value, options?: ApplyOptions) => boolean
 
 /**
- * The fields' change, by name, for writing them from outside: what each field
- * registers, and what writes one. Apart from the schema registry, because a
- * field registers it from the component that owns its change, not from the
- * hook that builds its schema.
+ * A mounted field, as something outside it reaches it: written through its own
+ * change, asked whether it is locked and which options it offers now, and
+ * validated. `validate` answers the field's errors, and shows them when the
+ * form shows a person's as they write or leave a field.
+ */
+export type FieldHandle = Readonly<{
+  apply: Apply
+  isLocked: () => boolean
+  options: () => readonly Option[] | undefined
+  validate: () => readonly string[]
+}>
+
+/**
+ * The mounted fields' handles, by name: what each field registers, and what
+ * reads them. Apart from the schema registry, because a field registers it from
+ * the component that owns its change, not from the hook that builds its schema.
  */
 export function useApplyRegistry() {
-  const appliers = useRef(new Map<string, Apply>())
+  const handles = useRef(new Map<string, FieldHandle>())
 
-  // A field's cleanup takes out only the writer it put in, so a remount under
+  // A field's cleanup takes out only the handle it put in, so a remount under
   // the same name that registered first keeps its own.
-  const onRegisterApply = useCallback((name: string, apply: Apply) => {
-    appliers.current.set(name, apply)
+  const onRegisterApply = useCallback((name: string, handle: FieldHandle) => {
+    handles.current.set(name, handle)
     return () => {
-      if (appliers.current.get(name) === apply) {
-        appliers.current.delete(name)
+      if (handles.current.get(name) === handle) {
+        handles.current.delete(name)
       }
     }
   }, [])
 
-  const apply = useCallback(
-    (name: string, value: Value, options?: ApplyOptions) =>
-      appliers.current.get(name)?.(value, options) ?? false,
+  const getHandles = useCallback(
+    (): ReadonlyMap<string, FieldHandle> => handles.current,
     []
   )
 
-  return [onRegisterApply, apply] as const
+  return [onRegisterApply, getHandles] as const
 }
 
+/** What a field hands `useRegisterApply`, read afresh on every call. */
+export type FieldParts = Readonly<{
+  change: (event: InputChangeEvent, apply?: ApplyOptions) => boolean
+  locked: boolean
+  options: () => readonly Option[] | undefined
+  validate: () => readonly string[]
+}>
+
 /**
- * Registers a field's change under its name for as long as the field is
+ * Registers a field's handle under its name for as long as the field is
  * mounted. Read through a ref, so a change of what the field is locked by or
  * validates with is not a new registration.
  *
@@ -63,18 +82,22 @@ export function useApplyRegistry() {
  */
 export function useRegisterApply(
   name: string | undefined,
-  change: (event: InputChangeEvent, apply?: ApplyOptions) => boolean,
-  onRegisterApply: (name: string, apply: Apply) => () => void
+  parts: FieldParts,
+  onRegisterApply: (name: string, handle: FieldHandle) => () => void
 ) {
-  const changeRef = useLatest(change)
+  const partsRef = useLatest(parts)
 
   useEffect(() => {
     if (!name) {
       return
     }
 
-    return onRegisterApply(name, (value, options) =>
-      changeRef.current({ target: { value } }, options ?? {})
-    )
-  }, [changeRef, name, onRegisterApply])
+    return onRegisterApply(name, {
+      apply: (value, options) =>
+        partsRef.current.change({ target: { value } }, options ?? {}),
+      isLocked: () => partsRef.current.locked,
+      options: () => partsRef.current.options(),
+      validate: () => partsRef.current.validate(),
+    })
+  }, [name, onRegisterApply, partsRef])
 }
