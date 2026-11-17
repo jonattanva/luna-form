@@ -949,16 +949,49 @@ Resultados:
       budgets sin cambios. Todavía no tiene consumidor: lo usa el paso
       siguiente.
 - [ ] Revisión de código del 2026-11-16, decisiones para el paso siguiente:
-  - Los tools filtran contraseñas, `advanced.agent: false` y lo que no es
-    escribible con el esquema de `buildToolSchema`; `apply` sigue genérico.
-  - Un campo que aparece en la misma llamada se escribe en la pasada
-    siguiente: todavía no está registrado.
-  - Una e2e de `apply` con eventos `value` mide el flush de los
-    autocompletados fuera de un evento de React.
-  - En un PR aparte: `useReplayedChangeEvents`, los dos efectos de
+  - Hecho en el paso 3: los tools filtran contraseñas, `advanced.agent: false`
+    y lo que no es escribible con el esquema de `buildToolSchema`; `apply`
+    sigue genérico.
+  - Hecho en el paso 3: un campo que aparece en la misma llamada se escribe en
+    la pasada siguiente.
+  - Pendiente: una e2e de `apply` con eventos `value` que mida el flush de los
+    autocompletados fuera de un evento de React. Llega con el host real.
+  - Pendiente, en un PR aparte: `useReplayedChangeEvents`, los dos efectos de
     `InputBase` que repiten los eventos de cambio.
-- [ ] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
+- [x] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
       descripciones (3.8), los códigos (3.15) y la cola (3.10).
+  - `createFormTools(agent, built, host, signal)` recibe el resultado de
+    `buildToolSchema` y un `FormToolsHost`: `apply`, `applyRows`, `getField`,
+    `getOptions`, `getStatus`, `read`, `settle`, `validate`, `getErrors`,
+    `submit` y `getSubmit`. Una hoja de lista se nombra como en `lookup`:
+    `items.0.sku`. El host real llega con el hook; los tests usan uno en
+    memoria (`tests/unit/agent-tools.spec.ts`, 48 casos, cada respuesta
+    validada contra su `outputSchema`).
+  - Un nombre inválido no registra nada y avisa con `logger.warn`.
+  - `fill` escribe en el orden de la definición, no en el del agente. Cada
+    valor se revisa al escribirlo, con las opciones que el campo tiene en ese
+    momento: un valor anterior de la misma llamada puede ser el que las carga.
+    Opciones sin cargar responden `invalid_option`.
+  - Un campo oculto o bloqueado espera a la pasada siguiente, por si otro
+    valor lo muestra o lo desbloquea. Un `false` de `apply` con el campo visible
+    y desbloqueado también se reintenta: el campo acaba de aparecer y todavía no
+    registró su escritura.
+  - Entrada tolerante: opciones por valor o etiqueta sin mayúsculas ni
+    acentos, números como texto, mes y año como enteros, Sí/No y checkbox como
+    booleanos, `null` vacía lo que puede quedar vacío. Un rango de un día es
+    válido; una hora como `25:99` no.
+  - `ok` no cuenta `hidden` ni `locked`, como dice 3.4; la descripción de
+    `<name>_fill` lo explica y la de `<name>_submit` pide revisar `skipped`.
+  - Un `allow` que falla responde `refused`. Un fallo del host (`settle`,
+    `submit`, `validate`) sí se lanza: es un fallo del puente (3.15).
+  - Revisión de código del 2026-11-17: ocho correcciones (hojas de lista en
+    `<name>_options`, campos que otro valor desbloquea, rango de un día,
+    `false` de `apply` reportado como `locked`, opciones sin cargar, `allow`
+    que lanza, horas imposibles y helpers repetidos con core). `listOptions`
+    se exporta de `tool-schema.ts` para que el esquema y los mensajes listen
+    las opciones igual.
+  - Sin consumidor en la librería todavía, así que el bundle no cambia (292.9
+    kB).
 - [ ] Rellenado en un commit por pasada y validación al final (3.14), con su
       render budget.
 - [ ] Rutas de hoja en las listas (`items.3.sku`).

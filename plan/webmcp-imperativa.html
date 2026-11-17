@@ -2857,28 +2857,29 @@ const result = await callTool(call.name, call.input)</code></pre>
                   siguiente:
                   <ul>
                     <li>
-                      Los tools filtran contraseñas,
+                      Hecho en el paso 3: los tools filtran contraseñas,
                       <code>advanced.agent: false</code> y lo que no es
                       escribible con el esquema de <code>buildToolSchema</code>;
                       <code>apply</code> sigue genérico.
                     </li>
                     <li>
-                      Un campo que aparece en la misma llamada se escribe en la
-                      pasada siguiente: todavía no está registrado.
+                      Hecho en el paso 3: un campo que aparece en la misma
+                      llamada se escribe en la pasada siguiente.
                     </li>
                     <li>
-                      Una e2e de <code>apply</code> con eventos
-                      <code>value</code> mide el flush de los autocompletados
-                      fuera de un evento de React.
+                      Pendiente: una e2e de <code>apply</code> con eventos
+                      <code>value</code> que mida el flush de los
+                      autocompletados fuera de un evento de React. Llega con el
+                      host real.
                     </li>
                     <li>
-                      En un PR aparte: <code>useReplayedChangeEvents</code>, los
-                      dos efectos de <code>InputBase</code> que repiten los
-                      eventos de cambio.
+                      Pendiente, en un PR aparte:
+                      <code>useReplayedChangeEvents</code>, los dos efectos de
+                      <code>InputBase</code> que repiten los eventos de cambio.
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   <code>client/lib/agent-tools.ts</code>: los cuatro tools (<a
                     href="#fill"
                     >3.4</a
@@ -2890,6 +2891,79 @@ const result = await callTool(call.name, call.input)</code></pre>
                     href="#ciclo"
                     >3.10</a
                   >).
+                  <ul>
+                    <li>
+                      <code>createFormTools(agent, built, host, signal)</code>
+                      recibe el resultado de <code>buildToolSchema</code> y un
+                      <code>FormToolsHost</code>: <code>apply</code>,
+                      <code>applyRows</code>, <code>getField</code>,
+                      <code>getOptions</code>, <code>getStatus</code>,
+                      <code>read</code>, <code>settle</code>,
+                      <code>validate</code>, <code>getErrors</code>,
+                      <code>submit</code> y <code>getSubmit</code>. Una hoja de
+                      lista se nombra como en <code>lookup</code>:
+                      <code>items.0.sku</code>. El host real llega con el hook;
+                      los tests usan uno en memoria
+                      (<code>tests/unit/agent-tools.spec.ts</code>, 48 casos,
+                      cada respuesta validada contra su
+                      <code>outputSchema</code>).
+                    </li>
+                    <li>
+                      Un nombre inválido no registra nada y avisa con
+                      <code>logger.warn</code>.
+                    </li>
+                    <li>
+                      <code>fill</code> escribe en el orden de la definición, no
+                      en el del agente. Cada valor se revisa al escribirlo, con
+                      las opciones que el campo tiene en ese momento: un valor
+                      anterior de la misma llamada puede ser el que las carga.
+                      Opciones sin cargar responden <code>invalid_option</code>.
+                    </li>
+                    <li>
+                      Un campo oculto o bloqueado espera a la pasada siguiente,
+                      por si otro valor lo muestra o lo desbloquea. Un
+                      <code>false</code> de <code>apply</code> con el campo
+                      visible y desbloqueado también se reintenta: el campo
+                      acaba de aparecer y todavía no registró su escritura.
+                    </li>
+                    <li>
+                      Entrada tolerante: opciones por valor o etiqueta sin
+                      mayúsculas ni acentos, números como texto, mes y año como
+                      enteros, Sí/No y checkbox como booleanos,
+                      <code>null</code> vacía lo que puede quedar vacío. Un
+                      rango de un día es válido; una hora como
+                      <code>25:99</code> no.
+                    </li>
+                    <li>
+                      <code>ok</code> no cuenta <code>hidden</code> ni
+                      <code>locked</code>, como dice <a href="#fill">3.4</a>; la
+                      descripción de <code>&lt;name&gt;_fill</code> lo explica y
+                      la de <code>&lt;name&gt;_submit</code> pide revisar
+                      <code>skipped</code>.
+                    </li>
+                    <li>
+                      Un <code>allow</code> que falla responde
+                      <code>refused</code>. Un fallo del host
+                      (<code>settle</code>, <code>submit</code>,
+                      <code>validate</code>) sí se lanza: es un fallo del puente
+                      (<a href="#contrato">3.15</a>).
+                    </li>
+                    <li>
+                      Revisión de código del 2026-11-17: ocho correcciones
+                      (hojas de lista en <code>&lt;name&gt;_options</code>,
+                      campos que otro valor desbloquea, rango de un día,
+                      <code>false</code> de <code>apply</code> reportado como
+                      <code>locked</code>, opciones sin cargar,
+                      <code>allow</code> que lanza, horas imposibles y helpers
+                      repetidos con core). <code>listOptions</code> se exporta
+                      de <code>tool-schema.ts</code> para que el esquema y los
+                      mensajes listen las opciones igual.
+                    </li>
+                    <li>
+                      Sin consumidor en la librería todavía, así que el bundle
+                      no cambia (292.9 kB).
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Rellenado en un commit por pasada y validación al final (<a
