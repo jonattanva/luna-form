@@ -994,27 +994,64 @@ Resultados:
     kB).
 - [ ] Rellenado en un commit por pasada y validación al final (3.14), con su
       render budget.
+  - Hecho con el host real: los valores de una pasada se escriben en la misma
+    tarea y la validación corre una vez, al final. Los errores llegan siempre
+    al agente, y en pantalla solo si el formulario los muestra antes de enviar.
+  - Falta el render budget de un rellenado de 100 campos y la latencia con 20,
+    100 y 200.
 - [ ] Rutas de hoja en las listas (`items.3.sku`).
-- [ ] `client/hook/use-agent-tools.ts`: detección, import diferido, adaptador
-      de WebMCP, `AbortController`, errores de registro y re-registro por
-      contenido (3.10, 3.11).
-- [ ] `listTools()` y `callTool()` con el registro de página, exportados por la
+- [x] Host real y `client/hook/use-agent-tools.ts`: detección, import
+      diferido, adaptador de WebMCP, `AbortController`, errores de registro y
+      re-registro por contenido (3.10, 3.11).
+  - `client/lib/agent-host.ts` arma el host sobre el store: cada campo
+    registra en `useApplyRegistry` un handle con `apply`, `isLocked`,
+    `options` y `validate`; una lista recibe filas por `pendingListRowsAtom`;
+    `settle` espera a que el store y los campos montados no cambien durante
+    50 ms, con un tope de 2 s.
+  - `client/lib/model-context.ts` declara lo mínimo de WebMCP, sin tocar el
+    `Document` global.
+  - El host lee en vivo `allow`, `readOnly`, `context` y el envío: un
+    re-registro solo pasa cuando cambian el nombre, la descripción, `submit` o
+    el esquema. La cola y la señal de vida son del formulario, no de cada
+    registro, así que un cambio de definición no corre dos llamadas a la vez
+    ni rechaza un `allow` pendiente.
+  - Dos formularios con el mismo nombre: el segundo avisa y toma los tools
+    cuando el primero se desmonta.
+  - El envío pasa por `requestSubmit` con el botón de submit del formulario, y
+    el éxito se avisa desde `onSuccess`, así llega aunque el host desmonte el
+    formulario.
+- [x] `listTools()` y `callTool()` con el registro de página, exportados por la
       entrada del cliente (3.9).
-- [ ] Prop `agent` en el `Form` del cliente, y `formRef` en
-      `component/form.tsx`.
-- [ ] `advanced.agent: false` en los tipos de core, y el tercer argumento de
-      `defineCustomInput`.
+- [x] Prop `agent` en el `Form` del cliente, y `formRef` en
+      `component/form.tsx`. El editor la usa en `/reactive` y expone
+      `window.__lunaTools`; el prototipo se borró.
+- [ ] `advanced.agent: false` en los tipos de core (hecho en el paso 1), y el
+      tercer argumento de `defineCustomInput` (falta).
 - [ ] Elegir, con mediciones, entre el camino inmediato y esperar el debounce
       (3.4).
-- [ ] Documentación: `packages/luna-react/docs/agents/tools.md` y una fila en
-      la tabla "Where to look" de `docs/index.md`.
-  - Iniciada: ya describe `buildToolSchema` y `advanced.agent`, con su fila en
-    el índice.
-  - Falta la prop, `listTools()` y `callTool()`, WebMCP y el contrato.
-  - `CLAUDE.md` pide mantener los docs al día porque se publican con el
-    paquete.
+  - Se usa el inmediato: las e2e de los tools y
+    `tests/e2e/value-event-autofill.spec.ts` pasan en los tres navegadores.
+    Falta medir la latencia.
+- [x] Documentación: `packages/luna-react/docs/agents/tools.md` describe la
+      prop, los cuatro tools, las respuestas, los códigos, WebMCP,
+      `listTools()` y `callTool()`.
 - [ ] e2e y tests de contrato (sección 5), y la medición antes y después
       (sección 6).
+  - `tests/e2e/agent-tools.spec.ts`: 10 casos en los tres navegadores, por
+    `window.__lunaTools`. 150 de 150 con `--repeat-each=5`.
+  - Tests de contrato: cada respuesta de los tests unitarios se valida contra
+    su `outputSchema`.
+  - Bundle: de 292.9 a 351.8 kB en total. En ESM el chunk de los tools pesa
+    23.9 kB (9.1 kB gzip) y carga solo cuando un agente lo pide; el camino
+    principal crece 2.3 kB gzip, por encima de los 0.5 del objetivo. En CJS,
+    que no divide, los tools van dentro (+32 kB). El límite del job subió a
+    360 kB.
+  - Revisión de código del 2026-11-17 sobre el host: ocho correcciones
+    (`allow` y `readOnly` en vivo, envío con el formulario desmontado, build
+    en curso al desmontar, nombres repetidos, cola compartida, errores en
+    pantalla según la configuración, botón de submit). Se mantiene la
+    exposición en el editor de producción (la acción solo repite lo que
+    recibe) y el `unknown` donde los datos vienen del store o de la acción.
 
 ### Fase 2: lo que pida la medición (1 a 2 semanas)
 
