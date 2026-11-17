@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794950316594,
+  "lastUpdate": 1794950341088,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "ef8d8398826b4fa03f75162ff0f12bb5ffea963e",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-08-25T09:56:44-05:00",
-          "tree_id": "cfd938a239435b75e1e10817f6949f94f1a5381d",
-          "url": "https://github.com/jonattanva/luna-form/commit/ef8d8398826b4fa03f75162ff0f12bb5ffea963e"
-        },
-        "date": 1787669889834,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 272,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 558,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 21.2,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1b54bbc233c0cb0230d44afed0a79e39d982c1ef",
+          "message": "Merge pull request #153 from jonattanva/claude/agent-leaf-paths\n\nAgent tools: write one field of one row by its route",
+          "timestamp": "2026-11-17T16:17:33-05:00",
+          "tree_id": "b3694408d0a8df6f393fe940a95a323e3614df67",
+          "url": "https://github.com/jonattanva/luna-form/commit/1b54bbc233c0cb0230d44afed0a79e39d982c1ef"
+        },
+        "date": 1794950341042,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 45.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.5,
             "unit": "ms"
           }
         ]
