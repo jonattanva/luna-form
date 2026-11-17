@@ -2230,7 +2230,10 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <li>
                   El chunk principal crece menos de 0.5 kB gzip. Se mide con
                   <code>lib-size</code> antes y después, y se compara contra el
-                  límite de 285 kB del job <code>bundle-size</code>.
+                  límite de 300 kB del job <code>bundle-size</code>. Era de 285
+                  kB: <code>buildToolSchema</code> en la entrada
+                  <code>schema</code> llevó el total de 275.8 a 291.6 kB, y el
+                  límite se subió en #147.
                 </li>
                 <li>
                   El chunk de los tools tiene su propio presupuesto, que se fija
@@ -2830,10 +2833,50 @@ const result = await callTool(call.name, call.input)</code></pre>
                   mínimas de una lista, campos que un evento desbloquea y
                   destinos resueltos como en el formulario.
                 </li>
+                <li class="done">
+                  Registro: <code>apply(value)</code> registrado desde
+                  <code>InputBase</code> (<a href="#fill">3.4</a>). Vive en
+                  <code>client/hook/use-apply.ts</code>, aparte de
+                  <code>useSchema</code>: <code>useApplyRegistry()</code> en
+                  <code>FormContent</code> y <code>useRegisterApply()</code> en
+                  <code>InputBase</code>.
+                  <code>apply(name, value, { immediate, validate })</code> pasa
+                  por el cambio del campo y devuelve <code>true</code> solo si
+                  el campo queda con el valor: <code>false</code> si está
+                  bloqueado, si lo rechaza (un <code>select</code> vacío) o si
+                  no está montado. No consume la marca del eco de una escritura
+                  del host, que antes se tragaba la escritura siguiente.
+                  <code>immediate</code> corre los eventos en la tarea siguiente
+                  en vez de a los 300 ms, y <code>validate: false</code> deja la
+                  validación para el final de la llamada. Probado en el
+                  navegador; e2e y render budgets sin cambios. Todavía no tiene
+                  consumidor: lo usa el paso siguiente.
+                </li>
                 <li>
-                  Registro: <code>apply(value)</code> en
-                  <code>useSchema</code> y su registro desde
-                  <code>InputBase</code> (<a href="#fill">3.4</a>).
+                  Revisión de código del 2026-11-16, decisiones para el paso
+                  siguiente:
+                  <ul>
+                    <li>
+                      Los tools filtran contraseñas,
+                      <code>advanced.agent: false</code> y lo que no es
+                      escribible con el esquema de <code>buildToolSchema</code>;
+                      <code>apply</code> sigue genérico.
+                    </li>
+                    <li>
+                      Un campo que aparece en la misma llamada se escribe en la
+                      pasada siguiente: todavía no está registrado.
+                    </li>
+                    <li>
+                      Una e2e de <code>apply</code> con eventos
+                      <code>value</code> mide el flush de los autocompletados
+                      fuera de un evento de React.
+                    </li>
+                    <li>
+                      En un PR aparte: <code>useReplayedChangeEvents</code>, los
+                      dos efectos de <code>InputBase</code> que repiten los
+                      eventos de cambio.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   <code>client/lib/agent-tools.ts</code>: los cuatro tools (<a

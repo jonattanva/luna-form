@@ -729,8 +729,9 @@ const result = await callTool(call.name, call.input)
 
 - **Objetivos:**
   - El chunk principal crece menos de 0.5 kB gzip. Se mide con `lib-size`
-    antes y después, y se compara contra el límite de 285 kB del job
-    `bundle-size`.
+    antes y después, y se compara contra el límite de 300 kB del job
+    `bundle-size`. Era de 285 kB: `buildToolSchema` en la entrada `schema`
+    llevó el total de 275.8 a 291.6 kB, y el límite se subió en #147.
   - El chunk de los tools tiene su propio presupuesto, que se fija con la
     primera medición.
 
@@ -935,8 +936,27 @@ Resultados:
       `tests/unit/tool-schema.spec.ts`, con 45 casos. Corregido tras la
       revisión de código: números enteros, filas mínimas de una lista, campos
       que un evento desbloquea y destinos resueltos como en el formulario.
-- [ ] Registro: `apply(value)` en `useSchema` y su registro desde `InputBase`
-      (3.4).
+- [x] Registro: `apply(value)` registrado desde `InputBase` (3.4). Vive en
+      `client/hook/use-apply.ts`, aparte de `useSchema`: `useApplyRegistry()`
+      en `FormContent` y `useRegisterApply()` en `InputBase`.
+      `apply(name, value, { immediate, validate })` pasa por el cambio del
+      campo y devuelve `true` solo si el campo queda con el valor: `false` si
+      está bloqueado, si lo rechaza (un `select` vacío) o si no está montado.
+      No consume la marca del eco de una escritura del host, que antes se
+      tragaba la escritura siguiente. `immediate` corre los eventos en la tarea
+      siguiente en vez de a los 300 ms, y `validate: false` deja la validación
+      para el final de la llamada. Probado en el navegador; e2e y render
+      budgets sin cambios. Todavía no tiene consumidor: lo usa el paso
+      siguiente.
+- [ ] Revisión de código del 2026-11-16, decisiones para el paso siguiente:
+  - Los tools filtran contraseñas, `advanced.agent: false` y lo que no es
+    escribible con el esquema de `buildToolSchema`; `apply` sigue genérico.
+  - Un campo que aparece en la misma llamada se escribe en la pasada
+    siguiente: todavía no está registrado.
+  - Una e2e de `apply` con eventos `value` mide el flush de los
+    autocompletados fuera de un evento de React.
+  - En un PR aparte: `useReplayedChangeEvents`, los dos efectos de
+    `InputBase` que repiten los eventos de cambio.
 - [ ] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
       descripciones (3.8), los códigos (3.15) y la cola (3.10).
 - [ ] Rellenado en un commit por pasada y validación al final (3.14), con su
