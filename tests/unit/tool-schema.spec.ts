@@ -447,6 +447,8 @@ describe('buildToolSchema', () => {
       ])
 
       expect(result.schema.properties?.items).toEqual({
+        description:
+          'Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: items.<row>.<field>.',
         items: {
           additionalProperties: false,
           properties: { qty: { type: 'integer' }, sku: { type: 'string' } },

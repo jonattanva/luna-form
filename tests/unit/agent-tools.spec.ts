@@ -158,7 +158,28 @@ function createForm(setup: Setup = {}) {
     validate: [] as Array<readonly string[]>,
   }
 
+  // A row's leaf by its route, `items.1.sku`: the rows are the list's own
+  // value here, and the route is the name the form gives the leaf.
+  const leafOf = (name: string) => {
+    const match = /^items\.(\d+)\.(\w+)$/.exec(name)
+    const rows = values.get('items')
+    return match && Array.isArray(rows) && Number(match[1]) < rows.length
+      ? { index: Number(match[1]), leaf: match[2], rows: rows as ToolRow[] }
+      : undefined
+  }
+
   const write = (name: string, value: ToolValue) => {
+    const leaf = leafOf(name)
+    if (leaf) {
+      values.set(
+        'items',
+        leaf.rows.map((row, index) =>
+          index === leaf.index ? { ...row, [leaf.leaf]: value } : row
+        )
+      )
+      return
+    }
+
     values.set(name, value)
     const fill = setup.fills?.[name]
     const show =
@@ -200,13 +221,15 @@ function createForm(setup: Setup = {}) {
     },
     getErrors: () => errors,
     getField: (name) => definitions.get(name),
-    getOptions: (name) => options.get(name),
+    getOptions: (path, name) => options.get(name ?? path),
     getStatus: (name): FieldStatus | undefined =>
       absent.has(name)
         ? undefined
         : { hidden: false, locked: locked.has(name) },
     getSubmit: () => submitted,
+    locate: (name) => name,
     read: (name) => values.get(name),
+    resolve: (route) => (leafOf(route) ? route : undefined),
     settle: async () => {
       calls.settle++
       for (const effect of effects.splice(0)) {
@@ -736,6 +759,118 @@ describe('createFormTools', () => {
             code: 'invalid_type',
             message: 'This field cannot be emptied: give it one of its values.',
             name: 'country',
+          },
+        ])
+      })
+    })
+
+    describe('a leaf of a row, by its route', () => {
+      test("should write one row's leaf and report it under its route", async () => {
+        const { calls, tools } = toolsOf({
+          values: { items: [{ sku: 'A1' }, { sku: 'B2' }] },
+        })
+        const result = await call(tools, 'fill', { 'items.1.sku': 'b2' })
+
+        expect(calls.rows).toEqual([])
+        expect(calls.apply).toEqual([
+          ['items.1.sku', 'b2', { immediate: true, validate: false }],
+        ])
+        expect(result).toMatchObject({
+          applied: ['items.1.sku'],
+          ok: true,
+          values: { 'items.1.sku': 'b2' },
+        })
+      })
+
+      test("should check a leaf as its row's schema says, and validate it", async () => {
+        const { calls, tools } = toolsOf({
+          rules: { 'items.0.sku': () => 'Too short' },
+          values: { items: [{ sku: 'A1' }] },
+        })
+        const result = await call(tools, 'fill', {
+          'items.0.qty': 'many',
+          'items.0.sku': 'x',
+        })
+
+        expect(calls.validate).toEqual([['items.0.sku']])
+        expect(result.errors).toEqual({ 'items.0.sku': ['Too short'] })
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_type',
+            message: 'Expected a whole number.',
+            name: 'items.0.qty',
+          },
+        ])
+      })
+
+      test('should write into a row the same call adds', async () => {
+        const { tools, values } = toolsOf({ values: { items: [] } })
+        const result = await call(tools, 'fill', {
+          items: [{ sku: 'A1' }],
+          'items.0.qty': 4,
+        })
+
+        expect(result.applied).toEqual(['items', 'items.0.qty'])
+        expect(values.get('items')).toEqual([{ qty: '4', sku: 'A1' }])
+      })
+
+      test('should write a route after the list the same call sends whole', async () => {
+        const { calls, tools, values } = toolsOf({
+          values: { items: [{ sku: 'A1' }, { sku: 'B2' }] },
+        })
+        const result = await call(tools, 'fill', {
+          items: [{ sku: 'X' }],
+          'items.0.qty': 4,
+        })
+
+        expect(calls.rows).toEqual([['items', [{ sku: 'X' }]]])
+        expect(calls.apply.map(([name]) => name)).toEqual(['items.0.qty'])
+        expect(values.get('items')).toEqual([{ qty: '4', sku: 'X' }])
+        expect(result.applied).toEqual(['items', 'items.0.qty'])
+      })
+
+      test('should take a row only as a whole number without a leading zero', async () => {
+        const { calls, tools } = toolsOf({
+          values: { items: [{ sku: 'A1' }, { sku: 'B2' }] },
+        })
+        const result = await call(tools, 'fill', { 'items.01.sku': 'x' })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'unknown',
+            message: 'No field so named.',
+            name: 'items.01.sku',
+          },
+        ])
+      })
+
+      test('should answer unknown for a row the list does not hold, or a leaf it does not have', async () => {
+        const { calls, tools } = toolsOf({
+          values: { items: [{ sku: 'A1' }] },
+        })
+        const result = await call(tools, 'fill', {
+          'items.0.color': 'red',
+          'items.5.sku': 'x',
+          'items.x.sku': 'x',
+        })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'unknown',
+            message: 'No field so named.',
+            name: 'items.0.color',
+          },
+          {
+            code: 'unknown',
+            message: 'No field so named.',
+            name: 'items.x.sku',
+          },
+          {
+            code: 'unknown',
+            message: 'No row of the list is at that position.',
+            name: 'items.5.sku',
           },
         ])
       })

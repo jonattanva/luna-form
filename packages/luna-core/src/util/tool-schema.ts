@@ -98,6 +98,13 @@ const INLINE_OPTIONS = 25
 const LOOKUP =
   'Its options are not listed here: find them with the options tool of this form.'
 
+// What a schema cannot declare: a key for one leaf of one row. `name` is the
+// list's whole name, through the first row of a list it is in.
+function describeRoutes(name: string): string {
+  const route = name.replace(/\.0\./g, '.<row>.')
+  return `Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: ${route}.<row>.<field>.`
+}
+
 // A bound the form cannot read refuses whatever is written, and lets an
 // optional field through only empty.
 const UNREADABLE =
@@ -315,6 +322,7 @@ function buildList(
   if (list.advanced?.fixed) {
     notes.push('It keeps the rows it has: send each of them, in order.')
   }
+  notes.push(describeRoutes(name))
   notes.push(...availabilityNotes(list, walk, name))
 
   const schema = withText(
