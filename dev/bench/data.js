@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794949648594,
+  "lastUpdate": 1794949676280,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "8873761e5e3b8ed7f3ae1eff3c065042bd531bbb",
-          "message": "Merge pull request #63 from jonattanva/chore/knip-entry-exports\n\nchore(core): let knip see luna-core, and clear what it found",
-          "timestamp": "2026-08-25T09:14:43-05:00",
-          "tree_id": "812b172f326a8c852015df79a8244fe62204a315",
-          "url": "https://github.com/jonattanva/luna-form/commit/8873761e5e3b8ed7f3ae1eff3c065042bd531bbb"
-        },
-        "date": 1787667369019,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 221,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 143,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 12.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "113493c44c59138467a37ef6149d0fc285a445e2",
+          "message": "Merge pull request #152 from jonattanva/dependabot/npm_and_yarn/examples/with-next-shadcn/next-16.4.5\n\nbuild(deps): bump next from 16.4.3 to 16.4.5 in /examples/with-next-shadcn",
+          "timestamp": "2026-11-17T16:06:47-05:00",
+          "tree_id": "e46272dcbbe145ca7818ecfdae1be93d3e6bcec4",
+          "url": "https://github.com/jonattanva/luna-form/commit/113493c44c59138467a37ef6149d0fc285a445e2"
+        },
+        "date": 1794949676221,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 61,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 21.2,
             "unit": "ms"
           }
         ]
