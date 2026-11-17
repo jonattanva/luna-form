@@ -237,6 +237,92 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name$=".sku"]').nth(1)).toHaveValue('B2')
   })
 
+  test("should write one row's field by its route, and leave the others alone", async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_fill', { items: [{ sku: 'A1' }, { sku: 'B2' }] })
+    const result = await call(page, 'preview_fill', { 'items.1.sku': 'b2-new' })
+
+    expect(result).toMatchObject({
+      applied: ['items.1.sku'],
+      ok: true,
+      values: { 'items.1.sku': 'b2-new' },
+    })
+    await expect(page.locator('input[name$=".sku"]').nth(0)).toHaveValue('A1')
+    await expect(page.locator('input[name$=".sku"]').nth(1)).toHaveValue(
+      'b2-new'
+    )
+    expect(
+      await call(page, 'preview_fill', { 'items.4.sku': 'x' })
+    ).toMatchObject({
+      ok: false,
+      skipped: [
+        {
+          code: 'unknown',
+          message: 'No row of the list is at that position.',
+          name: 'items.4.sku',
+        },
+      ],
+    })
+  })
+
+  test('should write a field of a row in a list that is itself in a row', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                fields: [
+                  { label: 'Title', name: 'title', type: 'input/text' },
+                  {
+                    fields: [
+                      { label: 'Code', name: 'code', type: 'input/text' },
+                    ],
+                    label: 'Parts',
+                    name: 'parts',
+                    type: 'list',
+                  },
+                ],
+                label: 'Groups',
+                name: 'groups',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('/reactive')
+    await page.waitForFunction(() => '__lunaTools' in window)
+
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ code: 'a' }], title: 'A' },
+        { parts: [{ code: 'b' }, { code: 'c' }], title: 'B' },
+      ],
+    })
+    const result = await call(page, 'preview_fill', {
+      'groups.1.parts.1.code': 'c2',
+    })
+
+    expect(result).toMatchObject({
+      applied: ['groups.1.parts.1.code'],
+      ok: true,
+      skipped: [],
+    })
+    expect((await call(page, 'preview_read')).values).toEqual({
+      groups: [
+        { parts: [{ code: 'a' }], title: 'A' },
+        { parts: [{ code: 'b' }, { code: 'c2' }], title: 'B' },
+      ],
+    })
+  })
+
   test('should validate what it wrote once, and show the errors on the page', async ({
     page,
   }) => {

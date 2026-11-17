@@ -50,6 +50,28 @@ function pick(from: Counters, keys: string[]): Counters {
   return Object.fromEntries(keys.map((key) => [key, from[key] ?? 0]))
 }
 
+type AgentWindow = Window & {
+  __lunaTools?: Readonly<{
+    call: (name: string, input: object) => Promise<object>
+  }>
+  __registered?: number
+}
+
+// WebMCP as far as a form uses it, counting every tool registered: the form
+// only builds and registers its tools where the browser offers it.
+function fakeModelContext() {
+  const counted = window as AgentWindow
+  counted.__registered = 0
+  Object.defineProperty(document, 'modelContext', {
+    configurable: true,
+    value: {
+      registerTool: () => {
+        counted.__registered = (counted.__registered ?? 0) + 1
+      },
+    },
+  })
+}
+
 async function churnRows(page: Page) {
   for (let i = 0; i < 10; i++) {
     await page.getByRole('button', { name: 'Add item' }).last().click()
@@ -166,6 +188,63 @@ const BUDGETS: Budget[] = [
       await openScenario(page, timezoneToggle, '/')
       await resetCounters(page)
       await page.getByRole('checkbox', { name: /Toggle/ }).click()
+      await settle(page)
+      return readCounters(page)
+    },
+  },
+  {
+    id: 'AGT-1',
+    title: 'a keystroke in a form offered to agents registers no tool again',
+    // The tools are built from the definition, never from what is typed, and
+    // a host render that hands the form equal props leaves them as they are.
+    counts: { registered: 0 },
+    target: { registered: 0 },
+    measure: async (page) => {
+      await page.addInitScript(fakeModelContext)
+      await openScenario(page, flat(30), '/reactive')
+      await page.waitForFunction(
+        () => ((window as AgentWindow).__registered ?? 0) > 0
+      )
+      await page.evaluate(() => {
+        ;(window as AgentWindow).__registered = 0
+      })
+      await countPerKeystroke(page, 'field_30')
+      // Past the pause after which a changed definition registers again.
+      await page.evaluate(
+        () => new Promise((resolve) => setTimeout(resolve, 700))
+      )
+      return {
+        registered: await page.evaluate(
+          () => (window as AgentWindow).__registered ?? 0
+        ),
+      }
+    },
+  },
+  {
+    id: 'AGT-2',
+    title: 'an agent filling a hundred fields renders the form once',
+    // Every value of a round is written in the same task, so React commits
+    // them together: the form renders once, and no field outside its own
+    // subscriptions renders at all.
+    counts: { guard: 1, prepare: 1, render: 0, wrapper: 0 },
+    target: { guard: 1, prepare: 1, render: 0, wrapper: 0 },
+    measure: async (page) => {
+      await openScenario(page, flat(100), '/reactive')
+      await page.waitForFunction(() => '__lunaTools' in window)
+      await resetCounters(page)
+      const result = await page.evaluate(() =>
+        (window as AgentWindow).__lunaTools?.call(
+          'preview_fill',
+          Object.fromEntries(
+            Array.from({ length: 100 }, (_, i) => [`field_${i + 1}`, 'x'])
+          )
+        )
+      )
+      // A fill that wrote nothing would render nothing, and pass.
+      const applied = (result as { applied?: string[] } | undefined)?.applied
+      if (applied?.length !== 100) {
+        throw new Error(`The fill wrote ${applied?.length ?? 0} of 100 fields`)
+      }
       await settle(page)
       return readCounters(page)
     },

@@ -2,7 +2,11 @@ import { composeListValue } from './compose-list-value'
 import { createFormTools, createQueue, type Queue } from './agent-tools'
 import { fieldStateAtom } from './state-store'
 import { inputErrorAtom } from './error-store'
-import { mountedListsAtom, pendingListRowsAtom } from './list-store'
+import {
+  mountedListsAtom,
+  pendingListRowsAtom,
+  type MountedList,
+} from './list-store'
 import { sourceAtom } from './source-store'
 import { valueAtom } from './value-store'
 import {
@@ -184,9 +188,9 @@ function createFormHost(
 
     getField: (name) => fields.get(name),
 
-    getOptions: (name) =>
-      getHandles().get(name)?.options() ??
-      declaredOptions(fields.get(name), read()),
+    getOptions: (path, name) =>
+      (name === undefined ? undefined : getHandles().get(name)?.options()) ??
+      declaredOptions(fields.get(path), read()),
 
     // A field hidden is not mounted, and has no handle to ask.
     getStatus: (name) => {
@@ -200,6 +204,10 @@ function createFormHost(
     },
 
     getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store),
+
+    resolve: (route) => translateRows(route, lists(), 'id'),
+
+    locate: (name) => translateRows(name, lists(), 'position'),
 
     read: (name) => {
       const mounted = lists()
@@ -229,6 +237,49 @@ function createFormHost(
       return errors
     },
   }
+}
+
+// A name with the row of every list in it named the other way: by position,
+// as an agent names it, or by the id the form keeps it under. `to` says which
+// the result uses. A list is found by the name the form gives it, ids and all,
+// so one in a row (`items.<id>.parts`) is found whichever way the row was
+// named. `undefined` when a row is not there, or not named as a row is: a
+// whole number, with no leading zero.
+function translateRows(
+  name: string,
+  mounted: Readonly<Record<string, MountedList>>,
+  to: 'id' | 'position'
+): string | undefined {
+  const segments = name.split('.')
+  let key = ''
+  let translated = ''
+
+  for (let index = 0; index < segments.length; index++) {
+    key = key ? `${key}.${segments[index]}` : segments[index]
+    translated = translated
+      ? `${translated}.${segments[index]}`
+      : segments[index]
+
+    const list = mounted[key]
+    const row = segments[index + 1]
+    if (!list || row === undefined) {
+      continue
+    }
+    if (!/^(0|[1-9]\d*)$/.test(row)) {
+      return undefined
+    }
+
+    const position = to === 'id' ? Number(row) : list.items.indexOf(Number(row))
+    const id = list.items[position]
+    if (id === undefined) {
+      return undefined
+    }
+
+    key = `${key}.${id}`
+    translated = `${translated}.${to === 'id' ? id : position}`
+    index++
+  }
+  return translated
 }
 
 // The options a field's definition gives it, for a field that is not mounted

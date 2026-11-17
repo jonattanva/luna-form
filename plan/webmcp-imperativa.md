@@ -997,9 +997,33 @@ Resultados:
   - Hecho con el host real: los valores de una pasada se escriben en la misma
     tarea y la validación corre una vez, al final. Los errores llegan siempre
     al agente, y en pantalla solo si el formulario los muestra antes de enviar.
-  - Falta el render budget de un rellenado de 100 campos y la latencia con 20,
-    100 y 200.
-- [ ] Rutas de hoja en las listas (`items.3.sku`).
+  - Render budget AGT-2: rellenar 100 campos renderiza el formulario una vez
+    (`prepare` 1, `guard` 1) y ningún `Field` (`render` 0, `wrapper` 0). Y
+    AGT-1: una tecla en un formulario con `agent` no vuelve a registrar los
+    tools, con WebMCP simulado.
+  - Falta la latencia con 20, 100 y 200 campos.
+- [x] Rutas de hoja en las listas (`items.3.sku`).
+  - `<name>_fill` acepta la ruta de una hoja, la fila contada desde 0, también
+    en una lista dentro de una fila. El host traduce la posición al id estable
+    de la fila (`resolve`) y de vuelta (`locate`), así los errores de una fila
+    llegan por su ruta y no por el id interno, que antes se filtraba.
+  - Una ruta a una fila que no existe responde `unknown`; una fila que agrega
+    la misma llamada se puede escribir por su ruta en la pasada siguiente.
+  - `values` cuenta las hojas que cambiaron por su ruta cuando la lista no se
+    mandó entera y tiene las mismas filas.
+  - El esquema no puede declarar las rutas (`additionalProperties: false`, sin
+    `patternProperties` en el subconjunto portable): la descripción de cada
+    lista las explica.
+  - Bundle: 356.3 kB en total, bajo el límite de 360.
+  - Revisión de código del 2026-11-17: ocho correcciones (una ruta enviada con
+    su lista entera espera a la pasada siguiente, `locate` en listas anidadas,
+    opciones de la fila escrita y no de la primera, errores de filas borradas,
+    nota de rutas con el nombre completo de la lista, mensaje de fila
+    colapsada, `rows_adjusted` en una lista escrita por su ruta, posiciones sin
+    ceros a la izquierda). No se reusa `translatePath` de `use-field-list`: es
+    un callback de cada lista, por contexto.
+  - Limitación: una fila colapsada no tiene sus campos montados y no se puede
+    escribir por ruta; la respuesta pide mandar la lista entera.
 - [x] Host real y `client/hook/use-agent-tools.ts`: detección, import
       diferido, adaptador de WebMCP, `AbortController`, errores de registro y
       re-registro por contenido (3.10, 3.11).

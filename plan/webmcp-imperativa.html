@@ -2979,12 +2979,65 @@ const result = await callTool(call.name, call.input)</code></pre>
                       enviar.
                     </li>
                     <li>
-                      Falta el render budget de un rellenado de 100 campos y la
-                      latencia con 20, 100 y 200.
+                      Render budget AGT-2: rellenar 100 campos renderiza el
+                      formulario una vez (<code>prepare</code> 1,
+                      <code>guard</code> 1) y ningún <code>Field</code> (<code
+                        >render</code
+                      >
+                      0, <code>wrapper</code> 0). Y AGT-1: una tecla en un
+                      formulario con <code>agent</code> no vuelve a registrar
+                      los tools, con WebMCP simulado.
+                    </li>
+                    <li>Falta la latencia con 20, 100 y 200 campos.</li>
+                  </ul>
+                </li>
+                <li class="done">
+                  Rutas de hoja en las listas (<code>items.3.sku</code>).
+                  <ul>
+                    <li>
+                      <code>&lt;name&gt;_fill</code> acepta la ruta de una hoja,
+                      la fila contada desde 0, también en una lista dentro de
+                      una fila. El host traduce la posición al id estable de la
+                      fila (<code>resolve</code>) y de vuelta
+                      (<code>locate</code>), así los errores de una fila llegan
+                      por su ruta y no por el id interno, que antes se filtraba.
+                    </li>
+                    <li>
+                      Una ruta a una fila que no existe responde
+                      <code>unknown</code>; una fila que agrega la misma llamada
+                      se puede escribir por su ruta en la pasada siguiente.
+                    </li>
+                    <li>
+                      <code>values</code> cuenta las hojas que cambiaron por su
+                      ruta cuando la lista no se mandó entera y tiene las mismas
+                      filas.
+                    </li>
+                    <li>
+                      El esquema no puede declarar las rutas (<code
+                        >additionalProperties: false</code
+                      >, sin <code>patternProperties</code> en el subconjunto
+                      portable): la descripción de cada lista las explica.
+                    </li>
+                    <li>Bundle: 356.3 kB en total, bajo el límite de 360.</li>
+                    <li>
+                      Revisión de código del 2026-11-17: ocho correcciones (una
+                      ruta enviada con su lista entera espera a la pasada
+                      siguiente, <code>locate</code> en listas anidadas,
+                      opciones de la fila escrita y no de la primera, errores de
+                      filas borradas, nota de rutas con el nombre completo de la
+                      lista, mensaje de fila colapsada,
+                      <code>rows_adjusted</code> en una lista escrita por su
+                      ruta, posiciones sin ceros a la izquierda). No se reusa
+                      <code>translatePath</code> de <code>use-field-list</code>:
+                      es un callback de cada lista, por contexto.
+                    </li>
+                    <li>
+                      Limitación: una fila colapsada no tiene sus campos
+                      montados y no se puede escribir por ruta; la respuesta
+                      pide mandar la lista entera.
                     </li>
                   </ul>
                 </li>
-                <li>Rutas de hoja en las listas (<code>items.3.sku</code>).</li>
                 <li class="done">
                   Host real y <code>client/hook/use-agent-tools.ts</code>:
                   detección, import diferido, adaptador de WebMCP,

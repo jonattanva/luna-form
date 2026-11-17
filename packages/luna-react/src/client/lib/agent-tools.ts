@@ -115,11 +115,27 @@ export type FormToolsHost = Readonly<{
   getErrors: () => Readonly<Record<string, readonly string[]>>
   /** The definition of a field, whether or not it is on the form now. */
   getField: (name: string) => Field | undefined
-  /** A field's options as they read on screen, when it has any to offer. */
-  getOptions: (name: string) => readonly Option[] | undefined
+  /**
+   * A field's options as they read on screen: those of the field mounted as
+   * `name` when it is given, and otherwise those its definition at `path`
+   * gives. `path` is how the schema names it, a row's leaf through the first
+   * row; `name` is what the form calls the one in the row written.
+   */
+  getOptions: (path: string, name?: string) => readonly Option[] | undefined
   /** `undefined` while the field is not on the form. */
   getStatus: (name: string) => FieldStatus | undefined
   getSubmit: () => SubmitStatus
+  /**
+   * The name a row's leaf has in the form, from its route by position:
+   * `items.3.sku` to the name of the fourth row's `sku`. `undefined` when the
+   * list holds no row there.
+   */
+  resolve: (route: string) => string | undefined
+  /**
+   * A name the form gives, with a row named by its position instead.
+   * `undefined` when a row in it is no longer on the form.
+   */
+  locate: (name: string) => string | undefined
   /** What the form holds for a field: a list's as its rows. */
   read: (name: string) => ToolValue | undefined
   /**
@@ -148,6 +164,16 @@ type SkipCode =
   | 'unknown'
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
+
+// A value a fill is still to write: its schema, the path its definition and
+// options are found by, and whether it is a leaf of a row named by its route.
+type Pending = Readonly<{
+  // The top-level list a route goes into.
+  list?: string
+  path: string
+  schema: ToolSchema
+  value: ToolJson
+}>
 
 // A value checked against its field and turned into what the field's control
 // hands over on a change: a list's rows, or one value.
@@ -433,14 +459,31 @@ export function createFormTools(
     }
   }
 
-  const checkOf = (path: string): Check => ({
+  // `name` is the field in the form the value goes to, whose options are the
+  // ones it offers now; a row of a list sent whole has none yet.
+  const checkOf = (path: string, name?: string): Check => ({
     field: host.getField(path),
     lookup: lookup.has(path),
-    of: checkOf,
-    options: host.getOptions(path),
+    of: (leaf) => checkOf(leaf),
+    options: host.getOptions(path, name),
     optionsTool: names.options,
     path,
   })
+
+  // The errors of the fields named and of the leaves of the lists among them,
+  // each under the name an agent knows it by: a row's by its position.
+  const locateErrors = (
+    errors: Readonly<Record<string, readonly string[]>>,
+    names: readonly string[]
+  ): ToolResult =>
+    Object.fromEntries(
+      Object.entries(pickErrors(errors, names)).flatMap(([name, messages]) => {
+        // An error left by a row since removed belongs to no row an agent
+        // can name.
+        const route = host.locate(name)
+        return route === undefined ? [] : [[route, messages]]
+      })
+    )
 
   const isShown = (name: string) => {
     const status = host.getStatus(name)
@@ -483,43 +526,83 @@ export function createFormTools(
       return CANCELLED
     }
 
-    // A field left out of the tools reads the same as one that does not
-    // exist, so an agent cannot tell that it does.
-    const skipped: Skip[] = Object.keys(input)
-      .filter((name) => ownProperty(properties, name) === undefined)
-      .map((name) => ({ code: 'unknown', message: 'No field so named.', name }))
-
-    // In the order the form shows the fields, as a person fills them in,
-    // whatever order the agent sent them in.
-    const pending = new Map<string, ToolJson>()
+    // What the call writes: the fields in the order the form shows them, as a
+    // person fills them in, whatever order the agent sent them in, and then
+    // the leaves of rows named by their route, `items.3.sku`, in the order
+    // they came. A leaf is checked against its schema and read through its
+    // list's first row, `items.0.sku`, the way the schema names it.
+    const pending = new Map<string, Pending>()
     for (const name of fields) {
       const value = ownProperty(input, name)
       if (value !== undefined) {
-        pending.set(name, value)
+        pending.set(name, { path: name, schema: properties[name], value })
+      }
+    }
+
+    // A field left out of the tools reads the same as one that does not
+    // exist, so an agent cannot tell that it does.
+    const skipped: Skip[] = []
+    for (const [name, value] of Object.entries(input)) {
+      if (ownProperty(properties, name) !== undefined) {
+        continue
+      }
+      const leaf = findLeaf(properties, name)
+      if (leaf) {
+        pending.set(name, { ...leaf, value })
+      } else {
+        skipped.push({ code: 'unknown', message: 'No field so named.', name })
       }
     }
 
     const before = snapshot()
     const applied: string[] = []
 
+    // Where a pending value goes, and how the field there stands now. A route
+    // goes to the row the list holds at that position when it is written.
+    const placeOf = (name: string, entry: Pending) => {
+      const target = entry.list ? host.resolve(name) : name
+      return {
+        status: target === undefined ? undefined : host.getStatus(target),
+        target,
+      }
+    }
+
+    // What the form calls each value written, and the schema it was written
+    // with, to validate it and to tell a list that kept other rows.
+    const written = new Map<
+      string,
+      Readonly<{ schema: ToolSchema; target: string }>
+    >()
+
     // A field another value shows or unlocks cannot be written until that
     // value has run its course, so the fill goes in rounds: what can be
     // written is, the form settles, and what became writable is written next.
+    // A route into a list waits for a round after the list itself, when the
+    // same call sends it: the rows it gives replace the ones there were.
     for (let pass = 0; pass < PASSES && pending.size > 0; pass++) {
       if (isAborted(callSignal)) {
         break
       }
 
       let tried = false
-      for (const [name, value] of pending) {
-        const status = host.getStatus(name)
-        if (!status || status.hidden || status.locked) {
+      const lists = new Set<string>()
+      for (const [name, entry] of pending) {
+        if (entry.list && (pending.has(entry.list) || lists.has(entry.list))) {
+          continue
+        }
+
+        const { status, target } = placeOf(name, entry)
+        if (target === undefined || !status || status.hidden || status.locked) {
           continue
         }
 
         // Checked as it is written, against the options the field offers
         // now: a value written before it may be what loads them.
-        const checked = checkValue(properties[name], value, checkOf(name))
+        const checked = checkValue(
+          entry.schema,
+          entry.value,
+          checkOf(entry.path, target)
+        )
         if (!checked.ok) {
           pending.delete(name)
           skipped.push({ code: checked.code, message: checked.message, name })
@@ -532,12 +615,19 @@ export function createFormTools(
         const held = checked.held
         const taken =
           'rows' in held
-            ? host.applyRows(name, held.rows)
-            : host.apply(name, held.value, { immediate: true, validate: false })
+            ? host.applyRows(target, held.rows)
+            : host.apply(target, held.value, {
+                immediate: true,
+                validate: false,
+              })
 
         if (taken) {
           pending.delete(name)
           applied.push(name)
+          written.set(name, { schema: entry.schema, target })
+          if ('rows' in held) {
+            lists.add(name)
+          }
         }
       }
 
@@ -547,48 +637,65 @@ export function createFormTools(
       await host.settle()
     }
 
-    for (const name of pending.keys()) {
-      const status = host.getStatus(name)
+    for (const [name, entry] of pending) {
+      const { status, target } = placeOf(name, entry)
       skipped.push(
-        !status || status.hidden
+        target === undefined
           ? {
-              code: 'hidden',
-              message:
-                'The field is not on the form: some other value shows it.',
+              code: 'unknown',
+              message: 'No row of the list is at that position.',
               name,
             }
-          : {
-              code: 'locked',
-              message: status.locked
-                ? 'The field is disabled or read-only.'
-                : 'The field did not take the value.',
-              name,
-            }
+          : !status || status.hidden
+            ? {
+                code: 'hidden',
+                message: entry.list
+                  ? 'The field is not on the form: its row is collapsed, or some other value shows it. Send the whole list instead.'
+                  : 'The field is not on the form: some other value shows it.',
+                name,
+              }
+            : {
+                code: 'locked',
+                message: status.locked
+                  ? 'The field is disabled or read-only.'
+                  : 'The field did not take the value.',
+                name,
+              }
       )
     }
 
+    const targets = [...written.values()].map(({ target }) => target)
     const errors =
-      applied.length > 0 ? pickErrors(host.validate(applied), applied) : {}
+      targets.length > 0 ? locateErrors(host.validate(targets), targets) : {}
 
     const after = snapshot()
     const values: Record<string, ToolJson> = {}
     const revealed: string[] = []
     for (const name of fields) {
-      const was = before.get(name)
-      const now = after.get(name)
-      if (!deepEqual(was?.value, now?.value)) {
-        values[name] = now?.value ?? null
+      const was = before.get(name)?.value ?? null
+      const now = after.get(name)?.value ?? null
+      if (!deepEqual(was, now)) {
+        // A list the call did not send whole, holding the rows it held, is
+        // told by the leaves that changed, under their route.
+        Object.assign(
+          values,
+          ownProperty(input, name) === undefined && isRowsOf(properties[name])
+            ? changedLeaves(name, was, now)
+            : { [name]: now }
+        )
       }
-      if (!was?.shown && now?.shown) {
+      if (!before.get(name)?.shown && after.get(name)?.shown) {
         revealed.push(name)
       }
     }
 
-    const adjusted = applied.flatMap((name) => {
-      const sent = input[name]
-      const now = after.get(name)?.value
+    // A list written whole, at the top or in a row, that kept another number
+    // of rows than it was sent.
+    const adjusted = [...written].flatMap(([name, { schema, target }]) => {
+      const sent = ownProperty(input, name)
+      const now = after.get(name)?.value ?? host.read(target)
       return isToolList(sent) &&
-        isRowsOf(properties[name]) &&
+        isRowsOf(schema) &&
         isToolList(now) &&
         sent.length !== now.length
         ? [
@@ -657,7 +764,7 @@ export function createFormTools(
     }
 
     return {
-      errors: pickErrors(host.getErrors(), page),
+      errors: locateErrors(host.getErrors(), page),
       hidden,
       locked,
       ...(known.length > page.length && { more: known.length - page.length }),
@@ -692,7 +799,12 @@ export function createFormTools(
       }
     }
 
-    const offered = host.getOptions(field)
+    // A leaf of a list by the schema's name for it offers what its definition
+    // gives: no one row speaks for every row.
+    const offered = host.getOptions(
+      field,
+      property === undefined ? undefined : field
+    )
     if (!offered) {
       return {
         items: [],
@@ -978,6 +1090,66 @@ function pickErrors(
         names.some((name) => key === name || key.startsWith(`${name}.`))
     )
   )
+}
+
+// A leaf of a row named by its route, `items.3.sku`, or of a list in a row,
+// `items.3.parts.0.code`: its schema, and the path the schema names it by,
+// through each list's first row.
+function findLeaf(
+  properties: Readonly<Record<string, ToolSchema>>,
+  route: string,
+  prefix = ''
+): Readonly<{ list?: string; path: string; schema: ToolSchema }> | undefined {
+  for (const [name, schema] of Object.entries(properties)) {
+    const leaves = schema.items?.properties
+    if (!isRowsOf(schema) || !leaves || !route.startsWith(`${name}.`)) {
+      continue
+    }
+
+    const match = /^(0|[1-9]\d*)\.(.+)$/.exec(route.slice(name.length + 1))
+    if (!match) {
+      continue
+    }
+
+    const path = `${prefix}${name}.0.`
+    const leaf = ownProperty(leaves, match[2])
+    const found = leaf
+      ? { path: `${path}${match[2]}`, schema: leaf }
+      : findLeaf(leaves, match[2], path)
+    // A route goes into the list at the top, whatever list it ends in.
+    return found && (prefix === '' ? { ...found, list: name } : found)
+  }
+  return undefined
+}
+
+// The leaves that changed between two readings of a list holding the same
+// rows, under their route: `items.3.sku`. The whole list when the rows are not
+// the same ones.
+function changedLeaves(
+  name: string,
+  was: ToolJson,
+  now: ToolJson
+): Record<string, ToolJson> {
+  if (!isToolList(was) || !isToolList(now) || was.length !== now.length) {
+    return { [name]: now }
+  }
+
+  const changed: Record<string, ToolJson> = {}
+  now.forEach((row, index) => {
+    const before = was[index]
+    if (!isToolObject(row) || !isToolObject(before)) {
+      if (!deepEqual(before, row)) {
+        changed[`${name}.${index}`] = row
+      }
+      return
+    }
+    for (const [leaf, value] of Object.entries(row)) {
+      if (!deepEqual(before[leaf] ?? null, value)) {
+        changed[`${name}.${index}.${leaf}`] = value
+      }
+    }
+  })
+  return changed
 }
 
 function checkValue(

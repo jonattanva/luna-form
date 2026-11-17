@@ -57,6 +57,18 @@ It takes an option by its value or its label, in any case and without
 accents, and a number written as text. `null` empties a field that can be
 empty; a single choice cannot.
 
+A list takes all its rows at once, replacing the ones it holds. One leaf of
+one row is written by its route instead, the row counted from 0, without
+sending the list again:
+
+```json
+{ "items.2.quantity": 4 }
+```
+
+A route to a row the list does not hold answers `unknown`. A row the same call
+adds can be written into by its route too. The schema cannot declare routes,
+so the list's description is where an agent learns them.
+
 ```json
 {
   "ok": false,
@@ -82,8 +94,10 @@ empty; a single choice cannot.
 
 - **`values`** holds the final value of every field that changed during the
   call, the ones a change event filled included (`city`), in the formats of
-  the schema.
+  the schema. A list the call did not send whole, holding the same rows, is
+  told by the leaves that changed, under their route.
 - **`skipped`** holds what was not written, with a [code](#codes).
+- **`errors`** name a row's leaf by its route too: `items.2.quantity`.
 - **`ok`** is `false` when a value did not fit its field or broke a rule. A
   field skipped as `hidden` or `locked` does not make it `false`.
 - What was written stays written when another field fails, as when a person
