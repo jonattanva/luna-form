@@ -129,8 +129,14 @@ export type FormToolsHost = Readonly<{
   settle: () => Promise<void>
   /** Submits the form as its submit button does, and resolves with the outcome. */
   submit: (signal: AbortSignal) => Promise<SubmitStatus>
-  /** Validates the fields and shows their errors, as leaving them does. */
-  validate: (names: readonly string[]) => void
+  /**
+   * Validates the fields, a list's by its leaves, and answers their errors by
+   * the name of the field that has them. They are shown where the form shows
+   * a person's before a submit.
+   */
+  validate: (
+    names: readonly string[]
+  ) => Readonly<Record<string, readonly string[]>>
 }>
 
 type SkipCode =
@@ -331,17 +337,21 @@ const SUBMIT_OUTPUT: ToolSchema = {
  *   the author asks for it.
  *
  * A form answers its calls one at a time, in the order they come, with up to
- * ten waiting. What an agent can correct comes back in the answer, with a
- * `code`; nothing is thrown for it. An invalid name builds no tool.
+ * ten waiting: `form.queue` is the form's, shared by every set of tools built for
+ * it, so the ones built after a definition changed wait for the ones before.
+ * What an agent can correct comes back in the answer, with a `code`; nothing
+ * is thrown for it. An invalid name builds no tool.
  *
- * `signal` is the life of the tools: aborting it aborts what `allow` is asked.
+ * `form.signal` is the life of the form: aborting it aborts what `allow` is
+ * asked.
  */
 export function createFormTools(
   agent: AgentOptions,
   built: ToolSchemaResult,
   host: FormToolsHost,
-  signal?: AbortSignal
+  form: Readonly<{ queue?: Queue; signal?: AbortSignal }> = {}
 ): Tool[] {
+  const { signal } = form
   if (!NAME.test(agent.name)) {
     logger.warn(
       `The agent name "${agent.name}" registers no tool: it takes letters, digits, "_" and "-", up to 56 of them.`
@@ -359,7 +369,7 @@ export function createFormTools(
   const properties = built.schema.properties ?? {}
   const fields = Object.keys(properties)
   const lookup = new Set(built.lookup)
-  const queue = createQueue(QUEUE_LIMIT)
+  const queue = form.queue ?? createQueue()
 
   // Every call goes through the queue, and finds out there whether the agent
   // gave up while it waited.
@@ -437,11 +447,24 @@ export function createFormTools(
     return status !== undefined && !status.hidden
   }
 
+  // What the form holds for a field, in the shape its schema gives it.
+  const readField = (name: string) =>
+    present(properties[name], host.read(name) ?? null)
+
   // What the form holds for every field shown, as `allow` is told it before a
   // submit.
   const readShown = (): ToolResult =>
     Object.fromEntries(
-      fields.filter(isShown).map((name) => [name, host.read(name) ?? null])
+      fields.filter(isShown).map((name) => [name, readField(name)])
+    )
+
+  // Every field's place and value, to tell afterwards what a fill changed.
+  const snapshot = () =>
+    new Map(
+      fields.map((name) => {
+        const shown = isShown(name)
+        return [name, { shown, value: shown ? readField(name) : null }]
+      })
     )
 
   const fill = async (
@@ -476,7 +499,7 @@ export function createFormTools(
       }
     }
 
-    const before = snapshot(fields, host)
+    const before = snapshot()
     const applied: string[] = []
 
     // A field another value shows or unlocks cannot be written until that
@@ -544,11 +567,10 @@ export function createFormTools(
       )
     }
 
-    if (applied.length > 0) {
-      host.validate(applied)
-    }
+    const errors =
+      applied.length > 0 ? pickErrors(host.validate(applied), applied) : {}
 
-    const after = snapshot(fields, host)
+    const after = snapshot()
     const values: Record<string, ToolJson> = {}
     const revealed: string[] = []
     for (const name of fields) {
@@ -579,7 +601,6 @@ export function createFormTools(
         : []
     })
 
-    const errors = pickErrors(host.getErrors(), applied)
     // Read through a call: the agent may have cancelled during any of the
     // waits above, which a check before them does not see.
     const cancelled = isAborted(callSignal)
@@ -632,7 +653,7 @@ export function createFormTools(
       if (status.locked) {
         locked.push(name)
       }
-      values[name] = host.read(name) ?? null
+      values[name] = readField(name)
     }
 
     return {
@@ -839,14 +860,18 @@ function pendingAnswer(readTool: string): ToolResult {
   }
 }
 
-// Runs tasks one at a time, in the order they come. `undefined` when `limit`
-// tasks are waiting already.
-function createQueue(limit: number) {
+/**
+ * Runs a form's calls one at a time, in the order they come. `undefined` when
+ * ten are waiting already.
+ */
+export type Queue = <T>(task: () => Promise<T>) => Promise<T> | undefined
+
+export function createQueue(): Queue {
   let tail = Promise.resolve()
   let waiting = 0
 
   return <T>(task: () => Promise<T>): Promise<T> | undefined => {
-    if (waiting >= limit) {
+    if (waiting >= QUEUE_LIMIT) {
       return undefined
     }
 
@@ -903,16 +928,42 @@ function linkSignals(
   }
 }
 
-type Snapshot = Readonly<{ shown: boolean; value: ToolValue }>
-
-function snapshot(fields: readonly string[], host: FormToolsHost) {
-  const taken = new Map<string, Snapshot>()
-  for (const name of fields) {
-    const status = host.getStatus(name)
-    const shown = status !== undefined && !status.hidden
-    taken.set(name, { shown, value: shown ? (host.read(name) ?? null) : null })
+// What the form holds, in the shape the schema gives the field: a number, a
+// month and a year as numbers, a Yes/No as a boolean, and a list's rows with
+// the leaves the schema has, each the same way. A leaf the agent may not write
+// -- a password in a row -- is not read back either.
+function present(schema: ToolSchema | undefined, value: ToolJson): ToolJson {
+  if (value === null || !schema) {
+    return value
   }
-  return taken
+
+  if (schema.type === 'integer' || schema.type === 'number') {
+    const number =
+      isString(value) && value.trim() !== '' ? Number(value) : value
+    return typeof number === 'number' && Number.isFinite(number)
+      ? number
+      : value
+  }
+
+  if (schema.type === 'boolean' && (value === 'true' || value === 'false')) {
+    return value === 'true'
+  }
+
+  const leaves = schema.items?.properties
+  if (isRowsOf(schema) && leaves && isToolList(value)) {
+    return value.map((row) =>
+      isToolObject(row)
+        ? Object.fromEntries(
+            Object.entries(row).flatMap(([leaf, inner]) => {
+              const leafSchema = ownProperty(leaves, leaf)
+              return leafSchema ? [[leaf, present(leafSchema, inner)]] : []
+            })
+          )
+        : row
+    )
+  }
+
+  return value
 }
 
 // The errors of the fields named, and of the leaves of the lists among them.

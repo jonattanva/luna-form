@@ -11,12 +11,14 @@ import {
   resolveDictionary,
 } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useLatest } from '../hook/use-latest'
 import { useApplyRegistry } from '../hook/use-apply'
 import { useSchema } from '../hook/use-schema'
-import { useSetAtom } from 'jotai'
+import { useAgentTools, useSubmission } from '../hook/use-agent-tools'
+import { useSetAtom, useStore } from 'jotai'
+import type { AgentOptions } from '../lib/agent-tools'
 import type { Children, Config, Control } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 
@@ -29,6 +31,7 @@ export function FormContent<
       step?: boolean
     }
     action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>
+    agent?: AgentOptions
     children?: Control
     config: Config
     context?: Record<string, unknown>
@@ -72,16 +75,42 @@ export function FormContent<
   )
 
   const [getSchema, getField, onRegister, onUnmount] = useSchema()
-  const [onRegisterApply] = useApplyRegistry()
+  const [onRegisterApply, getHandles] = useApplyRegistry()
+
+  // The `<form>` and what its submit leaves, for an agent's tools to submit it
+  // as its button does. See `useAgentTools`.
+  const formRef = useRef<HTMLFormElement>(null)
+  const submission = useSubmission(formRef)
+  const onSuccess = props.onSuccess
   const [action, state, isPending, onSubmit] = useFormState(
     getSchema,
     props.action,
     {
-      onSuccess: props.onSuccess,
+      onSuccess: (data: T) => {
+        submission.onSuccess(data)
+        onSuccess?.(data)
+      },
       validation: props.config.validation.submit,
       translations,
     }
   )
+
+  useEffect(() => {
+    submission.observe(state, isPending)
+  }, [isPending, state, submission])
+
+  const store = useStore()
+  useAgentTools({
+    agent: props.agent,
+    context: props.context,
+    definition: props.definition,
+    getHandles,
+    localization,
+    readOnly: props.readOnly,
+    sections: props.sections,
+    store,
+    submission: props.action ? submission : undefined,
+  })
 
   const isShowingError =
     props.config.validation.showError && !state.success && state.error
@@ -188,6 +217,7 @@ export function FormContent<
           context={props.context}
           control={props.children}
           definition={props.definition}
+          formRef={formRef}
           collapsible={FieldSetAdvanced}
           guard={VisibilityGuard}
           isPending={isPending}

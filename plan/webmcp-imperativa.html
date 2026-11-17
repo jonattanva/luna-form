@@ -2970,59 +2970,132 @@ const result = await callTool(call.name, call.input)</code></pre>
                     href="#escala"
                     >3.14</a
                   >), con su render budget.
+                  <ul>
+                    <li>
+                      Hecho con el host real: los valores de una pasada se
+                      escriben en la misma tarea y la validación corre una vez,
+                      al final. Los errores llegan siempre al agente, y en
+                      pantalla solo si el formulario los muestra antes de
+                      enviar.
+                    </li>
+                    <li>
+                      Falta el render budget de un rellenado de 100 campos y la
+                      latencia con 20, 100 y 200.
+                    </li>
+                  </ul>
                 </li>
                 <li>Rutas de hoja en las listas (<code>items.3.sku</code>).</li>
-                <li>
-                  <code>client/hook/use-agent-tools.ts</code>: detección, import
-                  diferido, adaptador de WebMCP, <code>AbortController</code>,
-                  errores de registro y re-registro por contenido (<a
-                    href="#ciclo"
-                    >3.10</a
-                  >, <a href="#carga">3.11</a>).
+                <li class="done">
+                  Host real y <code>client/hook/use-agent-tools.ts</code>:
+                  detección, import diferido, adaptador de WebMCP,
+                  <code>AbortController</code>, errores de registro y
+                  re-registro por contenido (<a href="#ciclo">3.10</a>,
+                  <a href="#carga">3.11</a>).
+                  <ul>
+                    <li>
+                      <code>client/lib/agent-host.ts</code> arma el host sobre
+                      el store: cada campo registra en
+                      <code>useApplyRegistry</code> un handle con
+                      <code>apply</code>, <code>isLocked</code>,
+                      <code>options</code> y <code>validate</code>; una lista
+                      recibe filas por <code>pendingListRowsAtom</code>;
+                      <code>settle</code> espera a que el store y los campos
+                      montados no cambien durante 50 ms, con un tope de 2 s.
+                    </li>
+                    <li>
+                      <code>client/lib/model-context.ts</code> declara lo mínimo
+                      de WebMCP, sin tocar el <code>Document</code> global.
+                    </li>
+                    <li>
+                      El host lee en vivo <code>allow</code>,
+                      <code>readOnly</code>, <code>context</code> y el envío: un
+                      re-registro solo pasa cuando cambian el nombre, la
+                      descripción, <code>submit</code> o el esquema. La cola y
+                      la señal de vida son del formulario, no de cada registro,
+                      así que un cambio de definición no corre dos llamadas a la
+                      vez ni rechaza un <code>allow</code> pendiente.
+                    </li>
+                    <li>
+                      Dos formularios con el mismo nombre: el segundo avisa y
+                      toma los tools cuando el primero se desmonta.
+                    </li>
+                    <li>
+                      El envío pasa por <code>requestSubmit</code> con el botón
+                      de submit del formulario, y el éxito se avisa desde
+                      <code>onSuccess</code>, así llega aunque el host desmonte
+                      el formulario.
+                    </li>
+                  </ul>
                 </li>
-                <li>
+                <li class="done">
                   <code>listTools()</code> y <code>callTool()</code> con el
                   registro de página, exportados por la entrada del cliente (<a
                     href="#sin-webmcp"
                     >3.9</a
                   >).
                 </li>
-                <li>
+                <li class="done">
                   Prop <code>agent</code> en el <code>Form</code> del cliente, y
-                  <code>formRef</code> en <code>component/form.tsx</code>.
+                  <code>formRef</code> en <code>component/form.tsx</code>. El
+                  editor la usa en <code>/reactive</code> y expone
+                  <code>window.__lunaTools</code>; el prototipo se borró.
                 </li>
                 <li>
-                  <code>advanced.agent: false</code> en los tipos de core, y el
-                  tercer argumento de <code>defineCustomInput</code>.
+                  <code>advanced.agent: false</code> en los tipos de core (hecho
+                  en el paso 1), y el tercer argumento de
+                  <code>defineCustomInput</code> (falta).
                 </li>
                 <li>
                   Elegir, con mediciones, entre el camino inmediato y esperar el
                   debounce (<a href="#fill">3.4</a>).
-                </li>
-                <li>
-                  Documentación:
-                  <code>packages/luna-react/docs/agents/tools.md</code> y una
-                  fila en la tabla "Where to look" de
-                  <code>docs/index.md</code>.
                   <ul>
                     <li>
-                      Iniciada: ya describe <code>buildToolSchema</code> y
-                      <code>advanced.agent</code>, con su fila en el índice.
-                    </li>
-                    <li>
-                      Falta la prop, <code>listTools()</code> y
-                      <code>callTool()</code>, WebMCP y el contrato.
-                    </li>
-                    <li>
-                      <code>CLAUDE.md</code> pide mantener los docs al día
-                      porque se publican con el paquete.
+                      Se usa el inmediato: las e2e de los tools y
+                      <code>tests/e2e/value-event-autofill.spec.ts</code> pasan
+                      en los tres navegadores. Falta medir la latencia.
                     </li>
                   </ul>
+                </li>
+                <li class="done">
+                  Documentación:
+                  <code>packages/luna-react/docs/agents/tools.md</code> describe
+                  la prop, los cuatro tools, las respuestas, los códigos,
+                  WebMCP, <code>listTools()</code> y <code>callTool()</code>.
                 </li>
                 <li>
                   e2e y tests de contrato (<a href="#pruebas">sección 5</a>), y
                   la medición antes y después (<a href="#medicion">sección 6</a
                   >).
+                  <ul>
+                    <li>
+                      <code>tests/e2e/agent-tools.spec.ts</code>: 10 casos en
+                      los tres navegadores, por <code>window.__lunaTools</code>.
+                      150 de 150 con <code>--repeat-each=5</code>.
+                    </li>
+                    <li>
+                      Tests de contrato: cada respuesta de los tests unitarios
+                      se valida contra su <code>outputSchema</code>.
+                    </li>
+                    <li>
+                      Bundle: de 292.9 a 351.8 kB en total. En ESM el chunk de
+                      los tools pesa 23.9 kB (9.1 kB gzip) y carga solo cuando
+                      un agente lo pide; el camino principal crece 2.3 kB gzip,
+                      por encima de los 0.5 del objetivo. En CJS, que no divide,
+                      los tools van dentro (+32 kB). El límite del job subió a
+                      360 kB.
+                    </li>
+                    <li>
+                      Revisión de código del 2026-11-17 sobre el host: ocho
+                      correcciones (<code>allow</code> y
+                      <code>readOnly</code> en vivo, envío con el formulario
+                      desmontado, build en curso al desmontar, nombres
+                      repetidos, cola compartida, errores en pantalla según la
+                      configuración, botón de submit). Se mantiene la exposición
+                      en el editor de producción (la acción solo repite lo que
+                      recibe) y el <code>unknown</code> donde los datos vienen
+                      del store o de la acción.
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>

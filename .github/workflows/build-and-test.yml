@@ -55,10 +55,13 @@ jobs:
           # 265.9 kB after the list work of #127 to #129. `buildToolSchema`
           # in the schema entry adds about 15 kB more over cjs and esm
           # together, 291.6 kB in all; an application that does not import
-          # it does not ship it (`sideEffects: false`). The limit leaves room
-          # for that code to grow by a few kB and still fails on a bundled
+          # it does not ship it (`sideEffects: false`). The tools a form with
+          # `agent` offers add about 57 kB more: in esm they are a chunk of
+          # their own that loads only when an agent asks, and cjs, which
+          # does not split, carries them inline. The limit leaves room for
+          # that code to grow by a few kB and still fails on a bundled
           # dependency.
-          LIMIT_KB=300
+          LIMIT_KB=360
           total=0
           rows=""
 

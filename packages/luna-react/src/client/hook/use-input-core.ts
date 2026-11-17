@@ -52,7 +52,7 @@ import {
   type Localization,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
-import type { Apply } from './use-apply'
+import type { FieldHandle } from './use-apply'
 
 // One run of `state` rules, from the change that started it to the last field
 // it emptied. `visited` holds each field whose rules ran, so a chain that loops
@@ -80,7 +80,7 @@ export type InputCoreProps = Readonly<{
   ) => void
   // Where the field leaves the way to write it from outside, through its own
   // change; what it hands back takes that out again. See `useSchema`.
-  onRegisterApply: (name: string, apply: Apply) => () => void
+  onRegisterApply: (name: string, handle: FieldHandle) => () => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean
@@ -596,8 +596,11 @@ export function useInputCore(
   // coerces each entry and counts them for `required`). Stringifying it here to
   // fit a `string` parameter would hand that schema "email,sms" -- one item,
   // never empty, so `required` could never fail.
+  //
+  // `show: false` checks without putting the errors on screen, for a value
+  // written from outside on a form that shows none until it is submitted.
   const validated = useCallback(
-    (value: Value) => {
+    (value: Value, show = true) => {
       const results = schema.safeParse(value)
       const errors = results.error?.issues.map((issue) => issue.message) ?? []
 
@@ -615,7 +618,10 @@ export function useInputCore(
       // the record is what every reader asks, and it would otherwise keep an
       // empty array for every field the user has ever touched.
       const issues = [...errors, ...customErrors]
-      setErrors(issues.length > 0 ? issues : undefined)
+      if (show) {
+        setErrors(issues.length > 0 ? issues : undefined)
+      }
+      return issues
     },
     [props.field.validation?.custom, schema, setErrors, store, translationsRef]
   )

@@ -1,12 +1,173 @@
 # Tools for agents
 
 An AI agent fills a form through tools: functions it calls with arguments that
-a JSON Schema describes. `buildToolSchema` derives that schema from the same
-`sections` that render the form, so a tool takes the fields, options and bounds
-the form checks on submit, and nothing an agent should not write.
+a JSON Schema describes. A form with `agent` offers itself as tools: through
+[WebMCP](#webmcp) when the browser has it, and through
+[`listTools()` and `callTool()`](#without-webmcp) for any other agent. The
+tools write each field through its own change, as a person does, so the
+field's transforms, change events and validation all run.
 
-The form does not register tools on its own yet. Use the schema with the tools
-you register, through WebMCP or for your own model.
+```tsx
+<Form
+  sections={sections}
+  config={config}
+  action={action}
+  agent={{
+    name: 'signup',
+    description: 'Creates an account with an email and a password.',
+    submit: true,
+    allow: (call, { signal }) =>
+      call.tool === 'submit' ? askPerson(call.values, signal) : true,
+  }}
+/>
+```
+
+- **`name`** prefixes the tools: `signup_fill`, `signup_read`,
+  `signup_options`, `signup_submit`. Letters, digits, `_` and `-`, up to 56 of
+  them, unique on the page. Any other name registers nothing and says so in
+  the console.
+- **`description`** is what the form is for, in your words: it opens the
+  description of every tool, and it is what weighs most in how a model uses
+  them. Write it as trusted text; nothing a person typed goes in it.
+- **`submit`** offers `<name>_submit`. Off by default, and only with an
+  `action`: sending has effects outside the page.
+- **`allow(call, { signal })`** is asked before a fill and before a submit,
+  never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
+  Answer `true` to go on, or `false` or the reason to refuse, which the agent
+  is given; a promise is waited for, as while a person confirms. `signal` is
+  aborted when the agent cancels, when the form unmounts, or after five
+  minutes, and the call is refused then. An `allow` that throws refuses it.
+
+The tools are built from the schema [below](#building-the-schema). Nothing is
+built, and the code that builds them is not loaded, until WebMCP is on the
+page or `listTools()` or `callTool()` is called.
+
+## The tools
+
+### `<name>_fill`
+
+Takes the values to write, keyed by field name, in the formats the schema
+gives. A field left out keeps its value. It writes in the order the form shows
+the fields, and in rounds: a field that another value of the same call shows
+or unlocks is written once it is. Each value is checked when it is written;
+the field validates them all once, at the end, and shows the errors as leaving
+a field does.
+
+It takes an option by its value or its label, in any case and without
+accents, and a number written as text. `null` empties a field that can be
+empty; a single choice cannot.
+
+```json
+{
+  "ok": false,
+  "applied": ["email", "plan", "frequency"],
+  "revealed": ["frequency"],
+  "values": {
+    "email": "ada@example",
+    "plan": "pro",
+    "frequency": "weekly",
+    "city": "Bogotá"
+  },
+  "adjusted": [],
+  "skipped": [
+    {
+      "name": "country",
+      "code": "invalid_option",
+      "message": "No option \"Perú\". Options: co (Colombia), mx (México)."
+    }
+  ],
+  "errors": { "email": ["Invalid email address"] }
+}
+```
+
+- **`values`** holds the final value of every field that changed during the
+  call, the ones a change event filled included (`city`), in the formats of
+  the schema.
+- **`skipped`** holds what was not written, with a [code](#codes).
+- **`ok`** is `false` when a value did not fit its field or broke a rule. A
+  field skipped as `hidden` or `locked` does not make it `false`.
+- What was written stays written when another field fails, as when a person
+  writes.
+
+### `<name>_read`
+
+Takes `{ fields? }` and answers what the form holds now: `values`, the fields
+`hidden` and `locked`, the `errors` on screen, and `submit`, the last
+submission (`idle`, `pending`, `success` with its `data`, or `error`). Up to
+100 fields a call; `more` says how many are left to ask for.
+
+### `<name>_options`
+
+Offered when a field's options are not in the schema. Takes
+`{ field, text? }` and answers up to 50 `items` whose label or value contains
+`text`, and `more`. A list's leaf is named through its first row,
+`items.0.product`.
+
+### `<name>_submit`
+
+Submits the form as its submit button does: the same validation, action,
+pending state and reset. Answers `{ ok: true, data }` with what the action
+returned, `{ ok: false, error, errors }` when it failed, or
+`{ pending: true }` when a submission is still running or the action takes
+more than 15 seconds; `<name>_read` gives the outcome later.
+
+### Codes
+
+| `code`           | Where      | Meaning                                         |
+| ---------------- | ---------- | ----------------------------------------------- |
+| `invalid_type`   | `skipped`  | The value is not of the field's type            |
+| `invalid_option` | `skipped`  | Not one of its options; the message lists them  |
+| `invalid_format` | `skipped`  | A day or a time written wrong                   |
+| `unknown`        | `skipped`  | No field so named, or one left out of the tools |
+| `hidden`         | `skipped`  | The field is not on the form                    |
+| `locked`         | `skipped`  | The field is disabled or read-only              |
+| `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
+| `refused`        | answer     | `allow` refused the call                        |
+| `busy`           | answer     | Ten calls are waiting already                   |
+| `cancelled`      | answer     | The agent cancelled the call                    |
+
+A form answers its calls one at a time, in the order they come. Every tool
+declares an `outputSchema`, and what an agent can correct comes back in the
+answer with a `code`, never as an error thrown.
+
+## WebMCP
+
+Where the browser offers `document.modelContext`, the form registers its tools
+there on mount, and takes them down when it unmounts. A definition that
+changes registers them again half a second later, and only when the tools
+come out different. A page that turns tools off with
+`Permissions-Policy: tools=()` gets none, and the form works as before.
+
+## Without WebMCP
+
+`listTools()` and `callTool()` give any agent the tools of every form with
+`agent` on the page: for a model you call through its API, whose loop usually
+runs on your server. Each tool has `name`, `title`, `description`,
+`inputSchema`, `outputSchema` and `annotations`, the shape MCP and WebMCP use;
+rename the schema to what your model's API calls it.
+
+```ts
+import { callTool, listTools } from 'react-luna-form'
+
+const tools = await listTools()
+const definitions = tools.map((tool) => ({
+  name: tool.name,
+  description: tool.description,
+  parameters: tool.inputSchema,
+}))
+
+// For each tool call the model asks for:
+const result = await callTool(call.name, call.input)
+```
+
+## What the agent reads
+
+Labels, values and options come from the page, and a person or a remote
+source may have written them: every tool is marked `untrustedContentHint` and
+says so in its description. Leave a field out of the tools with
+[`advanced.agent: false`](#what-an-agent-cannot-write) when an agent should not
+be the one to ask for it; a password is always left out, and a field left out
+answers `unknown`, as one that does not exist.
 
 ## Building the schema
 
@@ -60,7 +221,7 @@ A field with more than 25 options, or with options that are fetched or that a
 `source` event installs, is a `string` in the schema and is listed in `lookup`.
 
 A month, a year and a Yes/No are numbers and a boolean here, while the form
-stores them as text: a tool that writes them converts them.
+stores them as text: the tools convert them both ways.
 
 Two fields under one name hold one value, as they do in the form: the schema
 describes it once, by the first of them an agent may write, and lists it in
@@ -68,7 +229,7 @@ describes it once, by the first of them an agent may write, and lists it in
 
 ## What an agent cannot write
 
-These fields are not in the schema, and a tool should refuse them:
+These fields are not in the schema, and the tools refuse them:
 
 - `input/password`, always.
 - A field or a list with `"advanced": { "agent": false }`.

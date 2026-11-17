@@ -10,6 +10,7 @@ import { useRegisterApply, type ApplyOptions } from '../hook/use-apply'
 import { deepEqual } from 'fast-equals'
 import {
   applyTransformToChange,
+  flattenOptions,
   holdValue,
   isDateRange,
   isInput,
@@ -22,7 +23,11 @@ import {
   type Nullable,
   type Value,
 } from '@luna-form/core'
-import type { InputChangeEvent, InputStrategies } from './input-strategies'
+import {
+  toChangeValue,
+  type InputChangeEvent,
+  type InputStrategies,
+} from './input-strategies'
 
 export function InputBase(
   props: InputCoreProps & {
@@ -287,7 +292,30 @@ export function InputBase(
     [change]
   )
 
-  useRegisterApply(props.field.name, change, props.onRegisterApply)
+  // The options the control was handed: the definition's, the fetched ones, or
+  // the ones a `source` event installed.
+  const options =
+    'options' in commonPropsWithOptions &&
+    Array.isArray(commonPropsWithOptions.options)
+      ? commonPropsWithOptions.options
+      : undefined
+
+  useRegisterApply(
+    props.field.name,
+    {
+      change,
+      locked,
+      options: () => options && flattenOptions(options),
+      // What the field holds, checked as leaving it checks it, and shown when
+      // the form shows errors before a submit.
+      validate: () =>
+        validated(
+          isValidValue(valueRef.current) ? toChangeValue(valueRef.current) : '',
+          props.config.validation.blur || props.config.validation.change
+        ),
+    },
+    props.onRegisterApply
+  )
 
   // The form sends what the field holds whenever the control cannot. A
   // read-only field is locked the one way every control understands, by being
