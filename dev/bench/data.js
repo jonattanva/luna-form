@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794948026397,
+  "lastUpdate": 1794948049831,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "e039ec268808042284a395e489baf55f9d57f94e",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-08-17T12:25:53-05:00",
-          "tree_id": "55126e016eb5385103d0119f745add69693c441a",
-          "url": "https://github.com/jonattanva/luna-form/commit/e039ec268808042284a395e489baf55f9d57f94e"
-        },
-        "date": 1786987635819,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 276,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 596,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 22.2,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "38f28fece87d4a71180df783f79d1571cceff420",
+          "message": "Merge pull request #149 from jonattanva/claude/agent-apply\n\nAgent tools: write a field from outside, and the four form tools",
+          "timestamp": "2026-11-17T15:39:39-05:00",
+          "tree_id": "e18a97805b8bb371e3a2b727d13037fb9f451575",
+          "url": "https://github.com/jonattanva/luna-form/commit/38f28fece87d4a71180df783f79d1571cceff420"
+        },
+        "date": 1794948049786,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 38.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 14.9,
             "unit": "ms"
           }
         ]
