@@ -604,13 +604,20 @@ function describeEnum(choices: readonly Choice[], notes: string[]): ToolSchema {
   return { enum: choices.map((choice) => choice.value), type: 'string' }
 }
 
-// The values and what each one reads as on screen, which is how a person will
-// name them: `co (Colombia), mx (México)`.
 function describeOptions(choices: readonly Choice[]): string {
-  const listed = choices.map(({ label, value }) =>
-    label === value ? value : `${value} (${label})`
-  )
-  return `Options: ${listed.join(', ')}.`
+  return `Options: ${listOptions(choices)}.`
+}
+
+/**
+ * Options by their values and what each one reads as on screen, which is how
+ * a person will name them: `co (Colombia), mx (México)`.
+ */
+export function listOptions(choices: readonly Choice[]): string {
+  return choices
+    .map(({ label, value }) =>
+      label === value ? value : `${value} (${label})`
+    )
+    .join(', ')
 }
 
 // What it takes for a slot that is hidden or locked to be written: which
