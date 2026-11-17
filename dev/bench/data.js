@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794948211515,
+  "lastUpdate": 1794948241783,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "044fc116d72a3889e7ce6a58b6581c4ab0c04414",
-          "message": "Merge pull request #59 from jonattanva/docs/ship-docs-in-package\n\ndocs: ship the form documentation inside the package",
-          "timestamp": "2026-08-24T22:08:40-05:00",
-          "tree_id": "de74c26b8069c9eb5e3459a14ecc275d79cde50f",
-          "url": "https://github.com/jonattanva/luna-form/commit/044fc116d72a3889e7ce6a58b6581c4ab0c04414"
-        },
-        "date": 1787627398404,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 281,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 557,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "883efe9b0a3b95397255e6615f9ecd9b98a330e0",
           "message": "Merge pull request #60 from jonattanva/fix/checkbox-default-checked\n\nfix(checkbox): read the default by truthiness, not by presence",
           "timestamp": "2026-08-25T08:29:26-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 14.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8861e214b10c6bf7b517570c6aefc029686208cb",
+          "message": "Merge pull request #150 from jonattanva/claude/agent-host\n\nAgent tools: the agent prop, the real host, WebMCP and callTool",
+          "timestamp": "2026-11-17T15:42:23-05:00",
+          "tree_id": "e657a0288fcfe1c79619fb232a1f6665c6dcf86e",
+          "url": "https://github.com/jonattanva/luna-form/commit/8861e214b10c6bf7b517570c6aefc029686208cb"
+        },
+        "date": 1794948241723,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 57.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 23.4,
             "unit": "ms"
           }
         ]
