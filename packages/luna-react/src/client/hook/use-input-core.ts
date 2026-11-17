@@ -52,6 +52,7 @@ import {
   type Localization,
 } from '@luna-form/core'
 import type { Config, InputChange } from '../../type'
+import type { Apply } from './use-apply'
 
 // One run of `state` rules, from the change that started it to the last field
 // it emptied. `visited` holds each field whose rules ran, so a chain that loops
@@ -77,6 +78,9 @@ export type InputCoreProps = Readonly<{
     field: Field,
     offered?: ReadonlySet<string>
   ) => void
+  // Where the field leaves the way to write it from outside, through its own
+  // change; what it hands back takes that out again. See `useSchema`.
+  onRegisterApply: (name: string, apply: Apply) => () => void
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   onValueChange?: (input: InputChange) => void
   readOnly?: boolean

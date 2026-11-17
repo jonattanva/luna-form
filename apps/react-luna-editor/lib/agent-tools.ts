@@ -13,18 +13,17 @@ import {
   type SetStateAction,
 } from 'react'
 
-// Phase 0 of plan/webmcp-imperativa.md: the reactive preview handed to an
-// agent without touching the library, in development only. Two tools -- fill
+// The reactive preview handed to an agent without touching the library, in
+// development only. Two tools -- fill
 // the form through the host's own values, and submit it the way a person
 // would -- registered with WebMCP when the browser has it, and put on `window`
 // so an agent driving the page can call them anyway.
 //
 // The schema is the library's own (`buildToolSchema`), so the tools take only
 // what an agent may write: no password, no read-only field, nothing marked
-// `advanced.agent: false`. What they cannot do is what the prototype is for:
-// a value written through the host skips a time's conversion and a
-// transform, and loses to a flat key a person already wrote. Phase 1 writes
-// through each field instead.
+// `advanced.agent: false`. What they cannot do: a value written through the
+// host skips a time's conversion and a transform, and loses to a flat key a
+// person already wrote.
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 

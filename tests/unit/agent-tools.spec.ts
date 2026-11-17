@@ -1,0 +1,1124 @@
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import {
+  createFormTools,
+  type AgentOptions,
+  type FieldStatus,
+  type FormToolsHost,
+  type SubmitStatus,
+  type Tool,
+  type ToolJson,
+  type ToolResult,
+  type ToolRow,
+  type ToolValue,
+} from '@/packages/luna-react/src/client/lib/agent-tools'
+import {
+  buildToolSchema,
+  type ToolSchema,
+} from '@/packages/luna-core/src/util/tool-schema'
+import { isField, isList } from '@/packages/luna-core/src/util/is-input'
+import type { Field, Fields, Option } from '@/packages/luna-core/src/type'
+
+const COUNTRIES: Option[] = [
+  { label: 'Colombia', value: 'co' },
+  { label: 'México', value: 'mx' },
+  { label: 'Perú', value: 'pe' },
+]
+
+const PLANS: Option[] = [
+  { label: 'Free', value: 'free' },
+  { label: 'Pro', value: 'pro' },
+]
+
+const FREQUENCIES: Option[] = [
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Monthly', value: 'monthly' },
+]
+
+// Two options that read the same once case and accents are set aside.
+const SIZES: Option[] = [
+  { label: 'Grande', value: 'g' },
+  { label: 'grande', value: 'xg' },
+  { label: 'Small', value: 's' },
+]
+
+const ZONES: Option[] = Array.from({ length: 60 }, (_, index) => ({
+  label: `Zone ${index}`,
+  value: `Zone/${index}`,
+}))
+
+const FIELDS: Fields = [
+  { label: 'Email', name: 'email', type: 'input/email' },
+  { name: 'country', source: COUNTRIES, type: 'select' },
+  {
+    event: {
+      change: [
+        {
+          action: 'state',
+          state: { hidden: false },
+          target: 'frequency',
+          when: 'pro',
+        },
+      ],
+    },
+    name: 'plan',
+    source: PLANS,
+    type: 'radio',
+  },
+  { hidden: true, name: 'frequency', source: FREQUENCIES, type: 'select' },
+  { name: 'size', source: SIZES, type: 'select' },
+  { name: 'zone', type: 'select/timezone' },
+  { name: 'age', type: 'input/number' },
+  { name: 'month', type: 'select/month' },
+  { name: 'active', type: 'select/active' },
+  { name: 'agree', type: 'checkbox' },
+  { name: 'birthday', type: 'input/date' },
+  { name: 'start', type: 'input/time' },
+  { advanced: { mode: 'range' }, name: 'stay', type: 'input/date' },
+  { name: 'tags', source: COUNTRIES, type: 'chips' },
+  { name: 'secret', type: 'input/password' },
+  { advanced: { agent: false }, name: 'document', type: 'input/text' },
+  {
+    advanced: { length: { max: 2 } },
+    fields: [
+      { name: 'sku', type: 'input/text' },
+      { name: 'qty', type: 'input/number' },
+      { name: 'zone', type: 'select/timezone' },
+    ],
+    name: 'items',
+    type: 'list',
+  },
+]
+
+const AGENT: AgentOptions = {
+  description: 'Signs a person up.',
+  name: 'signup',
+  submit: true,
+}
+
+type Setup = Readonly<{
+  // Fields not on the form until a value shows them.
+  absent?: readonly string[]
+  locked?: readonly string[]
+  // Fields that do not take their first value: they have just appeared.
+  notReady?: readonly string[]
+  // Fields whose options are still on their way.
+  unloaded?: readonly string[]
+  // A locked field that another one unlocks when it holds a value.
+  unlocks?: Readonly<Record<string, Readonly<{ target: string; when: string }>>>
+  // What a field's value writes into another one, as a `value` event does.
+  fills?: Readonly<Record<string, (value: ToolValue) => [string, ToolValue]>>
+  // A field that is not on the form until another one holds a value.
+  shows?: Readonly<Record<string, Readonly<{ target: string; when: string }>>>
+  // Validation, by field: a message when the value is wrong.
+  rules?: Readonly<Record<string, (value: ToolValue) => string | undefined>>
+  submit?: (signal: AbortSignal) => Promise<SubmitStatus>
+  values?: Readonly<Record<string, ToolValue>>
+}>
+
+// A form in memory, keeping to what the host promises: a write that a value
+// shows another field for is seen once the form settles.
+function createForm(setup: Setup = {}) {
+  const definitions = new Map<string, Field>()
+  for (const slot of FIELDS) {
+    if (isList(slot)) {
+      for (const leaf of slot.fields.filter(isField)) {
+        definitions.set(`${slot.name}.0.${leaf.name}`, leaf)
+      }
+    } else if (isField(slot)) {
+      definitions.set(slot.name, slot)
+    }
+  }
+
+  const options = new Map<string, readonly Option[]>([
+    ['country', COUNTRIES],
+    ['plan', PLANS],
+    ['frequency', FREQUENCIES],
+    ['size', SIZES],
+    ['zone', ZONES],
+    ['tags', COUNTRIES],
+    ['items.0.zone', ZONES],
+  ])
+  for (const name of setup.unloaded ?? []) {
+    options.delete(name)
+  }
+
+  const absent = new Set(setup.absent ?? ['frequency'])
+  const locked = new Set(setup.locked)
+  const notReady = new Set(setup.notReady)
+  const values = new Map<string, ToolValue>(Object.entries(setup.values ?? {}))
+  const errors: Record<string, string[]> = {}
+  const effects: Array<() => void> = []
+  let submitted: SubmitStatus = { status: 'idle' }
+
+  const calls = {
+    apply: [] as Array<[string, ToolValue, object | undefined]>,
+    rows: [] as Array<[string, readonly ToolRow[]]>,
+    settle: 0,
+    validate: [] as Array<readonly string[]>,
+  }
+
+  const write = (name: string, value: ToolValue) => {
+    values.set(name, value)
+    const fill = setup.fills?.[name]
+    const show =
+      setup.shows?.[name] ??
+      (name === 'plan' ? { target: 'frequency', when: 'pro' } : undefined)
+    const unlock = setup.unlocks?.[name]
+
+    effects.push(() => {
+      if (fill) {
+        const [target, filled] = fill(value)
+        values.set(target, filled)
+      }
+      if (show) {
+        if (value === show.when) {
+          absent.delete(show.target)
+        } else {
+          absent.add(show.target)
+        }
+      }
+      if (unlock && value === unlock.when) {
+        locked.delete(unlock.target)
+      }
+    })
+  }
+
+  const host: FormToolsHost = {
+    apply: (name, value, applyOptions) => {
+      calls.apply.push([name, value, applyOptions])
+      if (locked.has(name) || notReady.delete(name)) {
+        return false
+      }
+      write(name, value)
+      return true
+    },
+    applyRows: (name, rows) => {
+      calls.rows.push([name, rows])
+      write(name, rows.slice(0, 2))
+      return true
+    },
+    getErrors: () => errors,
+    getField: (name) => definitions.get(name),
+    getOptions: (name) => options.get(name),
+    getStatus: (name): FieldStatus | undefined =>
+      absent.has(name)
+        ? undefined
+        : { hidden: false, locked: locked.has(name) },
+    getSubmit: () => submitted,
+    read: (name) => values.get(name),
+    settle: async () => {
+      calls.settle++
+      for (const effect of effects.splice(0)) {
+        effect()
+      }
+    },
+    submit: async (signal) => {
+      submitted = { status: 'pending' }
+      submitted = await (setup.submit?.(signal) ??
+        Promise.resolve<SubmitStatus>({ data: {}, status: 'success' }))
+      return submitted
+    },
+    validate: (names) => {
+      calls.validate.push(names)
+      for (const name of names) {
+        const message = setup.rules?.[name]?.(values.get(name) ?? null)
+        if (message) {
+          errors[name] = [message]
+        } else {
+          delete errors[name]
+        }
+      }
+    },
+  }
+
+  return { calls, host, values }
+}
+
+function toolsOf(
+  setup: Setup = {},
+  agent: AgentOptions = AGENT,
+  signal?: AbortSignal
+) {
+  const form = createForm(setup)
+  const tools = createFormTools(
+    agent,
+    buildToolSchema([{ fields: FIELDS }]),
+    form.host,
+    signal
+  )
+  return { ...form, tools }
+}
+
+function toolNamed(tools: readonly Tool[], suffix: string): Tool {
+  const tool = tools.find((candidate) => candidate.name.endsWith(`_${suffix}`))
+  if (!tool) {
+    throw new Error(`No ${suffix} tool`)
+  }
+  return tool
+}
+
+// Calls a tool and checks the answer against the tool's output schema, so
+// every test is a contract test too.
+async function call(
+  tools: readonly Tool[],
+  suffix: string,
+  input: ToolJson = {},
+  signal?: AbortSignal
+): Promise<ToolResult> {
+  const tool = toolNamed(tools, suffix)
+  const result = await tool.execute(input, { signal })
+  expect(violations(tool.outputSchema, result, tool.name)).toEqual([])
+  return result
+}
+
+// Where a value breaks the part of JSON Schema a tool's schemas use.
+function violations(schema: ToolSchema, value: ToolJson, at: string): string[] {
+  const found: string[] = []
+  const typed: Record<ToolSchema['type'], boolean> = {
+    array: Array.isArray(value),
+    boolean: typeof value === 'boolean',
+    integer: Number.isInteger(value),
+    number: typeof value === 'number',
+    object:
+      typeof value === 'object' && value !== null && !Array.isArray(value),
+    string: typeof value === 'string',
+  }
+
+  if (!typed[schema.type]) {
+    return [`${at} is not ${schema.type}`]
+  }
+  if (schema.enum && !schema.enum.includes(value as string)) {
+    found.push(`${at} is not one of ${schema.enum.join(', ')}`)
+  }
+  if (
+    schema.minimum !== undefined &&
+    typeof value === 'number' &&
+    value < schema.minimum
+  ) {
+    found.push(`${at} is under ${schema.minimum}`)
+  }
+  if (Array.isArray(value) && schema.items) {
+    const items = schema.items
+    value.forEach((item: ToolJson, index: number) =>
+      found.push(...violations(items, item, `${at}[${index}]`))
+    )
+  }
+  if (typed.object && schema.properties) {
+    const record = value as Record<string, ToolJson>
+    for (const name of schema.required ?? []) {
+      if (!(name in record)) {
+        found.push(`${at}.${name} is missing`)
+      }
+    }
+    for (const [name, inner] of Object.entries(record)) {
+      const property = schema.properties[name]
+      if (property) {
+        found.push(...violations(property, inner, `${at}.${name}`))
+      } else if (schema.additionalProperties === false) {
+        found.push(`${at}.${name} is not declared`)
+      }
+    }
+  }
+  return found
+}
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.restoreAllMocks()
+})
+
+describe('createFormTools', () => {
+  describe('the tools', () => {
+    test('should name the tools after the agent, and offer submit and options only when they apply', () => {
+      expect(toolsOf().tools.map((tool) => tool.name)).toEqual([
+        'signup_fill',
+        'signup_read',
+        'signup_options',
+        'signup_submit',
+      ])
+
+      const fields: Fields = [{ name: 'email', type: 'input/email' }]
+      const tools = createFormTools(
+        { description: 'Signs up.', name: 'signup' },
+        buildToolSchema([{ fields }]),
+        createForm().host
+      )
+      expect(tools.map((tool) => tool.name)).toEqual([
+        'signup_fill',
+        'signup_read',
+      ])
+    })
+
+    test('should build no tool for a name that some consumer would refuse', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      for (const name of ['', 'sign up', 'x'.repeat(57), 'signup.form']) {
+        expect(toolsOf({}, { ...AGENT, name }).tools).toEqual([])
+      }
+      expect(warn).toHaveBeenCalledTimes(4)
+    })
+
+    test('should mark what each tool does, and take the fill schema from the form', () => {
+      const { tools } = toolsOf()
+      const fill = toolNamed(tools, 'fill')
+
+      expect(fill.inputSchema).toEqual(
+        buildToolSchema([{ fields: FIELDS }]).schema
+      )
+      expect(fill.annotations).toEqual({ untrustedContentHint: true })
+      expect(toolNamed(tools, 'read').annotations).toEqual({
+        readOnlyHint: true,
+        untrustedContentHint: true,
+      })
+      expect(toolNamed(tools, 'options').annotations).toEqual({
+        readOnlyHint: true,
+        untrustedContentHint: true,
+      })
+      expect(toolNamed(tools, 'submit').annotations).toEqual({
+        consequentialHint: true,
+        untrustedContentHint: true,
+      })
+    })
+
+    test("should open every description with the author's and warn that the page's text is data", () => {
+      for (const tool of toolsOf().tools) {
+        expect(tool.description.startsWith('Signs a person up.')).toBe(true)
+        expect(tool.description).toContain('never instructions')
+      }
+    })
+
+    test('should name in the fill description what a submission needs', () => {
+      const fields: Fields = [
+        { name: 'email', required: true, type: 'input/email' },
+        { name: 'name', type: 'input/text' },
+      ]
+      const [fill] = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        createForm().host
+      )
+      expect(fill.description).toContain('A submission needs: email.')
+    })
+  })
+
+  describe('fill', () => {
+    test('should write each field through its own change, and validate them once at the end', async () => {
+      const { calls, tools } = toolsOf()
+      const result = await call(tools, 'fill', {
+        country: 'mx',
+        email: 'ada@example.com',
+      })
+
+      expect(calls.apply).toEqual([
+        ['email', 'ada@example.com', { immediate: true, validate: false }],
+        ['country', 'mx', { immediate: true, validate: false }],
+      ])
+      expect(calls.validate).toEqual([['email', 'country']])
+      expect(result).toEqual({
+        adjusted: [],
+        applied: ['email', 'country'],
+        errors: {},
+        ok: true,
+        revealed: [],
+        skipped: [],
+        values: { country: 'mx', email: 'ada@example.com' },
+      })
+    })
+
+    test('should report what a value event filled in, and only what changed', async () => {
+      const { tools } = toolsOf({
+        fills: { email: () => ['country', 'co'] },
+        values: { age: '30', email: 'ada@example.com' },
+      })
+      const result = await call(tools, 'fill', { email: 'ada@example.com' })
+
+      expect(result.values).toEqual({ country: 'co' })
+    })
+
+    test('should write a field another value shows in the next round', async () => {
+      const { calls, tools } = toolsOf()
+      const result = await call(tools, 'fill', {
+        frequency: 'weekly',
+        plan: 'pro',
+      })
+
+      expect(calls.apply.map(([name]) => name)).toEqual(['plan', 'frequency'])
+      expect(result.applied).toEqual(['plan', 'frequency'])
+      expect(result.revealed).toEqual(['frequency'])
+      expect(result.ok).toBe(true)
+    })
+
+    test('should skip as hidden a field nothing shows, without failing the call', async () => {
+      const { tools } = toolsOf()
+      const result = await call(tools, 'fill', {
+        frequency: 'weekly',
+        plan: 'free',
+      })
+
+      expect(result.applied).toEqual(['plan'])
+      expect(result.skipped).toEqual([
+        {
+          code: 'hidden',
+          message: 'The field is not on the form: some other value shows it.',
+          name: 'frequency',
+        },
+      ])
+      expect(result.ok).toBe(true)
+    })
+
+    test('should skip a locked field without failing the call', async () => {
+      const { calls, tools } = toolsOf({ locked: ['email'] })
+      const result = await call(tools, 'fill', {
+        country: 'co',
+        email: 'ada@example.com',
+      })
+
+      expect(calls.apply.map(([name]) => name)).toEqual(['country'])
+      expect(result.skipped).toEqual([
+        {
+          code: 'locked',
+          message: 'The field is disabled or read-only.',
+          name: 'email',
+        },
+      ])
+      expect(result.ok).toBe(true)
+    })
+
+    test('should write a field another value unlocks in the next round', async () => {
+      const { calls, tools } = toolsOf({
+        locked: ['country'],
+        unlocks: { email: { target: 'country', when: 'ada@example.com' } },
+      })
+      const result = await call(tools, 'fill', {
+        country: 'co',
+        email: 'ada@example.com',
+      })
+
+      expect(calls.apply.map(([name]) => name)).toEqual(['email', 'country'])
+      expect(result.applied).toEqual(['email', 'country'])
+      expect(result.skipped).toEqual([])
+    })
+
+    test('should try again a field that has not taken its place yet, and not call it locked', async () => {
+      const { calls, tools } = toolsOf({ notReady: ['country'] })
+      const result = await call(tools, 'fill', { country: 'co' })
+
+      expect(calls.apply.map(([name]) => name)).toEqual(['country', 'country'])
+      expect(result.applied).toEqual(['country'])
+      expect(result.skipped).toEqual([])
+    })
+
+    test('should answer a field left out of the tools as one that does not exist', async () => {
+      const { calls, tools } = toolsOf()
+      const result = await call(tools, 'fill', {
+        document: '123',
+        nothing: 'x',
+        secret: 'hunter2',
+        toString: 'x',
+      })
+
+      expect(calls.apply).toEqual([])
+      expect(result.skipped).toEqual(
+        ['document', 'nothing', 'secret', 'toString'].map((name) => ({
+          code: 'unknown',
+          message: 'No field so named.',
+          name,
+        }))
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    test('should return the errors of the fields it wrote, and fail on them', async () => {
+      const { tools } = toolsOf({
+        rules: { email: () => 'Invalid email address' },
+      })
+      const result = await call(tools, 'fill', { email: 'ada@example' })
+
+      expect(result.errors).toEqual({ email: ['Invalid email address'] })
+      expect(result.ok).toBe(false)
+    })
+
+    test('should refuse an input that is not an object of values', async () => {
+      const { tools } = toolsOf()
+      for (const input of [null, 'email', ['email']]) {
+        expect(await call(tools, 'fill', input)).toEqual({
+          code: 'invalid_type',
+          message: 'Pass an object of values keyed by field name.',
+          ok: false,
+        })
+      }
+    })
+
+    describe('options', () => {
+      test('should take an option by its label or value in any case and without accents', async () => {
+        const { calls, tools } = toolsOf()
+        await call(tools, 'fill', {
+          country: 'MEXICO',
+          plan: 'Pro',
+          tags: ['perú', 'co'],
+        })
+
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['country', 'mx'],
+          ['plan', 'pro'],
+          ['tags', ['pe', 'co']],
+        ])
+      })
+
+      test('should name the options a label could mean when it reads as more than one', async () => {
+        const { tools } = toolsOf()
+        const result = await call(tools, 'fill', { size: 'GRANDE' })
+
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message:
+              '"GRANDE" names more than one option: g (Grande), xg (grande).',
+            name: 'size',
+          },
+        ])
+      })
+
+      test('should list the options when the value is none of them, and point to the search past 25', async () => {
+        const { tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          country: 'Chile',
+          zone: 'Mars/Olympus',
+        })
+
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message:
+              'No option "Chile". Options: co (Colombia), mx (México), pe (Perú).',
+            name: 'country',
+          },
+          {
+            code: 'invalid_option',
+            message: 'No option "Mars/Olympus". Find them with signup_options.',
+            name: 'zone',
+          },
+        ])
+        expect(result.ok).toBe(false)
+      })
+
+      test('should refuse an option while the options are not loaded', async () => {
+        const { calls, tools } = toolsOf({ unloaded: ['zone'] })
+        const result = await call(tools, 'fill', { zone: 'Narnia/Cair' })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message:
+              'Its options are not loaded yet: fill the fields it depends on first, then find them with signup_options.',
+            name: 'zone',
+          },
+        ])
+      })
+
+      test('should refuse an option chosen twice, or more than a field takes', async () => {
+        const { tools } = toolsOf()
+        const result = await call(tools, 'fill', { tags: ['co', 'Colombia'] })
+
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message: '"co" more than once.',
+            name: 'tags',
+          },
+        ])
+      })
+    })
+
+    describe('types and formats', () => {
+      test('should hand each value over the way its control does', async () => {
+        const { calls, tools } = toolsOf()
+        await call(tools, 'fill', {
+          active: false,
+          age: '42',
+          agree: true,
+          birthday: '1906-12-09',
+          month: 3,
+          start: '09:30',
+        })
+
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['age', '42'],
+          ['month', '3'],
+          ['active', 'false'],
+          ['agree', true],
+          ['birthday', '1906-12-09'],
+          ['start', '09:30'],
+        ])
+      })
+
+      test('should skip a value of the wrong type or format, saying what it expected', async () => {
+        const { calls, tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          age: 'forty',
+          agree: 'yes',
+          birthday: '1906-02-30',
+          email: 42,
+          month: 13,
+          start: '9:30',
+        })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          { code: 'invalid_type', message: 'Expected text.', name: 'email' },
+          {
+            code: 'invalid_type',
+            message: 'Expected a whole number.',
+            name: 'age',
+          },
+          {
+            code: 'invalid_option',
+            message: 'Expected a whole number from 1 to 12.',
+            name: 'month',
+          },
+          {
+            code: 'invalid_type',
+            message: 'Expected true or false.',
+            name: 'agree',
+          },
+          {
+            code: 'invalid_format',
+            message: 'Expected a day as yyyy-MM-dd.',
+            name: 'birthday',
+          },
+          {
+            code: 'invalid_format',
+            message:
+              'Expected a time of day, 24-hour, matching ^\\d{2}:\\d{2}$.',
+            name: 'start',
+          },
+        ])
+      })
+
+      test('should take a range of one day, and refuse a time that does not exist', async () => {
+        const { calls, tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          start: '25:99',
+          stay: ['2024-05-01', '2024-05-01'],
+        })
+
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['stay', ['2024-05-01', '2024-05-01']],
+        ])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_format',
+            message:
+              'Expected a time of day, 24-hour, matching ^\\d{2}:\\d{2}$.',
+            name: 'start',
+          },
+        ])
+      })
+
+      test('should empty a field with null, unless it is a choice', async () => {
+        const { calls, tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          country: null,
+          email: null,
+          tags: null,
+        })
+
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['email', ''],
+          ['tags', []],
+        ])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_type',
+            message: 'This field cannot be emptied: give it one of its values.',
+            name: 'country',
+          },
+        ])
+      })
+    })
+
+    describe('lists', () => {
+      test('should hand a list its rows, and report the rows it did not keep', async () => {
+        const { calls, tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          items: [{ sku: 'A1' }, { qty: 2, sku: 'B2' }, { sku: 'C3' }],
+        })
+
+        expect(calls.rows).toEqual([
+          ['items', [{ sku: 'A1' }, { qty: '2', sku: 'B2' }, { sku: 'C3' }]],
+        ])
+        expect(result.adjusted).toEqual([
+          {
+            code: 'rows_adjusted',
+            message: 'The list holds 2 rows: 3 were sent.',
+            name: 'items',
+          },
+        ])
+        expect(result.values).toEqual({
+          items: [{ sku: 'A1' }, { qty: '2', sku: 'B2' }],
+        })
+      })
+
+      test('should skip a list with a row it cannot take, saying which', async () => {
+        const { calls, tools } = toolsOf()
+        const result = await call(tools, 'fill', {
+          items: [{ sku: 'A1' }, { color: 'red' }],
+        })
+
+        expect(calls.rows).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_type',
+            message: 'Row 2 has no field "color".',
+            name: 'items',
+          },
+        ])
+      })
+
+      test("should say which row's field a value does not fit", async () => {
+        const { tools } = toolsOf()
+        const result = await call(tools, 'fill', { items: [{ qty: 'many' }] })
+
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_type',
+            message: 'Row 1, qty: Expected a whole number.',
+            name: 'items',
+          },
+        ])
+      })
+    })
+  })
+
+  describe('allow', () => {
+    test('should ask before filling, with the values sent', async () => {
+      const allow = vi.fn(() => true)
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
+      await call(tools, 'fill', { email: 'ada@example.com' })
+
+      expect(allow).toHaveBeenCalledWith(
+        { tool: 'fill', values: { email: 'ada@example.com' } },
+        { signal: expect.any(AbortSignal) }
+      )
+      expect(calls.apply).toHaveLength(1)
+    })
+
+    test('should write nothing when refused, and pass on the reason given', async () => {
+      for (const [answer, message] of [
+        [false, 'The page refused the call.'],
+        ['Ask the person first.', 'Ask the person first.'],
+      ] as const) {
+        const { calls, tools } = toolsOf({}, { ...AGENT, allow: () => answer })
+        expect(await call(tools, 'fill', { email: 'a@b.co' })).toEqual({
+          code: 'refused',
+          message,
+          ok: false,
+        })
+        expect(calls.apply).toEqual([])
+      }
+    })
+
+    test('should wait for an answer that is a promise', async () => {
+      let answer: ((value: boolean) => void) | undefined
+      const allow = () =>
+        new Promise<boolean>((resolve) => {
+          answer = resolve
+        })
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
+
+      const pending = call(tools, 'fill', { email: 'a@b.co' })
+      await vi.waitFor(() => expect(answer).toBeDefined())
+      expect(calls.apply).toEqual([])
+
+      answer?.(true)
+      expect((await pending).ok).toBe(true)
+    })
+
+    test('should stop waiting when the agent cancels, and abort what allow was handed', async () => {
+      let handed: AbortSignal | undefined
+      const allow = (_call: object, { signal }: { signal: AbortSignal }) => {
+        handed = signal
+        return new Promise<boolean>(() => {})
+      }
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
+      const controller = new AbortController()
+
+      const pending = call(
+        tools,
+        'fill',
+        { email: 'a@b.co' },
+        controller.signal
+      )
+      await Promise.resolve()
+      await Promise.resolve()
+      controller.abort()
+
+      expect(await pending).toEqual({
+        code: 'cancelled',
+        message: 'The call was cancelled before it changed anything.',
+        ok: false,
+      })
+      expect(handed?.aborted).toBe(true)
+      expect(calls.apply).toEqual([])
+    })
+
+    test('should refuse a call allow never answers once the tools are taken down or after five minutes', async () => {
+      vi.useFakeTimers()
+      const allow = () => new Promise<boolean>(() => {})
+      const lifetime = new AbortController()
+      const { tools } = toolsOf({}, { ...AGENT, allow }, lifetime.signal)
+
+      const first = call(tools, 'fill', { email: 'a@b.co' })
+      await vi.advanceTimersByTimeAsync(5 * 60_000)
+      expect(await first).toEqual({
+        code: 'refused',
+        message: 'The call got no answer from the page.',
+        ok: false,
+      })
+
+      const second = call(tools, 'fill', { email: 'a@b.co' })
+      await vi.advanceTimersByTimeAsync(0)
+      lifetime.abort()
+      expect((await second).code).toBe('refused')
+    })
+
+    test('should refuse the call when allow fails', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { calls, tools } = toolsOf(
+        {},
+        {
+          ...AGENT,
+          allow: () => {
+            throw new Error('No dialog')
+          },
+        }
+      )
+
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toEqual({
+        code: 'refused',
+        message: 'The page could not answer the call.',
+        ok: false,
+      })
+      expect(calls.apply).toEqual([])
+      expect(error).toHaveBeenCalled()
+    })
+
+    test('should not ask to read or to look up options', async () => {
+      const allow = vi.fn(() => false)
+      const { tools } = toolsOf({}, { ...AGENT, allow })
+      await call(tools, 'read')
+      await call(tools, 'options', { field: 'zone' })
+
+      expect(allow).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('queue', () => {
+    test('should answer the calls of a form one at a time, in the order they came', async () => {
+      const order: string[] = []
+      let release = () => {}
+      const allow = (call: { tool: string; values: ToolResult }) => {
+        order.push(`ask ${String(call.values.email)}`)
+        return call.values.email === 'first'
+          ? new Promise<boolean>((resolve) => {
+              release = () => resolve(true)
+            })
+          : true
+      }
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
+
+      const first = call(tools, 'fill', { email: 'first' })
+      const second = call(tools, 'fill', { email: 'second' })
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(order).toEqual(['ask first'])
+
+      release()
+      await Promise.all([first, second])
+      expect(order).toEqual(['ask first', 'ask second'])
+      expect(calls.apply.map(([, value]) => value)).toEqual(['first', 'second'])
+    })
+
+    test('should answer busy past ten calls waiting', async () => {
+      const allow = () => new Promise<boolean>(() => {})
+      const { tools } = toolsOf({}, { ...AGENT, allow })
+
+      // The first is being answered, and ten wait behind it.
+      for (let index = 0; index < 11; index++) {
+        void toolNamed(tools, 'fill').execute({ email: `${index}` })
+      }
+      expect(await call(tools, 'read')).toEqual({
+        code: 'busy',
+        message:
+          'The form has 10 calls waiting: call again once one is answered.',
+        ok: false,
+      })
+    })
+  })
+
+  describe('read', () => {
+    test('should read the values, what is hidden or locked, the errors and the last submission', async () => {
+      const { host, tools } = toolsOf({
+        locked: ['email'],
+        rules: { country: () => 'Pick a country' },
+        values: { country: 'xx', email: 'ada@example.com' },
+      })
+      host.validate(['country'])
+
+      expect(
+        await call(tools, 'read', { fields: ['email', 'country', 'frequency'] })
+      ).toEqual({
+        errors: { country: ['Pick a country'] },
+        hidden: ['frequency'],
+        locked: ['email'],
+        submit: { status: 'idle' },
+        values: { country: 'xx', email: 'ada@example.com' },
+      })
+    })
+
+    test('should read every field when none is named, and nothing left out of the tools', async () => {
+      const { tools } = toolsOf()
+      const result = await call(tools, 'read', {
+        fields: ['email', 'secret', 'document'],
+      })
+      expect(Object.keys(result.values as object)).toEqual(['email'])
+
+      const all = await call(tools, 'read')
+      expect(Object.keys(all.values as object)).not.toContain('secret')
+      expect(all.hidden).toEqual(['frequency'])
+    })
+
+    test('should read up to 100 fields, and say how many are left', async () => {
+      const fields: Fields = Array.from({ length: 103 }, (_, index) => ({
+        name: `field${index}`,
+        type: 'input/text',
+      }))
+      const [, read] = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        createForm({ absent: [] }).host
+      )
+      const result = await read.execute({})
+
+      expect(Object.keys(result.values as object)).toHaveLength(100)
+      expect(result.more).toBe(3)
+    })
+
+    test('should refuse fields that are not a list of names', async () => {
+      const { tools } = toolsOf()
+      expect((await call(tools, 'read', { fields: 'email' })).code).toBe(
+        'invalid_type'
+      )
+    })
+  })
+
+  describe('options', () => {
+    test('should find options by label or value, in any case and without accents', async () => {
+      const { tools } = toolsOf()
+      expect(
+        await call(tools, 'options', { field: 'zone', text: 'ZONE 1' })
+      ).toEqual({
+        items: ZONES.filter(({ label }) => label.startsWith('Zone 1')),
+      })
+    })
+
+    test('should return up to 50 options, and say how many more there are', async () => {
+      const { tools } = toolsOf()
+      const result = await call(tools, 'options', { field: 'zone' })
+
+      expect(result.items).toEqual(ZONES.slice(0, 50))
+      expect(result.more).toBe(10)
+    })
+
+    test("should find the options of a list's leaf by the name the schema gives it", async () => {
+      const { tools } = toolsOf()
+      expect(
+        toolNamed(tools, 'options').inputSchema.properties?.field?.enum
+      ).toContain('items.0.zone')
+      expect(
+        await call(tools, 'options', { field: 'items.0.zone', text: 'zone 59' })
+      ).toEqual({ items: [ZONES[59]] })
+    })
+
+    test('should answer unknown for a field without options or left out of the tools', async () => {
+      const { tools } = toolsOf()
+      for (const field of ['email', 'secret', 'nothing']) {
+        expect(await call(tools, 'options', { field })).toEqual({
+          code: 'unknown',
+          message: 'No field so named has options.',
+          ok: false,
+        })
+      }
+    })
+  })
+
+  describe('submit', () => {
+    test('should ask with what the form holds, submit, and return what the action answered', async () => {
+      const allow = vi.fn(() => true)
+      const { tools } = toolsOf(
+        {
+          submit: async () => ({ data: { id: 7 }, status: 'success' }),
+          values: { email: 'ada@example.com' },
+        },
+        { ...AGENT, allow }
+      )
+
+      expect(await call(tools, 'submit')).toEqual({ data: { id: 7 }, ok: true })
+      expect(allow).toHaveBeenCalledWith(
+        {
+          tool: 'submit',
+          values: expect.objectContaining({ email: 'ada@example.com' }),
+        },
+        { signal: expect.any(AbortSignal) }
+      )
+    })
+
+    test('should return the error and the field errors of a submission that failed', async () => {
+      const { tools } = toolsOf({
+        submit: async () => ({
+          error: { title: 'Check the form' },
+          errors: { email: ['Invalid email address'] },
+          status: 'error',
+        }),
+      })
+
+      expect(await call(tools, 'submit')).toEqual({
+        error: { title: 'Check the form' },
+        errors: { email: ['Invalid email address'] },
+        ok: false,
+      })
+    })
+
+    test('should answer pending after 15 seconds, and not submit again while one runs', async () => {
+      vi.useFakeTimers()
+      const submit = vi.fn(() => new Promise<SubmitStatus>(() => {}))
+      const { tools } = toolsOf({ submit })
+
+      const first = call(tools, 'submit')
+      await vi.advanceTimersByTimeAsync(15_000)
+      const pending = {
+        message:
+          'The submission is still running: call signup_read for its outcome.',
+        pending: true,
+      }
+      expect(await first).toEqual(pending)
+
+      expect(await call(tools, 'submit')).toEqual(pending)
+      expect(submit).toHaveBeenCalledTimes(1)
+    })
+
+    test('should not submit a call the agent cancelled', async () => {
+      const submit = vi.fn(async (): Promise<SubmitStatus> => ({
+        status: 'success',
+      }))
+      const { tools } = toolsOf({ submit })
+      const controller = new AbortController()
+      controller.abort()
+
+      expect((await call(tools, 'submit', {}, controller.signal)).code).toBe(
+        'cancelled'
+      )
+      expect(submit).not.toHaveBeenCalled()
+    })
+  })
+})
