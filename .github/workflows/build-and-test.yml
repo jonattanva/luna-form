@@ -294,7 +294,7 @@ jobs:
         run: pnpm build
       - name: Start application server
         run: |
-          pnpm serve &
+          pnpm serve > server.log 2>&1 &
           for attempt in $(seq 1 60); do
             curl -sf http://localhost:3000 > /dev/null && exit 0
             sleep 1
@@ -303,12 +303,15 @@ jobs:
           exit 1
       - name: Run e2e tests
         # Chromium also runs the WebMCP project, the same browser with the flag on.
-        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
+        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob,line --max-failures=3
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
-          path: blob-report/
+          path: |
+            blob-report/
+            server.log
+            test-results/
           retention-days: 1
   e2e-report:
     name: e2e-report
