@@ -3903,7 +3903,15 @@ const result = await callTool(call.name, call.input)</code></pre>
                 </li>
                 <li>
                   ¿Por qué los mensajes de campo obligatorio salieron en inglés
-                  en un formulario en español?
+                  en un formulario en español? Resuelto el 2026-11-17: sin un
+                  mensaje en la definición, cada validación caía en el texto de
+                  Zod, técnico y en inglés (<code
+                    >Too small: expected string to have &gt;=1 characters</code
+                  >). Ahora luna da el suyo, en el idioma del formulario, para
+                  cada regla que genera; un mensaje de la definición sigue
+                  mandando. <code>resolveDictionary</code> se exporta de
+                  <code>react-luna-form/schema</code> para que un servidor use
+                  los mismos.
                 </li>
               </ul>
             </li>
