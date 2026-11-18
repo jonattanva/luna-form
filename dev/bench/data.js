@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794970884121,
+  "lastUpdate": 1794970908973,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "55b221c0be7944122d99922e956d0e0f5ea8092f",
-          "message": "Merge pull request #66 from jonattanva/fix/state-hidden-clear-reported\n\nfix(state): report the clear when a state action hides a field",
-          "timestamp": "2026-08-27T22:55:10-05:00",
-          "tree_id": "1f27e65a8dc14732d1cfeb02f3ecb3e5ca71be2f",
-          "url": "https://github.com/jonattanva/luna-form/commit/55b221c0be7944122d99922e956d0e0f5ea8092f"
-        },
-        "date": 1787889404587,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 630,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "ca352b013e8c17115e0139026780e8e5f7cd7da4",
           "message": "Merge pull request #68 from jonattanva/chore/bundle-size-comment-non-fatal\n\nci: let a failed bundle-size comment stop failing the build",
           "timestamp": "2026-08-27T23:01:43-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 12.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "85a1a32c77b0b6cba4c61fa18c6727b557fd74dc",
+          "message": "Merge pull request #157 from jonattanva/claude/replayed-change-events\n\nMove the replayed change events out of InputBase into useReplayedChangeEvents",
+          "timestamp": "2026-11-17T22:00:38-05:00",
+          "tree_id": "9b993382ab653386aa94712442421f6c2a01d799",
+          "url": "https://github.com/jonattanva/luna-form/commit/85a1a32c77b0b6cba4c61fa18c6727b557fd74dc"
+        },
+        "date": 1794970908928,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 43.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15,
             "unit": "ms"
           }
         ]
