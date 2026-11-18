@@ -952,7 +952,7 @@ Resultados:
       para el final de la llamada. Probado en el navegador; e2e y render
       budgets sin cambios. Todavía no tiene consumidor: lo usa el paso
       siguiente.
-- [ ] Revisión de código del 2026-11-16, decisiones para el paso siguiente:
+- [x] Revisión de código del 2026-11-16, decisiones para el paso siguiente:
   - Hecho en el paso 3: los tools filtran contraseñas, `advanced.agent: false`
     y lo que no es escribible con el esquema de `buildToolSchema`; `apply`
     sigue genérico.
@@ -961,8 +961,16 @@ Resultados:
   - Hecho con el host real: las e2e de los tools escriben campos con eventos
     `value` (con y sin `transform`) y `value-event-autofill.spec.ts` pasa en
     los tres navegadores.
-  - Pendiente, en un PR aparte: `useReplayedChangeEvents`, los dos efectos de
-    `InputBase` que repiten los eventos de cambio.
+  - Hecho en un PR aparte: `useReplayedChangeEvents`
+    (`client/hook/use-replayed-change-events.ts`) lleva los dos efectos de
+    `InputBase` que repiten los eventos de cambio, al montar y por un valor del
+    host, y devuelve `markReplayed` para el cambio de la persona. `InputBase`
+    pasa de 451 a 359 líneas. La revisión de código del 2026-11-17 corrigió
+    dos fallas que ya traían los efectos: una repetición al montar que no
+    volvía a mirar cuando el host llenaba más tarde un campo que nombraba
+    vacío, y un cambio de `defaultValue` que quedaba encolado. Y cada campo
+    deja de suscribirse dos veces a su entrada del host: `useValue` le pasa
+    la suya.
 - [x] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
       descripciones (3.8), los códigos (3.15) y la cola (3.10).
   - `createFormTools(agent, built, host, signal)` recibe el resultado de
