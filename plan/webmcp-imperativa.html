@@ -3279,11 +3279,31 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <span class="chip">1 a 2 semanas</span>
               </div>
               <ul class="tasks">
-                <li>
+                <li class="done">
                   <code>source</code> en
                   <code>onValueChange</code> (<code>'user'</code>,
-                  <code>'agent'</code> o <code>'event'</code>) y un registro
-                  opcional de llamadas, para auditar.
+                  <code>'agent'</code> o <code>'event'</code>), para auditar.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18. Lo que escribe un agente llega como
+                      <code>agent</code>: un campo, y las filas de una lista. Lo
+                      que su cambio desencadena, un evento
+                      <code>value</code> que llena otro campo o un
+                      <code>state</code> que oculta uno y lo vacía, llega como
+                      <code>event</code>. Agregar o quitar una fila con los
+                      botones es <code>user</code>.
+                    </li>
+                    <li>
+                      Los tipos <code>ValueChange</code> y
+                      <code>ValueSource</code> se exportan con el
+                      <code>Form</code>.
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Un registro opcional de llamadas, para auditar lo que el
+                  agente pidió y lo que se le respondió, también lo que no
+                  escribió nada.
                 </li>
                 <li>
                   Persona y agente a la vez: <code>revision</code> y el código

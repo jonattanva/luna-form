@@ -1,8 +1,15 @@
 import { createAtomStore } from './store-helper'
+import type { ValueSource } from '../../type'
+
+/** Rows for a list, and who sent them: the list tells the consumer so. */
+export type PendingRows = Readonly<{
+  rows: Array<Record<string, unknown>>
+  source: ValueSource
+}>
 
 /**
- * Rows delivered to a list by a `value` change event, waiting for the list to
- * take them.
+ * Rows delivered to a list by a `value` change event or by an agent, waiting
+ * for the list to take them.
  *
  * A list is the one target that cannot be written where every other target is
  * written. Its values do not live under its own name -- they are flat keys of
@@ -15,12 +22,12 @@ import { createAtomStore } from './store-helper'
  * `value` assigns rather than adds. Read through the family so that a delivery
  * to one list is not a re-render for every other.
  *
- * Same shape as `pendingAutoFillAtom` in `value-store`, and the same idea --
- * work handed to whoever owns the state -- but that one holds a single
- * delivery because only one field can hold the caret, while any number of
- * lists can be waiting at once.
+ * The same idea as `pendingAutoFillAtom` in `value-store` -- work handed to
+ * whoever owns the state -- but that one holds a single delivery because only
+ * one field can hold the caret, while any number of lists can be waiting at
+ * once.
  */
-const pendingRows = createAtomStore<Array<Record<string, unknown>>>()
+const pendingRows = createAtomStore<PendingRows>()
 
 export const pendingListRowsAtom = pendingRows.atom
 

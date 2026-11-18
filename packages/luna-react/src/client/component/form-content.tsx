@@ -15,7 +15,7 @@ import { useSetAtom } from 'jotai'
 import type { AgentOptions } from '../lib/agent-tools'
 import type { FieldHandle } from '../hook/use-apply'
 import type { useSubmission } from '../hook/use-agent-tools'
-import type { Children, Config, Control } from '../../type'
+import type { Children, Config, Control, ValueChange } from '../../type'
 import type {
   Definition,
   Localization,
@@ -54,7 +54,7 @@ export function FormContent<
     definition?: Definition
     lang?: string
     onSuccess?: (data: T) => void
-    onValueChange?: (input: { name: string; value: unknown }) => void
+    onValueChange?: (input: ValueChange) => void
     readOnly?: boolean
     sections: Sections
     translations?: Record<string, Record<string, string>>
@@ -136,8 +136,7 @@ export function FormContent<
   const onValueChange = useMemo(
     () =>
       hasValueChange
-        ? (input: { name: string; value: unknown }) =>
-            onValueChangeRef.current?.(input)
+        ? (input: ValueChange) => onValueChangeRef.current?.(input)
         : undefined,
     [hasValueChange, onValueChangeRef]
   )

@@ -1,7 +1,7 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
-type ValueChange = { name: string; value: unknown }
+type ValueChange = { name: string; source: string; value: unknown }
 
 const COLLAPSED_LIST_THREE_ITEMS = `{
   "sections": [
@@ -143,6 +143,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Email', name: 'email' },
           { label: 'Phone', name: 'phone' },
@@ -168,6 +169,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Email', name: 'email' },
           { label: undefined, name: undefined },
@@ -188,6 +190,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Email', name: 'email' },
           { label: 'Address', name: 'address' },
@@ -208,6 +211,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Phone', name: 'phone' },
           { label: 'Address', name: 'address' },
@@ -241,6 +245,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Email', name: 'email' },
           { label: 'Phone (edited)', name: 'phone' },
@@ -272,6 +277,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Phone (edited)', name: 'phone' },
           { label: 'Address', name: 'address' },
@@ -295,6 +301,7 @@ test.describe('List collapsed value preservation', { tag: ['@e2e'] }, () => {
       .poll(() => lastFieldChange(events))
       .toEqual({
         name: 'field',
+        source: 'user',
         value: [
           { label: 'Email', name: 'email' },
           { label: 'Phone', name: 'phone' },

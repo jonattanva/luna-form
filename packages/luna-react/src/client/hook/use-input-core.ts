@@ -51,7 +51,7 @@ import {
   validateCustom,
   type Localization,
 } from '@luna-form/core'
-import type { Config, InputChange } from '../../type'
+import type { Config, InputChange, ValueSource } from '../../type'
 import type { FieldHandle } from './use-apply'
 
 // One run of `state` rules, from the change that started it to the last field
@@ -190,7 +190,8 @@ export function useInputCore(
     }
   }
 
-  // Names a target's new value for the consumer.
+  // Names a target's new value for the consumer. What writes or clears a
+  // target is a change event of another field, so that is the source it names.
   //
   // A target the schema does not know is passed over rather than reported:
   // there is nothing left to name it by -- the report carries the field's
@@ -207,6 +208,7 @@ export function useInputCore(
     if (field) {
       props.onValueChange({
         name: translateListPath(target),
+        source: 'event',
         type: field.type,
         value,
       })
@@ -428,34 +430,38 @@ export function useInputCore(
   // `applyTransformToChange` only runs for an `input/*` field, and only on a
   // string even then, so an array reaches `setValue` exactly as it arrived.
   // `shown` is the text the control held before the change: only what the
-  // change wrote is rewritten, and the text it kept stays as it was.
-  const onValueChangeRef = useLatest((value: Value, shown?: string) => {
-    // A transient field acts and keeps nothing: neither its own stored value
-    // nor a word to the consumer. Its change events still go out -- they are
-    // the only reason it exists -- so this returns before the two writes and
-    // leaves `dispatchChange` in `input-base` alone.
-    //
-    // Leaving the stored value out is what lets it be pressed twice: the
-    // `deepEqual(inputValue, valueRef.current)` guard in `shouldSkipChange`
-    // compares against a value that is never written, so the second identical
-    // press is not read as a no-op.
-    if (props.field.advanced?.transient) {
-      return
-    }
+  // change wrote is rewritten, and the text it kept stays as it was. `source`
+  // is who made the change, for the consumer.
+  const onValueChangeRef = useLatest(
+    (value: Value, source: ValueSource, shown?: string) => {
+      // A transient field acts and keeps nothing: neither its own stored value
+      // nor a word to the consumer. Its change events still go out -- they are
+      // the only reason it exists -- so this returns before the two writes and
+      // leaves `dispatchChange` in `input-base` alone.
+      //
+      // Leaving the stored value out is what lets it be pressed twice: the
+      // `deepEqual(inputValue, valueRef.current)` guard in `shouldSkipChange`
+      // compares against a value that is never written, so the second identical
+      // press is not read as a no-op.
+      if (props.field.advanced?.transient) {
+        return
+      }
 
-    const newValue = isInput(props.field)
-      ? applyTransformToChange(shown, value, props.field.advanced?.transform)
-      : value
+      const newValue = isInput(props.field)
+        ? applyTransformToChange(shown, value, props.field.advanced?.transform)
+        : value
 
-    setValue(newValue)
-    if (props.onValueChange) {
-      props.onValueChange({
-        name: translateListPath(props.field.name),
-        type: props.field.type,
-        value: newValue,
-      })
+      setValue(newValue)
+      if (props.onValueChange) {
+        props.onValueChange({
+          name: translateListPath(props.field.name),
+          source,
+          type: props.field.type,
+          value: newValue,
+        })
+      }
     }
-  })
+  )
 
   // The same, read from `onChange` and from the mount-time run of
   // `useReplayedChangeEvents`. Both reach it after the commit it belongs to: a
@@ -518,7 +524,7 @@ export function useInputCore(
             if (isRows(candidate)) {
               setPendingListRows((previous) => ({
                 ...previous,
-                [newTarget]: candidate,
+                [newTarget]: { rows: candidate, source: 'event' },
               }))
             }
             return

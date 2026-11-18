@@ -113,9 +113,10 @@ export function InputBase(
   })
 
   // A change to the field, whoever makes it: the control's `onChange`, or a
-  // value written from outside (`apply` is set, see `useRegisterApply`), which
-  // hands the value in the control's own shape and goes through every step a
-  // person's change does. `true` when the field holds the value afterwards.
+  // value an agent writes from outside (`apply` is set, see
+  // `useRegisterApply`), which hands the value in the control's own shape and
+  // goes through every step a person's change does, and reaches the consumer
+  // as the agent's. `true` when the field holds the value afterwards.
   const change = useCallback(
     (event: InputChangeEvent, apply?: ApplyOptions) => {
       if (locked) {
@@ -155,7 +156,7 @@ export function InputBase(
       // control showed last.
       const shown = apply ? undefined : shownRef.current
       keepCaret(event.target, props.field, shown)
-      onValueChangeRef.current(inputValue, shown)
+      onValueChangeRef.current(inputValue, apply ? 'agent' : 'user', shown)
       if (apply?.validate ?? props.config.validation.change) {
         validated(inputValue)
       }

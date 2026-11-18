@@ -12,3 +12,4 @@ export type {
   ToolValue,
 } from './lib/agent-tools'
 export type { Sections, Source, ZodSchema } from '@luna-form/core'
+export type { ValueChange, ValueSource } from '../type'

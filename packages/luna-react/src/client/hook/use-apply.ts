@@ -18,9 +18,10 @@ export type ApplyOptions = Readonly<{
 
 /**
  * Writes a value into a field the way a person's change does, in the shape the
- * field's control sends it. `true` when the field holds the value afterwards;
- * `false` when it did not take it: it is locked, it refuses the value (a select
- * left empty), or nothing named so is mounted.
+ * field's control sends it. The form's tools are what write through it, so the
+ * consumer hears the change as an agent's. `true` when the field holds the
+ * value afterwards; `false` when it did not take it: it is locked, it refuses
+ * the value (a select left empty), or nothing named so is mounted.
  */
 export type Apply = (value: Value, options?: ApplyOptions) => boolean
 
