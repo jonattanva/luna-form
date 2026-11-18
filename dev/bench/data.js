@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795023429307,
+  "lastUpdate": 1795023454089,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "a82b6a075e670a4269fd610555cad377d7c2be15",
-          "message": "Merge pull request #70 from jonattanva/fix/state-hidden-clear-containers\n\nfix(state): clear a container the same way whichever rule hides it, and let a field opt out",
-          "timestamp": "2026-09-07T10:34:33-05:00",
-          "tree_id": "d020ea5195f7d6c4cd9c735909877e41538fd3dd",
-          "url": "https://github.com/jonattanva/luna-form/commit/a82b6a075e670a4269fd610555cad377d7c2be15"
-        },
-        "date": 1788795365163,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 311,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 609,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "61612320fe3229f627320a94882d4c16d1214d38",
           "message": "Merge pull request #80 from jonattanva/dependabot/npm_and_yarn/examples/with-next-vanilla/next-16.3.3\n\nchore(deps): bump next from 16.2.12 to 16.3.3 in /examples/with-next-vanilla",
           "timestamp": "2026-09-11T15:39:52-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 18.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e2ad9ef333415a404edb2d4d36bd6aedf80a956",
+          "message": "Merge pull request #164 from jonattanva/claude/ci-playwright-image\n\nci: run the e2e tests in the Playwright image instead of installing browser packages on the runner",
+          "timestamp": "2026-11-18T12:36:43-05:00",
+          "tree_id": "b7df9a6263d9e01131e096d06d24995843372010",
+          "url": "https://github.com/jonattanva/luna-form/commit/6e2ad9ef333415a404edb2d4d36bd6aedf80a956"
+        },
+        "date": 1795023454047,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 38.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 14.9,
             "unit": "ms"
           }
         ]
