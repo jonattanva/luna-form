@@ -7,9 +7,11 @@ import {
   isSelectMonth,
   isSelectYear,
   isString,
+  getTimeFormat,
   isTime,
   listOptions,
   logger,
+  toNativeTime,
 } from '@luna-form/core'
 import type { ApplyOptions } from '../hook/use-apply'
 import type {
@@ -432,14 +434,24 @@ export function createFormTools(
 
     const limit = linkSignals([callSignal, signal], ALLOW_TIMEOUT)
     try {
-      // A page whose `allow` fails has not said yes.
+      // A page whose `allow` fails has not said yes. One that says yes at
+      // once is not waited for.
+      let asked: ReturnType<NonNullable<AgentOptions['allow']>> | typeof FAILED
+      try {
+        asked = agent.allow({ tool, values }, { signal: limit.signal })
+      } catch (error) {
+        logger.error('The agent call was refused: allow failed.', error)
+        asked = FAILED
+      }
+      if (asked === true) {
+        return undefined
+      }
+
       const answer = await Promise.race([
-        Promise.resolve()
-          .then(() => agent.allow?.({ tool, values }, { signal: limit.signal }))
-          .catch((error: Error) => {
-            logger.error('The agent call was refused: allow failed.', error)
-            return FAILED
-          }),
+        Promise.resolve(asked).catch((error: Error) => {
+          logger.error('The agent call was refused: allow failed.', error)
+          return FAILED
+        }),
         whenAborted(limit.signal),
       ])
 
@@ -500,7 +512,7 @@ export function createFormTools(
 
   // What the form holds for a field, in the shape its schema gives it.
   const readField = (name: string) =>
-    present(properties[name], host.read(name) ?? null)
+    present(properties[name], host.read(name) ?? null, name, host.getField)
 
   // What the form holds for every field shown, as `allow` is told it before a
   // submit.
@@ -1049,12 +1061,26 @@ function linkSignals(
 }
 
 // What the form holds, in the shape the schema gives the field: a number, a
-// month and a year as numbers, a Yes/No as a boolean, and a list's rows with
-// the leaves the schema has, each the same way. A leaf the agent may not write
-// -- a password in a row -- is not read back either.
-function present(schema: ToolSchema | undefined, value: ToolJson): ToolJson {
+// month and a year as numbers, a Yes/No as a boolean, a time as `HH:mm` or
+// `HH:mm:ss` whatever format the field shows it in, and a list's rows with the
+// leaves the schema has, each the same way. A leaf the agent may not write --
+// a password in a row -- is not read back either. `path` names the field the
+// way `fieldOf` finds its definition.
+function present(
+  schema: ToolSchema | undefined,
+  value: ToolJson,
+  path: string,
+  fieldOf: (path: string) => Field | undefined
+): ToolJson {
   if (value === null || !schema) {
     return value
+  }
+
+  const field = fieldOf(path)
+  if (field && isTime(field) && isString(value)) {
+    const format = getTimeFormat(field)
+    const native = toNativeTime(value, format)
+    return native ? native.slice(0, format.includes('ss') ? 8 : 5) : value
   }
 
   if (schema.type === 'integer' || schema.type === 'number') {
@@ -1076,7 +1102,14 @@ function present(schema: ToolSchema | undefined, value: ToolJson): ToolJson {
         ? Object.fromEntries(
             Object.entries(row).flatMap(([leaf, inner]) => {
               const leafSchema = ownProperty(leaves, leaf)
-              return leafSchema ? [[leaf, present(leafSchema, inner)]] : []
+              return leafSchema
+                ? [
+                    [
+                      leaf,
+                      present(leafSchema, inner, `${path}.0.${leaf}`, fieldOf),
+                    ],
+                  ]
+                : []
             })
           )
         : row

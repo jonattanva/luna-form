@@ -299,7 +299,8 @@ jobs:
           echo "The application server did not answer on port 3000" >&2
           exit 1
       - name: Run e2e tests
-        run: pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
+        # Chromium also runs the WebMCP project, the same browser with the flag on.
+        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

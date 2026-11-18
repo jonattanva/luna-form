@@ -18,6 +18,8 @@ import { useEffect, useMemo, useState } from 'react'
 
 declare global {
   interface Window {
+    // What a test asks before the preview's tools fill or submit it.
+    __lunaAllow?: AgentOptions['allow']
     __lunaTools?: Readonly<{ call: typeof callTool; list: typeof listTools }>
   }
 }
@@ -139,7 +141,26 @@ export function ReactiveFormPreview() {
   // needs the other kind of host says so in the injected JSON: `host.nested`
   // keeps the declared shape (see `writeNested`), and `host.declared` hands the
   // form that record through `withDeclaredFields`, as such a host is told to.
-  const { host, ...formProps } = form
+  const { agent: offered, host, ...formProps } = form
+
+  // How the preview is offered to an agent. A test changes its name,
+  // description or submit in the injected JSON, and decides what `allow`
+  // answers through `window.__lunaAllow`.
+  const agent = useMemo<AgentOptions>(
+    () => ({
+      ...AGENT,
+      ...(isRecord(offered) && {
+        ...(typeof offered.name === 'string' && { name: offered.name }),
+        ...(typeof offered.description === 'string' && {
+          description: offered.description,
+        }),
+        ...(typeof offered.submit === 'boolean' && { submit: offered.submit }),
+      }),
+      allow: (call, options) =>
+        window.__lunaAllow ? window.__lunaAllow(call, options) : true,
+    }),
+    [offered]
+  )
   const nested = host?.nested === true
   const declared = host?.declared === true
 
@@ -201,7 +222,7 @@ export function ReactiveFormPreview() {
         value={formValue}
         config={formConfig}
         action={action}
-        agent={AGENT}
+        agent={agent}
         onSuccess={handleSuccess}
         onValueChange={handleValueChange}
       >

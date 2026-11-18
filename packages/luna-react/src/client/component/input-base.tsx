@@ -8,6 +8,8 @@ import { useValue } from '../hook/use-value'
 import { useLatest } from '../hook/use-latest'
 import { useRegisterApply, type ApplyOptions } from '../hook/use-apply'
 import { deepEqual } from 'fast-equals'
+import { useStore } from 'jotai'
+import { valueAtom } from '../lib/value-store'
 import {
   applyTransformToChange,
   flattenOptions,
@@ -66,6 +68,7 @@ export function InputBase(
   } = useInputCore(props, { setValue, value, setSource })
 
   const { getField } = props
+  const store = useStore()
 
   const initialEventsProcessedRef = useRef(false)
 
@@ -230,12 +233,20 @@ export function InputBase(
       }
 
       // Written again from outside, the value the field holds changes nothing,
-      // and runs its events no second time.
-      if (apply && deepEqual(inputValue, valueRef.current)) {
+      // and runs its events no second time. What it holds is read from the
+      // store, not from the last render: a submit that just succeeded has
+      // emptied the store already, and the field still shows what it sent.
+      if (
+        apply &&
+        deepEqual(inputValue, store.get(valueAtom)[props.field.name])
+      ) {
         return true
       }
 
-      const shown = shownRef.current
+      // A value written from outside replaces the whole text, so its
+      // transform rewrites all of it, not only what differs from the text the
+      // control showed last.
+      const shown = apply ? undefined : shownRef.current
       keepCaret(event.target, props.field, shown)
       onValueChangeRef.current(inputValue, shown)
       if (apply?.validate ?? props.config.validation.change) {
@@ -280,6 +291,7 @@ export function InputBase(
       shouldSkipChange,
       shouldSkipOnChange,
       shownRef,
+      store,
       validated,
       valueRef,
     ]
