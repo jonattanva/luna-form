@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794966668688,
+  "lastUpdate": 1794966696429,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "cb97e89c172e207b4e029637563d5bf9d2cd2181",
-          "message": "Merge pull request #64 from jonattanva/fix/chips-mount-change-events\n\nfix(chips): match a `when` against the array, not against its text",
-          "timestamp": "2026-08-27T07:36:11-05:00",
-          "tree_id": "b6125843c6c03f30c89478634c307e8bbf45ff02",
-          "url": "https://github.com/jonattanva/luna-form/commit/cb97e89c172e207b4e029637563d5bf9d2cd2181"
-        },
-        "date": 1787834266651,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 279,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 191,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 15.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "31a896fbf1da38170f2bea7ed971ffa7f42688a8",
+          "message": "Merge pull request #155 from jonattanva/claude/agent-bundle\n\nAgent tools: load build, registration and submit on demand, and three bundle budgets",
+          "timestamp": "2026-11-17T20:50:20-05:00",
+          "tree_id": "01bf21fcfd0ec83dfc87d5ee70cac051aa3a8f12",
+          "url": "https://github.com/jonattanva/luna-form/commit/31a896fbf1da38170f2bea7ed971ffa7f42688a8"
+        },
+        "date": 1794966696383,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 51.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.1,
             "unit": "ms"
           }
         ]
