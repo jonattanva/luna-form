@@ -3312,6 +3312,15 @@ const result = await callTool(call.name, call.input)</code></pre>
                   Si la medición lo pide: el modo agrupado y
                   <code>&lt;name&gt;_describe</code> (<a href="#escala">3.14</a
                   >).
+                  <ul>
+                    <li>
+                      Medido el 2026-11-18 (sección 6): una página de cinco
+                      formularios no lo pide. <code>&lt;name&gt;_describe</code>
+                      tampoco: el formulario de 200 campos queda en 12.4 k
+                      caracteres de esquema, bajo el aviso de 24 kB. Queda para
+                      cuando una página real pase ese umbral.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   En el editor, tools de autoría (<code>set_definition</code>,
@@ -3824,6 +3833,125 @@ const result = await callTool(call.name, call.input)</code></pre>
               capturas.
             </li>
           </ul>
+
+          <h3>Página con cinco formularios, 2026-11-18</h3>
+          <p>
+            Lo que registra cada formulario, medido con
+            <code>listTools()</code> en el editor (build de producción). "Lo que
+            ve el modelo" es nombre, título, descripción y esquema de entrada;
+            los esquemas de salida van aparte, porque ni
+            <code>getTools</code> de WebMCP ni las APIs de modelos los usan.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Formulario</th>
+                  <th>Tools</th>
+                  <th>Descripciones</th>
+                  <th>Esquemas de entrada</th>
+                  <th>Lo que ve el modelo</th>
+                  <th>Esquemas de salida</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Perfil: nombre y dos avisos</td>
+                  <td>3</td>
+                  <td>1.7 k</td>
+                  <td>0.5 k</td>
+                  <td>2.5 k</td>
+                  <td>2.1 k</td>
+                </tr>
+                <tr>
+                  <td>Plan: un <code>value</code> y un <code>state</code></td>
+                  <td>3</td>
+                  <td>1.7 k</td>
+                  <td>0.7 k</td>
+                  <td>2.7 k</td>
+                  <td>2.1 k</td>
+                </tr>
+                <tr>
+                  <td>Pedido: fecha, zona horaria y una lista</td>
+                  <td>4</td>
+                  <td>2.2 k</td>
+                  <td>1.1 k</td>
+                  <td>3.7 k</td>
+                  <td>2.4 k</td>
+                </tr>
+                <tr>
+                  <td>Encuesta: 200 campos, 18 selects de 30 opciones</td>
+                  <td>4</td>
+                  <td>2.5 k</td>
+                  <td>12.4 k</td>
+                  <td>15.2 k</td>
+                  <td>2.4 k</td>
+                </tr>
+                <tr>
+                  <td>Contacto: correo, tema y mensaje</td>
+                  <td>3</td>
+                  <td>1.7 k</td>
+                  <td>0.6 k</td>
+                  <td>2.6 k</td>
+                  <td>2.1 k</td>
+                </tr>
+                <tr>
+                  <td><strong>Página</strong></td>
+                  <td>17</td>
+                  <td>9.8 k</td>
+                  <td>15.4 k</td>
+                  <td>26.6 k</td>
+                  <td>11.0 k</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ul>
+            <li>
+              <strong>Lo que pesa:</strong> el esquema de entrada de un
+              formulario grande, no la cantidad de formularios. Sin la encuesta,
+              los otros cuatro suman 11.3 k caracteres (unos 3 k tokens) por
+              turno.
+            </li>
+            <li>
+              <strong>El modo agrupado, estimado:</strong> seis tools de página
+              con descripciones como las de hoy suman unos 3.5 k fijos, más el
+              esquema de cada formulario que el agente pide con
+              <code>&lt;grupo&gt;_describe</code>, que queda en la conversación
+              desde ahí.
+              <ul>
+                <li>
+                  Si el agente usa un formulario chico: unos 4.6 k en lugar de
+                  26.6 k.
+                </li>
+                <li>
+                  Si usa la encuesta: unos 16 k, porque su esquema llega igual.
+                </li>
+                <li>
+                  Si usa los cinco: unos 19 k, con una llamada más por
+                  formulario.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Lo que cuesta agruparlos:</strong>
+              <code>&lt;grupo&gt;_fill</code> recibe valores sin tipar, porque
+              el esquema llega en una respuesta y no en la definición del tool.
+              El agente pierde la validación del cliente MCP antes de llamar, y
+              gasta una llamada más por formulario.
+            </li>
+            <li>
+              <strong>La caché de prompts</strong> reutiliza la definición de
+              los tools entre turnos mientras no cambia (<a href="#escala"
+                >3.14</a
+              >), así que el piso fijo se cobra completo una vez y después a una
+              fracción.
+            </li>
+            <li>
+              <strong>17 tools</strong> quedan lejos de la cantidad con la que
+              un modelo empieza a elegir peor; el modo agrupado bajaría a 6.
+            </li>
+          </ul>
         </section>
 
         <section id="riesgos">
@@ -4045,6 +4173,13 @@ const result = await callTool(call.name, call.input)</code></pre>
             </li>
             <li>
               ¿Con cuántos formularios en una página conviene el modo agrupado?
+              Respondida con la medición del 2026-11-18 (<a href="#medicion"
+                >sección 6</a
+              >): no lo decide la cantidad de formularios sino el texto que
+              suman. Cinco formularios comunes son unos 11 k caracteres por
+              turno, y no lo justifican. Conviene cuando una página ofrece
+              formularios que el agente casi nunca usa y el texto de sus tools
+              pasa de 24 kB, el mismo umbral del aviso por formulario.
             </li>
             <li>
               De la fase 0, por revisar en luna:
