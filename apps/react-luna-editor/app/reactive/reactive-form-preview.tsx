@@ -139,8 +139,10 @@ export function ReactiveFormPreview() {
 
   // The page keeps every report under its own name, a flat record. A test that
   // needs the other kind of host says so in the injected JSON: `host.nested`
-  // keeps the declared shape (see `writeNested`), and `host.declared` hands the
-  // form that record through `withDeclaredFields`, as such a host is told to.
+  // keeps the declared shape (see `writeNested`), `host.declared` hands the
+  // form that record through `withDeclaredFields`, as such a host is told to,
+  // and `host.clearOnSuccess` empties it after a successful submit, as a host
+  // that wants the form to start blank does.
   const { agent: offered, host, ...formProps } = form
 
   // How the preview is offered to an agent. A test changes its name,
@@ -163,6 +165,7 @@ export function ReactiveFormPreview() {
   )
   const nested = host?.nested === true
   const declared = host?.declared === true
+  const clearOnSuccess = host?.clearOnSuccess === true
 
   const formValue = useMemo(
     () =>
@@ -207,6 +210,9 @@ export function ReactiveFormPreview() {
     form: Record<string, unknown>
   }) {
     setResult(response)
+    if (clearOnSuccess) {
+      setValues({})
+    }
   }
 
   return (

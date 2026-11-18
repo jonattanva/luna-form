@@ -1330,6 +1330,14 @@ Preguntas abiertas:
 5. ¿Con cuántos formularios en una página conviene el modo agrupado?
 6. De la fase 0, por revisar en luna:
    - ¿Por qué una lista quedó con dos filas vacías después de un envío exitoso?
+     Resuelto el 2026-11-17: un éxito vaciaba los valores pero la lista
+     conservaba sus filas, y un campo que el host seguía guardando quedaba
+     en blanco. Ahora el formulario empieza de nuevo con un store nuevo (el
+     `Provider` de jotai va con una `key` que sube con cada éxito): en
+     blanco y con las filas iniciales, o con lo que el host guarda por
+     `value`, como dice `docs/forms/submit.md`. El `submit` del agente
+     responde cuando el formulario ya empezó de nuevo, así que un `read`
+     justo después ve lo que el formulario tiene entonces.
    - ¿Por qué los mensajes de campo obligatorio salieron en inglés en un
      formulario en español? Resuelto el 2026-11-17: sin un mensaje en la
      definición, cada validación caía en el texto de Zod, técnico y en inglés

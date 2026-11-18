@@ -645,6 +645,47 @@ test.describe(
       await expect(page.locator('input[name="name"]')).toHaveValue('Call 9')
     })
 
+    test('should read and write the form a submit started over, a list included', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        sections: [
+          {
+            fields: [
+              { label: 'Name', name: 'name', type: 'input/text' },
+              {
+                fields: [{ label: 'SKU', name: 'sku', type: 'input/text' }],
+                label: 'Items',
+                name: 'items',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+      })
+      await page.locator('input[name="name"]').fill('Ada')
+
+      // In one go, as an agent does: the submit answers once the form has
+      // started over, from what the host keeps of what was reported.
+      const [submitted, read] = await page.evaluate(async () => {
+        const tools = (window as Window & { __lunaTools?: Tools }).__lunaTools!
+        return [
+          await tools.call('preview_submit', {}),
+          await tools.call('preview_read', {}),
+        ]
+      })
+      expect(submitted.ok).toBe(true)
+      expect(read.values).toMatchObject({ name: 'Ada' })
+      const filled = await call(page, 'preview_fill', {
+        items: [{ sku: 'A1' }, { sku: 'B2' }],
+      })
+      expect(filled).toMatchObject({
+        ok: true,
+        values: { items: [{ sku: 'A1' }, { sku: 'B2' }] },
+      })
+      await expect(page.locator('input[name$=".sku"]')).toHaveCount(2)
+    })
+
     test('should write a value again after a submission reset the form', async ({
       page,
     }) => {
@@ -820,6 +861,29 @@ test.describe(
             : []
         })
         .toEqual(['name', 'city'])
+    })
+
+    test('should keep the tools registered when a submit starts the form over', async ({
+      page,
+    }) => {
+      await page.addInitScript(countToolChanges)
+      await openWith(page, NAME_ONLY)
+      await expect.poll(async () => (await webmcpTools(page)).length).toBe(3)
+      await page.evaluate(() => {
+        ;(window as WebMCPWindow).__toolChanges = 0
+      })
+
+      expect((await call(page, 'preview_submit')).ok).toBe(true)
+      await page.evaluate(
+        () => new Promise((resolve) => setTimeout(resolve, 800))
+      )
+
+      expect(
+        await page.evaluate(() => (window as WebMCPWindow).__toolChanges)
+      ).toBe(0)
+      expect((await call(page, 'preview_fill', { name: 'Grace' })).ok).toBe(
+        true
+      )
     })
 
     test('should take the tools down under the name the form leaves', async ({

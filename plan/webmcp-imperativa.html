@@ -3910,7 +3910,17 @@ const result = await callTool(call.name, call.input)</code></pre>
               <ul>
                 <li>
                   ¿Por qué una lista quedó con dos filas vacías después de un
-                  envío exitoso?
+                  envío exitoso? Resuelto el 2026-11-17: un éxito vaciaba los
+                  valores pero la lista conservaba sus filas, y un campo que el
+                  host seguía guardando quedaba en blanco. Ahora el formulario
+                  empieza de nuevo con un store nuevo (el
+                  <code>Provider</code> de jotai va con una <code>key</code> que
+                  sube con cada éxito): en blanco y con las filas iniciales, o
+                  con lo que el host guarda por <code>value</code>, como dice
+                  <code>docs/forms/submit.md</code>. El <code>submit</code> del
+                  agente responde cuando el formulario ya empezó de nuevo, así
+                  que un <code>read</code> justo después ve lo que el formulario
+                  tiene entonces.
                 </li>
                 <li>
                   ¿Por qué los mensajes de campo obligatorio salieron en inglés

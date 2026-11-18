@@ -76,13 +76,13 @@ async function submitHeldBack(page: Page): Promise<string[]> {
   return sent
 }
 
-/** That the control shows no option picked. */
-async function expectNothingPicked(page: Page, type: string) {
+/** That the control shows the option picked. */
+async function expectPicked(page: Page, type: string, label: string) {
   if (type === 'radio') {
-    await expect(page.getByRole('radio', { name: 'Lima' })).not.toBeChecked()
+    await expect(page.getByRole('radio', { name: label })).toBeChecked()
     return
   }
-  await expect(page.getByRole('combobox')).toHaveText('')
+  await expect(page.getByRole('combobox')).toHaveText(label)
 }
 
 async function pick(page: Page, type: string, label: string) {
@@ -207,8 +207,9 @@ test.describe('A value its written options do not offer @e2e', () => {
   })
 
   // A field that holds nothing, or what it offers, sends what it always sent:
-  // nothing picked, then Lima, then nothing again once the success emptied
-  // the form. A select sends `""` for nothing picked, a radio nothing at all.
+  // nothing picked, then Lima, then Lima again, since the form starts over
+  // from what the host still holds. A select sends `""` for nothing picked, a
+  // radio nothing at all.
   for (const [type, nothing] of [
     ['select', '{"city":""}'],
     ['radio', '{}'],
@@ -222,11 +223,11 @@ test.describe('A value its written options do not offer @e2e', () => {
       const sent = [await submitted(page)]
       await pick(page, type, 'Lima')
       sent.push(await submitted(page))
-      // A success empties the form before the next submit.
-      await expectNothingPicked(page, type)
+      // The success started the form over from what the host holds.
+      await expectPicked(page, type, 'Lima')
       sent.push(await submitted(page))
 
-      expect(sent).toEqual([nothing, '{"city":"lim"}', nothing])
+      expect(sent).toEqual([nothing, '{"city":"lim"}', '{"city":"lim"}'])
     })
   }
 })

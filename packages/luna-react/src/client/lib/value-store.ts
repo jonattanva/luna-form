@@ -4,7 +4,6 @@ import { createAtomStore } from './store-helper'
 const store = createAtomStore<unknown>()
 
 export const valueAtom = store.atom
-export const clearAllValueAtom = store.clearAll
 export const clearInputValueAtom = store.clear
 
 // What a `value` change event has delivered to each target, and what it still

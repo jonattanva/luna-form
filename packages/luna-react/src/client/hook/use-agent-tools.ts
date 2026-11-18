@@ -106,11 +106,21 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
   const waiting = useRef<((outcome: Submitted) => void) | null>(null)
   const initial = useRef<FormState | null>(null)
 
+  // A success held back until the form has started over. See `restart`.
+  const held = useRef<Submitted | null>(null)
+
   const settle = useCallback((outcome: Submitted) => {
+    held.current = null
     status.current = outcome
     waiting.current?.(outcome)
     waiting.current = null
   }, [])
+
+  const release = useCallback(() => {
+    if (held.current) {
+      settle(held.current)
+    }
+  }, [settle])
 
   const observe = useCallback(
     (state: FormState, isPending: boolean) => {
@@ -131,12 +141,13 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
     [settle]
   )
 
-  const onSuccess = useCallback(
-    (data: Record<string, unknown>) => {
-      settle({ data, status: 'success' })
-    },
-    [settle]
-  )
+  // A success starts the form over, so whoever waits for it is answered once
+  // the form has, and reads what the form holds then rather than a store about
+  // to be dropped or one its fields have not reported into yet. Until then the
+  // submission is still pending, and no other is sent into the form leaving.
+  const onSuccess = useCallback((data: Record<string, unknown>) => {
+    held.current = { data, status: 'success' }
+  }, [])
 
   // The outcome of the submission about to start.
   const wait = useCallback(
@@ -150,9 +161,22 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
 
   const getStatus = useCallback(() => status.current, [])
 
+  // The form started over: the state its action begins with is a new one,
+  // and no submission either. The last outcome stays, for an agent to read.
+  // Called as the form mounts anew, after its fields have, so a success held
+  // for it is told here.
+  const restart = useCallback(() => {
+    initial.current = null
+    release()
+  }, [release])
+
+  // A form taken off the page does not start over, and whoever waits is told
+  // all the same.
+  useEffect(() => release, [release])
+
   return useMemo(
-    () => ({ formRef, getStatus, observe, onSuccess, wait }),
-    [formRef, getStatus, observe, onSuccess, wait]
+    () => ({ formRef, getStatus, observe, onSuccess, restart, wait }),
+    [formRef, getStatus, observe, onSuccess, restart, wait]
   )
 }
 

@@ -261,8 +261,11 @@ function createFormHost(
   read: () => AgentForm,
   fields: ReadonlyMap<string, Field>
 ): FormToolsHost {
-  const { getHandles, store } = read()
-  const lists = () => store.get(mountedListsAtom)
+  // The store as the form holds it now: a success starts the form over on a
+  // new one, and the tools built before it go on reading and writing the form.
+  const { getHandles } = read()
+  const store = () => read().store
+  const lists = () => store().get(mountedListsAtom)
 
   return {
     apply: (name, value, options) =>
@@ -272,14 +275,14 @@ function createFormHost(
       if (!lists()[name]) {
         return false
       }
-      store.set(pendingListRowsAtom, {
-        ...store.get(pendingListRowsAtom),
+      store().set(pendingListRowsAtom, {
+        ...store().get(pendingListRowsAtom),
         [name]: rows.map((row) => ({ ...row })),
       })
       return true
     },
 
-    getErrors: () => store.get(inputErrorAtom),
+    getErrors: () => store().get(inputErrorAtom),
 
     getField: (name) => fields.get(name),
 
@@ -298,7 +301,7 @@ function createFormHost(
         : undefined
     },
 
-    getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store),
+    getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store()),
 
     resolve: (route) => translateRows(route, lists(), 'id'),
 
@@ -307,7 +310,7 @@ function createFormHost(
     read: (name) => {
       const mounted = lists()
       const list = mounted[name]
-      const values = store.get(valueAtom)
+      const values = store().get(valueAtom)
       return list
         ? composeListValue(name, list, { mounted, values }).map(toRow)
         : toToolValue(values[name])
@@ -321,7 +324,7 @@ function createFormHost(
       if (!submission || !form || signal.aborted) {
         return toSubmitStatus(
           { error: { title: 'The form is not on the page.' }, status: 'error' },
-          store
+          store()
         )
       }
 
@@ -329,7 +332,7 @@ function createFormHost(
       // Through the form's own submit button when it has one, so its `name`
       // and `value` are sent as they are when a person presses it.
       form.requestSubmit(findSubmitter(form))
-      return toSubmitStatus(await outcome, store)
+      return toSubmitStatus(await outcome, store())
     },
 
     validate: (names) => {
@@ -413,17 +416,20 @@ function declaredOptions(
 // Waits until nothing the form holds has changed for one step: the change
 // events a write runs, the fields they show or hide, and the rows a list takes.
 async function settle(
-  store: Store,
+  current: () => Store,
   getHandles: () => ReadonlyMap<string, FieldHandle>
 ) {
-  const read = () => [
-    store.get(valueAtom),
-    store.get(fieldStateAtom),
-    store.get(mountedListsAtom),
-    store.get(pendingListRowsAtom),
-    store.get(sourceAtom),
-    [...getHandles().keys()].join('\n'),
-  ]
+  const read = () => {
+    const store = current()
+    return [
+      store.get(valueAtom),
+      store.get(fieldStateAtom),
+      store.get(mountedListsAtom),
+      store.get(pendingListRowsAtom),
+      store.get(sourceAtom),
+      [...getHandles().keys()].join('\n'),
+    ]
+  }
 
   let last = read()
   for (let waited = 0; waited < SETTLE_LIMIT; waited += SETTLE_STEP) {
