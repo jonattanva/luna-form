@@ -304,3 +304,138 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     await expect(card).toBeEmpty()
   })
 })
+
+// A success that does not keep the values starts the form over: what the
+// definition gives it, or what the host still holds through `value`. Clearing
+// the values alone left a list with the rows it had, emptied, and a field the
+// host held blank.
+test.describe('The form after a successful submit', { tag: ['@e2e'] }, () => {
+  const form = JSON.stringify({
+    sections: [
+      {
+        fields: [
+          { label: 'Name', name: 'name', type: 'input/text' },
+          {
+            fields: [{ label: 'SKU', name: 'sku', type: 'input/text' }],
+            label: 'Items',
+            name: 'items',
+            type: 'list',
+          },
+        ],
+      },
+    ],
+  })
+
+  for (const [route, name, rows] of [
+    ['/', '', ['']],
+    ['/reactive', 'Ada', ['A1', 'B2']],
+  ] as const) {
+    test(`should start over on ${route}, a list with the rows it starts with`, async ({
+      page,
+    }) => {
+      await inject(page, form)
+      await page.goto(route)
+
+      await page.locator('input[name="name"]').fill('Ada')
+      await page.locator('input[name$=".sku"]').first().fill('A1')
+      await page.getByRole('button', { name: 'Add item' }).click()
+      await page.locator('input[name$=".sku"]').nth(1).fill('B2')
+      await page.getByRole('button', { name: 'Submit' }).click()
+      await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+      // `/` keeps nothing; `/reactive` holds what was reported, as a host
+      // that keeps the values does.
+      await expect(page.locator('input[name="name"]')).toHaveValue(name)
+      await expect(page.locator('input[name$=".sku"]')).toHaveCount(rows.length)
+      for (const [index, value] of rows.entries()) {
+        await expect(
+          page.locator('input[name$=".sku"]').nth(index)
+        ).toHaveValue(value)
+      }
+    })
+  }
+
+  test('should start blank for a host that clears its state on success', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({ ...JSON.parse(form), host: { clearOnSuccess: true } })
+    )
+    await page.goto('/reactive')
+
+    await page.locator('input[name="name"]').fill('Ada')
+    await page.locator('input[name$=".sku"]').first().fill('A1')
+    await page.getByRole('button', { name: 'Add item' }).click()
+    await page.locator('input[name$=".sku"]').nth(1).fill('B2')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+    await expect(page.locator('input[name="name"]')).toHaveValue('')
+    await expect(page.locator('input[name$=".sku"]')).toHaveCount(1)
+    await expect(page.locator('input[name$=".sku"]')).toHaveValue('')
+  })
+
+  test('should hide again what a change event revealed', async ({ page }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { hidden: false },
+                      target: 'company',
+                      when: 'business',
+                    },
+                  ],
+                },
+                label: 'Kind',
+                name: 'kind',
+                source: [
+                  { label: 'Personal', value: 'personal' },
+                  { label: 'Business', value: 'business' },
+                ],
+                type: 'radio',
+              },
+              {
+                hidden: true,
+                label: 'Company',
+                name: 'company',
+                type: 'input/text',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('/')
+
+    await page.getByRole('radio', { name: 'Business' }).click()
+    await page.locator('input[name="company"]').fill('Acme')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+    await expect(
+      page.getByRole('radio', { name: 'Business' })
+    ).not.toBeChecked()
+    await expect(page.locator('input[name="company"]')).toHaveCount(0)
+  })
+
+  test('should bring a keyboard user back to the submit button', async ({
+    page,
+  }) => {
+    await inject(page, form)
+    await page.goto('/')
+
+    await page.locator('input[name="name"]').fill('Ada')
+    await page.locator('input[name="name"]').press('Enter')
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+
+    await expect(page.getByRole('button', { name: 'Submit' })).toBeFocused()
+  })
+})

@@ -124,8 +124,10 @@ Offered when a field's options are not in the schema. Takes
 ### `<name>_submit`
 
 Submits the form as its submit button does: the same validation, action,
-pending state and reset. Answers `{ ok: true, data }` with what the action
-returned, `{ ok: false, error, errors }` when it failed, or
+pending state and start over (see [Submit](../forms/submit.md)). A success is
+answered once the form has started over, so a `<name>_read` right after it
+reads what the form holds then. Answers `{ ok: true, data }` with what the
+action returned, `{ ok: false, error, errors }` when it failed, or
 `{ pending: true }` when a submission is still running or the action takes
 more than 15 seconds; `<name>_read` gives the outcome later.
 

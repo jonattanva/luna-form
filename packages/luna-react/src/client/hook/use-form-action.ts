@@ -1,12 +1,10 @@
 import { useSetAtom, useStore } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
-import { clearAllValueAtom, valueAtom } from '../lib/value-store'
-import { requestFormReset } from 'react-dom'
+import { valueAtom } from '../lib/value-store'
 import {
   startTransition,
   useActionState,
   useCallback,
-  useRef,
   type FormEvent,
 } from 'react'
 import {
@@ -32,6 +30,9 @@ export type FormState<T> = {
 
 export type FormActionOptions<T> = {
   onSuccess?: (data: T) => void
+  // A success that does not keep the values starts the form over: whoever
+  // renders the form mounts it anew, on a store of its own. See `Form`.
+  onReset?: () => void
   preserveValues?: boolean
   translations?: Record<string, string>
   validation?: boolean
@@ -47,6 +48,7 @@ export function useFormState<T, F = Record<string, unknown>>(
   options?: FormActionOptions<T>
 ) {
   const {
+    onReset,
     onSuccess,
     preserveValues = false,
     validation = true,
@@ -55,10 +57,6 @@ export function useFormState<T, F = Record<string, unknown>>(
 
   const store = useStore()
   const setError = useSetAtom(reportErrorAtom)
-  const clearValues = useSetAtom(clearAllValueAtom)
-
-  // The form being submitted, so that a success can reset it. See `onSubmit`.
-  const formRef = useRef<HTMLFormElement | null>(null)
 
   const initialState: FormState<T> = {
     data: null,
@@ -126,12 +124,8 @@ export function useFormState<T, F = Record<string, unknown>>(
 
           onSuccess?.(result.data as T)
           if (!preserveValues) {
-            const submitted = formRef.current
             startTransition(() => {
-              clearValues()
-              if (submitted) {
-                requestFormReset(submitted)
-              }
+              onReset?.()
             })
           }
 
@@ -165,12 +159,11 @@ export function useFormState<T, F = Record<string, unknown>>(
   //
   // With the default prevented and a transition started here, React runs no
   // action of its own and resets nothing; it only shows the form as pending. A
-  // success still resets, above, where it clears the values.
+  // success starts the form over, above, through `onReset`.
   const onSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       const form = event.currentTarget
-      formRef.current = form
       const submitter = (event.nativeEvent as SubmitEvent).submitter
       const formData = new FormData(form, submitter)
       startTransition(() => {

@@ -332,33 +332,6 @@ describe('store-helper', () => {
     })
   })
 
-  describe('createAtomStore — clearAll', () => {
-    test('removes all keys from the store', () => {
-      const store = createStore()
-      const { atom: base, clearAll } = createAtomStore<string>()
-
-      store.set(createEntryAtom(base, 'a'), 'x')
-      store.set(createEntryAtom(base, 'b'), 'y')
-      expect(store.get(base)).toEqual({ a: 'x', b: 'y' })
-
-      store.set(clearAll)
-      expect(store.get(base)).toEqual({})
-    })
-
-    test('does not trigger a state update when store is already empty', () => {
-      const store = createStore()
-      const { atom: base, clearAll } = createAtomStore<string>()
-
-      let updates = 0
-      store.sub(base, () => {
-        updates++
-      })
-
-      store.set(clearAll)
-      expect(updates).toBe(0)
-    })
-  })
-
   describe('createAtomStore — bulkReport', () => {
     test('replaces the entire store with the provided value', () => {
       const store = createStore()

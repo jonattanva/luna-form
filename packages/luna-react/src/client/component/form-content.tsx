@@ -5,22 +5,38 @@ import { Input } from './input'
 import { Slot } from './slot/slot'
 import { VisibilityGuard } from './guard/visibility-guard'
 import { renderIfExists } from '../../lib/render-If-exists'
-import {
-  collectSourceTargets,
-  prepare,
-  resolveDictionary,
-} from '@luna-form/core'
+import { collectSourceTargets, prepare } from '@luna-form/core'
 import { useFormState, type FormState } from '../hook/use-form-action'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, type RefObject } from 'react'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useLatest } from '../hook/use-latest'
-import { useApplyRegistry } from '../hook/use-apply'
 import { useSchema } from '../hook/use-schema'
-import { useAgentTools, useSubmission } from '../hook/use-agent-tools'
-import { useSetAtom, useStore } from 'jotai'
+import { useSetAtom } from 'jotai'
 import type { AgentOptions } from '../lib/agent-tools'
+import type { FieldHandle } from '../hook/use-apply'
+import type { useSubmission } from '../hook/use-agent-tools'
 import type { Children, Config, Control } from '../../type'
-import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
+import type {
+  Definition,
+  Localization,
+  Nullable,
+  Sections,
+  ZodSchema,
+} from '@luna-form/core'
+
+/**
+ * What `Form` keeps across a start over, which the content of a form is handed
+ * rather than making: the `<form>`, the registry its fields' handles go into,
+ * and what the tools record of its submissions. `onReset` starts the form over
+ * after a success. See `Form`.
+ */
+export type StartOver = Readonly<{
+  formRef: RefObject<HTMLFormElement | null>
+  localization: Localization
+  onRegisterApply: (name: string, handle: FieldHandle) => () => void
+  onReset: () => void
+  submission: ReturnType<typeof useSubmission>
+}>
 
 export function FormContent<
   T extends Record<string, unknown> = Record<string, unknown>,
@@ -43,22 +59,15 @@ export function FormContent<
     sections: Sections
     translations?: Record<string, Record<string, string>>
     value?: Nullable<T>
-  }>
+  }> &
+    StartOver
 ) {
-  // Merging the built-ins allocates, so it is memoized: this identity is a
-  // dependency of the per-field schema memo, and a fresh object on every render
-  // would rebuild every field's schema on every keystroke.
-  const translations = useMemo(
-    () => resolveDictionary(props.lang, props.translations),
-    [props.lang, props.translations]
-  )
-
   // The language and the dictionary travel together to every field, as one
-  // object that keeps its identity while neither changes.
-  const localization = useMemo(
-    () => ({ lang: props.lang, translations }),
-    [props.lang, translations]
-  )
+  // object that keeps its identity while neither changes: the dictionary is a
+  // dependency of the per-field schema memo. Merged once, by `Form`, which
+  // hands the agent's tools the same one.
+  const { localization } = props
+  const translations = localization.translations
 
   // The fields whose options a `source` event installs, which no schema can
   // hold to the options their definition writes. Read off the same resolved
@@ -75,17 +84,13 @@ export function FormContent<
   )
 
   const [getSchema, getField, onRegister, onUnmount] = useSchema()
-  const [onRegisterApply, getHandles] = useApplyRegistry()
-
-  // The `<form>` and what its submit leaves, for an agent's tools to submit it
-  // as its button does. See `useAgentTools`.
-  const formRef = useRef<HTMLFormElement>(null)
-  const submission = useSubmission(formRef)
+  const { formRef, onRegisterApply, submission } = props
   const onSuccess = props.onSuccess
   const [action, state, isPending, onSubmit] = useFormState(
     getSchema,
     props.action,
     {
+      onReset: props.onReset,
       onSuccess: (data: T) => {
         submission.onSuccess(data)
         onSuccess?.(data)
@@ -95,23 +100,17 @@ export function FormContent<
     }
   )
 
+  // A form that has started over begins with an action state of its own,
+  // which is no submission, and has its fields mounted and reported: a success
+  // held for it is told now. Before `observe` is handed it. See
+  // `useSubmission`.
+  useEffect(() => {
+    submission.restart()
+  }, [submission])
+
   useEffect(() => {
     submission.observe(state, isPending)
   }, [isPending, state, submission])
-
-  const store = useStore()
-  useAgentTools({
-    agent: props.agent,
-    context: props.context,
-    definition: props.definition,
-    getHandles,
-    localization,
-    readOnly: props.readOnly,
-    sections: props.sections,
-    store,
-    submission: props.action ? submission : undefined,
-    types: props.config.agentTypes,
-  })
 
   const isShowingError =
     props.config.validation.showError && !state.success && state.error

@@ -37,8 +37,8 @@ On submit, in this order:
    so `rules.0.value` rebuilds the list — with the gaps of removed rows closed
    up.
 4. **Your `action` is awaited** with that object and the schema.
-5. **`onSuccess` is called** with what the action returned, and the form clears
-   itself.
+5. **`onSuccess` is called** with what the action returned, and the form starts
+   over.
 
 ## Only mounted fields are validated
 
@@ -80,7 +80,7 @@ rules rather than reconstructing them.
 
 Three ways it can end:
 
-- **`success: true`** — `onSuccess` receives `data`, and the form clears.
+- **`success: true`** — `onSuccess` receives `data`, and the form starts over.
 - **`success: false`** — the `error` you return is rendered by the form's
   [alert](../setup.md#style-alert-env), untouched. This is where a server-side
   failure ("that email is already registered") belongs.
@@ -89,14 +89,23 @@ Three ways it can end:
   a message for the user; return `success: false` for anything you want them to
   read.
 
-## The form empties on a successful submit
+## The form starts over on a successful submit
 
-Once the action succeeds the values are cleared and the inputs come back blank.
-For the usual "submit and move on" this is what you want, and for a form that
-should keep what was submitted it is a surprise.
+Once the action succeeds the form starts over, as when it first opened: every
+field and list mounts anew on a fresh store. A field comes back with its
+`defaultValue` or blank, a list with the rows it starts with, one by default,
+and a field a change event revealed is hidden again. A custom control and the
+form's `children` start from their own initial state too, and if the focus was
+in the form it moves to its submit button. For the usual "submit and move on"
+this is what you want, and for a form that should keep what was submitted it is
+a surprise.
 
 If the values have to survive, hold them outside the form: mirror
-`onValueChange` into your own state and feed it back through `value` — see
+`onValueChange` into your own state and feed it back through `value`. The form
+starts over from what `value` holds, so the fields and the rows come back as
+you kept them, and their change events run again for those values as they do
+when the form opens, a `source` fetch included. Clear your state in `onSuccess`
+to start blank instead. See
 [`withDeclaredFields`](../setup.md#withdeclaredfields) for the part that trips
 people, which is that a key you stop sending is not the same as a key you send
 empty.

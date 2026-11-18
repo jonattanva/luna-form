@@ -113,15 +113,6 @@ export function createContributionAtom<T>(
   )
 }
 
-function createClearAllAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
-  return atom(null, (get, set) => {
-    const current = get(baseAtom)
-    if (current && Object.keys(current).length > 0) {
-      set(baseAtom, {})
-    }
-  })
-}
-
 function createClearAtom<T>(baseAtom: PrimitiveAtom<Record<string, T>>) {
   return atom(null, (get, set, names: string[]) => {
     const current = get(baseAtom)
@@ -200,7 +191,6 @@ export function createAtomStore<T>(initialValue: Record<string, T> = {}) {
 
   return {
     atom: baseAtom,
-    clearAll: createClearAllAtom(baseAtom),
     clear: createClearAtom(baseAtom),
     bulkReport: createBulkReportAtom(baseAtom),
   }
