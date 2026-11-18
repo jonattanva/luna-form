@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794969968737,
+  "lastUpdate": 1794969991428,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "0cfb801099bf2d5d0aed5251220d2c0783497a45",
-          "message": "upgrade dependencie",
-          "timestamp": "2026-08-27T14:07:47-05:00",
-          "tree_id": "5532013d41ce7b3ab1bf8c9747e446237ae5d523",
-          "url": "https://github.com/jonattanva/luna-form/commit/0cfb801099bf2d5d0aed5251220d2c0783497a45"
-        },
-        "date": 1787857765719,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 296,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 652,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00fab0f66e87807ff1825a1f46900597c86c434c",
+          "message": "Merge pull request #156 from jonattanva/claude/agent-e2e\n\nAgent tools: end-to-end coverage with real WebMCP, and the before and after measurement",
+          "timestamp": "2026-11-17T21:45:28-05:00",
+          "tree_id": "0c29f31308b28a5e62935178a57a0c44e12f2bcd",
+          "url": "https://github.com/jonattanva/luna-form/commit/00fab0f66e87807ff1825a1f46900597c86c434c"
+        },
+        "date": 1794969991386,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 32.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 12.1,
             "unit": "ms"
           }
         ]
