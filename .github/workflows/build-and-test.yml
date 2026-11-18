@@ -292,6 +292,9 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Build project
         run: pnpm build
+      # The server writes to a file. Left on the step's output, it blocks once
+      # that step has ended and nobody reads the pipe, and every test after
+      # that times out.
       - name: Start application server
         run: |
           pnpm serve > server.log 2>&1 &
@@ -303,15 +306,18 @@ jobs:
           exit 1
       - name: Run e2e tests
         # Chromium also runs the WebMCP project, the same browser with the flag on.
-        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob,line --max-failures=3
+        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
-          path: |
-            blob-report/
-            server.log
-            test-results/
+          path: blob-report/
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: server-log-${{ matrix.browser }}-${{ matrix.shard }}
+          path: server.log
           retention-days: 1
   e2e-report:
     name: e2e-report
