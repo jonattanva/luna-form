@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795037883512,
+  "lastUpdate": 1795038194594,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "69b2eadbbcdb018d2890b7563210ec74f6b4f708",
-          "message": "Merge pull request #77 from jonattanva/chore/render-instrument\n\nchore(benchmark): keep the instrument that measured the render work",
-          "timestamp": "2026-09-11T15:41:39-05:00",
-          "tree_id": "8c3ce980edac440f9105f86ef43f6135eb7034ac",
-          "url": "https://github.com/jonattanva/luna-form/commit/69b2eadbbcdb018d2890b7563210ec74f6b4f708"
-        },
-        "date": 1789159384591,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 290,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 588,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "d57fe7eab473232acfe031354fa66eabfa771b19",
           "message": "Merge pull request #72 from jonattanva/fix/event-spec-flake\n\ntest(event): make the source and dismissal waits deterministic",
           "timestamp": "2026-09-12T09:54:48-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 18.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f09e431a87f49bbb0d5a9311ae8dc673544e0e65",
+          "message": "Merge pull request #168 from jonattanva/claude/agent-person-changed\n\nfeat(react): keep a fill from writing over what a person changed",
+          "timestamp": "2026-11-18T16:37:19-05:00",
+          "tree_id": "cdc15058f57c08dc8cb84b97e738ff20edeb8f20",
+          "url": "https://github.com/jonattanva/luna-form/commit/f09e431a87f49bbb0d5a9311ae8dc673544e0e65"
+        },
+        "date": 1795038194561,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 47.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.8,
             "unit": "ms"
           }
         ]
