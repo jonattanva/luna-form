@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795043271148,
+  "lastUpdate": 1795043301179,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "f1b8163db278d86c43844f02baaa85b8d50202e3",
-          "message": "Merge pull request #73 from jonattanva/refactor/keep-value-advanced\n\nrefactor(field): keepValue into advanced, plus input-core cleanups and the schema-per-render fix",
-          "timestamp": "2026-09-12T09:55:16-05:00",
-          "tree_id": "8f0758d28353b92dd4ab437abd27ca88c825cea0",
-          "url": "https://github.com/jonattanva/luna-form/commit/f1b8163db278d86c43844f02baaa85b8d50202e3"
-        },
-        "date": 1789225014593,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 289,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 556,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "72453b618e114132b8c80d1b81e994de9990b8a9",
           "message": "Merge pull request #75 from jonattanva/perf/atom-family-release\n\nperf: land #74, #75 and #76 -- a field renders when its own value moves",
           "timestamp": "2026-09-12T13:46:59-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 19.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f42bbb646244dab0a3b5036209ba07a38aad9c07",
+          "message": "Merge pull request #170 from jonattanva/claude/remote-options\n\nfeat(react): wait for the options a field fetches, and say what brings them",
+          "timestamp": "2026-11-18T18:06:53-05:00",
+          "tree_id": "6c2381b7d8e1bff353fd7d32d47705142494a5e6",
+          "url": "https://github.com/jonattanva/luna-form/commit/f42bbb646244dab0a3b5036209ba07a38aad9c07"
+        },
+        "date": 1795043301134,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 41.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.7,
             "unit": "ms"
           }
         ]
