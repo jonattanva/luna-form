@@ -70,13 +70,46 @@ export function useFormState<T, F = Record<string, unknown>>(
       formData: FormData
     ): Promise<FormState<T>> => {
       const [schemas, fields, options] = getSchema()
-
       const schema = buildSchema(schemas, fields, translations)
-      if (validation === false) {
-        if (action) {
-          return await action(formData as F, schema)
+
+      // What the action answers ends the submission the same way whether the
+      // form checked what it sends or not: a success is told and starts the
+      // form over, a failure is shown, and a throw is caught.
+      const answer = async (
+        run: NonNullable<typeof action>,
+        input: F,
+        sent: Nullable<T>
+      ): Promise<FormState<T>> => {
+        try {
+          const result = await run(input, schema)
+          if (!result.success) {
+            return failure(sent, result.error)
+          }
+
+          onSuccess?.(result.data as T)
+          if (!preserveValues) {
+            startTransition(() => {
+              onReset?.()
+            })
+          }
+
+          return success(sent, preserveValues)
+        } catch (error) {
+          logger.error('Error executing form action:', error)
+          return failure(sent, {
+            title: translateBuiltIn(
+              'An unexpected error occurred submitting the form.',
+              translations
+            ),
+            details: buildError(error, translations),
+          })
         }
-        return prevState
+      }
+
+      // Nothing checked: the action is handed the raw `FormData`, for a form
+      // whose action parses it itself. With no action there is nothing to do.
+      if (validation === false) {
+        return action ? answer(action, formData as F, null) : prevState
       }
 
       // A date leaves the schema as `yyyy-MM-dd` whatever the field showed, so
@@ -111,38 +144,14 @@ export function useFormState<T, F = Record<string, unknown>>(
         })
       }
 
+      if (!action) {
+        return success(validated.data as T, preserveValues)
+      }
+
       const unflattened = unflatten(
         validated.data as Record<string, unknown>
       ) as F & T
-
-      if (action) {
-        try {
-          const result = await action(unflattened as F, schema)
-          if (!result.success) {
-            return failure(unflattened as T, result.error)
-          }
-
-          onSuccess?.(result.data as T)
-          if (!preserveValues) {
-            startTransition(() => {
-              onReset?.()
-            })
-          }
-
-          return success(unflattened as T, preserveValues)
-        } catch (error) {
-          logger.error('Error executing form action:', error)
-          return failure(unflattened as T, {
-            title: translateBuiltIn(
-              'An unexpected error occurred submitting the form.',
-              translations
-            ),
-            details: buildError(error, translations),
-          })
-        }
-      }
-
-      return success(validated.data as T, preserveValues)
+      return answer(action, unflattened, unflattened)
     },
     initialState
   )

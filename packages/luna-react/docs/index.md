@@ -33,7 +33,7 @@ between the client and server `Form`.
 | Formatting an interpolated value as currency, a date or a duration           | [interpolation/format-filters.md](interpolation/format-filters.md) |
 | Letting an AI agent fill a form, or keeping a field from one                 | [agents/tools.md](agents/tools.md)                                 |
 
-## Three things that surprise people
+## Two things that surprise people
 
 Read the relevant page before writing the field, not after debugging it.
 
@@ -42,10 +42,6 @@ Read the relevant page before writing the field, not after debugging it.
   registered resolves to `undefined` and the field is skipped, on the server
   and on the client alike. No error, no placeholder — the field is simply
   absent from the form.
-- **`defineConfig({ validation })` replaces the defaults, it does not merge.**
-  Passing `{ change: false }` also turns off `blur`, `submit` and
-  `showError` — the form loses its error summary and nothing says why. Pass
-  every key you still want.
 - **A `change` event also runs at mount.** A field that arrives with a value or
   a `defaultValue` fires its `change` events once, so anything they reveal,
   clear or fetch happens before the user touches the form. See

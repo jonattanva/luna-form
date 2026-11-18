@@ -701,6 +701,35 @@ test.describe(
       })
     })
 
+    test('should answer the outcome of a submission that checks nothing', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        host: { validateOnSubmit: false },
+        sections: [
+          {
+            fields: [
+              {
+                label: 'Name',
+                name: 'name',
+                required: true,
+                type: 'input/text',
+              },
+            ],
+          },
+        ],
+      })
+
+      // Nothing stops it, and it ends: a second one is sent rather than
+      // answered pending.
+      for (let round = 0; round < 2; round++) {
+        expect(await call(page, 'preview_submit')).toMatchObject({ ok: true })
+        expect((await call(page, 'preview_read')).submit).toMatchObject({
+          status: 'success',
+        })
+      }
+    })
+
     test('should answer calls one at a time, and busy past ten waiting', async ({
       page,
     }) => {

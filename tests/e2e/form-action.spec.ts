@@ -376,6 +376,30 @@ test.describe('The form after a successful submit', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name$=".sku"]')).toHaveValue('')
   })
 
+  test('should end a submit that checks nothing as any other', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        ...JSON.parse(form),
+        host: { clearOnSuccess: true, validateOnSubmit: false },
+      })
+    )
+    await page.goto('/reactive')
+
+    await page.locator('input[name="name"]').fill('Ada')
+    await page.getByRole('button', { name: 'Add item' }).click()
+    await expect(page.locator('input[name$=".sku"]')).toHaveCount(2)
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    // `onSuccess` is called, and the form starts over from what the host
+    // holds then, which it cleared: the list is back to the row it starts with.
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    await expect(page.locator('input[name="name"]')).toHaveValue('')
+    await expect(page.locator('input[name$=".sku"]')).toHaveCount(1)
+  })
+
   test('should hide again what a change event revealed', async ({ page }) => {
     await inject(
       page,
