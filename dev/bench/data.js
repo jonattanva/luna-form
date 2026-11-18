@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795031609077,
+  "lastUpdate": 1795031633171,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "b2d522f8d428a498514a0108ee9c520067ff3def",
-          "message": "Merge pull request #78 from jonattanva/fix/example-remove-accent\n\nfix(example): ask for the accent transform by its name",
-          "timestamp": "2026-09-11T15:41:05-05:00",
-          "tree_id": "26290689c6ec4fc932374fd85fd17fc1dd0f2219",
-          "url": "https://github.com/jonattanva/luna-form/commit/b2d522f8d428a498514a0108ee9c520067ff3def"
-        },
-        "date": 1789159349169,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 275,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 525,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "69b2eadbbcdb018d2890b7563210ec74f6b4f708",
           "message": "Merge pull request #77 from jonattanva/chore/render-instrument\n\nchore(benchmark): keep the instrument that measured the render work",
           "timestamp": "2026-09-11T15:41:39-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 22.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b2903c76b3627c572f8a5b54a6fef5ea492be7d",
+          "message": "Merge pull request #167 from jonattanva/claude/value-change-source\n\nfeat(react): tell onValueChange who made each change",
+          "timestamp": "2026-11-18T14:52:28-05:00",
+          "tree_id": "edef8f01212df52521c72320ef3ec88aeb55caf3",
+          "url": "https://github.com/jonattanva/luna-form/commit/8b2903c76b3627c572f8a5b54a6fef5ea492be7d"
+        },
+        "date": 1795031633085,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 56.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.5,
             "unit": "ms"
           }
         ]
