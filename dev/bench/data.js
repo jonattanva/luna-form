@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795019482669,
+  "lastUpdate": 1795019507564,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "5ce408c867ec412485c2f5c4f883b13be11b7fef",
-          "message": "upgrade dependencie",
-          "timestamp": "2026-08-30T22:41:46-05:00",
-          "tree_id": "0b77b027d7ae3c2beeda72d758afd242ba6510ad",
-          "url": "https://github.com/jonattanva/luna-form/commit/5ce408c867ec412485c2f5c4f883b13be11b7fef"
-        },
-        "date": 1788147786030,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 610,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "bb094e4bf656d405a251c483e16155de5050109c",
           "message": "chore(deps): upgrade dependencies\n\nTwo of these are worth calling out.\n\n`vitest` goes from 4.1.11 to 5.0.0, a major, and the 700 unit tests pass on it\nunchanged.\n\n`@playwright/test` goes from 1.62.1 to 1.63.0, which pins new browser\nrevisions -- chromium 1243, firefox 1543, webkit 2359. A checkout that skips\n`pnpm exec playwright install` fails every e2e at launch with `Executable\ndoesn't exist`, which reads like a broken suite rather than a missing\ndownload.\n\nThe rest are patch or minor: next and eslint-config-next to 16.3.4,\n@base-ui/react to 1.8.0, typescript-eslint to 8.69.0, plus knip, lint-staged,\nglobals and the @types packages.\n\nVerified on the upgraded tree: 700 unit, 1566 e2e across chromium, firefox and\nwebkit, typescript, eslint and prettier.",
           "timestamp": "2026-09-07T09:29:26-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06152c6519556fed46e979489ba3cdf1603a6325",
+          "message": "Merge pull request #162 from jonattanva/claude/bundle-margin\n\nci: raise the bundle budgets to 400 kB total and 33 kB gzip on the main path, with the figures they guard",
+          "timestamp": "2026-11-18T11:30:40-05:00",
+          "tree_id": "c28a27ab9ce43fa079e7778485455a64c168bb7f",
+          "url": "https://github.com/jonattanva/luna-form/commit/06152c6519556fed46e979489ba3cdf1603a6325"
+        },
+        "date": 1795019507521,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 63.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.7,
             "unit": "ms"
           }
         ]
