@@ -123,7 +123,9 @@ it, or put it back, while the errors are showing.
 `defineConfig({ validation: { submit: false } })` skips the parse entirely. The
 action is called with the raw `FormData` and the schema, and nothing is checked,
 reported or cleared on the way — for a form whose action does its own parsing.
-With no action at all, submitting does nothing.
+What it returns ends the submit as it does with validation on: a success calls
+`onSuccess` and starts the form over, a failure shows its `error`, and a throw
+is caught. With no action at all, submitting does nothing.
 
 The other three keys are untouched by that: this object
 [merges into the defaults](../setup.md#validation), so a form that stops

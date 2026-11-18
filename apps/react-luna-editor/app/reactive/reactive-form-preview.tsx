@@ -110,21 +110,26 @@ export function ReactiveFormPreview() {
   // alone cannot reach them. The harness lifts them out of the injected JSON to
   // let a test set one -- `env` holds the values a label can interpolate and
   // `style` is the form-wide layout default, and nothing else here can vary
-  // either.
+  // either. `host.validateOnSubmit: false` turns the submit's parse off, for a
+  // host whose action reads the raw `FormData` itself.
   //
   // Memoized like `form`, and for the same reason: every field is memoized on
   // the config it is handed, so a new one on each keystroke -- this page sets
   // state on every one -- rendered every field of a form that declares either.
+  const unchecked = form.host?.validateOnSubmit === false
   const formConfig = useMemo(
     () =>
-      form.env || form.style
+      form.env || form.style || unchecked
         ? {
             ...config,
             ...(form.env ? { env: form.env } : {}),
             ...(form.style ? { style: form.style } : {}),
+            ...(unchecked
+              ? { validation: { ...config.validation, submit: false } }
+              : {}),
           }
         : config,
-    [form.env, form.style]
+    [form.env, form.style, unchecked]
   )
 
   const [values, setValues] = useState<Record<string, unknown>>(
