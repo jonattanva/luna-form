@@ -1184,8 +1184,22 @@ Resultados:
   - Con la CPU 20 veces más lenta, `main` fallaba 10 de 10 (`frequency`
     oculto, `card` bloqueado) y el cambio pasa 10 de 10, también a 40x. La
     e2e que lo cubre usa CDP y corre solo en Chromium (etiqueta `@chromium`).
-- [ ] Un envío con `validation.submit: false` no se resuelve para los tools: el
+- [x] Un envío con `validation.submit: false` no se resuelve para los tools: el
       estado queda en `pending` y `<name>_submit` no vuelve a enviar.
+  - Hecho el 2026-11-18. Ese camino devolvía lo que respondía la acción sin más:
+    ni `onSuccess` (el del host ni el de los tools), ni empezar de nuevo, ni
+    capturar un error lanzado. Ahora los dos caminos terminan igual. Sin
+    acción no había problema: los tools no reciben la submission.
+- [x] Acortar las descripciones de los tools, que pide la medición antes del
+      modo agrupado.
+  - Hecho el 2026-11-18: de 2326 a 2159 caracteres en un formulario de tres
+    campos con `<name>_options`, un 7 %. Ya eran cortas; lo que se podía quitar
+    era lo que el modelo necesita (cuándo `ok` es falso, el valor final, el
+    timeout de un envío que sigue corriendo). Los esquemas de salida pesan más
+    (2415 caracteres) y son el recorte que queda.
+  - Con `validation.submit: false`, `<name>_fill` ya no nombra los campos que
+    el envío necesita y `<name>_submit` dice que los valores van sin revisar.
+    Las notas de cada campo siguen describiendo las reglas del formulario.
 
 ### Fase 3: endurecimiento
 

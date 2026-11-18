@@ -88,6 +88,8 @@ export type AgentForm = Readonly<{
   submission?: Submission
   // The schema each custom type declares for agents. See `defineCustomInput`.
   types?: Readonly<Record<string, ToolSchema>>
+  // Whether a submit checks the values: `validation.submit`.
+  validates?: boolean
 }>
 
 // How long the form is given to settle after a round of writes: until nothing
@@ -212,12 +214,19 @@ function createAgentTools(
   const queue = options.queue ?? createQueue()
 
   return {
-    key: JSON.stringify([agent.name, agent.description, agent.submit, built]),
+    key: JSON.stringify([
+      agent.name,
+      agent.description,
+      agent.submit,
+      form.validates !== false,
+      built,
+    ]),
     queue,
     tools: createFormTools(agent, built, host, {
       declared: new Set(Object.keys(form.types ?? {})),
       queue,
       signal: options.signal,
+      validates: form.validates,
     }),
   }
 }

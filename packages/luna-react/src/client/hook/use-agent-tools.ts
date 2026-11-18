@@ -297,6 +297,7 @@ export function useAgentTools(form: AgentForm) {
   const { context, definition, localization, sections } = form
   const description = form.agent?.description
   const submit = form.agent?.submit
+  const validates = form.validates
   // By content: a host that defines its config in a component makes the
   // record anew on every render.
   const types = JSON.stringify(form.types ?? null)
@@ -326,5 +327,6 @@ export function useAgentTools(form: AgentForm) {
     sections,
     submit,
     types,
+    validates,
   ])
 }

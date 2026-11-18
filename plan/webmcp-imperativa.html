@@ -3374,11 +3374,44 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Un envío con <code>validation.submit: false</code> no se
                   resuelve para los tools: el estado queda en
                   <code>pending</code> y <code>&lt;name&gt;_submit</code> no
                   vuelve a enviar.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18. Ese camino devolvía lo que respondía
+                      la acción sin más: ni <code>onSuccess</code> (el del host
+                      ni el de los tools), ni empezar de nuevo, ni capturar un
+                      error lanzado. Ahora los dos caminos terminan igual. Sin
+                      acción no había problema: los tools no reciben la
+                      submission.
+                    </li>
+                  </ul>
+                </li>
+                <li class="done">
+                  Acortar las descripciones de los tools, que pide la medición
+                  antes del modo agrupado.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18: de 2326 a 2159 caracteres en un
+                      formulario de tres campos con
+                      <code>&lt;name&gt;_options</code>, un 7 %. Ya eran cortas;
+                      lo que se podía quitar era lo que el modelo necesita
+                      (cuándo <code>ok</code> es falso, el valor final, el
+                      timeout de un envío que sigue corriendo). Los esquemas de
+                      salida pesan más (2415 caracteres) y son el recorte que
+                      queda.
+                    </li>
+                    <li>
+                      Con <code>validation.submit: false</code>,
+                      <code>&lt;name&gt;_fill</code> ya no nombra los campos que
+                      el envío necesita y <code>&lt;name&gt;_submit</code> dice
+                      que los valores van sin revisar. Las notas de cada campo
+                      siguen describiendo las reglas del formulario.
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>
