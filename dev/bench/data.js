@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795006339519,
+  "lastUpdate": 1795006359141,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "ddfd39bee89554e8a2fb274a922199123b16373f",
-          "message": "Merge pull request #69 from jonattanva/docs/form-contract-and-style-fixes\n\ndocs: document the form contract around the fields, and fix two config keys it exposed",
-          "timestamp": "2026-08-30T00:39:52-05:00",
-          "tree_id": "d2d6e26e04acaef29dadd3493ccd591dcfa760bf",
-          "url": "https://github.com/jonattanva/luna-form/commit/ddfd39bee89554e8a2fb274a922199123b16373f"
-        },
-        "date": 1788068473784,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 271,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 613,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 17.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8781a671c1bc2a83d5639a29b858f358bc942e82",
+          "message": "Merge pull request #160 from jonattanva/claude/close-phase-1\n\ndocs(plan): close phase 1 with the acceptance criteria met and what moves on to phases 2 and 3",
+          "timestamp": "2026-11-18T07:51:50-05:00",
+          "tree_id": "fa59f31bc8e92b0366c7bcb79b78736a3504100e",
+          "url": "https://github.com/jonattanva/luna-form/commit/8781a671c1bc2a83d5639a29b858f358bc942e82"
+        },
+        "date": 1795006359105,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 31,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 11.7,
             "unit": "ms"
           }
         ]
