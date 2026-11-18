@@ -126,6 +126,13 @@ export type FormToolsHost = Readonly<{
   getOptions: (path: string, name?: string) => readonly Option[] | undefined
   /** `undefined` while the field is not on the form. */
   getStatus: (name: string) => FieldStatus | undefined
+  /**
+   * Whether the form already shows or unlocks a field that the page has not
+   * drawn so yet, or has handed a list rows it has not drawn: a change event
+   * writes what it decides at once, and React draws it when it can, later on
+   * a busy page. `path` is how the schema names it, as in `getOptions`.
+   */
+  isDrawing: (name: string, path: string) => boolean
   getSubmit: () => SubmitStatus
   /**
    * The name a row's leaf has in the form, from its route by position:
@@ -203,6 +210,10 @@ const NAME = /^[A-Za-z0-9_-]{1,56}$/
 
 // How many rounds a fill writes the fields that appear as it writes.
 const PASSES = 5
+// How many more it waits, without writing, for the page to draw a field the
+// form already shows or unlocks: at least two seconds of the form's quiet
+// steps.
+const DRAW_ROUNDS = 40
 // How many options a message lists, and how many a search returns.
 const LISTED_OPTIONS = 25
 const FOUND_OPTIONS = 50
@@ -599,20 +610,37 @@ export function createFormTools(
     // written is, the form settles, and what became writable is written next.
     // A route into a list waits for a round after the list itself, when the
     // same call sends it: the rows it gives replace the ones there were.
-    for (let pass = 0; pass < PASSES && pending.size > 0; pass++) {
+    //
+    // A round in which a field it waits for is being drawn does not count as
+    // a pass, and does not end the fill when it wrote nothing: how long React
+    // takes to draw it is not the form's doing.
+    let drawn = 0
+    for (let pass = 0; pass < PASSES + drawn && pending.size > 0; pass++) {
       if (isAborted(callSignal)) {
         break
       }
 
       let tried = false
+      let drawing = false
       const lists = new Set<string>()
       for (const [name, entry] of pending) {
         if (entry.list && (pending.has(entry.list) || lists.has(entry.list))) {
           continue
         }
 
+        // A route is read against the rows the list has drawn: while it has
+        // rows still to draw, the route would land in one about to be replaced.
+        if (entry.list && host.isDrawing(entry.list, entry.list)) {
+          drawing = true
+          continue
+        }
+
         const { status, target } = placeOf(name, entry)
-        if (target === undefined || !status || status.hidden || status.locked) {
+        if (target === undefined) {
+          continue
+        }
+        if (!status || status.hidden || status.locked) {
+          drawing ||= host.isDrawing(target, entry.path)
           continue
         }
 
@@ -651,7 +679,9 @@ export function createFormTools(
         }
       }
 
-      if (!tried) {
+      if (drawing && drawn < DRAW_ROUNDS) {
+        drawn++
+      } else if (!tried) {
         break
       }
       await host.settle()

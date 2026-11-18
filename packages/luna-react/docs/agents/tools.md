@@ -49,7 +49,9 @@ page or `listTools()` or `callTool()` is called.
 Takes the values to write, keyed by field name, in the formats the schema
 gives. A field left out keeps its value. It writes in the order the form shows
 the fields, and in rounds: a field that another value of the same call shows
-or unlocks is written once it is. Each value is checked when it is written;
+or unlocks is written once it is. On a busy page it waits for that field to be
+drawn, up to about two seconds, so a `hidden` or `locked` skip there can mean
+the page did not draw it in time. Each value is checked when it is written;
 the field validates them all once, at the end, and shows the errors as leaving
 a field does.
 

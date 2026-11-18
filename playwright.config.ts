@@ -42,14 +42,16 @@ export default defineConfig({
         launchOptions: { args: ['--enable-features=WebMCPTesting'] },
       },
     },
+    // `@chromium` is for a test that needs what only Chromium offers, such as
+    // slowing the CPU down through the DevTools protocol.
     {
       name: 'firefox',
-      grepInvert: /@webmcp/,
+      grepInvert: /@webmcp|@chromium/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      grepInvert: /@webmcp/,
+      grepInvert: /@webmcp|@chromium/,
       use: { ...devices['Desktop Safari'] },
     },
   ],
