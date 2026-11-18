@@ -111,11 +111,8 @@ type Setup = Readonly<{
   refuses?: readonly string[]
   // Fields whose options are still on their way.
   unloaded?: readonly string[]
-  // The fields whose change brings a field's options, by the field: one
-  // named here has no request of its own out for them.
-  from?: Readonly<Record<string, readonly string[]>>
-  // Fields disabled, which fetch no options.
-  disabled?: readonly string[]
+  // Fields with a request out for their options, until they arrive.
+  fetching?: readonly string[]
   // A locked field that another one unlocks when it holds a value.
   unlocks?: Readonly<Record<string, Readonly<{ target: string; when: string }>>>
   // What a field's value writes into another one, as a `value` event does.
@@ -261,16 +258,16 @@ function createForm(setup: Setup = {}) {
     getStatus: (name): FieldStatus | undefined =>
       absent.has(name)
         ? undefined
-        : { hidden: false, locked: locked.has(name) },
+        : {
+            fetching:
+              setup.fetching?.includes(name) === true && !options.has(name),
+            hidden: false,
+            locked: locked.has(name),
+          },
     getSubmit: () => submitted,
     isChanged: (name) => changed.has(name),
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
-    optionsFrom: (path) => ({
-      disabled: setup.disabled?.includes(path) === true,
-      fetching: setup.from?.[path] === undefined,
-      from: setup.from?.[path] ?? [],
-    }),
     read: (name) => values.get(name),
     resolve: (route) => (leafOf(route) ? route : undefined),
     seen: (names) => {
@@ -1572,7 +1569,10 @@ describe('createFormTools', () => {
     })
 
     test('should wait for the options a field is loading', async () => {
-      const { options, tools } = toolsOf({ unloaded: ['zone'] })
+      const { options, tools } = toolsOf({
+        fetching: ['zone'],
+        unloaded: ['zone'],
+      })
       const answer = call(tools, 'options', { field: 'zone', text: 'zone 59' })
       options.set('zone', ZONES)
 
@@ -1583,22 +1583,48 @@ describe('createFormTools', () => {
       const ask = async (setup: Setup) =>
         (await call(toolsOf(setup).tools, 'options', { field: 'zone' })).message
 
-      expect(
-        await ask({ from: { zone: ['country'] }, unloaded: ['zone'] })
-      ).toBe('Its options come from country: fill it first, then ask again.')
       expect(await ask({ absent: ['zone'], unloaded: ['zone'] })).toBe(
         'The field is not on the form: fill what shows it first, then ask again.'
       )
-      expect(await ask({ disabled: ['zone'], unloaded: ['zone'] })).toBe(
-        'The field is disabled, so its options are not fetched.'
+      expect(await ask({ locked: ['zone'], unloaded: ['zone'] })).toBe(
+        'The field is disabled or read-only.'
       )
 
       vi.useFakeTimers()
-      const answer = ask({ unloaded: ['zone'] })
+      const answer = ask({ fetching: ['zone'], unloaded: ['zone'] })
       await vi.advanceTimersByTimeAsync(5_000)
-      expect(await answer).toBe(
-        'Its options did not arrive within 5 seconds: ask again later.'
+      expect(await answer).toBe('Its options did not arrive: ask again later.')
+    })
+
+    test('should name the field whose change brings the options', async () => {
+      const fields: Fields = [
+        {
+          event: {
+            change: [
+              {
+                action: 'source',
+                source: { url: '/api/zones?country={value}' },
+                target: 'zone',
+              },
+            ],
+          },
+          name: 'country',
+          source: COUNTRIES,
+          type: 'select',
+        },
+        { name: 'zone', type: 'select' },
+      ]
+      const tools = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        createForm({ unloaded: ['zone'] }).host
       )
+
+      expect(await call(tools, 'options', { field: 'zone' })).toEqual({
+        items: [],
+        message:
+          'Its options come from country: fill it first, then ask again.',
+      })
     })
 
     test('should answer unknown for a field without options or left out of the tools', async () => {

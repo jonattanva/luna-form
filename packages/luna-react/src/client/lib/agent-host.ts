@@ -18,13 +18,9 @@ import {
   isColumn,
   isList,
   isObject,
-  isOptions,
   isSelectTimezone,
-  isInterpolated,
   isString,
-  isTargetOf,
   logger,
-  mergeSource,
   prepare,
   translateBuiltIn,
   type Definition,
@@ -330,50 +326,18 @@ function createFormHost(
       (name === undefined ? undefined : getHandles().get(name)?.options()) ??
       declaredOptions(fields.get(path), read()),
 
-    // As the field reads its source: what a `source` event installed, or
-    // its own, fetched once its URL holds no placeholder. See `useFetch`.
-    optionsFrom: (path, name) => {
-      const field = fields.get(path)
-      const state =
-        name === undefined ? undefined : store().get(fieldStateAtom)[name]
-      const installed = Object.values(
-        (name === undefined ? undefined : store().get(sourceAtom)[name]) ?? {}
-      )
-      const source =
-        installed.length > 0
-          ? mergeSource(installed)
-          : field && isOptions(field)
-            ? field.source
-            : undefined
-      return {
-        disabled: state?.disabled ?? field?.disabled === true,
-        fetching:
-          isObject(source) &&
-          !Array.isArray(source) &&
-          isString(source.url) &&
-          !isInterpolated(source.url),
-        from:
-          installed.length > 0
-            ? []
-            : [...fields].flatMap(([sourceName, each]) =>
-                each.event?.change?.some(
-                  (event) =>
-                    event.action === 'source' && isTargetOf(path, event.target)
-                )
-                  ? [sourceName]
-                  : []
-              ),
-      }
-    },
-
     // A field hidden is not mounted, and has no handle to ask.
     getStatus: (name) => {
       const handle = getHandles().get(name)
       if (handle) {
-        return { hidden: false, locked: handle.isLocked() }
+        return {
+          fetching: handle.isFetching(),
+          hidden: false,
+          locked: handle.isLocked(),
+        }
       }
       return lists()[name]
-        ? { hidden: false, locked: read().readOnly === true }
+        ? { fetching: false, hidden: false, locked: read().readOnly === true }
         : undefined
     },
 

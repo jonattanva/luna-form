@@ -131,9 +131,10 @@ waits up to five seconds for the field's own request, and asks for nothing
 itself, so the request keeps to
 [`remotePatterns`](../setup.md#fetcherremotepatterns), the source's headers
 and its cache. When there are none to wait for, `items` is empty and `message`
-says why: the field is hidden or disabled, or its options come from another
-field's [`source` event](../events/change.md#3-source-action-sourceevent),
-named so the agent fills it first.
+says why: the field is hidden, disabled or read-only, or its options come from
+another field's
+[`source` event](../events/change.md#3-source-action-sourceevent), named so
+the agent fills it first.
 
 ### `<name>_submit`
 

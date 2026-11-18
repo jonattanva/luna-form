@@ -1200,7 +1200,7 @@ Resultados:
     solo `withDeclaredFields`).
   - El total sigue atrapando una dependencia empaquetada por error, que suma
     cientos de kB, y cada presupuesto deja lugar para unos cuantos cambios.
-  - El 2026-11-18, con las opciones remotas, el chunk de los tools llegó a 12.3
+  - El 2026-11-18, con las opciones remotas, el chunk de los tools llegó a 12.1
     kB gzip y su presupuesto sube a 14: solo se descarga cuando hay un agente,
     y deja lugar para los ítems que quedan.
 - [x] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
