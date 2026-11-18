@@ -23,28 +23,3 @@ export function getModelContext(): ModelContext | undefined {
   }
   return (document as Document & { modelContext?: ModelContext }).modelContext
 }
-
-/**
- * Registers each tool until `signal` is aborted. A page that turned tools off
- * (`NotAllowedError`) and a form gone before its tools were in (`AbortError`)
- * are no fault of the form; anything else is reported, and the form goes on
- * without that tool.
- */
-export function registerTools(
-  modelContext: ModelContext,
-  tools: readonly Tool[],
-  signal: AbortSignal,
-  report: (tool: Tool, error: Error) => void
-) {
-  for (const tool of tools) {
-    // A browser on an older draft returns nothing or throws instead of
-    // rejecting, so both end up in the same `catch`.
-    Promise.resolve()
-      .then(() => modelContext.registerTool(tool, { signal }))
-      .catch((error: Error) => {
-        if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-          report(tool, error)
-        }
-      })
-  }
-}

@@ -1165,8 +1165,11 @@ function checkValue(
   value: ToolJson,
   check: Check
 ): Checked {
+  // `null` empties the field, which its bounds do not speak to.
   const checked = checkShape(schema, value, check)
-  return checked.ok && check.declared ? checkDeclared(schema, checked) : checked
+  return checked.ok && check.declared && value !== null
+    ? checkDeclared(schema, checked)
+    : checked
 }
 
 // A value against the bounds a declared schema gives, which the tools are the
@@ -1183,10 +1186,15 @@ function checkDeclared(
   const value = checked.held.value
   const { maxLength, maximum, minItems, minLength, minimum, pattern } = schema
 
+  // A number a built-in number field is handed as the text it would type.
+  const number =
+    schema.type === 'integer' || schema.type === 'number'
+      ? Number(value)
+      : undefined
   if (
-    typeof value === 'number' &&
-    ((minimum !== undefined && value < minimum) ||
-      (maximum !== undefined && value > maximum))
+    number !== undefined &&
+    ((minimum !== undefined && number < minimum) ||
+      (maximum !== undefined && number > maximum))
   ) {
     const kind = schema.type === 'integer' ? 'a whole number' : 'a number'
     const from = minimum === undefined ? '' : ` from ${minimum}`
@@ -1194,7 +1202,7 @@ function checkDeclared(
     return rejected('invalid_option', `Expected ${kind}${from}${to}.`)
   }
 
-  if (isString(value)) {
+  if (isString(value) && schema.type === 'string') {
     if (
       (minLength !== undefined && value.length < minLength) ||
       (maxLength !== undefined && value.length > maxLength)

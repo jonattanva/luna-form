@@ -1,15 +1,19 @@
-import { getModelContext, registerTools } from '../lib/model-context'
+import { getModelContext } from '../lib/model-context'
 import { logger, type FormStateError, type Nullable } from '@luna-form/core'
 import { useCallback, useEffect, useMemo, useRef, type RefObject } from 'react'
 import { useLatest } from './use-latest'
-import type { AgentForm, Submitted } from '../lib/agent-host'
+import type { AgentForm, AgentRuntime, Submitted } from '../lib/agent-host'
 import type {
-  Queue,
   Tool,
   ToolDefinition,
   ToolJson,
   ToolResult,
 } from '../lib/agent-tools'
+
+// What lives here is what every form pays for: the page's registry, the two
+// functions that read it, and what a form records of its submissions. What
+// builds and registers the tools is loaded the first time they are needed.
+// See `createAgentRuntime`.
 
 // A form on the page offered to agents: its name, its tools, built when
 // someone first asks for them, and what to do when it becomes the form that
@@ -32,6 +36,12 @@ function answersToItsName(entry: PageEntry): boolean {
     }
   }
   return false
+}
+
+// A build that failed where nothing waits for it: the form goes on without
+// its tools, and the next one tries again.
+function report(error: Error) {
+  logger.warn('The agent tools of a form could not be built.', error)
 }
 
 // How long a form waits after its definition changes before it builds its
@@ -82,8 +92,8 @@ type FormState = Readonly<{
 }>
 
 /**
- * How the tools submit the form and hear how it went: through the `<form>` on
- * the page, as its submit button does, and from what its action leaves.
+ * What a form records of its submissions, for the tools to submit it and hear
+ * how it went: the last outcome, and whoever waits for the next one.
  *
  * Made before the form's action state, so that `onSuccess` -- called with what
  * the action returned, which the state a success leaves does not keep -- can
@@ -128,48 +138,22 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
     [settle]
   )
 
-  const submit = useCallback(
-    (signal: AbortSignal) =>
+  // The outcome of the submission about to start.
+  const wait = useCallback(
+    () =>
       new Promise<Submitted>((resolve) => {
-        const form = formRef.current
-        if (!form || signal.aborted) {
-          resolve({
-            error: { title: 'The form is not on the page.' },
-            status: 'error',
-          })
-          return
-        }
-
         waiting.current = resolve
         status.current = { status: 'pending' }
-        // Through the form's own submit button when it has one, so its `name`
-        // and `value` are sent as they are when a person presses it.
-        form.requestSubmit(findSubmitter(form))
       }),
-    [formRef]
+    []
   )
 
   const getStatus = useCallback(() => status.current, [])
 
   return useMemo(
-    () => ({ getStatus, observe, onSuccess, submit }),
-    [getStatus, observe, onSuccess, submit]
+    () => ({ formRef, getStatus, observe, onSuccess, wait }),
+    [formRef, getStatus, observe, onSuccess, wait]
   )
-}
-
-function findSubmitter(
-  form: HTMLFormElement
-): HTMLButtonElement | HTMLInputElement | undefined {
-  for (const element of form.elements) {
-    if (
-      (element instanceof HTMLButtonElement ||
-        element instanceof HTMLInputElement) &&
-      element.type === 'submit'
-    ) {
-      return element
-    }
-  }
-  return undefined
 }
 
 /**
@@ -184,78 +168,15 @@ function findSubmitter(
 export function useAgentTools(form: AgentForm) {
   const latest = useLatest(form)
 
-  // While the form is on the page under its name: the signal of its life,
-  // which takes down every tool built for it and refuses what `allow` was
-  // still being asked, and the queue every one of them shares.
-  const life = useRef<{
-    controller: AbortController
-    entry: PageEntry
-    queue?: Queue
-  } | null>(null)
+  // The form on the page under its name, while it is.
+  const entry = useRef<PageEntry | null>(null)
 
-  // The tools built last, what tells whether a build would give the same ones,
-  // and the signal that unregisters them.
-  const current = useRef<{
-    key: string
-    registration: AbortController
-    tools: readonly Tool[]
-  } | null>(null)
-
-  const build = useCallback(async (): Promise<readonly Tool[]> => {
-    const owner = life.current
-    if (!owner || !answersToItsName(owner.entry)) {
-      return []
-    }
-
-    const { createAgentTools } = await import('../lib/agent-host')
-
-    // Gone, or replaced by a remount, while the module loaded.
-    if (life.current !== owner) {
-      return []
-    }
-
-    const built = createAgentTools(() => latest.current, {
-      queue: owner.queue,
-      signal: owner.controller.signal,
-    })
-    owner.queue = built.queue
-
-    if (current.current?.key === built.key) {
-      return current.current.tools
-    }
-
-    current.current?.registration.abort()
-    const registration = new AbortController()
-    owner.controller.signal.addEventListener(
-      'abort',
-      () => registration.abort(),
-      { once: true }
-    )
-    current.current = { key: built.key, registration, tools: built.tools }
-
-    const modelContext = getModelContext()
-    if (modelContext) {
-      registerTools(
-        modelContext,
-        built.tools,
-        registration.signal,
-        (tool, error) =>
-          logger.warn(`The tool ${tool.name} was not registered.`, error)
-      )
-    }
-    return built.tools
-  }, [latest])
-
-  // Built afresh when the definition changed since, and handed out as they are
-  // otherwise.
+  // Whether the definition changed since the tools were last built.
   const stale = useRef(true)
-  const load = useCallback(async () => {
-    if (!stale.current && current.current) {
-      return current.current.tools
-    }
-    stale.current = false
-    return build()
-  }, [build])
+
+  // Whether the tools were built since the form took its name, which is when
+  // a change to the definition waits a pause before they are built again.
+  const built = useRef(false)
 
   const name = form.agent?.name
   useEffect(() => {
@@ -263,12 +184,45 @@ export function useAgentTools(form: AgentForm) {
       return
     }
 
-    const entry: PageEntry = {
-      load,
+    // What builds and registers the tools for this form while it is on the
+    // page, loaded the first time it is needed. A load that failed is tried
+    // again the next time.
+    let runtime: Promise<AgentRuntime> | undefined
+    let loaded: AgentRuntime | undefined
+
+    const mounted: PageEntry = {
+      load: async () => {
+        if (!answersToItsName(mounted)) {
+          return []
+        }
+
+        runtime ??= import('../lib/agent-host').then(
+          ({ createAgentRuntime }) => {
+            loaded = createAgentRuntime(() => latest.current)
+            return loaded
+          },
+          (error: Error) => {
+            runtime = undefined
+            throw error
+          }
+        )
+        const ready = await runtime
+
+        // Gone while the module loaded.
+        if (!page.has(mounted)) {
+          return []
+        }
+
+        // Fresh until a build succeeds: one that throws is built again.
+        const tools = ready.load(stale.current)
+        stale.current = false
+        built.current = true
+        return tools
+      },
       name,
       wake: () => {
         if (getModelContext()) {
-          void load()
+          void mounted.load().catch(report)
         }
       },
     }
@@ -282,16 +236,23 @@ export function useAgentTools(form: AgentForm) {
       }
     }
 
-    const owner = { controller: new AbortController(), entry }
-    life.current = owner
     stale.current = true
-    page.add(entry)
+    built.current = false
+    entry.current = mounted
+    page.add(mounted)
 
     return () => {
-      page.delete(entry)
-      owner.controller.abort()
-      life.current = null
-      current.current = null
+      page.delete(mounted)
+      entry.current = null
+      built.current = false
+
+      // At once when the module is here, so nothing registered outlives the
+      // form, and the next form under its name registers after it.
+      if (loaded) {
+        loaded.dispose()
+      } else {
+        void runtime?.then((ready) => ready.dispose()).catch(report)
+      }
 
       for (const other of page) {
         if (other.name === name) {
@@ -300,7 +261,7 @@ export function useAgentTools(form: AgentForm) {
         }
       }
     }
-  }, [load, name])
+  }, [latest, name])
 
   // What the tools are built from. With WebMCP on the page they are built and
   // registered on mount, and again a pause after it changes; without it, the
@@ -310,11 +271,11 @@ export function useAgentTools(form: AgentForm) {
   // object inline, new on every render. `allow` and `readOnly` are read when
   // they are needed.
   const { context, definition, localization, sections } = form
+  const description = form.agent?.description
+  const submit = form.agent?.submit
   // By content: a host that defines its config in a component makes the
   // record anew on every render.
   const types = JSON.stringify(form.types ?? null)
-  const description = form.agent?.description
-  const submit = form.agent?.submit
   useEffect(() => {
     if (!name) {
       return
@@ -327,16 +288,15 @@ export function useAgentTools(form: AgentForm) {
 
     const timer = setTimeout(
       () => {
-        void load()
+        void entry.current?.load().catch(report)
       },
-      current.current ? REBUILD_DELAY : 0
+      built.current ? REBUILD_DELAY : 0
     )
     return () => clearTimeout(timer)
   }, [
     context,
     definition,
     description,
-    load,
     localization,
     name,
     sections,
