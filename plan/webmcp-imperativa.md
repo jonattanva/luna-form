@@ -1148,8 +1148,11 @@ Resultados:
     que llena otro campo o un `state` que oculta uno y lo vacía, llega como
     `event`. Agregar o quitar una fila con los botones es `user`.
   - Los tipos `ValueChange` y `ValueSource` se exportan con el `Form`.
-- [ ] Un registro opcional de llamadas, para auditar lo que el agente pidió y
+- [x] Un registro opcional de llamadas, para auditar lo que el agente pidió y
       lo que se le respondió, también lo que no escribió nada.
+  - Hecho el 2026-11-18: `agent.onCall` recibe cada llamada al responderse,
+    con `tool`, `input`, `output` y `duration`, también las rechazadas,
+    canceladas o `busy`. Lo que lanza se registra y no cambia la respuesta.
 - [x] Persona y agente a la vez: el código `changed` (3.14).
   - Hecho el 2026-11-18, con la revisión implícita en vez de `revision`.
   - El formulario anota lo que cambia una persona: lo que escribe en un campo

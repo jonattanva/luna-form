@@ -5,6 +5,7 @@ export { withDeclaredFields } from './lib/with-declared-fields'
 export { callTool, listTools } from './hook/use-agent-tools'
 export type {
   AgentCall,
+  AgentCallRecord,
   AgentOptions,
   ToolDefinition,
   ToolJson,

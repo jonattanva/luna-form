@@ -228,6 +228,7 @@ function createAgentTools(
       const allow = read().agent?.allow
       return allow ? allow(call, allowOptions) : true
     },
+    onCall: (call) => read().agent?.onCall?.(call),
   }
 
   const host = createFormHost(

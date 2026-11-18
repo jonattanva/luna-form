@@ -19,8 +19,10 @@ import { useEffect, useMemo, useState } from 'react'
 
 declare global {
   interface Window {
-    // What a test asks before the preview's tools fill or submit it.
+    // What a test asks before the preview's tools fill or submit it, and
+    // what it is told of each call they answered.
     __lunaAllow?: AgentOptions['allow']
+    __lunaOnCall?: AgentOptions['onCall']
     __lunaTools?: Readonly<{ call: typeof callTool; list: typeof listTools }>
   }
 }
@@ -152,8 +154,9 @@ export function ReactiveFormPreview() {
   const { agent: offered, host, ...formProps } = form
 
   // How the preview is offered to an agent. A test changes its name,
-  // description or submit in the injected JSON, and decides what `allow`
-  // answers through `window.__lunaAllow`.
+  // description or submit in the injected JSON, decides what `allow`
+  // answers through `window.__lunaAllow`, and hears of each call through
+  // `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
     () => ({
       ...AGENT,
@@ -166,6 +169,7 @@ export function ReactiveFormPreview() {
       }),
       allow: (call, options) =>
         window.__lunaAllow ? window.__lunaAllow(call, options) : true,
+      onCall: (call) => window.__lunaOnCall?.(call),
     }),
     [offered]
   )
