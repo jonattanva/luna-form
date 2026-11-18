@@ -48,25 +48,30 @@ jobs:
         run: |
           DIST="packages/luna-react/dist"
           ESM="$DIST/client/esm"
-          # Three budgets, each for what it guards.
+          # Three budgets, each for what it guards. Each leaves room for the
+          # library to grow by a few changes, so a budget that fails says
+          # something unexpected was added, not that the margin ran out.
           #
           # The total of every file guards against a dependency bundled by
           # mistake, which adds hundreds of kB (date-fns took it to 342 kB).
           # Peer dependencies are external, so the total is the library's
-          # own code over cjs and esm, every entry: 359.0 kB with the agent
-          # tools, which cjs carries inline because it does not split.
+          # own code over cjs and esm, every entry: 379.9 kB, the agent
+          # tools included, which cjs carries inline because it does not
+          # split.
           #
           # The main path is what every application loads from the client
           # entry in esm, compressed: the entry and the chunks it imports.
-          # 29.7 kB gzip with the agent tools offered: the fields' handles,
-          # `listTools()`, `callTool()` and what a form records of its
-          # submissions are here, and splitting the tools off costs about
-          # 0.8 kB of names shared between the chunks.
+          # 30.8 kB gzip: the fields' handles, `listTools()`, `callTool()`
+          # and what a form records of its submissions are here, and
+          # splitting the tools off costs about 0.8 kB of names shared
+          # between the chunks. It is the most an application loads from the
+          # entry, and close to what it loads whatever it imports: the entry
+          # and its shared chunk come in whole.
           #
           # The tools chunk is what loads only when an agent asks for a
-          # form's tools: 10.4 kB gzip, the tools, their host and the schema.
-          TOTAL_KB=380
-          MAIN_GZIP_KB=31
+          # form's tools: 10.7 kB gzip, the tools, their host and the schema.
+          TOTAL_KB=400
+          MAIN_GZIP_KB=33
           TOOLS_GZIP_KB=12
           total=0
           rows=""
