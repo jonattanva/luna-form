@@ -7,6 +7,7 @@ import type {
   Fields,
   FormStateError,
   Localization,
+  ToolSchema,
 } from '@luna-form/core'
 
 export type Slot = (props: {
@@ -30,13 +31,27 @@ export type Children = (props: {
 }) => React.ReactNode
 
 export type InputConfig<T extends React.ElementType> = {
+  // The value an agent writes into a field of these types, for a type no
+  // built-in one describes. See `defineCustomInput`.
+  agent?: InputAgentOptions
   types: string | string[]
   input: React.ComponentProps<T>
 }
 
+/** How the tools of a form with `agent` describe a custom type. */
+export type InputAgentOptions = Readonly<{
+  /**
+   * The value the field takes, in the part of JSON Schema every consumer
+   * reads. Without it the field takes text.
+   */
+  schema: ToolSchema
+}>
+
 export type AlertProps = Readonly<FormStateError>
 
 export type Config = BaseConfig<React.ComponentProps<React.ElementType>> & {
+  // The schema each custom type declares for agents, by type.
+  agentTypes?: Readonly<Record<string, ToolSchema>>
   alert?: React.ComponentType<AlertProps>
 }
 

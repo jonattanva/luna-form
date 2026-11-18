@@ -323,6 +323,42 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should write a custom type in the shape it declares', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          { fields: [{ label: 'Rating', name: 'rating', type: 'rating' }] },
+        ],
+      })
+    )
+    await page.goto('/reactive')
+    await page.waitForFunction(() => '__lunaTools' in window)
+
+    const [fill] = await list(page)
+    expect(
+      (fill.inputSchema.properties as Record<string, object>).rating
+    ).toEqual({ maximum: 5, minimum: 1, title: 'Rating', type: 'integer' })
+
+    expect(await call(page, 'preview_fill', { rating: 4 })).toMatchObject({
+      ok: true,
+      values: { rating: 4 },
+    })
+    await expect(page.locator('input[name="rating"]')).toHaveValue('4')
+    expect(await call(page, 'preview_fill', { rating: 'four' })).toMatchObject({
+      ok: false,
+      skipped: [
+        {
+          code: 'invalid_type',
+          message: 'Expected a whole number.',
+          name: 'rating',
+        },
+      ],
+    })
+  })
+
   test('should validate what it wrote once, and show the errors on the page', async ({
     page,
   }) => {

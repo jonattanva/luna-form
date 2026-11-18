@@ -2965,7 +2965,7 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Rellenado en un commit por pasada y validación al final (<a
                     href="#escala"
                     >3.14</a
@@ -2988,7 +2988,14 @@ const result = await callTool(call.name, call.input)</code></pre>
                       formulario con <code>agent</code> no vuelve a registrar
                       los tools, con WebMCP simulado.
                     </li>
-                    <li>Falta la latencia con 20, 100 y 200 campos.</li>
+                    <li>
+                      Latencia (Chromium, build de producción, mediana de 5):
+                      55, 69 y 100 ms con 20, 100 y 200 campos de texto; 106,
+                      113 y 153 ms con la mitad copiando su valor a otro campo
+                      por un evento <code>value</code>. Casi todo es la espera
+                      mínima de <code>settle</code> (50 ms por paso); los
+                      eventos suman un paso.
+                    </li>
                   </ul>
                 </li>
                 <li class="done">
@@ -3093,19 +3100,49 @@ const result = await callTool(call.name, call.input)</code></pre>
                   editor la usa en <code>/reactive</code> y expone
                   <code>window.__lunaTools</code>; el prototipo se borró.
                 </li>
-                <li>
+                <li class="done">
                   <code>advanced.agent: false</code> en los tipos de core (hecho
                   en el paso 1), y el tercer argumento de
-                  <code>defineCustomInput</code> (falta).
+                  <code>defineCustomInput</code>.
+                  <ul>
+                    <li>
+                      <code
+                        >defineCustomInput(types, input, { agent: { schema }
+                        })</code
+                      >: <code>defineConfig</code> junta los esquemas por tipo
+                      en <code>config.agentTypes</code>, y el host se los pasa a
+                      <code>buildToolSchema</code> como <code>types</code>. El
+                      editor registra <code>rating</code> (entero de 1 a 5) para
+                      la e2e. Documentado en
+                      <code>docs/fields/custom-inputs.md</code> y
+                      <code>docs/agents/tools.md</code>.
+                    </li>
+                    <li>
+                      Revisión de código del 2026-11-17: los tools revisan los
+                      límites del esquema declarado (rango, largo, patrón,
+                      <code>minItems</code>), que ninguna regla del formulario
+                      conoce; un esquema de objeto se descarta con un aviso; la
+                      última registración de un tipo decide su esquema; un
+                      esquema declarado reemplaza al de un tipo integrado; el
+                      hook compara los esquemas por contenido.
+                    </li>
+                    <li>
+                      Bundle: 358.9 kB, a 1.1 kB del límite de 360. El próximo
+                      cambio que sume código tiene que bajar el camino principal
+                      o revisar el presupuesto.
+                    </li>
+                  </ul>
                 </li>
-                <li>
+                <li class="done">
                   Elegir, con mediciones, entre el camino inmediato y esperar el
                   debounce (<a href="#fill">3.4</a>).
                   <ul>
                     <li>
-                      Se usa el inmediato: las e2e de los tools y
+                      El inmediato: las e2e de los tools y
                       <code>tests/e2e/value-event-autofill.spec.ts</code> pasan
-                      en los tres navegadores. Falta medir la latencia.
+                      en los tres navegadores, y un rellenado de 200 campos
+                      tarda 100 ms (153 con eventos). Esperar el debounce
+                      sumaría 300 ms por cada pasada con eventos.
                     </li>
                   </ul>
                 </li>

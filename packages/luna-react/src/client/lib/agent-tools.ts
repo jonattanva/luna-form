@@ -186,6 +186,7 @@ type Checked =
 // What checking a value needs to know besides its schema, and how to ask the
 // same of a leaf of its rows.
 type Check = Readonly<{
+  declared: boolean
   field?: Field
   lookup: boolean
   of: (name: string) => Check
@@ -375,7 +376,13 @@ export function createFormTools(
   agent: AgentOptions,
   built: ToolSchemaResult,
   host: FormToolsHost,
-  form: Readonly<{ queue?: Queue; signal?: AbortSignal }> = {}
+  form: Readonly<{
+    // The types whose schema the host declares: no rule of the form checks a
+    // value against it, so the tools do. See `defineCustomInput`.
+    declared?: ReadonlySet<string>
+    queue?: Queue
+    signal?: AbortSignal
+  }> = {}
 ): Tool[] {
   const { signal } = form
   if (!NAME.test(agent.name)) {
@@ -462,6 +469,7 @@ export function createFormTools(
   // `name` is the field in the form the value goes to, whose options are the
   // ones it offers now; a row of a list sent whole has none yet.
   const checkOf = (path: string, name?: string): Check => ({
+    declared: form.declared?.has(host.getField(path)?.type ?? '') === true,
     field: host.getField(path),
     lookup: lookup.has(path),
     of: (leaf) => checkOf(leaf),
@@ -1153,6 +1161,75 @@ function changedLeaves(
 }
 
 function checkValue(
+  schema: ToolSchema,
+  value: ToolJson,
+  check: Check
+): Checked {
+  const checked = checkShape(schema, value, check)
+  return checked.ok && check.declared ? checkDeclared(schema, checked) : checked
+}
+
+// A value against the bounds a declared schema gives, which the tools are the
+// only ones to check: a number's range, a text's length and pattern, how many
+// values at least.
+function checkDeclared(
+  schema: ToolSchema,
+  checked: Extract<Checked, { ok: true }>
+): Checked {
+  if ('rows' in checked.held) {
+    return checked
+  }
+
+  const value = checked.held.value
+  const { maxLength, maximum, minItems, minLength, minimum, pattern } = schema
+
+  if (
+    typeof value === 'number' &&
+    ((minimum !== undefined && value < minimum) ||
+      (maximum !== undefined && value > maximum))
+  ) {
+    const kind = schema.type === 'integer' ? 'a whole number' : 'a number'
+    const from = minimum === undefined ? '' : ` from ${minimum}`
+    const to = maximum === undefined ? '' : ` up to ${maximum}`
+    return rejected('invalid_option', `Expected ${kind}${from}${to}.`)
+  }
+
+  if (isString(value)) {
+    if (
+      (minLength !== undefined && value.length < minLength) ||
+      (maxLength !== undefined && value.length > maxLength)
+    ) {
+      return rejected(
+        'invalid_format',
+        `Expected ${minLength ?? 0} to ${maxLength ?? 'any number of'} characters.`
+      )
+    }
+    if (pattern !== undefined && !matches(pattern, value)) {
+      return rejected('invalid_format', `Expected text matching ${pattern}.`)
+    }
+  }
+
+  if (isMultiple(value) && minItems !== undefined && value.length < minItems) {
+    return rejected(
+      'invalid_option',
+      `At least ${minItems} ${minItems === 1 ? 'value' : 'values'}.`
+    )
+  }
+
+  return checked
+}
+
+// A pattern the way JSON Schema reads it, in Unicode mode. One that does not
+// compile matches nothing.
+function matches(pattern: string, text: string): boolean {
+  try {
+    return new RegExp(pattern, 'u').test(text)
+  } catch {
+    return false
+  }
+}
+
+function checkShape(
   schema: ToolSchema,
   value: ToolJson,
   check: Check

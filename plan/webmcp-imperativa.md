@@ -992,7 +992,7 @@ Resultados:
     las opciones igual.
   - Sin consumidor en la librería todavía, así que el bundle no cambia (292.9
     kB).
-- [ ] Rellenado en un commit por pasada y validación al final (3.14), con su
+- [x] Rellenado en un commit por pasada y validación al final (3.14), con su
       render budget.
   - Hecho con el host real: los valores de una pasada se escriben en la misma
     tarea y la validación corre una vez, al final. Los errores llegan siempre
@@ -1001,7 +1001,10 @@ Resultados:
     (`prepare` 1, `guard` 1) y ningún `Field` (`render` 0, `wrapper` 0). Y
     AGT-1: una tecla en un formulario con `agent` no vuelve a registrar los
     tools, con WebMCP simulado.
-  - Falta la latencia con 20, 100 y 200 campos.
+  - Latencia (Chromium, build de producción, mediana de 5): 55, 69 y 100 ms
+    con 20, 100 y 200 campos de texto; 106, 113 y 153 ms con la mitad
+    copiando su valor a otro campo por un evento `value`. Casi todo es la
+    espera mínima de `settle` (50 ms por paso); los eventos suman un paso.
 - [x] Rutas de hoja en las listas (`items.3.sku`).
   - `<name>_fill` acepta la ruta de una hoja, la fila contada desde 0, también
     en una lista dentro de una fila. El host traduce la posición al id estable
@@ -1049,13 +1052,25 @@ Resultados:
 - [x] Prop `agent` en el `Form` del cliente, y `formRef` en
       `component/form.tsx`. El editor la usa en `/reactive` y expone
       `window.__lunaTools`; el prototipo se borró.
-- [ ] `advanced.agent: false` en los tipos de core (hecho en el paso 1), y el
-      tercer argumento de `defineCustomInput` (falta).
-- [ ] Elegir, con mediciones, entre el camino inmediato y esperar el debounce
+- [x] `advanced.agent: false` en los tipos de core (hecho en el paso 1), y el
+      tercer argumento de `defineCustomInput`.
+  - `defineCustomInput(types, input, { agent: { schema } })`: `defineConfig`
+    junta los esquemas por tipo en `config.agentTypes`, y el host se los pasa a
+    `buildToolSchema` como `types`. El editor registra `rating` (entero de 1 a 5) para la e2e. Documentado en `docs/fields/custom-inputs.md` y
+    `docs/agents/tools.md`.
+  - Revisión de código del 2026-11-17: los tools revisan los límites del
+    esquema declarado (rango, largo, patrón, `minItems`), que ninguna regla del
+    formulario conoce; un esquema de objeto se descarta con un aviso; la última
+    registración de un tipo decide su esquema; un esquema declarado reemplaza
+    al de un tipo integrado; el hook compara los esquemas por contenido.
+  - Bundle: 358.9 kB, a 1.1 kB del límite de 360. El próximo cambio que sume
+    código tiene que bajar el camino principal o revisar el presupuesto.
+- [x] Elegir, con mediciones, entre el camino inmediato y esperar el debounce
       (3.4).
-  - Se usa el inmediato: las e2e de los tools y
-    `tests/e2e/value-event-autofill.spec.ts` pasan en los tres navegadores.
-    Falta medir la latencia.
+  - El inmediato: las e2e de los tools y
+    `tests/e2e/value-event-autofill.spec.ts` pasan en los tres navegadores, y
+    un rellenado de 200 campos tarda 100 ms (153 con eventos). Esperar el
+    debounce sumaría 300 ms por cada pasada con eventos.
 - [x] Documentación: `packages/luna-react/docs/agents/tools.md` describe la
       prop, los cuatro tools, las respuestas, los códigos, WebMCP,
       `listTools()` y `callTool()`.

@@ -310,6 +310,9 @@ export function useAgentTools(form: AgentForm) {
   // object inline, new on every render. `allow` and `readOnly` are read when
   // they are needed.
   const { context, definition, localization, sections } = form
+  // By content: a host that defines its config in a component makes the
+  // record anew on every render.
+  const types = JSON.stringify(form.types ?? null)
   const description = form.agent?.description
   const submit = form.agent?.submit
   useEffect(() => {
@@ -338,5 +341,6 @@ export function useAgentTools(form: AgentForm) {
     name,
     sections,
     submit,
+    types,
   ])
 }

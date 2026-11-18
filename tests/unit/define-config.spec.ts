@@ -1,4 +1,8 @@
-import { defineConfig } from '@/packages/luna-react/src/config'
+import {
+  defineConfig,
+  defineCustomInput,
+  defineInput,
+} from '@/packages/luna-react/src/config'
 import { describe, expect, test, vi } from 'vitest'
 
 // When to validate, and whether to summarise the errors. All four default to
@@ -69,5 +73,77 @@ describe('defineConfig env.locale', () => {
     } finally {
       warn.mockRestore()
     }
+  })
+})
+
+// The schema a custom type declares for agents, gathered by type for the
+// tools of a form with `agent`. A type that declares none takes text there.
+describe('defineCustomInput agent schema', () => {
+  const Rating = () => null
+  const Text = () => null
+
+  test('should gather each type it registers under its schema', () => {
+    const schema = { maximum: 5, minimum: 1, type: 'integer' } as const
+    const config = defineConfig({
+      inputs: [
+        defineInput(Text),
+        defineCustomInput(['rating', 'rating/stars'], Rating, {
+          agent: { schema },
+        }),
+      ],
+    })
+
+    expect(config.agentTypes).toEqual({
+      rating: schema,
+      'rating/stars': schema,
+    })
+    expect(config.inputs.rating).toBe(Rating)
+  })
+
+  test('should keep the schema of the last registration of a type', () => {
+    const config = defineConfig({
+      inputs: [
+        defineCustomInput('rating', Rating, {
+          agent: { schema: { type: 'integer' } },
+        }),
+        defineCustomInput('rating', Text),
+      ],
+    })
+
+    expect(config.inputs.rating).toBe(Text)
+    expect(config.agentTypes).toBeUndefined()
+  })
+
+  test('should leave out a schema that asks for an object, and say so', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const config = defineConfig({
+        inputs: [
+          defineCustomInput('address', Rating, {
+            agent: { schema: { properties: {}, type: 'object' } },
+          }),
+          defineCustomInput('people', Rating, {
+            agent: { schema: { items: { type: 'object' }, type: 'array' } },
+          }),
+        ],
+      })
+
+      expect(config.agentTypes).toBeUndefined()
+      expect(warn).toHaveBeenCalledTimes(2)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  test('should leave no schemas when no type declares one', () => {
+    const config = defineConfig({
+      inputs: [defineCustomInput('rating', Rating)],
+    })
+
+    expect(config.agentTypes).toBeUndefined()
+    expect(defineCustomInput('rating', Rating)).toEqual({
+      input: Rating,
+      types: 'rating',
+    })
   })
 })

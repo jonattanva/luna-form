@@ -11,8 +11,14 @@ import {
   logger,
   type Environment,
   type Protocol,
+  type ToolSchema,
 } from '@luna-form/core'
-import type { AlertProps, Config, InputConfig } from '../type'
+import type {
+  AlertProps,
+  Config,
+  InputAgentOptions,
+  InputConfig,
+} from '../type'
 
 // For whoever writes the component a date field renders with: it reads back
 // what the form put on its props. Exported beside `defineCustomInput`, which is
@@ -77,14 +83,40 @@ export function defineConfig<T extends React.ElementType>(
     )
   }
 
-  options.inputs.forEach(({ types, input }) => {
+  // The last registration of a type is the one it renders with, so it is the
+  // one that says what an agent writes into it, or that nothing does.
+  const agentTypes: Record<string, ToolSchema> = {}
+  options.inputs.forEach(({ agent, types, input }) => {
     const type = Array.isArray(types) ? types : [types]
     type.forEach((t) => {
       config.inputs[t] = input
+      if (agent && holdsValues(t, agent.schema)) {
+        agentTypes[t] = agent.schema
+      } else {
+        delete agentTypes[t]
+      }
     })
   })
 
+  if (Object.keys(agentTypes).length > 0) {
+    config.agentTypes = agentTypes
+  }
+
   return config
+}
+
+// A field holds a value or a list of values, never an object: a schema that
+// asks for one could be described to an agent and never written.
+function holdsValues(type: string, schema: ToolSchema): boolean {
+  const item = schema.type === 'array' ? schema.items : schema
+  if (item && item.type !== 'object' && item.type !== 'array') {
+    return true
+  }
+
+  logger.warn(
+    `The agent schema of "${type}" is left out: a field holds a value or a list of values, not an object.`
+  )
+  return false
 }
 
 export const defineCheckbox = createDefineFunction([CHECKBOX])
@@ -98,11 +130,18 @@ export const defineRadio = createDefineFunction([RADIO])
 export const defineSelect = createDefineFunction(SELECTS)
 export const defineTextArea = createDefineFunction([TEXTAREA])
 
+/**
+ * Registers a component under types of your own. `options.agent.schema` is
+ * the value an agent writes into a field of those types, for a form offered
+ * to agents; without it such a field takes text. See `docs/agents/tools.md`.
+ */
 export function defineCustomInput<T extends React.ElementType>(
   types: string | string[],
-  input: React.ComponentProps<T>
+  input: React.ComponentProps<T>,
+  options?: Readonly<{ agent?: InputAgentOptions }>
 ): InputConfig<T> {
-  return createDefineFunction<T>(types)(input)
+  const config = createDefineFunction<T>(types)(input)
+  return options?.agent ? { ...config, agent: options.agent } : config
 }
 
 function createDefineFunction<T extends React.ElementType>(

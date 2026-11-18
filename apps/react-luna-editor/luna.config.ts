@@ -34,5 +34,10 @@ export default defineConfig({
     defineCustomInput('chips/day', DayOfWeekWrapper),
     defineCustomInput('input/date', DatePickerInput),
     defineCustomInput('select/timezone', ComboboxWithGroup),
+
+    // A type of the editor's own, written by an agent as a whole number.
+    defineCustomInput('rating', Input, {
+      agent: { schema: { maximum: 5, minimum: 1, type: 'integer' } },
+    }),
   ],
 })

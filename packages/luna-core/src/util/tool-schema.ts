@@ -364,6 +364,14 @@ function describeValue(
   name: string,
   notes: string[]
 ): ToolSchema {
+  // A type the host declares a schema for is described by it, a built-in one
+  // too: the host knows what its own component takes. Only a type it names
+  // itself: `toString` is no schema.
+  const types = walk.types
+  if (types && Object.prototype.hasOwnProperty.call(types, field.type)) {
+    return types[field.type]
+  }
+
   // A required checkbox is a box someone has to tick: the submit takes `true`
   // only. A Yes/No answers either way.
   if (isCheckbox(field) || isSelectActive(field)) {
@@ -437,11 +445,7 @@ function describeValue(
     return describeChoice(field, walk, name, notes)
   }
 
-  // Only a type the host names itself: `toString` is no schema.
-  const types = walk.types
-  return types && Object.prototype.hasOwnProperty.call(types, field.type)
-    ? types[field.type]
-    : describeText(field, notes)
+  return describeText(field, notes)
 }
 
 function describeDate(field: DateField, notes: string[]): ToolSchema {
