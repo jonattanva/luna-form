@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795026622451,
+  "lastUpdate": 1795026650736,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "61612320fe3229f627320a94882d4c16d1214d38",
-          "message": "Merge pull request #80 from jonattanva/dependabot/npm_and_yarn/examples/with-next-vanilla/next-16.3.3\n\nchore(deps): bump next from 16.2.12 to 16.3.3 in /examples/with-next-vanilla",
-          "timestamp": "2026-09-11T15:39:52-05:00",
-          "tree_id": "76af1bf25c2fb0d35d32e8704cd5e8c40d04d47c",
-          "url": "https://github.com/jonattanva/luna-form/commit/61612320fe3229f627320a94882d4c16d1214d38"
-        },
-        "date": 1789159272959,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 313,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 242,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "b2d522f8d428a498514a0108ee9c520067ff3def",
           "message": "Merge pull request #78 from jonattanva/fix/example-remove-accent\n\nfix(example): ask for the accent transform by its name",
           "timestamp": "2026-09-11T15:41:05-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 14.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "784af7e18bd2ca99094b837783a5cce7fc49d0e1",
+          "message": "Merge pull request #166 from jonattanva/claude/five-form-measurement\n\ndocs(plan): measure a page of five forms and answer when a grouped mode pays",
+          "timestamp": "2026-11-18T13:29:32-05:00",
+          "tree_id": "c26b123d4cde27b19b51e29dea20843c324808cf",
+          "url": "https://github.com/jonattanva/luna-form/commit/784af7e18bd2ca99094b837783a5cce7fc49d0e1"
+        },
+        "date": 1795026650613,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 49.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.1,
             "unit": "ms"
           }
         ]
