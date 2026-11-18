@@ -98,6 +98,10 @@ so the list's description is where an agent learns them.
   told by the leaves that changed, under their route.
 - **`skipped`** holds what was not written, with a [code](#codes).
 - **`errors`** name a row's leaf by its route too: `items.2.quantity`.
+- A time is written and read back as the schema gives it, `HH:mm`, or
+  `HH:mm:ss` when the field shows seconds, whatever format it shows. It
+  reaches the action with its seconds, `09:30:00`, as a time input sends it
+  when a person picks one.
 - **`ok`** is `false` when a value did not fit its field or broke a rule. A
   field skipped as `hidden` or `locked` does not make it `false`.
 - What was written stays written when another field fails, as when a person

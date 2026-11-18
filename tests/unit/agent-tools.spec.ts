@@ -1293,6 +1293,26 @@ describe('createFormTools', () => {
       })
     })
 
+    test('should read a time as the schema gives it, whatever format the field shows', async () => {
+      const fields: Fields = [
+        { advanced: { format: 'hh:mm a' }, name: 'alarm', type: 'input/time' },
+        { advanced: { format: 'HH:mm:ss' }, name: 'lap', type: 'input/time' },
+      ]
+      const form = createForm({
+        absent: [],
+        values: { alarm: '09:30 PM', lap: '01:02:03' },
+      })
+      const [, read] = createFormTools(AGENT, buildToolSchema([{ fields }]), {
+        ...form.host,
+        getField: (name) =>
+          fields.filter(isField).find((field) => field.name === name),
+      })
+
+      expect((await read.execute({ fields: ['alarm', 'lap'] })).values).toEqual(
+        { alarm: '21:30', lap: '01:02:03' }
+      )
+    })
+
     test('should read every field when none is named, and nothing left out of the tools', async () => {
       const { tools } = toolsOf()
       const result = await call(tools, 'read', {

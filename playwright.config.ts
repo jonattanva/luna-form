@@ -29,14 +29,27 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      grepInvert: /@webmcp/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    // WebMCP, behind the flag Chrome's `chrome://flags/#enable-webmcp-testing`
+    // sets: the tests tagged `@webmcp` drive `document.modelContext` itself.
+    {
+      name: 'chromium-webmcp',
+      grep: /@webmcp/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--enable-features=WebMCPTesting'] },
+      },
     },
     {
       name: 'firefox',
+      grepInvert: /@webmcp/,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      grepInvert: /@webmcp/,
       use: { ...devices['Desktop Safari'] },
     },
   ],

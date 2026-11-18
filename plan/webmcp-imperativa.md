@@ -958,8 +958,9 @@ Resultados:
     sigue genérico.
   - Hecho en el paso 3: un campo que aparece en la misma llamada se escribe en
     la pasada siguiente.
-  - Pendiente: una e2e de `apply` con eventos `value` que mida el flush de los
-    autocompletados fuera de un evento de React. Llega con el host real.
+  - Hecho con el host real: las e2e de los tools escriben campos con eventos
+    `value` (con y sin `transform`) y `value-event-autofill.spec.ts` pasa en
+    los tres navegadores.
   - Pendiente, en un PR aparte: `useReplayedChangeEvents`, los dos efectos de
     `InputBase` que repiten los eventos de cambio.
 - [x] `client/lib/agent-tools.ts`: los cuatro tools (3.4 a 3.7), sus
@@ -1085,7 +1086,7 @@ Resultados:
 - [x] Documentación: `packages/luna-react/docs/agents/tools.md` describe la
       prop, los cuatro tools, las respuestas, los códigos, WebMCP,
       `listTools()` y `callTool()`.
-- [ ] e2e y tests de contrato (sección 5), y la medición antes y después
+- [x] e2e y tests de contrato (sección 5), y la medición antes y después
       (sección 6).
   - `tests/e2e/agent-tools.spec.ts`: 10 casos en los tres navegadores, por
     `window.__lunaTools`. 150 de 150 con `--repeat-each=5`.
@@ -1102,6 +1103,21 @@ Resultados:
     pantalla según la configuración, botón de submit). Se mantiene la
     exposición en el editor de producción (la acción solo repite lo que
     recibe) y el `unknown` donde los datos vienen del store o de la acción.
+  - Cerrado el 2026-11-17: las e2e de la sección 5 y el proyecto
+    `chromium-webmcp`. 20 casos de los tools en los tres navegadores y 5 contra
+    WebMCP real en el Chromium de Playwright (156) con
+    `--enable-features=WebMCPTesting`; el CI los corre en el job de Chromium.
+    El editor lee `agent` del JSON inyectado y pregunta a
+    `window.__lunaAllow`.
+  - Lo que encontraron: una escritura de un valor igual al que tenía un campo
+    justo después de un envío exitoso se perdía (comparaba contra el último
+    render y no contra el store); un `transform` se aplicaba solo a lo que
+    difería del texto anterior; una hora se leía en el formato de pantalla y
+    no en el del esquema. Corregidos. Y una hora llega a la acción con
+    segundos (`09:30:00`), como la manda una persona: documentado.
+  - Fuera de las e2e: `pending` a los 15 s, que necesita una acción lenta;
+    queda en los unitarios.
+  - Medición de la sección 6: hecha en su versión reducida (ver sección 6).
 
 ### Fase 2: lo que pida la medición (1 a 2 semanas)
 
@@ -1223,6 +1239,44 @@ con la extensión de Chrome, o el agente del propio navegador.
 - **Referencia externa:** sección 9.
 - **Sin regresión para quien no lo usa:** tamaño del bundle con `lib-size`,
   render budgets e interacción con `ab-timing`, con la prop presente y ausente.
+
+### Resultados del 2026-11-17
+
+Versión reducida: una corrida por formulario y modo, con Claude Code y la
+extensión de Chrome sobre el editor (`/reactive`, build de producción). Con los
+tools se llamó a `window.__lunaTools`, que es `callTool()`: los mismos tools que
+se registran en WebMCP. El tiempo incluye lo que el agente razona entre pasos.
+
+| Formulario                          | Modo   | Éxito           | Llamadas             | Tiempo                 | Caracteres devueltos                 |
+| ----------------------------------- | ------ | --------------- | -------------------- | ---------------------- | ------------------------------------ |
+| 1. Simple (nombre, avisos, guardar) | A mano | Sí, 1 reintento | 21 (4 capturas)      | 59.4 s                 | ~1.5 k y 4 imágenes                  |
+| 1                                   | Tools  | Sí              | 3                    | 8.5 s                  | 5.4 k de tools, 0.4 k de respuestas  |
+| 2. Condicional (`state` y `value`)  | A mano | Sí              | 10 (1 captura)       | 32.5 s                 | ~0.8 k y 1 imagen                    |
+| 2                                   | Tools  | Sí              | 3                    | 7.8 s                  | 5.4 k de tools, 0.3 k de respuestas  |
+| 3. Lista, fecha y zona horaria      | A mano | Sí              | 21 (2 capturas)      | 48.9 s                 | ~1.2 k y 2 imágenes                  |
+| 3                                   | Tools  | Sí              | 3                    | 8.3 s                  | 6.8 k de tools, 0.4 k de respuestas  |
+| 4. 200 campos, 2 listas, 18 selects | A mano | No medido       | ~250 a 430 estimadas | ~10 a 20 min estimados | —                                    |
+| 4                                   | Tools  | Sí              | 4                    | 16.1 s                 | 17.4 k de tools, 9.7 k de respuestas |
+
+- **Reintento a mano:** un clic en una opción cayó fuera porque cambió el
+  marco de coordenadas de la captura; el formulario se envió con el valor
+  viejo y hubo que rellenarlo de nuevo. Con los tools no hay coordenadas.
+- **Formulario 4 a mano, estimado** de los otros tres: unas 2.5 s por
+  llamada, una o dos llamadas por campo y más por cada select y cada fila.
+  Correrlo mediría la paciencia del agente más que el formulario.
+- **Escala:** el esquema de 200 campos ocupa 11.2 k caracteres, bajo el aviso
+  de 24 kB; el rellenado tarda 370 ms en la página, en una sola llamada, y
+  las etiquetas de las opciones se aceptan tal cual.
+- **Página con varios formularios:** cada formulario suma un piso fijo de
+  5.0 k caracteres de tools (2.1 k de descripciones y 2.1 k de esquemas de
+  salida); sin esquemas de salida, que ni `getTools` de WebMCP ni las APIs de
+  modelos usan, 2.9 k. Cinco formularios son 14 a 25 k fijos por turno. Es el
+  dato para el modo agrupado de la fase 2: se justifica en páginas con
+  varios formularios, y antes conviene acortar las descripciones.
+- **Lectura:** con los tools, 3 o 4 llamadas por formulario en lugar de 10 a
+  21, de 4 a 7 veces más rápido y sin reintentos. Lo que cuesta es el texto
+  de los tools en cada turno, que en un formulario chico pesa como mirar la
+  página, sin sus capturas.
 
 ## 7. Riesgos y preguntas abiertas
 
