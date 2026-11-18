@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795023068832,
+  "lastUpdate": 1795023092102,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "bb094e4bf656d405a251c483e16155de5050109c",
-          "message": "chore(deps): upgrade dependencies\n\nTwo of these are worth calling out.\n\n`vitest` goes from 4.1.11 to 5.0.0, a major, and the 700 unit tests pass on it\nunchanged.\n\n`@playwright/test` goes from 1.62.1 to 1.63.0, which pins new browser\nrevisions -- chromium 1243, firefox 1543, webkit 2359. A checkout that skips\n`pnpm exec playwright install` fails every e2e at launch with `Executable\ndoesn't exist`, which reads like a broken suite rather than a missing\ndownload.\n\nThe rest are patch or minor: next and eslint-config-next to 16.3.4,\n@base-ui/react to 1.8.0, typescript-eslint to 8.69.0, plus knip, lint-staged,\nglobals and the @types packages.\n\nVerified on the upgraded tree: 700 unit, 1566 e2e across chromium, firefox and\nwebkit, typescript, eslint and prettier.",
-          "timestamp": "2026-09-07T09:29:26-05:00",
-          "tree_id": "c43b252743b149165227f27b6c43ab109ac4f185",
-          "url": "https://github.com/jonattanva/luna-form/commit/bb094e4bf656d405a251c483e16155de5050109c"
-        },
-        "date": 1788791464822,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 222,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 124,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 22.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58885efb7e5493accf77d6f66b63a0f850886c18",
+          "message": "Merge pull request #163 from jonattanva/claude/submit-without-validation\n\nfix(react): end a submit that checks nothing the way any other ends",
+          "timestamp": "2026-11-18T12:30:23-05:00",
+          "tree_id": "f1323c0b2ac87b5886d47f654c43b34a865b0d8e",
+          "url": "https://github.com/jonattanva/luna-form/commit/58885efb7e5493accf77d6f66b63a0f850886c18"
+        },
+        "date": 1795023092050,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 53.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.9,
             "unit": "ms"
           }
         ]
