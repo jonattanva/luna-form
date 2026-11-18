@@ -95,14 +95,18 @@ export function useValue(field: Field) {
   }, [])
 
   // Read once, from the effect after this hook's own: the field re-runs its
-  // `state` rules on what the host put back. See `input-base`.
+  // `state` rules on what the host put back. See `useReplayedChangeEvents`.
   const takeHostChange = useCallback(() => {
     const change = hostChangeRef.current
     hostChangeRef.current = null
     return change
   }, [])
 
+  // The host's entry is handed on with the rest, so whoever needs to know when
+  // it moves does not subscribe to it a second time.
   return {
+    hostFound: found,
+    hostValue,
     setValue,
     shouldSkipOnChange,
     takeHostChange,

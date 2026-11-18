@@ -1,19 +1,18 @@
 import { FieldDescription } from './field-description'
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
-import { useCallback, useEffect, useRef } from 'react'
-import { useHostEntry, useHostEntryReader } from '../hook/use-host-entry'
+import { useCallback } from 'react'
 import { useInputCore, type InputCoreProps } from '../hook/use-input-core'
 import { useValue } from '../hook/use-value'
 import { useLatest } from '../hook/use-latest'
 import { useRegisterApply, type ApplyOptions } from '../hook/use-apply'
+import { useReplayedChangeEvents } from '../hook/use-replayed-change-events'
 import { deepEqual } from 'fast-equals'
 import { useStore } from 'jotai'
 import { valueAtom } from '../lib/value-store'
 import {
   applyTransformToChange,
   flattenOptions,
-  holdValue,
   isDateRange,
   isInput,
   isString,
@@ -45,9 +44,14 @@ export function InputBase(
     isInitialReady,
   } = props.strategies
 
-  const { setValue, shouldSkipOnChange, takeHostChange, value } = useValue(
-    props.field
-  )
+  const {
+    hostFound,
+    hostValue,
+    setValue,
+    shouldSkipOnChange,
+    takeHostChange,
+    value,
+  } = useValue(props.field)
   const { data, setSource, isStaticSource } = useSource(
     props.field,
     props.config,
@@ -69,14 +73,6 @@ export function InputBase(
 
   const { getField } = props
   const store = useStore()
-
-  const initialEventsProcessedRef = useRef(false)
-
-  // Subscribed only to know when to look again: `found` flips once the host's
-  // record names this field, and that is what re-runs the effect below; the
-  // value is what re-runs the one after it.
-  const { found: hostFound, value: hostValue } = useHostEntry(props.field.name)
-  const readHostEntry = useHostEntryReader(props.field.name)
 
   // Withheld when a `source` change event swapped the schema's array for a
   // remote DataSource: the fetched labels are data, not authored copy.
@@ -101,109 +97,20 @@ export function InputBase(
   // enabled -- can still send a change, and the form does not take it.
   const locked = Boolean(commonPropsWithOptions.disabled)
 
-  useEffect(() => {
-    if (initialEventsProcessedRef.current) {
-      return
-    }
-
-    // The whole decision runs in the microtask, not here, and that is the point
-    // rather than a detail. This reader latches: it decides once and marks
-    // itself done. The form writes the host's record from its own effect, and a
-    // parent's effects run after its children's, so anything read at this line
-    // is what the previous commit left -- and a decision made on it is made
-    // against a value the host has already replaced. By the time the microtask
-    // runs, every effect in this commit has run, the form's write included.
-    //
-    // It also runs once the commit has flushed, which is what the events
-    // themselves need: what they write is addressed to other fields, and those
-    // are still mounting while this effect runs. Both reasons want the same
-    // place, so there is one hop, not two.
-    queueMicrotask(() => {
-      if (initialEventsProcessedRef.current) {
-        return
-      }
-
-      const { found, value: hostValue } = readHostEntry()
-
-      const hasInitialSource = found || isValidValue(props.field.defaultValue)
-      if (!hasInitialSource) {
-        return
-      }
-
-      if (!props.field.event?.change) {
-        initialEventsProcessedRef.current = true
-        return
-      }
-
-      const resolvedValue = found ? hostValue : undefined
-
-      // Held the way the field holds it, so the events fired at mount see the
-      // same shape as the ones fired once the user has typed.
-      const hydratedValue = holdValue(
-        props.field,
-        isValidValue(resolvedValue) ? resolvedValue : props.field.defaultValue
-      )
-
-      if (!isValidValue(hydratedValue)) {
-        return
-      }
-
-      if (!isInitialReady(props.field, hydratedValue, data)) {
-        return
-      }
-
-      initialEventsProcessedRef.current = true
-
-      // Gone before the microtask ran. `onUnmount` took the field out of the
-      // schema and its value with it, and an event sent on its behalf now
-      // would write into a form that no longer has it.
-      if (!getField(props.field.name)) {
-        return
-      }
-
-      applyChangeEventsRef.current(
-        buildInitialSelected(hydratedValue, data, entity)
-      )
-    })
-  }, [
+  // The change events at mount, and the `state` rules again for a value the
+  // host puts in later. After `useValue`, whose effect notices the host's.
+  const markReplayed = useReplayedChangeEvents(props.field, {
     applyChangeEventsRef,
+    applyStateEventsRef,
     buildInitialSelected,
     data,
     entity,
     getField,
     hostFound,
-    isInitialReady,
-    props.field,
-    readHostEntry,
-  ])
-
-  // After mount, a value the host puts in the field from outside -- an undo, a
-  // reset -- re-runs the field's `state` rules, so what they reveal follows
-  // the value as it does at mount and on a click. Declared after `useValue`,
-  // whose effect is the one that notices, so it reads this commit's answer.
-  // Until the mount-time run has happened, that run reads the host itself.
-  useEffect(() => {
-    const change = takeHostChange()
-    if (!change || !initialEventsProcessedRef.current) {
-      return
-    }
-
-    // Held nothing, the rules are undone as if the field were empty, the way a
-    // hide withdraws them. See `withdrawStates`.
-    applyStateEventsRef.current(
-      isValidValue(change.value)
-        ? buildInitialSelected(change.value, data, entity)
-        : null
-    )
-  }, [
-    applyStateEventsRef,
-    buildInitialSelected,
-    data,
-    entity,
-    hostFound,
     hostValue,
+    isInitialReady,
     takeHostChange,
-  ])
+  })
 
   // A change to the field, whoever makes it: the control's `onChange`, or a
   // value written from outside (`apply` is set, see `useRegisterApply`), which
@@ -257,7 +164,7 @@ export function InputBase(
       // mount-time run to do -- and a field that mounted empty has now been
       // through them, which is what lets a value the host puts back later
       // undo what this change revealed.
-      initialEventsProcessedRef.current = true
+      markReplayed()
 
       // Written from outside, the events run on the next task rather than
       // once the typing stops: there is no typing to wait for. Still through
@@ -284,6 +191,7 @@ export function InputBase(
       getValue,
       hasClickable,
       locked,
+      markReplayed,
       onValueChangeRef,
       props.config.validation.change,
       props.field,

@@ -456,9 +456,9 @@ export function useInputCore(
     }
   })
 
-  // The same, read from `onChange` and from the initial-events effect in
-  // `input-base`. Both reach it after the commit it belongs to: a layout effect
-  // is written before any effect of that commit runs.
+  // The same, read from `onChange` and from the mount-time run of
+  // `useReplayedChangeEvents`. Both reach it after the commit it belongs to: a
+  // layout effect is written before any effect of that commit runs.
   const applyChangeEventsRef = useLatest((selected: unknown) => {
     const events = props.field.event?.change
     if (!events) {
