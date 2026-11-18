@@ -10,14 +10,18 @@ import {
   getText,
   getYearSchema,
   isOffered,
+  validateCustom,
   withHeldOptions,
 } from '@/packages/luna-core/src/util/schema'
 import { isTargetOf } from '@/packages/luna-core/src/util/path'
+import { resolveDictionary } from '@/packages/luna-core/src/util/translate'
 import { z } from 'zod'
 import type {
   Date as DateField,
   Field,
   Input,
+  Select,
+  Value,
 } from '@/packages/luna-core/src/type'
 
 describe('Schema Utility', () => {
@@ -1908,5 +1912,178 @@ describe('withHeldOptions', () => {
     withHeldOptions(form, [{ name: 'city', offered, value: 'xyz' }])
 
     expect(form).toEqual({ city: 'lim' })
+  })
+})
+
+// What a field says about a value it holds back when its definition gives no
+// message: the library's own words, in the form's language, never the
+// validator's (`Too small: expected string to have >=1 characters`).
+describe('messages a definition does not give', () => {
+  const messagesOf = (field: Field, value: Value, lang?: string): string[] =>
+    getSchema(field, resolveDictionary(lang), undefined, lang)
+      .safeParse(value)
+      .error?.issues.map((issue) => issue.message) ?? []
+
+  const cases: Array<
+    [string, Input | Select | DateField, Value, string, string]
+  > = [
+    [
+      'a required text left empty',
+      { name: 'name', required: true, type: 'input/text' },
+      '',
+      'This field is required',
+      'Este campo es obligatorio',
+    ],
+    [
+      'a required checkbox left unticked',
+      { name: 'agree', required: true, type: 'checkbox' },
+      false,
+      'This field is required',
+      'Este campo es obligatorio',
+    ],
+    [
+      'a required chips with nothing picked',
+      {
+        name: 'tags',
+        required: true,
+        source: [{ label: 'A', value: 'a' }],
+        type: 'chips',
+      } satisfies Select,
+      [],
+      'This field is required',
+      'Este campo es obligatorio',
+    ],
+    [
+      'a text under its minimum length',
+      {
+        advanced: { length: { min: 3 } },
+        name: 'code',
+        type: 'input/text',
+      },
+      'ab',
+      'Enter at least 3 characters',
+      'Escribe al menos 3 caracteres',
+    ],
+    [
+      'a text over a maximum of one, in the singular',
+      {
+        advanced: { length: { max: 1 } },
+        name: 'initial',
+        type: 'input/text',
+      },
+      'ab',
+      'Enter at most 1 character',
+      'Escribe como máximo 1 carácter',
+    ],
+    [
+      'an optional month that is no month',
+      { name: 'month', type: 'select/month' },
+      '13',
+      'Enter 12 or less',
+      'Escribe 12 o menos',
+    ],
+    [
+      'a number over its maximum',
+      {
+        advanced: { length: { max: 9 } },
+        name: 'count',
+        type: 'input/number',
+      },
+      '12',
+      'Enter 9 or less',
+      'Escribe 9 o menos',
+    ],
+    [
+      'text in a number field',
+      { name: 'count', type: 'input/number' },
+      'abc',
+      'Enter a number',
+      'Escribe un número',
+    ],
+    [
+      'a decimal in a whole number field',
+      { name: 'count', type: 'input/number' },
+      '2.5',
+      'Enter a whole number',
+      'Escribe un número entero',
+    ],
+    [
+      'an address that is none',
+      { name: 'email', type: 'input/email' },
+      'ada',
+      'Invalid email address',
+      'Correo electrónico no válido',
+    ],
+    [
+      'an option the field does not offer',
+      {
+        name: 'pick',
+        source: [{ label: 'A', value: 'a' }],
+        type: 'select',
+      } satisfies Select,
+      'z',
+      'This option is not available',
+      'Esta opción no está disponible',
+    ],
+    [
+      'a day before the first the field takes',
+      {
+        advanced: { format: 'dd/MM/yyyy', length: { min: '2026-01-01' } },
+        name: 'day',
+        type: 'input/date',
+      } satisfies DateField,
+      '2025-05-05',
+      'Date must be on or after 01/01/2026',
+      'La fecha debe ser igual o posterior a 01/01/2026',
+    ],
+  ]
+
+  test.each(cases)(
+    'should say why it holds back %s, in English and in Spanish',
+    (_, field, value, english, spanish) => {
+      expect(messagesOf(field, value)).toEqual([english])
+      expect(messagesOf(field, value, 'es')).toEqual([spanish])
+    }
+  )
+
+  test('should write the month of a bound in the language of the form', () => {
+    const field: DateField = {
+      advanced: { length: { min: '2026-01-01' } },
+      name: 'day',
+      type: 'input/date',
+    }
+    expect(messagesOf(field, '2025-05-05', 'es')).toEqual([
+      'La fecha debe ser igual o posterior a enero 1, 2026',
+    ])
+  })
+
+  test('should say why a cross-field rule with no message holds a value back', () => {
+    expect(
+      validateCustom('a', { field: 'other', operator: 'eq' }, () => 'b')
+    ).toEqual(['Invalid value'])
+    expect(
+      validateCustom(
+        'a',
+        { field: 'other', operator: 'eq' },
+        () => 'b',
+        resolveDictionary('es')
+      )
+    ).toEqual(['Valor no válido'])
+  })
+
+  test("should keep the field's own message over the library's", () => {
+    const field: Input = {
+      name: 'name',
+      required: true,
+      type: 'input/text',
+      validation: { required: 'name_required' },
+    }
+    const schema = getSchema(field, {
+      ...resolveDictionary('es'),
+      name_required: 'Dinos tu nombre',
+    })
+    expect(schema.safeParse('').error?.issues[0].message).toBe(
+      'Dinos tu nombre'
+    )
   })
 })

@@ -152,7 +152,7 @@ The list renders as `Contacto`, its add button as `Añadir elemento`, and its co
 
 The library ships translations for the copy it renders on its own behalf, because a form cannot name those strings in its schema. Today that covers **Spanish**; any other `lang` falls back to the English source text.
 
-Beyond the list keys above, the built-in set also covers the `(Optional)` label suffix, the `Yes`/`No` options of [`select/active`](specialized-selectors.md#5-activebinary-selector-selectactive), and the summary the form shows above itself when a submit fails: `There were validation errors submitting the form.`, `Please correct the errors and try again.`, and `An unexpected error occurred submitting the form.` (plus `Unknown error` for a thrown action carrying no message).
+Beyond the list keys above, the built-in set also covers the `(Optional)` label suffix, the `Yes`/`No` options of [`select/active`](specialized-selectors.md#5-activebinary-selector-selectactive), the summary the form shows above itself when a submit fails: `There were validation errors submitting the form.`, `Please correct the errors and try again.`, and `An unexpected error occurred submitting the form.` (plus `Unknown error` for a thrown action carrying no message), and the message a field shows for a rule its definition gives no message for, such as `This field is required`: see [When the definition gives no message](../validation/overview.md#when-the-definition-gives-no-message).
 
 The built-ins are layered _under_ the form's own block, so declaring a key still overrides them:
 

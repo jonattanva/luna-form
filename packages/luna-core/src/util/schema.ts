@@ -54,16 +54,23 @@ import type {
   WhenRule,
   ZodSchema,
 } from '../type'
-import { translate, translateOptional } from './translate'
+import {
+  translate,
+  translateBuiltIn,
+  translateOptional,
+  type BuiltInKey,
+} from './translate'
 
 // What `advanced.length` bounds: the characters of a text or an address, the
 // value of a number.
 type Bounded = z.ZodString | z.ZodEmail | z.ZodCoercedNumber
 
 type SchemaChecker = (input: Input) => boolean
+// `lang` is the form's language, for a date that names its month in a message.
 type SchemaGetter = (
   input: Input,
-  translations?: Record<string, string>
+  translations?: Record<string, string>,
+  lang?: string
 ) => z.ZodType
 
 const approach: Array<[SchemaChecker, SchemaGetter]> = [
@@ -107,23 +114,30 @@ export function flatten(error: z.ZodError<Record<string, unknown>>) {
 // A field's schema, wherever it is validated: the browser, on a change and on
 // a submit, and `buildFormSchema` on the server. `sourceTargets` are the
 // targets of the form's `source` events (see `collectSourceTargets`), whose
-// options are only known at run time.
+// options are only known at run time. `lang` is the form's language: a message
+// that names a day writes its month in it, as the field shows it.
 export function getSchema(
   input: Input,
   translations?: Record<string, string>,
-  sourceTargets?: ReadonlySet<string>
+  sourceTargets?: ReadonlySet<string>,
+  lang?: string
 ) {
   return applyOffered(
-    getLeafSchema(input, translations),
+    getLeafSchema(input, translations, lang),
     getOfferedValues(input, sourceTargets),
-    translateOptional(input.validation?.option, translations) ?? NOT_OFFERED
+    translateOptional(input.validation?.option, translations) ??
+      builtInMessage('This option is not available', translations)
   )
 }
 
-function getLeafSchema(input: Input, translations?: Record<string, string>) {
+function getLeafSchema(
+  input: Input,
+  translations?: Record<string, string>,
+  lang?: string
+) {
   for (const [check, getSchema] of approach) {
     if (check(input)) {
-      return getSchema(input, translations)
+      return getSchema(input, translations, lang)
     }
   }
   return getText(input, translations)
@@ -223,7 +237,7 @@ export function getText(input: Input, translations?: Record<string, string>) {
   // The bounds check what `text` made of the value: text, already trimmed.
   const read = z.string()
   const bounded = limits.unreadable
-    ? read.refine(() => false, UNREADABLE)
+    ? read.refine(() => false, builtInMessage(UNREADABLE, translations))
     : applyMinAndMax(read, limits, input, translations)
 
   if (input.required) {
@@ -238,11 +252,13 @@ export function getText(input: Input, translations?: Record<string, string>) {
 
 export function getNumber(input: Input, translations?: Record<string, string>) {
   const limits = buildLengthLimits(input)
-  const number = z.coerce.number()
+  const number = z.coerce.number({
+    error: builtInMessage('Enter a number', translations),
+  })
   // The step counts from `length.min`, so a bound that cannot be read leaves
   // no step to check either: one message says why.
   const schema = limits.unreadable
-    ? number.refine(() => false, UNREADABLE)
+    ? number.refine(() => false, builtInMessage(UNREADABLE, translations))
     : applyStep(
         applyMinAndMax(number, limits, input, translations),
         limits,
@@ -261,19 +277,26 @@ export function getYearSchema(
   translations?: Record<string, string>
 ) {
   const { max, min } = buildYearLimits(input)
-  const year = z.coerce.number().int()
+  const year = z.coerce
+    .number({ error: builtInMessage('Enter a number', translations) })
+    .int(builtInMessage('Enter a whole number', translations))
 
   const schema =
     min === undefined || max === undefined
-      ? year.refine(() => false, 'This year is not available')
+      ? year.refine(
+          () => false,
+          builtInMessage('This year is not available', translations)
+        )
       : year
           .min(
             min,
-            translateOptional(input.validation?.length?.min, translations)
+            translateOptional(input.validation?.length?.min, translations) ??
+              builtInMessage('Enter {min} or more', translations, { min })
           )
           .max(
             max,
-            translateOptional(input.validation?.length?.max, translations)
+            translateOptional(input.validation?.length?.max, translations) ??
+              builtInMessage('Enter {max} or less', translations, { max })
           )
 
   return presentLeaf(schema, input, translations, normalize)
@@ -283,8 +306,25 @@ export function getMonthSchema(
   input: Input,
   translations?: Record<string, string>
 ) {
-  const message = getRequiredMessage(input, translations)
-  const schema = z.coerce.number().int().min(1, message).max(12, message)
+  // A month the field declares its required message for says it about any
+  // value that is no month, as it always has; otherwise each check says what
+  // is wrong, and an optional month holding 13 is not called required.
+  const declared = translateOptional(input.validation?.required, translations)
+  const schema = z.coerce
+    .number({
+      error: declared ?? builtInMessage('Enter a number', translations),
+    })
+    .int(declared ?? builtInMessage('Enter a whole number', translations))
+    .min(
+      1,
+      declared ??
+        builtInMessage('Enter {min} or more', translations, { min: 1 })
+    )
+    .max(
+      12,
+      declared ??
+        builtInMessage('Enter {max} or less', translations, { max: 12 })
+    )
 
   return presentLeaf(schema, input, translations, normalize)
 }
@@ -298,12 +338,15 @@ export function getMonthSchema(
 // is accepted cannot drift apart.
 export function getDateSchema(
   field: Field,
-  translations?: Record<string, string>
+  translations?: Record<string, string>,
+  lang?: string
 ) {
   const format = getDateFormat(field)
+  const shown = { format, lang, translations }
   const limits = buildDateLimits(field)
   const invalid =
-    translateOptional(field.validation?.date, translations) ?? 'Invalid date'
+    translateOptional(field.validation?.date, translations) ??
+    builtInMessage('Invalid date', translations)
 
   if (isDateRange(field)) {
     const range = z.unknown().transform((value, context) => {
@@ -319,9 +362,7 @@ export function getDateSchema(
 
       const [fromText, toText] = ends
       if (fromText.trim() === '' || toText.trim() === '') {
-        return keepOut(
-          keptOutMessage(field, { issue: 'range' }, format, translations)
-        )
+        return keepOut(keptOutMessage(field, { issue: 'range' }, shown))
       }
 
       const from = toNativeDate(fromText, format)
@@ -332,7 +373,7 @@ export function getDateSchema(
 
       const kept = checkRange(from, to, limits)
       if (kept) {
-        return keepOut(keptOutMessage(field, kept, format, translations))
+        return keepOut(keptOutMessage(field, kept, shown))
       }
 
       const days: [string, string] = [from, to]
@@ -353,7 +394,7 @@ export function getDateSchema(
     if (kept) {
       context.addIssue({
         code: 'custom',
-        message: keptOutMessage(field, kept, format, translations),
+        message: keptOutMessage(field, kept, shown),
       })
       return z.NEVER
     }
@@ -369,33 +410,43 @@ export function getDateSchema(
 function keptOutMessage(
   field: Field,
   kept: DateIssue,
-  format: DateFormat,
-  translations?: Record<string, string>
+  shown: Readonly<{
+    format: DateFormat
+    lang?: string
+    translations?: Record<string, string>
+  }>
 ) {
+  const { format, lang, translations } = shown
   // A rule the field declares that the form cannot read: it is the form's to
   // fix, not the person's, and no day passes until it is.
   if (kept.issue === 'unreadable') {
-    return 'This date cannot be checked'
+    return builtInMessage('This date cannot be checked', translations)
   }
 
   if (kept.issue === 'reserved') {
     return (
       translateOptional(field.validation?.reserved, translations) ??
-      'This date is not available'
+      builtInMessage('This date is not available', translations)
     )
   }
 
   if (kept.issue === 'range') {
     return (
       translateOptional(field.validation?.range, translations) ??
-      'Invalid date range'
+      builtInMessage('Invalid date range', translations)
     )
   }
 
-  const day = displayDate(kept.limit, format)
+  const date = displayDate(kept.limit, format, lang)
   return (
     translateOptional(field.validation?.length?.[kept.issue], translations) ??
-    `Date must be on or ${kept.issue === 'min' ? 'after' : 'before'} ${day}`
+    builtInMessage(
+      kept.issue === 'min'
+        ? 'Date must be on or after {date}'
+        : 'Date must be on or before {date}',
+      translations,
+      { date }
+    )
   )
 }
 
@@ -467,7 +518,9 @@ function applyStep(
   const message = translateOptional(input.validation?.step, translations)
   const step = buildNumberStep(input)
   if (step === undefined) {
-    return schema.int(message)
+    return schema.int(
+      message ?? builtInMessage('Enter a whole number', translations)
+    )
   }
 
   const base = limits.min ?? 0
@@ -475,8 +528,16 @@ function applyStep(
     message:
       message ??
       (base === 0
-        ? `Invalid number: must be a multiple of ${step}`
-        : `Invalid number: must be ${base} plus a multiple of ${step}`),
+        ? builtInMessage(
+            'Invalid number: must be a multiple of {step}',
+            translations,
+            { step }
+          )
+        : builtInMessage(
+            'Invalid number: must be {base} plus a multiple of {step}',
+            translations,
+            { base, step }
+          )),
   })
 }
 
@@ -506,35 +567,67 @@ function applyEmail(
 ) {
   const message = input.validation?.email
     ? translate(input.validation?.email, translations)
-    : undefined
+    : builtInMessage('Invalid email address', translations)
 
   return applyMinAndMax(z.email(message), limits, input, translations)
 }
 
 // What a field whose bounds cannot be read says about any value it is given.
 // It is the form's to fix, not the person's, and no value passes until it is.
-const UNREADABLE = 'This value cannot be checked'
+const UNREADABLE = 'This value cannot be checked' satisfies BuiltInKey
 
 // The bounds are read by `buildLengthLimits`, the same reading
 // `defineConstraints` renders on the input, so the browser and the schema
 // check the same numbers.
+//
+// Without a message of its own, a bound says what it counts: the characters of
+// a text, or a number's own value.
 function applyMinAndMax<T extends Bounded>(
   schema: T,
   limits: LengthLimits,
   input: Input,
   translations?: Record<string, string>
 ): T {
+  const kind = schema.type === 'number' ? 'number' : 'text'
   for (const method of [MIN, MAX] as const) {
     const value = limits[method]
     if (value !== undefined) {
-      const message = translateOptional(
-        input.validation?.length?.[method],
-        translations
-      )
+      const message =
+        translateOptional(input.validation?.length?.[method], translations) ??
+        builtInMessage(boundMessage(kind, method, value), translations, {
+          [method]: value,
+        })
       schema = schema[method](value, message) as T
     }
   }
   return schema
+}
+
+// What a bound says, by what it counts, in the singular for one.
+function boundMessage(
+  kind: 'items' | 'number' | 'text',
+  method: 'max' | 'min',
+  value: number
+): BuiltInKey {
+  if (kind === 'number') {
+    return method === MIN ? 'Enter {min} or more' : 'Enter {max} or less'
+  }
+  if (kind === 'items') {
+    if (value === 1) {
+      return method === MIN ? 'Add at least 1 item' : 'Add at most 1 item'
+    }
+    return method === MIN
+      ? 'Add at least {min} items'
+      : 'Add at most {max} items'
+  }
+  if (value === 1) {
+    return method === MIN
+      ? 'Enter at least 1 character'
+      : 'Enter at most 1 character'
+  }
+  return method === MIN
+    ? 'Enter at least {min} characters'
+    : 'Enter at most {max} characters'
 }
 
 export function applyCustomValidation(
@@ -550,7 +643,9 @@ export function applyCustomValidation(
   return schema.superRefine((data, context) => {
     for (const { name, rule } of rules) {
       if (!evaluate(data, name, rule)) {
-        const message = translate(rule.message, translations)
+        const message = rule.message
+          ? translate(rule.message, translations)
+          : builtInMessage('Invalid value', translations)
         context.addIssue({
           code: 'custom',
           message,
@@ -603,10 +698,11 @@ export function validateCustom(
     const operator = rule.operator ?? 'eq'
     const operation = operators[operator]
     if (operation && !operation(value, getValue(rule.field))) {
-      if (rule.message) {
-        const message = translate(rule.message, translations)
-        errors.push(message)
-      }
+      errors.push(
+        rule.message
+          ? translate(rule.message, translations)
+          : builtInMessage('Invalid value', translations)
+      )
     }
   }
 
@@ -619,7 +715,24 @@ function getRequiredMessage(
 ) {
   return input.validation?.required
     ? translate(input.validation?.required, translations)
-    : undefined
+    : builtInMessage('This field is required', translations)
+}
+
+// The library's own message, in the form's language, with its placeholders
+// filled in: what a field says when its definition gives no message. See
+// `BuiltInKey`.
+function builtInMessage(
+  key: BuiltInKey,
+  translations?: Record<string, string>,
+  values?: Record<string, number | string>
+): string {
+  // Its placeholders are its own, `{min}` and the like, so a plain swap of
+  // each one does: the filters of a form's templates are no part of them.
+  return translateBuiltIn(key, translations).replace(
+    /\{(\w+)\}/g,
+    (placeholder, name: string) =>
+      values && name in values ? String(values[name]) : placeholder
+  )
 }
 
 function getArraySchema(input: Input, translations?: Record<string, string>) {
@@ -747,8 +860,6 @@ function buildObject(
   // schema matches the nested config the runtime persists (see `nestSchemas`).
   return buildSchema(nestSchemas(shape), leaves, translations)
 }
-
-const NOT_OFFERED = 'This option is not available'
 
 // The targets of every `source` event in the form, as written. The fields they
 // name take their options at run time, whatever the definition writes for
@@ -997,10 +1108,11 @@ function fieldIssues(
     if (firing && !hasValue(value)) {
       issues.push({
         path: [field.name],
-        message: translateOptional(
-          firing.message ?? field.validation?.required,
-          translations
-        ),
+        message:
+          translateOptional(
+            firing.message ?? field.validation?.required,
+            translations
+          ) ?? builtInMessage('This field is required', translations),
       })
     }
   }
@@ -1009,7 +1121,9 @@ function fieldIssues(
   if (pattern && !matchesPattern(pattern, value)) {
     issues.push({
       path: [field.name],
-      message: translateOptional(pattern.message, translations),
+      message:
+        translateOptional(pattern.message, translations) ??
+        builtInMessage('Invalid value', translations),
     })
   }
 
@@ -1017,7 +1131,9 @@ function fieldIssues(
     if (whenHolds(data, rule.when) && !runAssert(rule, value)) {
       issues.push({
         path: [field.name],
-        message: translateOptional(rule.message, translations),
+        message:
+          translateOptional(rule.message, translations) ??
+          builtInMessage('Invalid value', translations),
       })
     }
   }
@@ -1174,20 +1290,25 @@ function applyListLength<T extends z.ZodType>(
 ): z.ZodArray<T> {
   const { max, min, unreadable } = buildLengthLimits(list)
   if (unreadable) {
-    return items.refine(() => false, 'This list cannot be checked')
+    return items.refine(
+      () => false,
+      builtInMessage('This list cannot be checked', translations)
+    )
   }
 
   let schema = items
   if (min !== undefined) {
     schema = schema.min(
       min,
-      translateOptional(list.validation?.length?.min, translations)
+      translateOptional(list.validation?.length?.min, translations) ??
+        builtInMessage(boundMessage('items', MIN, min), translations, { min })
     )
   }
   if (max !== undefined) {
     schema = schema.max(
       max,
-      translateOptional(list.validation?.length?.max, translations)
+      translateOptional(list.validation?.length?.max, translations) ??
+        builtInMessage(boundMessage('items', MAX, max), translations, { max })
     )
   }
   return schema
