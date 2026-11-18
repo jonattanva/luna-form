@@ -735,9 +735,10 @@ const result = await callTool(call.name, call.input)
     `listTools()`, `callTool()` y lo que registra de sus envíos. Construir,
     registrar y enviar ya cargan de forma diferida.
   - El job `bundle-size` tiene tres presupuestos: el camino principal ESM en
-    gzip (31 kB), el chunk de los tools en gzip (12 kB, hoy 10.4) y el total
-    de todos los archivos (380 kB, hoy 359.0), que es la guardia contra una
-    dependencia empaquetada por error.
+    gzip (33 kB, hoy 30.8), el chunk de los tools en gzip (12 kB, hoy 10.7) y
+    el total de todos los archivos (400 kB, hoy 379.9), que es la guardia
+    contra una dependencia empaquetada por error. El del camino principal y el
+    total eran 31 y 380 kB hasta el 2026-11-18 (fase 2).
 
 ### 3.12 Tipos de TypeScript
 
@@ -1154,9 +1155,19 @@ Resultados:
 - [ ] Si la medición lo pide: el modo agrupado y `<name>_describe` (3.14).
 - [ ] En el editor, tools de autoría (`set_definition`, `get_definition`) para
       armar formularios desde lenguaje natural.
-- [ ] Margen del bundle: decidir si se suben los presupuestos o se recorta el
+- [x] Margen del bundle: decidir si se suben los presupuestos o se recorta el
       camino principal antes de sumar código (379.3 de 380 kB; 30.8 de 31 kB
       gzip).
+  - Decidido el 2026-11-18: subirlos, a 400 kB en total y 33 kB gzip en el
+    camino principal; el chunk de los tools sigue en 12. No había peso muerto
+    que recortar: lo que más pesa en el camino principal es core que todo
+    formulario usa (el esquema, las fechas y zonas horarias, el campo base y
+    las listas), y diferir los campos por tipo ya se probó y perdía valores al
+    enviar. Tampoco ayuda que una aplicación importe poco: la entrada y su
+    chunk compartido llegan casi enteros (25.3 de 30.8 kB gzip importando
+    solo `withDeclaredFields`).
+  - El total sigue atrapando una dependencia empaquetada por error, que suma
+    cientos de kB, y cada presupuesto deja lugar para unos cuantos cambios.
 - [ ] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
       cerrarse antes de que React confirme la transición que revela un campo.
       La e2e que escribe en la misma llamada un campo que otro valor muestra
@@ -1238,8 +1249,8 @@ Resultados:
   - una tecla en un formulario con `agent` no vuelve a registrar los tools;
   - rellenar 100 campos hace un commit por pasada.
 - **Bundle:** el job `bundle-size` cumple sus tres presupuestos: el camino
-  principal ESM (31 kB gzip), el chunk de los tools (12 kB gzip) y el total
-  (380 kB).
+  principal ESM (33 kB gzip), el chunk de los tools (12 kB gzip) y el total
+  (400 kB).
 
 ## 6. Medición antes y después
 
@@ -1383,7 +1394,8 @@ Cumplidos al cerrar la fase 1, el 2026-11-18.
 
 - [x] Sin la prop `agent`, o sin WebMCP ni llamadas a `listTools()`: ningún
       tool, ningún render extra, y el camino principal dentro de su
-      presupuesto (31 kB gzip; 2.2 kB más que sin agentes).
+      presupuesto (31 kB gzip; 2.2 kB más que sin agentes). Es el límite al
+      cerrar la fase 1; desde el 2026-11-18 es 33 kB (fase 2).
 - [x] Con la prop:
   - `getTools()` y `listTools()` devuelven, con el esquema de 3.3:
     - `<name>_fill` y `<name>_read`;

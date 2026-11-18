@@ -2240,10 +2240,11 @@ const result = await callTool(call.name, call.input)</code></pre>
                 </li>
                 <li>
                   El job <code>bundle-size</code> tiene tres presupuestos: el
-                  camino principal ESM en gzip (31 kB), el chunk de los tools en
-                  gzip (12 kB, hoy 10.4) y el total de todos los archivos (380
-                  kB, hoy 359.0), que es la guardia contra una dependencia
-                  empaquetada por error.
+                  camino principal ESM en gzip (33 kB, hoy 30.8), el chunk de
+                  los tools en gzip (12 kB, hoy 10.7) y el total de todos los
+                  archivos (400 kB, hoy 379.9), que es la guardia contra una
+                  dependencia empaquetada por error. El del camino principal y
+                  el total eran 31 y 380 kB hasta el 2026-11-18 (fase 2).
                 </li>
               </ul>
             </li>
@@ -3317,10 +3318,29 @@ const result = await callTool(call.name, call.input)</code></pre>
                   <code>get_definition</code>) para armar formularios desde
                   lenguaje natural.
                 </li>
-                <li>
+                <li class="done">
                   Margen del bundle: decidir si se suben los presupuestos o se
                   recorta el camino principal antes de sumar código (379.3 de
                   380 kB; 30.8 de 31 kB gzip).
+                  <ul>
+                    <li>
+                      Decidido el 2026-11-18: subirlos, a 400 kB en total y 33
+                      kB gzip en el camino principal; el chunk de los tools
+                      sigue en 12. No había peso muerto que recortar: lo que más
+                      pesa en el camino principal es core que todo formulario
+                      usa (el esquema, las fechas y zonas horarias, el campo
+                      base y las listas), y diferir los campos por tipo ya se
+                      probó y perdía valores al enviar. Tampoco ayuda que una
+                      aplicación importe poco: la entrada y su chunk compartido
+                      llegan casi enteros (25.3 de 30.8 kB gzip importando solo
+                      <code>withDeclaredFields</code>).
+                    </li>
+                    <li>
+                      El total sigue atrapando una dependencia empaquetada por
+                      error, que suma cientos de kB, y cada presupuesto deja
+                      lugar para unos cuantos cambios.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   <code>settle</code> más robusto bajo carga: su ventana quieta
@@ -3547,8 +3567,8 @@ const result = await callTool(call.name, call.input)</code></pre>
             </li>
             <li>
               <strong>Bundle:</strong> el job <code>bundle-size</code> cumple
-              sus tres presupuestos: el camino principal ESM (31 kB gzip), el
-              chunk de los tools (12 kB gzip) y el total (380 kB).
+              sus tres presupuestos: el camino principal ESM (33 kB gzip), el
+              chunk de los tools (12 kB gzip) y el total (400 kB).
             </li>
           </ul>
         </section>
@@ -4010,7 +4030,8 @@ const result = await callTool(call.name, call.input)</code></pre>
               Sin la prop <code>agent</code>, o sin WebMCP ni llamadas a
               <code>listTools()</code>: ningún tool, ningún render extra, y el
               camino principal dentro de su presupuesto (31 kB gzip; 2.2 kB más
-              que sin agentes).
+              que sin agentes). Es el límite al cerrar la fase 1; desde el
+              2026-11-18 es 33 kB (fase 2).
             </li>
             <li class="done">
               Con la prop:
