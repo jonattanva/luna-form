@@ -175,6 +175,8 @@ jobs:
     name: build
     timeout-minutes: 5
     runs-on: ubuntu-26.04
+    outputs:
+      playwright: ${{ steps.playwright-version.outputs.version }}
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -198,6 +200,12 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Build project
         run: pnpm build
+      # The version the e2e tests run in the Playwright image of, which has to
+      # be the one the lockfile installs.
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> $GITHUB_OUTPUT
   lint:
     name: lint
     timeout-minutes: 5
@@ -253,6 +261,13 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-26.04
     needs: build
+    # In the Playwright image, which carries the browsers and the system
+    # packages they need. Installing those packages on the runner took up to
+    # 27 minutes on a slow apt mirror, enough to cancel a webkit job before
+    # its tests ran. The runner's user, so Firefox does not run as root.
+    container:
+      image: mcr.microsoft.com/playwright:v${{ needs.build.outputs.playwright }}-resolute
+      options: --user 1001
     strategy:
       fail-fast: false
       matrix:
@@ -282,21 +297,12 @@ jobs:
             ${{ runner.os }}-turbo-
       - name: Build project
         run: pnpm build
-      - name: Get Playwright version
-        id: playwright-version
-        run: |
-          echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-          echo "image=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> $GITHUB_OUTPUT
-      - name: Cache Playwright browsers
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ steps.playwright-version.outputs.image }}-playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      # The server writes to a file. Left on the step's output, it blocks once
+      # that step has ended and nobody reads the pipe, and every test after
+      # that times out.
       - name: Start application server
         run: |
-          pnpm serve &
+          pnpm serve > server.log 2>&1 &
           for attempt in $(seq 1 60); do
             curl -sf http://localhost:3000 > /dev/null && exit 0
             sleep 1
@@ -311,6 +317,12 @@ jobs:
         with:
           name: blob-report-${{ matrix.browser }}-${{ matrix.shard }}
           path: blob-report/
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: server-log-${{ matrix.browser }}-${{ matrix.shard }}
+          path: server.log
           retention-days: 1
   e2e-report:
     name: e2e-report
