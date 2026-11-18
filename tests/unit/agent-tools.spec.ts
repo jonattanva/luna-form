@@ -111,6 +111,11 @@ type Setup = Readonly<{
   refuses?: readonly string[]
   // Fields whose options are still on their way.
   unloaded?: readonly string[]
+  // The fields whose change brings a field's options, by the field: one
+  // named here has no request of its own out for them.
+  from?: Readonly<Record<string, readonly string[]>>
+  // Fields disabled, which fetch no options.
+  disabled?: readonly string[]
   // A locked field that another one unlocks when it holds a value.
   unlocks?: Readonly<Record<string, Readonly<{ target: string; when: string }>>>
   // What a field's value writes into another one, as a `value` event does.
@@ -261,6 +266,11 @@ function createForm(setup: Setup = {}) {
     isChanged: (name) => changed.has(name),
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
+    optionsFrom: (path) => ({
+      disabled: setup.disabled?.includes(path) === true,
+      fetching: setup.from?.[path] === undefined,
+      from: setup.from?.[path] ?? [],
+    }),
     read: (name) => values.get(name),
     resolve: (route) => (leafOf(route) ? route : undefined),
     seen: (names) => {
@@ -307,7 +317,7 @@ function createForm(setup: Setup = {}) {
     },
   }
 
-  return { calls, host, values }
+  return { calls, host, options, values }
 }
 
 function toolsOf(
@@ -1559,6 +1569,36 @@ describe('createFormTools', () => {
       expect(
         await call(tools, 'options', { field: 'items.0.zone', text: 'zone 59' })
       ).toEqual({ items: [ZONES[59]] })
+    })
+
+    test('should wait for the options a field is loading', async () => {
+      const { options, tools } = toolsOf({ unloaded: ['zone'] })
+      const answer = call(tools, 'options', { field: 'zone', text: 'zone 59' })
+      options.set('zone', ZONES)
+
+      expect(await answer).toEqual({ items: [ZONES[59]] })
+    })
+
+    test('should say why a field has no options, and stop waiting for them', async () => {
+      const ask = async (setup: Setup) =>
+        (await call(toolsOf(setup).tools, 'options', { field: 'zone' })).message
+
+      expect(
+        await ask({ from: { zone: ['country'] }, unloaded: ['zone'] })
+      ).toBe('Its options come from country: fill it first, then ask again.')
+      expect(await ask({ absent: ['zone'], unloaded: ['zone'] })).toBe(
+        'The field is not on the form: fill what shows it first, then ask again.'
+      )
+      expect(await ask({ disabled: ['zone'], unloaded: ['zone'] })).toBe(
+        'The field is disabled, so its options are not fetched.'
+      )
+
+      vi.useFakeTimers()
+      const answer = ask({ unloaded: ['zone'] })
+      await vi.advanceTimersByTimeAsync(5_000)
+      expect(await answer).toBe(
+        'Its options did not arrive within 5 seconds: ask again later.'
+      )
     })
 
     test('should answer unknown for a field without options or left out of the tools', async () => {
