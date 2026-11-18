@@ -31,3 +31,18 @@ export const pendingAutoFillAtom = atom<{
   target: string
   value: unknown
 } | null>(null)
+
+// When a person last changed each field, or the rows of a list, by name: a
+// number that only grows, shared by every form on the page, so a form that
+// starts over on a new store never hands out one it gave before. Written by a
+// person's change alone -- not by a change event, a value the host puts in or
+// what an agent writes -- and read by the tools of a form with `agent`, so a
+// fill leaves alone what a person changed that the agent was not told of.
+export const touchedAtom = atom<Readonly<Record<string, number>>>({})
+
+let touches = 0
+
+// Notes a person's change to a field, or to a list's rows.
+export const touchAtom = atom(null, (get, set, name: string) => {
+  set(touchedAtom, { ...get(touchedAtom), [name]: ++touches })
+})

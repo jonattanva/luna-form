@@ -2458,9 +2458,9 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <tr>
                   <td>Persona y agente escribiendo a la vez</td>
                   <td>
-                    Un <code>revision</code> en las respuestas; un
-                    <code>fill</code> que lo envía no pisa los campos que la
-                    persona cambió después
+                    Un <code>fill</code> no pisa lo que la persona cambió desde
+                    que el agente lo leyó: <code>changed</code>, con su valor
+                    actual
                   </td>
                   <td class="num">2</td>
                 </tr>
@@ -2552,14 +2552,16 @@ const result = await callTool(call.name, call.input)</code></pre>
               <strong>Persona y agente a la vez (fase 2):</strong>
               <ul>
                 <li>
-                  Cada respuesta trae <code>revision</code>, un contador que
-                  sube con cada cambio del formulario.
+                  Un <code>fill</code> no pisa los campos que la persona cambió
+                  desde que el agente los leyó: van a <code>skipped</code> con
+                  el código <code>changed</code>, y su valor actual va en
+                  <code>values</code>.
                 </li>
                 <li>
-                  Un <code>fill</code> que envía la <code>revision</code> que
-                  leyó no pisa los campos que la persona cambió después: van a
-                  <code>skipped</code> con el código <code>changed</code> y su
-                  valor actual.
+                  La revisión es implícita: el formulario recuerda qué le dijo
+                  al agente. Un <code>revision</code> que el agente reenvía
+                  choca con un campo que se llame igual, y depende de que el
+                  modelo lo mande.
                 </li>
               </ul>
             </li>
@@ -3285,9 +3287,31 @@ const result = await callTool(call.name, call.input)</code></pre>
                   <code>'agent'</code> o <code>'event'</code>) y un registro
                   opcional de llamadas, para auditar.
                 </li>
-                <li>
-                  Persona y agente a la vez: <code>revision</code> y el código
-                  <code>changed</code> (<a href="#escala">3.14</a>).
+                <li class="done">
+                  Persona y agente a la vez: el código <code>changed</code> (<a
+                    href="#escala"
+                    >3.14</a
+                  >).
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18, con la revisión implícita en vez de
+                      <code>revision</code>.
+                    </li>
+                    <li>
+                      El formulario anota lo que cambia una persona: lo que
+                      escribe en un campo y las filas que agrega o quita. No lo
+                      que escribe un evento, el host por <code>value</code> o el
+                      agente. Comparar el store daba falsos cambios: al abrir,
+                      al empezar de nuevo y al pasar filas de una lista que se
+                      oculta.
+                    </li>
+                    <li>
+                      Cuenta como leído lo que
+                      <code>&lt;name&gt;_read</code> devolvió con su valor y
+                      todo campo con el que respondió un <code>fill</code>. Un
+                      envío exitoso empieza de nuevo sin nada anotado.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Usar <code>toolactivated</code> y <code>toolcancel</code> para
@@ -4050,8 +4074,7 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <tr>
                   <td>El agente pisa lo que escribe la persona</td>
                   <td>
-                    <code>revision</code> en la fase 2 (<a href="#escala"
-                      >3.14</a
+                    <code>changed</code> en la fase 2 (<a href="#escala">3.14</a
                     >)
                   </td>
                 </tr>

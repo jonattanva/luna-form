@@ -794,7 +794,7 @@ de la fase 1 es interno: no agrega API.
 | Ráfagas de eventos `source` remotos           | Se miden; si hace falta, se limita cuántos se piden a la vez                                                         | 1    |
 | Muchos formularios en una página              | Si la medición lo pide: un modo agrupado, con tools de página que reciben el formulario como parámetro               | 2    |
 | Formularios que siguen pasando el presupuesto | Si la medición lo pide: `<name>_describe({ section })`, que entrega el esquema por secciones                         | 2    |
-| Persona y agente escribiendo a la vez         | Un `revision` en las respuestas; un `fill` que lo envía no pisa los campos que la persona cambió después             | 2    |
+| Persona y agente escribiendo a la vez         | Un `fill` no pisa lo que la persona cambió desde que el agente lo leyó: `changed`, con su valor actual               | 2    |
 | Saber qué hizo el agente en producción        | `source` en `onValueChange` y un registro opcional de llamadas                                                       | 2    |
 
 Detalles:
@@ -825,11 +825,11 @@ Detalles:
   - Carga el esquema de un formulario solo cuando hace falta.
   - Se decide con la página de cinco formularios de la sección 6.
 - **Persona y agente a la vez (fase 2):**
-  - Cada respuesta trae `revision`, un contador que sube con cada cambio del
-    formulario.
-  - Un `fill` que envía la `revision` que leyó no pisa los campos que la
-    persona cambió después: van a `skipped` con el código `changed` y su valor
-    actual.
+  - Un `fill` no pisa los campos que la persona cambió desde que el agente los leyó:
+    van a `skipped` con el código `changed`, y su valor actual va en `values`.
+  - La revisión es implícita: el formulario recuerda qué le dijo al agente. Un
+    `revision` que el agente reenvía choca con un campo que se llame igual, y
+    depende de que el modelo lo mande.
 
 ### 3.15 Contrato de los tools
 
@@ -1143,7 +1143,15 @@ Resultados:
 
 - [ ] `source` en `onValueChange` (`'user'`, `'agent'` o `'event'`) y un
       registro opcional de llamadas, para auditar.
-- [ ] Persona y agente a la vez: `revision` y el código `changed` (3.14).
+- [x] Persona y agente a la vez: el código `changed` (3.14).
+  - Hecho el 2026-11-18, con la revisión implícita en vez de `revision`.
+  - El formulario anota lo que cambia una persona: lo que escribe en un campo
+    y las filas que agrega o quita. No lo que escribe un evento, el host por
+    `value` o el agente. Comparar el store daba falsos cambios: al abrir, al
+    empezar de nuevo y al pasar filas de una lista que se oculta.
+  - Cuenta como leído lo que `<name>_read` devolvió con su valor y todo campo
+    con el que respondió un `fill`. Un envío exitoso empieza de nuevo sin nada
+    anotado.
 - [ ] Usar `toolactivated` y `toolcancel` para resaltar:
   - el formulario mientras un agente lo usa (`data-agent-active`);
   - los campos que escribió (`data-agent-filled`).
@@ -1403,7 +1411,7 @@ Riesgos:
 | Inyección vía textos interpolados o texto de la página    | Descripciones sin interpolar, aviso en cada descripción y `untrustedContentHint` (3.13)            |
 | Formularios grandes caros en tokens o lentos de rellenar  | Las medidas de 3.14 y el formulario grande de la sección 6                                         |
 | Muchos formularios en una página                          | El modo agrupado, si la medición lo pide (3.14)                                                    |
-| El agente pisa lo que escribe la persona                  | `revision` en la fase 2 (3.14)                                                                     |
+| El agente pisa lo que escribe la persona                  | `changed` en la fase 2 (3.14)                                                                      |
 | Los tools se registran de más                             | Esquema comparado por contenido, `execute` leyendo refs y un budget nuevo                          |
 | Un componente propio envía algo distinto del valor        | El e2e de contrato: la acción recibe lo que reporta `values` (sección 5)                           |
 

@@ -320,6 +320,92 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name$=".sku"]').nth(1)).toHaveValue('B2')
   })
 
+  test('should not write over what a person changed since the agent read the form', async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_read')
+
+    await page.locator('input[name="email"]').fill('person@example.com')
+    await page.locator('input[name$=".sku"]').first().fill('P1')
+
+    const result = await call(page, 'preview_fill', {
+      email: 'agent@example.com',
+      items: [{ sku: 'A1' }],
+      name: 'Ada',
+    })
+    expect(result).toMatchObject({
+      applied: ['name'],
+      ok: false,
+      values: {
+        email: 'person@example.com',
+        items: [{ sku: 'P1' }],
+        name: 'Ada',
+        nickname: 'Ada',
+      },
+    })
+    expect(result.skipped).toEqual([
+      expect.objectContaining({ code: 'changed', name: 'email' }),
+      expect.objectContaining({ code: 'changed', name: 'items' }),
+    ])
+    await expect(page.locator('input[name="email"]')).toHaveValue(
+      'person@example.com'
+    )
+
+    // What its own fill set off is the agent's, and what it was told of is
+    // its to write over.
+    expect(
+      await call(page, 'preview_fill', {
+        email: 'agent@example.com',
+        nickname: 'Al',
+      })
+    ).toMatchObject({ applied: ['nickname', 'email'], ok: true, skipped: [] })
+    await expect(page.locator('input[name="email"]')).toHaveValue(
+      'agent@example.com'
+    )
+  })
+
+  test('should not write a row by its position once a person moved the rows', async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_fill', { items: [{ sku: 'A1' }, { sku: 'B2' }] })
+    await page.getByRole('button', { name: 'Remove Items item 1' }).click()
+    await expect(page.locator('input[name$=".sku"]')).toHaveCount(1)
+
+    expect(
+      await call(page, 'preview_fill', { 'items.0.sku': 'X' })
+    ).toMatchObject({ skipped: [{ code: 'changed', name: 'items.0.sku' }] })
+    await expect(page.locator('input[name$=".sku"]')).toHaveValue('B2')
+
+    // Told what the row there holds, the agent may write it.
+    expect(
+      await call(page, 'preview_fill', { 'items.0.sku': 'X' })
+    ).toMatchObject({ applied: ['items.0.sku'], ok: true })
+    await expect(page.locator('input[name$=".sku"]')).toHaveValue('X')
+  })
+
+  test("should take what a person's submission leaves as no one's change", async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_read')
+    await page.locator('input[name="name"]').fill('Ada')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    // The form tells of its success once it has started over. Read with no
+    // field, so nothing is told to the agent but that.
+    await expect
+      .poll(
+        async () => (await call(page, 'preview_read', { fields: [] })).submit
+      )
+      .toMatchObject({ status: 'success' })
+
+    expect(await call(page, 'preview_fill', { name: 'Bo' })).toMatchObject({
+      applied: ['name'],
+      ok: true,
+    })
+  })
+
   test("should write one row's field by its route, and leave the others alone", async ({
     page,
   }) => {

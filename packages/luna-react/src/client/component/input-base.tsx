@@ -8,8 +8,8 @@ import { useLatest } from '../hook/use-latest'
 import { useRegisterApply, type ApplyOptions } from '../hook/use-apply'
 import { useReplayedChangeEvents } from '../hook/use-replayed-change-events'
 import { deepEqual } from 'fast-equals'
-import { useStore } from 'jotai'
-import { valueAtom } from '../lib/value-store'
+import { useSetAtom, useStore } from 'jotai'
+import { touchAtom, valueAtom } from '../lib/value-store'
 import {
   applyTransformToChange,
   flattenOptions,
@@ -73,6 +73,7 @@ export function InputBase(
 
   const { getField } = props
   const store = useStore()
+  const touch = useSetAtom(touchAtom)
 
   // Withheld when a `source` change event swapped the schema's array for a
   // remote DataSource: the fetched labels are data, not authored copy.
@@ -156,6 +157,9 @@ export function InputBase(
       const shown = apply ? undefined : shownRef.current
       keepCaret(event.target, props.field, shown)
       onValueChangeRef.current(inputValue, shown)
+      if (!apply) {
+        touch(props.field.name)
+      }
       if (apply?.validate ?? props.config.validation.change) {
         validated(inputValue)
       }
@@ -200,6 +204,7 @@ export function InputBase(
       shouldSkipOnChange,
       shownRef,
       store,
+      touch,
       validated,
       valueRef,
     ]
