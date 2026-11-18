@@ -52,11 +52,12 @@ export function InputBase(
     takeHostChange,
     value,
   } = useValue(props.field)
-  const { data, setSource, isStaticSource } = useSource(
-    props.field,
-    props.config,
-    value
-  )
+  const {
+    data,
+    fetching = false,
+    setSource,
+    isStaticSource,
+  } = useSource(props.field, props.config, value)
 
   const {
     applyChangeEventsRef,
@@ -230,6 +231,7 @@ export function InputBase(
     props.field.name,
     {
       change,
+      fetching,
       locked,
       options: () => options && flattenOptions(options),
       // What the field holds, checked as leaving it checks it, and shown when

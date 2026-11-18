@@ -331,10 +331,14 @@ function createFormHost(
     getStatus: (name) => {
       const handle = getHandles().get(name)
       if (handle) {
-        return { hidden: false, locked: handle.isLocked() }
+        return {
+          fetching: handle.isFetching(),
+          hidden: false,
+          locked: handle.isLocked(),
+        }
       }
       return lists()[name]
-        ? { hidden: false, locked: read().readOnly === true }
+        ? { fetching: false, hidden: false, locked: read().readOnly === true }
         : undefined
     },
 

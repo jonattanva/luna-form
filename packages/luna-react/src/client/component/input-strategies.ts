@@ -35,7 +35,9 @@ export type InputStrategies = Readonly<{
     value?: Nullable<Record<string, unknown>>
   ) => {
     data: Nullable<unknown[]>
-    // Only set by sources that can carry options; write-only sources omit it.
+    // Only set by sources that can carry options; write-only sources omit
+    // them. `fetching` while the request for them has not answered.
+    fetching?: boolean
     isStaticSource?: boolean
     setSource: (target: string, source?: DataSource) => void
   }

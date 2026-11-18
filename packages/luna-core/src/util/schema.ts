@@ -861,28 +861,40 @@ function buildObject(
   return buildSchema(nestSchemas(shape), leaves, translations)
 }
 
-// The targets of every `source` event in the form, as written. The fields they
-// name take their options at run time, whatever the definition writes for
-// them. See `isTargetOf` for which field a target names.
-export function collectSourceTargets(fields: Fields): Set<string> {
-  const targets = new Set<string>()
+// The `source` events of the form: by each target as written, the fields whose
+// change fires one, by their whole name, a row's leaf through its list's first
+// row (`items.0.kind`). The fields a target names take their options at run
+// time, whatever the definition writes for them. See `isTargetOf` for which
+// field a target names.
+export function collectSourceEvents(fields: Fields): Map<string, string[]> {
+  const events = new Map<string, string[]>()
 
-  const visit = (entries: Fields): void => {
+  const visit = (entries: Fields, prefix: string): void => {
     for (const entry of entries) {
       if (!isField(entry)) {
-        visit(entry.fields)
+        visit(
+          entry.fields,
+          isList(entry) ? `${prefix}${entry.name}.0.` : prefix
+        )
         continue
       }
       for (const event of entry.event?.change ?? []) {
         if (event.action === 'source') {
-          targets.add(event.target)
+          const from = events.get(event.target) ?? []
+          from.push(`${prefix}${entry.name}`)
+          events.set(event.target, from)
         }
       }
     }
   }
 
-  visit(fields)
-  return targets
+  visit(fields, '')
+  return events
+}
+
+// The targets of every `source` event in the form, as written.
+export function collectSourceTargets(fields: Fields): Set<string> {
+  return new Set(collectSourceEvents(fields).keys())
 }
 
 /** An option a field offers, as text: what is submitted, and what is shown. */

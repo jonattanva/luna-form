@@ -1817,8 +1817,8 @@ dictionary ModelContextTool {
                 </li>
                 <li>
                   Fuentes remotas: devuelve las opciones ya cargadas. Si todavía
-                  no se cargaron, queda como pregunta abierta si el tool las
-                  pide.
+                  no se cargaron, espera hasta 5 segundos la petición del propio
+                  campo, sin pedir nada por su cuenta (pregunta 3).
                 </li>
                 <li>
                   Opciones que cambia un evento (<code>setSource</code>):
@@ -3379,10 +3379,17 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Fuentes remotas: que <code>&lt;name&gt;_options</code> pida
                   las opciones que todavía no se cargaron, según la respuesta a
                   la pregunta abierta.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18: espera la petición del campo hasta 5
+                      segundos, sin hacer una propia, y si no hay nada que
+                      esperar dice por qué (sección 7, pregunta 3).
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Si la medición lo pide: el modo agrupado y
@@ -3424,6 +3431,12 @@ const result = await callTool(call.name, call.input)</code></pre>
                       El total sigue atrapando una dependencia empaquetada por
                       error, que suma cientos de kB, y cada presupuesto deja
                       lugar para unos cuantos cambios.
+                    </li>
+                    <li>
+                      El 2026-11-18, con las opciones remotas, el chunk de los
+                      tools llegó a 12.1 kB gzip y su presupuesto sube a 14:
+                      solo se descarga cuando hay un agente, y deja lugar para
+                      los ítems que quedan.
                     </li>
                   </ul>
                 </li>
@@ -4217,7 +4230,7 @@ const result = await callTool(call.name, call.input)</code></pre>
           <h3>Preguntas abiertas</h3>
           <p>
             Al cerrar la fase 1 quedan abiertas la 3 y la 5, que pasan a la fase
-            2.
+            2, y se responden en ella:
           </p>
           <ol>
             <li>
@@ -4237,7 +4250,13 @@ const result = await callTool(call.name, call.input)</code></pre>
               Con una fuente remota que todavía no cargó, ¿<code
                 >&lt;name&gt;_options</code
               >
-              la pide?
+              la pide? Resuelta el 2026-11-18: no la pide, la espera. El campo
+              ya pide sus opciones al montarse; el tool espera esa petición
+              hasta 5 segundos, así respeta <code>remotePatterns</code>, los
+              headers y la caché de la fuente. Si no hay nada que esperar, dice
+              por qué: el campo está oculto o deshabilitado, o sus opciones
+              vienen del evento <code>source</code> de otro campo, que nombra
+              para que el agente lo llene primero.
             </li>
             <li>
               ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos

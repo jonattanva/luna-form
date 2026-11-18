@@ -27,12 +27,14 @@ export type Apply = (value: Value, options?: ApplyOptions) => boolean
 
 /**
  * A mounted field, as something outside it reaches it: written through its own
- * change, asked whether it is locked and which options it offers now, and
- * validated. `validate` answers the field's errors, and shows them when the
- * form shows a person's as they write or leave a field.
+ * change, asked whether it is locked, whether a request for its options has
+ * not answered yet and which options it offers now, and validated. `validate`
+ * answers the field's errors, and shows them when the form shows a person's
+ * as they write or leave a field.
  */
 export type FieldHandle = Readonly<{
   apply: Apply
+  isFetching: () => boolean
   isLocked: () => boolean
   options: () => readonly Option[] | undefined
   validate: () => readonly string[]
@@ -68,6 +70,7 @@ export function useApplyRegistry() {
 /** What a field hands `useRegisterApply`, read afresh on every call. */
 export type FieldParts = Readonly<{
   change: (event: InputChangeEvent, apply?: ApplyOptions) => boolean
+  fetching: boolean
   locked: boolean
   options: () => readonly Option[] | undefined
   validate: () => readonly string[]
@@ -96,6 +99,7 @@ export function useRegisterApply(
     return onRegisterApply(name, {
       apply: (value, options) =>
         partsRef.current.change({ target: { value } }, options ?? {}),
+      isFetching: () => partsRef.current.fetching,
       isLocked: () => partsRef.current.locked,
       options: () => partsRef.current.options(),
       validate: () => partsRef.current.validate(),

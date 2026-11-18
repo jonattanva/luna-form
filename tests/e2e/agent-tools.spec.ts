@@ -702,6 +702,74 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     ])
   })
 
+  test('should wait for the options a field fetches, and say which field brings them', async ({
+    page,
+  }) => {
+    // Slow enough that the tool is asked before they arrive.
+    await page.route('**/api/regions', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1_500))
+      await route.fulfill({
+        body: JSON.stringify([
+          { label: 'Andes', value: 'andes' },
+          { label: 'Caribe', value: 'caribe' },
+        ]),
+        contentType: 'application/json',
+      })
+    })
+    await page.route('**/api/cities*', (route) =>
+      route.fulfill({
+        body: JSON.stringify([{ label: 'Bogotá', value: 'bog' }]),
+        contentType: 'application/json',
+      })
+    )
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              label: 'Region',
+              name: 'region',
+              source: { url: '/api/regions' },
+              type: 'select',
+            },
+            {
+              event: {
+                change: [
+                  {
+                    action: 'source',
+                    source: { url: '/api/cities?kind={value}' },
+                    target: 'city',
+                  },
+                ],
+              },
+              label: 'Kind',
+              name: 'kind',
+              source: [{ label: 'Capital', value: 'capital' }],
+              type: 'select',
+            },
+            { label: 'City', name: 'city', type: 'select' },
+          ],
+        },
+      ],
+    })
+
+    expect(await call(page, 'preview_options', { field: 'region' })).toEqual({
+      items: [
+        { label: 'Andes', value: 'andes' },
+        { label: 'Caribe', value: 'caribe' },
+      ],
+    })
+
+    expect(await call(page, 'preview_options', { field: 'city' })).toEqual({
+      items: [],
+      message: 'Its options come from kind: fill it first, then ask again.',
+    })
+    await call(page, 'preview_fill', { kind: 'capital' })
+    expect(await call(page, 'preview_options', { field: 'city' })).toEqual({
+      items: [{ label: 'Bogotá', value: 'bog' }],
+    })
+  })
+
   test('should find time zones by name', async ({ page }) => {
     await open(page)
     const result = await call(page, 'preview_options', {

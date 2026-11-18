@@ -3,17 +3,7 @@ import { deepEqual } from 'fast-equals'
 import { getEntity, isOptions, isSelect, isValidValue } from '@luna-form/core'
 import { toChangeValue } from './input-strategies'
 import { useDataSource } from '../hook/use-data-source'
-import type { Config } from '../../type'
-import type { Field, Nullable, Value } from '@luna-form/core'
-
-function useSelectableSource(
-  field: Field,
-  config: Config,
-  value?: Nullable<Record<string, unknown>>
-) {
-  const [data, setSource, isStaticSource] = useDataSource(field, config, value)
-  return { data, setSource, isStaticSource }
-}
+import type { Field, Value } from '@luna-form/core'
 
 // Radix (and similar components) re-emit onChange("") when a select trigger
 // remounts (e.g. a collapsible list item toggling its React `Activity`). An
@@ -30,7 +20,7 @@ export function isEmptySelectChange(field: Field, inputValue: Value): boolean {
 }
 
 export const InputSelectable = createInput({
-  useSource: useSelectableSource,
+  useSource: useDataSource,
 
   getValue: (event) => event.target.value,
 
