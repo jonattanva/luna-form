@@ -3342,12 +3342,37 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   <code>settle</code> más robusto bajo carga: su ventana quieta
                   de 50 ms puede cerrarse antes de que React confirme la
                   transición que revela un campo. La e2e que escribe en la misma
                   llamada un campo que otro valor muestra falló una vez en
                   Firefox con la suite completa; aislada pasa 15 de 15.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18. El relleno pregunta al host si la
+                      página está dibujando el campo que no pudo escribir
+                      (<code>isDrawing</code>): uno oculto que ya se muestra,
+                      uno bloqueado que ya no lo está, o una lista con filas por
+                      montar. Mientras lo esté, la pasada no cuenta y espera
+                      otro <code>settle</code>, hasta 40 rondas (unos 2 s); un
+                      campo que nunca se dibuja queda en <code>skipped</code>
+                      después de esa espera.
+                    </li>
+                    <li>
+                      Se descartó esperar una barrera de commit: React 19.3
+                      confirma una sola lane de transición por render, así que
+                      la barrera podía resolverse antes de la transición que
+                      revela el campo.
+                    </li>
+                    <li>
+                      Con la CPU 20 veces más lenta, <code>main</code> fallaba
+                      10 de 10 (<code>frequency</code> oculto,
+                      <code>card</code> bloqueado) y el cambio pasa 10 de 10,
+                      también a 40x. La e2e que lo cubre usa CDP y corre solo en
+                      Chromium (etiqueta <code>@chromium</code>).
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Un envío con <code>validation.submit: false</code> no se

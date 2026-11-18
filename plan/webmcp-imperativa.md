@@ -1168,10 +1168,22 @@ Resultados:
     solo `withDeclaredFields`).
   - El total sigue atrapando una dependencia empaquetada por error, que suma
     cientos de kB, y cada presupuesto deja lugar para unos cuantos cambios.
-- [ ] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
+- [x] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
       cerrarse antes de que React confirme la transición que revela un campo.
       La e2e que escribe en la misma llamada un campo que otro valor muestra
       falló una vez en Firefox con la suite completa; aislada pasa 15 de 15.
+  - Hecho el 2026-11-18. El relleno pregunta al host si la página está
+    dibujando el campo que no pudo escribir (`isDrawing`): uno oculto que ya
+    se muestra, uno bloqueado que ya no lo está, o una lista con filas por
+    montar. Mientras lo esté, la pasada no cuenta y espera otro `settle`, hasta
+    40 rondas (unos 2 s); un campo que nunca se dibuja queda en `skipped`
+    después de esa espera.
+  - Se descartó esperar una barrera de commit: React 19.3 confirma una sola
+    lane de transición por render, así que la barrera podía resolverse antes
+    de la transición que revela el campo.
+  - Con la CPU 20 veces más lenta, `main` fallaba 10 de 10 (`frequency`
+    oculto, `card` bloqueado) y el cambio pasa 10 de 10, también a 40x. La
+    e2e que lo cubre usa CDP y corre solo en Chromium (etiqueta `@chromium`).
 - [ ] Un envío con `validation.submit: false` no se resuelve para los tools: el
       estado queda en `pending` y `<name>_submit` no vuelve a enviar.
 
