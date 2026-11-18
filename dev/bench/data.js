@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795005668448,
+  "lastUpdate": 1795006339519,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "bb094e4bf656d405a251c483e16155de5050109c",
-          "message": "chore(deps): upgrade dependencies\n\nTwo of these are worth calling out.\n\n`vitest` goes from 4.1.11 to 5.0.0, a major, and the 700 unit tests pass on it\nunchanged.\n\n`@playwright/test` goes from 1.62.1 to 1.63.0, which pins new browser\nrevisions -- chromium 1243, firefox 1543, webkit 2359. A checkout that skips\n`pnpm exec playwright install` fails every e2e at launch with `Executable\ndoesn't exist`, which reads like a broken suite rather than a missing\ndownload.\n\nThe rest are patch or minor: next and eslint-config-next to 16.3.4,\n@base-ui/react to 1.8.0, typescript-eslint to 8.69.0, plus knip, lint-staged,\nglobals and the @types packages.\n\nVerified on the upgraded tree: 700 unit, 1566 e2e across chromium, firefox and\nwebkit, typescript, eslint and prettier.",
-          "timestamp": "2026-09-07T09:29:26-05:00",
-          "tree_id": "c43b252743b149165227f27b6c43ab109ac4f185",
-          "url": "https://github.com/jonattanva/luna-form/commit/bb094e4bf656d405a251c483e16155de5050109c"
-        },
-        "date": 1788791433331,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00027945694,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0008837179600000002,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.025061821260000002,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.00032852015999999823,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.00046746487999999774,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.021994824519999998,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.0163754468,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8781a671c1bc2a83d5639a29b858f358bc942e82",
+          "message": "Merge pull request #160 from jonattanva/claude/close-phase-1\n\ndocs(plan): close phase 1 with the acceptance criteria met and what moves on to phases 2 and 3",
+          "timestamp": "2026-11-18T07:51:50-05:00",
+          "tree_id": "fa59f31bc8e92b0366c7bcb79b78736a3504100e",
+          "url": "https://github.com/jonattanva/luna-form/commit/8781a671c1bc2a83d5639a29b858f358bc942e82"
+        },
+        "date": 1795006339001,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00016473381999999986,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.00059781452,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00008316840000000014,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00021663307999999972,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00031748663999999963,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.012638538579999999,
             "unit": "ms"
           }
         ]
