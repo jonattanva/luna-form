@@ -544,7 +544,8 @@ de una fuente remota (3.3).
   - `select/timezone`: unas 400 zonas, con las etiquetas de `context.now`.
     `"Bogota"` devuelve `America/Bogota`.
   - Fuentes remotas: devuelve las opciones ya cargadas. Si todavía no se
-    cargaron, queda como pregunta abierta si el tool las pide.
+    cargaron, espera hasta 5 segundos la petición del propio campo, sin pedir
+    nada por su cuenta (pregunta 3).
   - Opciones que cambia un evento (`setSource`): devuelve las actuales. La
     descripción del tool dice que dependen de otros campos y que se rellenen
     esos primero.
@@ -1174,8 +1175,11 @@ Resultados:
     que sus eventos llenaron, y se quita cuando la persona lo cambia. La región
     `aria-live` dice cuántos campos llenó, en el idioma del formulario.
 
-- [ ] Fuentes remotas: que `<name>_options` pida las opciones que todavía no se
+- [x] Fuentes remotas: que `<name>_options` pida las opciones que todavía no se
       cargaron, según la respuesta a la pregunta abierta.
+  - Hecho el 2026-11-18: espera la petición del campo hasta 5 segundos, sin
+    hacer una propia, y si no hay nada que esperar dice por qué (sección 7,
+    pregunta 3).
 - [ ] Si la medición lo pide: el modo agrupado y `<name>_describe` (3.14).
   - Medido el 2026-11-18 (sección 6): una página de cinco formularios no lo
     pide. `<name>_describe` tampoco: el formulario de 200 campos queda en 12.4 k
@@ -1196,6 +1200,9 @@ Resultados:
     solo `withDeclaredFields`).
   - El total sigue atrapando una dependencia empaquetada por error, que suma
     cientos de kB, y cada presupuesto deja lugar para unos cuantos cambios.
+  - El 2026-11-18, con las opciones remotas, el chunk de los tools llegó a 12.1
+    kB gzip y su presupuesto sube a 14: solo se descarga cuando hay un agente,
+    y deja lugar para los ítems que quedan.
 - [x] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
       cerrarse antes de que React confirme la transición que revela un campo.
       La e2e que escribe en la misma llamada un campo que otro valor muestra
@@ -1444,7 +1451,7 @@ Preguntas resueltas en la revisión del 12 de noviembre:
 | ¿Exportar `buildToolSchema` desde la fase 1?              | Sí                                       | Quien registre tools propios usa el mismo esquema                                             |
 
 Preguntas abiertas. Al cerrar la fase 1 quedan abiertas la 3 y la 5, que
-pasan a la fase 2:
+pasan a la fase 2, y se responden en ella:
 
 1. ¿Camino inmediato o esperar el debounce de 300 ms? Se decide midiendo en la
    fase 1 (3.4). Resuelta: el inmediato. Un rellenado de 200 campos tarda
@@ -1453,6 +1460,12 @@ pasan a la fase 2:
    tools ayudan a elegir; separados, cada uno tiene una descripción simple.
    Resuelta: aparte, y solo cuando hay opciones que no van en el esquema.
 3. Con una fuente remota que todavía no cargó, ¿`<name>_options` la pide?
+   Resuelta el 2026-11-18: no la pide, la espera. El campo ya pide sus
+   opciones al montarse; el tool espera esa petición hasta 5 segundos, así
+   respeta `remotePatterns`, los headers y la caché de la fuente. Si no hay
+   nada que esperar, dice por qué: el campo está oculto o deshabilitado, o
+   sus opciones vienen del evento `source` de otro campo, que nombra para que
+   el agente lo llene primero.
 4. ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos en
    `<name>_read`, 24 kB de esquema. Se confirman con la medición. Alcanzan en
    los formularios de referencia: el de 200 campos tiene un esquema de 11.2 k

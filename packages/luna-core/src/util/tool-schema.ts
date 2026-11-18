@@ -30,7 +30,7 @@ import {
 import { getListBounds } from './list'
 import { resolveTarget } from './path'
 import { prepare } from './prepare'
-import { collectSourceTargets, getOfferedOptions } from './schema'
+import { collectSourceEvents, getOfferedOptions } from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
@@ -84,6 +84,9 @@ export type ToolSchemaResult = Readonly<{
   // The fields whose options are not in the schema -- too many to list, or
   // only known at run time -- by their whole name.
   lookup: readonly string[]
+  // The fields whose change fetches a field's options, by the target of the
+  // `source` event as written. See `collectSourceEvents`.
+  sources: Readonly<Record<string, readonly string[]>>
   // The fields a submit needs, at the top level. The schema does not mark
   // them: a fill names only the fields it changes.
   required: readonly string[]
@@ -167,12 +170,13 @@ export function buildToolSchema(
     (section) => prepare(section.fields)
   )
 
+  const sources = collectSourceEvents(fields)
   const walk: Walk = {
     dictionary: options.localization?.translations,
     lang: options.localization?.lang,
     lookup: new Set(),
     revealers: collectRevealers(fields),
-    sourceTargets: collectSourceTargets(fields),
+    sourceTargets: new Set(sources.keys()),
     types: options.types,
     visiting: new Set(),
     writable: new Map(),
@@ -182,6 +186,7 @@ export function buildToolSchema(
   return {
     lookup: [...walk.lookup],
     required: [...level.required],
+    sources: Object.fromEntries(sources),
     schema: {
       additionalProperties: false,
       properties: Object.fromEntries(level.properties),

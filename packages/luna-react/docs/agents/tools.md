@@ -126,6 +126,16 @@ Offered when a field's options are not in the schema. Takes
 `text`, and `more`. A list's leaf is named through its first row,
 `items.0.product`.
 
+A field whose options are fetched answers with them once they arrive: the tool
+waits up to five seconds for the field's own request, and asks for nothing
+itself, so the request keeps to
+[`remotePatterns`](../setup.md#fetcherremotepatterns), the source's headers
+and its cache. When there are none to wait for, `items` is empty and `message`
+says why: the field is hidden, disabled or read-only, or its options come from
+another field's
+[`source` event](../events/change.md#3-source-action-sourceevent), named so
+the agent fills it first.
+
 ### `<name>_submit`
 
 Submits the form as its submit button does: the same validation, action,

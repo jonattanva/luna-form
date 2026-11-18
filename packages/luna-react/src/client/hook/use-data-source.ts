@@ -16,11 +16,11 @@ export function useDataSource(
   )
 
   const currentSource = source ?? dataSource
-  const data = useFetch(currentSource, config, field.disabled)
+  const { data, fetching } = useFetch(currentSource, config, field.disabled)
 
   // A `source` change event always installs a DataSource, so an array here
   // means the options still come from the array declared in the schema.
   const isStaticSource = Array.isArray(currentSource)
 
-  return [data, setSource, isStaticSource] as const
+  return { data, fetching, isStaticSource, setSource }
 }

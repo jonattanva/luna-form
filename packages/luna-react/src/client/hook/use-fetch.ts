@@ -9,12 +9,16 @@ import {
 } from '@luna-form/core'
 import type { Config } from '../../type'
 
+/**
+ * The options a source gives: its array, or what its request answered.
+ * `fetching` while a request is out and has not answered yet.
+ */
 export function useFetch<T>(
   dataSource: Nullable<DataSource | T[]> = null,
   config: Config,
   disabled = false
-): Nullable<T[]> {
-  const { data, error } = useSWR<Record<string, T> | T[]>(
+): Readonly<{ data: Nullable<T[]>; fetching: boolean }> {
+  const { data, error, isLoading } = useSWR<Record<string, T> | T[]>(
     buildSource(dataSource, config, disabled),
     config.fetcher.provider
   )
@@ -23,17 +27,13 @@ export function useFetch<T>(
     logger.error('Error fetching data source:', error)
   }
 
-  if (dataSource) {
-    if (Array.isArray(dataSource)) {
-      return dataSource
-    }
-
-    if (data) {
-      return getArray(data, dataSource.namespace)
-    }
+  if (Array.isArray(dataSource)) {
+    return { data: dataSource, fetching: false }
   }
-
-  return null
+  return {
+    data: dataSource && data ? getArray(data, dataSource.namespace) : null,
+    fetching: isLoading,
+  }
 }
 
 function buildSource<T>(
