@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795005305534,
+  "lastUpdate": 1795005668448,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "5adcdf6e86bd7dc85f378a275623ee2feffe745f",
-          "message": "Merge pull request #67 from jonattanva/fix/mount-change-event-replay\n\nfix(input): run a mount change event once the form is whole, not while it mounts",
-          "timestamp": "2026-08-27T23:10:30-05:00",
-          "tree_id": "b6cf38d5d50d78d83f1e018f72a1233c7e46cb5c",
-          "url": "https://github.com/jonattanva/luna-form/commit/5adcdf6e86bd7dc85f378a275623ee2feffe745f"
-        },
-        "date": 1787890343334,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 638,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "ddfd39bee89554e8a2fb274a922199123b16373f",
           "message": "Merge pull request #69 from jonattanva/docs/form-contract-and-style-fixes\n\ndocs: document the form contract around the fields, and fix two config keys it exposed",
           "timestamp": "2026-08-30T00:39:52-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 12.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d43e7a7b6ebfdf529c4ea4e36f772c328e97410f",
+          "message": "Merge pull request #159 from jonattanva/claude/reset-after-submit\n\nfix(react): start the form over on a store of its own after a successful submit",
+          "timestamp": "2026-11-18T07:34:02-05:00",
+          "tree_id": "dda39d9e7b4cfd4b9bea44f9c5aed99ffe3dee7c",
+          "url": "https://github.com/jonattanva/luna-form/commit/d43e7a7b6ebfdf529c4ea4e36f772c328e97410f"
+        },
+        "date": 1795005668414,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 39.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 17.1,
             "unit": "ms"
           }
         ]
