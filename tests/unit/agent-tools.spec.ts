@@ -775,19 +775,22 @@ describe('createFormTools', () => {
       const fields: Fields = [
         { name: 'score', type: 'rating' },
         { name: 'tag', type: 'code' },
+        { name: 'count', type: 'input/number' },
       ]
 
       function declaredTools() {
         const form = createForm()
         const tools = createFormTools(
           AGENT,
-          buildToolSchema([{ fields }], { types: { code, rating } }),
+          buildToolSchema([{ fields }], {
+            types: { code, 'input/number': rating, rating },
+          }),
           {
             ...form.host,
             getField: (name) =>
               fields.filter(isField).find((field) => field.name === name),
           },
-          { declared: new Set(['code', 'rating']) }
+          { declared: new Set(['code', 'input/number', 'rating']) }
         )
         return { calls: form.calls, tools }
       }
@@ -826,6 +829,61 @@ describe('createFormTools', () => {
             message: 'Expected text matching ^[A-Z]+$.',
             name: 'tag',
           },
+        ])
+      })
+    })
+
+    describe('a declared schema, at its edges', () => {
+      const fields: Fields = [
+        { name: 'count', type: 'input/number' },
+        { name: 'tag', type: 'code' },
+      ]
+
+      function declaredTools() {
+        const form = createForm()
+        const tools = createFormTools(
+          AGENT,
+          buildToolSchema([{ fields }], {
+            types: {
+              code: { minLength: 3, type: 'string' },
+              'input/number': { maximum: 5, minimum: 1, type: 'integer' },
+            },
+          }),
+          {
+            ...form.host,
+            getField: (name) =>
+              fields.filter(isField).find((field) => field.name === name),
+          },
+          { declared: new Set(['code', 'input/number']) }
+        )
+        return { calls: form.calls, tools }
+      }
+
+      test('should check the range declared for a built-in number type, held as text', async () => {
+        const { calls, tools } = declaredTools()
+        const result = await call(tools, 'fill', { count: 99 })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message: 'Expected a whole number from 1 up to 5.',
+            name: 'count',
+          },
+        ])
+        await call(tools, 'fill', { count: 3 })
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['count', '3'],
+        ])
+      })
+
+      test('should empty a field with null whatever bounds it declares', async () => {
+        const { calls, tools } = declaredTools()
+        const result = await call(tools, 'fill', { tag: null })
+
+        expect(result.skipped).toEqual([])
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['tag', ''],
         ])
       })
     })

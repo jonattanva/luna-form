@@ -728,12 +728,16 @@ const result = await callTool(call.name, call.input)
   Las dos se miden con los render budgets.
 
 - **Objetivos:**
-  - El chunk principal crece menos de 0.5 kB gzip. Se mide con `lib-size`
-    antes y después, y se compara contra el límite de 300 kB del job
-    `bundle-size`. Era de 285 kB: `buildToolSchema` en la entrada `schema`
-    llevó el total de 275.8 a 291.6 kB, y el límite se subió en #147.
-  - El chunk de los tools tiene su propio presupuesto, que se fija con la
-    primera medición.
+  - El objetivo era que el chunk principal creciera menos de 0.5 kB gzip. La
+    medición dijo que no se alcanza: crece 2.2 kB (28.2 a 29.7 kB gzip). Unos
+    0.8 kB son los nombres que comparten los chunks al dividir, y el resto es
+    lo que tiene que cargar todo formulario: el handle de cada campo,
+    `listTools()`, `callTool()` y lo que registra de sus envíos. Construir,
+    registrar y enviar ya cargan de forma diferida.
+  - El job `bundle-size` tiene tres presupuestos: el camino principal ESM en
+    gzip (31 kB), el chunk de los tools en gzip (12 kB, hoy 10.4) y el total
+    de todos los archivos (380 kB, hoy 359.0), que es la guardia contra una
+    dependencia empaquetada por error.
 
 ### 3.12 Tipos de TypeScript
 
@@ -1063,8 +1067,15 @@ Resultados:
     formulario conoce; un esquema de objeto se descarta con un aviso; la última
     registración de un tipo decide su esquema; un esquema declarado reemplaza
     al de un tipo integrado; el hook compara los esquemas por contenido.
-  - Bundle: 358.9 kB, a 1.1 kB del límite de 360. El próximo cambio que sume
-    código tiene que bajar el camino principal o revisar el presupuesto.
+  - Bundle: 358.9 kB, a 1.1 kB del límite de 360. Lo resolvió el paso
+    siguiente: menos código en el camino principal y tres presupuestos.
+  - Revisión de código del 2026-11-17 sobre ese paso: nueve correcciones (un
+    rango declarado sobre un número integrado, un import fallido que se vuelve
+    a intentar y no deja rechazos sin manejar, la pausa de reconstrucción por
+    nombre, `null` que vacía aunque haya límites, una construcción que falla
+    sigue fresca, `createAgentTools` sin exportar, baja inmediata al
+    desmontar, el job mide solo los chunks que importa `index.js`, y el aviso
+    de un esquema sin `items`).
 - [x] Elegir, con mediciones, entre el camino inmediato y esperar el debounce
       (3.4).
   - El inmediato: las e2e de los tools y
@@ -1177,8 +1188,9 @@ Resultados:
 - **Render budgets:** los 11 existentes siguen igual. Se agregan dos:
   - una tecla en un formulario con `agent` no vuelve a registrar los tools;
   - rellenar 100 campos hace un commit por pasada.
-- **Bundle:** el job `bundle-size` sigue bajo el límite, el chunk principal no
-  crece más de 0.5 kB gzip, y el de los tools cumple su presupuesto.
+- **Bundle:** el job `bundle-size` cumple sus tres presupuestos: el camino
+  principal ESM (31 kB gzip), el chunk de los tools (12 kB gzip) y el total
+  (380 kB).
 
 ## 6. Medición antes y después
 
@@ -1262,8 +1274,8 @@ Preguntas abiertas:
 ## 8. Criterios de aceptación
 
 - [ ] Sin la prop `agent`, o sin WebMCP ni llamadas a `listTools()`: ningún
-      tool, ningún render extra, y el chunk principal crece menos de 0.5 kB
-      gzip.
+      tool, ningún render extra, y el camino principal dentro de su
+      presupuesto (31 kB gzip; 2.2 kB más que sin agentes).
 - [ ] Con la prop:
   - `getTools()` y `listTools()` devuelven, con el esquema de 3.3:
     - `<name>_fill` y `<name>_read`;

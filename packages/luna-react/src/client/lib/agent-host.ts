@@ -19,6 +19,7 @@ import {
   isObject,
   isSelectTimezone,
   isString,
+  logger,
   prepare,
   type Definition,
   type Field,
@@ -29,6 +30,8 @@ import {
   type Sections,
   type ToolSchema,
 } from '@luna-form/core'
+import { getModelContext, type ModelContext } from './model-context'
+import type { RefObject } from 'react'
 import type { useStore } from 'jotai'
 import type {
   AgentOptions,
@@ -51,10 +54,21 @@ export type Submitted = Readonly<{
   status: SubmitStatus['status']
 }>
 
-/** How the tools submit a form and hear how it went. */
+/**
+ * What a form records of its submissions, for the tools to submit it and hear
+ * how it went. `wait` answers with the outcome of the submission about to
+ * start. See `useSubmission`.
+ */
 export type Submission = Readonly<{
+  formRef: RefObject<HTMLFormElement | null>
   getStatus: () => Submitted
-  submit: (signal: AbortSignal) => Promise<Submitted>
+  wait: () => Promise<Submitted>
+}>
+
+/** What builds and registers a form's tools while it is on the page. */
+export type AgentRuntime = Readonly<{
+  dispose: () => void
+  load: (fresh: boolean) => readonly Tool[]
 }>
 
 /**
@@ -84,6 +98,82 @@ const SETTLE_STEP = 50
 const SETTLE_LIMIT = 2_000
 
 /**
+ * Builds a form's tools, registers them with WebMCP when the browser has it,
+ * and registers them again only when a build gives different ones. `fresh`
+ * says the definition changed since the last build; without it the tools built
+ * last are handed out as they are. `dispose` takes every one of them down and
+ * refuses what `allow` was still being asked: the form is gone.
+ */
+export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
+  // The life of the form, and the queue every set of its tools shares.
+  const life = new AbortController()
+  let queue: Queue | undefined
+
+  // The tools built last, what tells whether a build would give the same ones,
+  // and the signal that unregisters them.
+  let current: Readonly<{
+    key: string
+    registration: AbortController
+    tools: readonly Tool[]
+  }> | null = null
+
+  return {
+    dispose: () => life.abort(),
+    load: (fresh) => {
+      if (life.signal.aborted) {
+        return []
+      }
+      if (current && !fresh) {
+        return current.tools
+      }
+
+      const built = createAgentTools(read, { queue, signal: life.signal })
+      queue = built.queue
+      if (current?.key === built.key) {
+        return current.tools
+      }
+
+      current?.registration.abort()
+      const registration = new AbortController()
+      life.signal.addEventListener('abort', () => registration.abort(), {
+        once: true,
+      })
+      current = { key: built.key, registration, tools: built.tools }
+
+      const modelContext = getModelContext()
+      if (modelContext) {
+        registerTools(modelContext, built.tools, registration.signal)
+      }
+      return built.tools
+    },
+  }
+}
+
+/**
+ * Registers each tool until `signal` is aborted. A page that turned tools off
+ * (`NotAllowedError`) and a form gone before its tools were in (`AbortError`)
+ * are no fault of the form; anything else is reported, and the form goes on
+ * without that tool.
+ */
+function registerTools(
+  modelContext: ModelContext,
+  tools: readonly Tool[],
+  signal: AbortSignal
+) {
+  for (const tool of tools) {
+    // A browser on an older draft returns nothing or throws instead of
+    // rejecting, so both end up in the same `catch`.
+    Promise.resolve()
+      .then(() => modelContext.registerTool(tool, { signal }))
+      .catch((error: Error) => {
+        if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+          logger.warn(`The tool ${tool.name} was not registered.`, error)
+        }
+      })
+  }
+}
+
+/**
  * The tools of a form, and what tells whether they would be the same ones
  * again: the agent's own options and the schema, as text. Two builds with the
  * same `key` describe the same tools, so there is nothing to register again.
@@ -91,7 +181,7 @@ const SETTLE_LIMIT = 2_000
  * `queue` is the form's, kept from one build to the next; `signal` is the life
  * of the form.
  */
-export function createAgentTools(
+function createAgentTools(
   read: () => AgentForm,
   options: Readonly<{ queue?: Queue; signal: AbortSignal }>
 ): Readonly<{ key: string; queue: Queue; tools: Tool[] }> {
@@ -226,8 +316,20 @@ function createFormHost(
     settle: () => settle(store, getHandles),
 
     submit: async (signal) => {
-      const outcome = await read().submission?.submit(signal)
-      return toSubmitStatus(outcome, store)
+      const submission = read().submission
+      const form = submission?.formRef.current
+      if (!submission || !form || signal.aborted) {
+        return toSubmitStatus(
+          { error: { title: 'The form is not on the page.' }, status: 'error' },
+          store
+        )
+      }
+
+      const outcome = submission.wait()
+      // Through the form's own submit button when it has one, so its `name`
+      // and `value` are sent as they are when a person presses it.
+      form.requestSubmit(findSubmitter(form))
+      return toSubmitStatus(await outcome, store)
     },
 
     validate: (names) => {
@@ -332,6 +434,21 @@ async function settle(
     }
     last = now
   }
+}
+
+function findSubmitter(
+  form: HTMLFormElement
+): HTMLButtonElement | HTMLInputElement | undefined {
+  for (const element of form.elements) {
+    if (
+      (element instanceof HTMLButtonElement ||
+        element instanceof HTMLInputElement) &&
+      element.type === 'submit'
+    ) {
+      return element
+    }
+  }
+  return undefined
 }
 
 function toSubmitStatus(

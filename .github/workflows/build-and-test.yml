@@ -47,21 +47,27 @@ jobs:
       - name: Check bundle size
         run: |
           DIST="packages/luna-react/dist"
-          # The guard is for a dependency bundled by mistake, which adds
-          # hundreds of kB (date-fns took the total to 342 kB). The date
-          # picker's bounds, reserved days, ranges, years and time zones are
-          # the library's own code, about 35 kB over cjs and esm together.
-          # Peer dependencies are external, so the total is that code alone:
-          # 265.9 kB after the list work of #127 to #129. `buildToolSchema`
-          # in the schema entry adds about 15 kB more over cjs and esm
-          # together, 291.6 kB in all; an application that does not import
-          # it does not ship it (`sideEffects: false`). The tools a form with
-          # `agent` offers add about 57 kB more: in esm they are a chunk of
-          # their own that loads only when an agent asks, and cjs, which
-          # does not split, carries them inline. The limit leaves room for
-          # that code to grow by a few kB and still fails on a bundled
-          # dependency.
-          LIMIT_KB=360
+          ESM="$DIST/client/esm"
+          # Three budgets, each for what it guards.
+          #
+          # The total of every file guards against a dependency bundled by
+          # mistake, which adds hundreds of kB (date-fns took it to 342 kB).
+          # Peer dependencies are external, so the total is the library's
+          # own code over cjs and esm, every entry: 359.0 kB with the agent
+          # tools, which cjs carries inline because it does not split.
+          #
+          # The main path is what every application loads from the client
+          # entry in esm, compressed: the entry and the chunks it imports.
+          # 29.7 kB gzip with the agent tools offered: the fields' handles,
+          # `listTools()`, `callTool()` and what a form records of its
+          # submissions are here, and splitting the tools off costs about
+          # 0.8 kB of names shared between the chunks.
+          #
+          # The tools chunk is what loads only when an agent asks for a
+          # form's tools: 10.4 kB gzip, the tools, their host and the schema.
+          TOTAL_KB=380
+          MAIN_GZIP_KB=31
+          TOOLS_GZIP_KB=12
           total=0
           rows=""
 
@@ -74,8 +80,25 @@ jobs:
           "
           done < <(find "$DIST" -name "*.js" -print0 | sort -z)
 
-          total_kb=$(awk "BEGIN {printf \"%.1f\", $total/1024}")
-          limit_bytes=$((LIMIT_KB * 1024))
+          # The entry and the chunks it imports, which is all an application
+          # loads before an agent asks; the build empties dist first, so one
+          # tools chunk is there.
+          main_files=("$ESM/index.js")
+          while IFS= read -r chunk; do
+            main_files+=("$ESM/$chunk")
+          done < <(grep -o 'from"\./chunk-[A-Za-z0-9]*\.js"' "$ESM/index.js" | sed 's/^from"\.\///; s/"$//' | sort -u)
+          tools_files=("$ESM"/agent-host-*.js)
+          if [ "${#tools_files[@]}" -ne 1 ] || [ ! -f "${tools_files[0]}" ]; then
+            echo "Expected one agent tools chunk in $ESM: ${tools_files[*]}" >&2
+            exit 1
+          fi
+          main=$(cat "${main_files[@]}" | gzip -c | wc -c)
+          tools=$(gzip -c "${tools_files[0]}" | wc -c)
+
+          kb() { awk "BEGIN {printf \"%.1f\", $1/1024}"; }
+          total_kb=$(kb "$total")
+          main_kb=$(kb "$main")
+          tools_kb=$(kb "$tools")
 
           {
             echo "<!-- bundle-size-report -->"
@@ -84,16 +107,29 @@ jobs:
             echo "| File | Size |"
             echo "|---|---|"
             echo "$rows"
-            echo "**Total: ${total_kb} kB** (limit: ${LIMIT_KB} kB)"
+            echo "| Budget | Size | Limit |"
+            echo "|---|---|---|"
+            echo "| Total, every file | ${total_kb} kB | ${TOTAL_KB} kB |"
+            echo "| Main path, esm, gzip | ${main_kb} kB | ${MAIN_GZIP_KB} kB |"
+            echo "| Agent tools chunk, esm, gzip | ${tools_kb} kB | ${TOOLS_GZIP_KB} kB |"
           } > bundle-size-report.md
 
           cat bundle-size-report.md
 
-          if [ "$total" -gt "$limit_bytes" ]; then
-            echo "Bundle size ${total_kb} kB exceeds the limit of ${LIMIT_KB} kB" >&2
+          failed=0
+          over() {
+            if [ "$2" -gt $(($3 * 1024)) ]; then
+              echo "$1: $(kb "$2") kB exceeds the limit of $3 kB" >&2
+              failed=1
+            fi
+          }
+          over "Total" "$total" "$TOTAL_KB"
+          over "Main path (gzip)" "$main" "$MAIN_GZIP_KB"
+          over "Agent tools chunk (gzip)" "$tools" "$TOOLS_GZIP_KB"
+          if [ "$failed" -ne 0 ]; then
             exit 1
           fi
-          echo "Bundle size ${total_kb} kB is within the ${LIMIT_KB} kB limit"
+          echo "Within every budget: total ${total_kb} kB, main ${main_kb} kB gzip, tools ${tools_kb} kB gzip"
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         # The size gate is the step above, which exits non-zero on its own.

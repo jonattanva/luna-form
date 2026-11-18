@@ -114,7 +114,7 @@ function holdsValues(type: string, schema: ToolSchema): boolean {
   }
 
   logger.warn(
-    `The agent schema of "${type}" is left out: a field holds a value or a list of values, not an object.`
+    `The agent schema of "${type}" is left out: a field holds a value, or a list of values its items describe.`
   )
   return false
 }
