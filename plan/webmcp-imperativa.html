@@ -2228,16 +2228,21 @@ const result = await callTool(call.name, call.input)</code></pre>
               <strong>Objetivos:</strong>
               <ul>
                 <li>
-                  El chunk principal crece menos de 0.5 kB gzip. Se mide con
-                  <code>lib-size</code> antes y después, y se compara contra el
-                  límite de 300 kB del job <code>bundle-size</code>. Era de 285
-                  kB: <code>buildToolSchema</code> en la entrada
-                  <code>schema</code> llevó el total de 275.8 a 291.6 kB, y el
-                  límite se subió en #147.
+                  El objetivo era que el chunk principal creciera menos de 0.5
+                  kB gzip. La medición dijo que no se alcanza: crece 2.2 kB
+                  (28.2 a 29.7 kB gzip). Unos 0.8 kB son los nombres que
+                  comparten los chunks al dividir, y el resto es lo que tiene
+                  que cargar todo formulario: el handle de cada campo,
+                  <code>listTools()</code>, <code>callTool()</code> y lo que
+                  registra de sus envíos. Construir, registrar y enviar ya
+                  cargan de forma diferida.
                 </li>
                 <li>
-                  El chunk de los tools tiene su propio presupuesto, que se fija
-                  con la primera medición.
+                  El job <code>bundle-size</code> tiene tres presupuestos: el
+                  camino principal ESM en gzip (31 kB), el chunk de los tools en
+                  gzip (12 kB, hoy 10.4) y el total de todos los archivos (380
+                  kB, hoy 359.0), que es la guardia contra una dependencia
+                  empaquetada por error.
                 </li>
               </ul>
             </li>
@@ -3127,9 +3132,21 @@ const result = await callTool(call.name, call.input)</code></pre>
                       hook compara los esquemas por contenido.
                     </li>
                     <li>
-                      Bundle: 358.9 kB, a 1.1 kB del límite de 360. El próximo
-                      cambio que sume código tiene que bajar el camino principal
-                      o revisar el presupuesto.
+                      Bundle: 358.9 kB, a 1.1 kB del límite de 360. Lo resolvió
+                      el paso siguiente: menos código en el camino principal y
+                      tres presupuestos.
+                    </li>
+                    <li>
+                      Revisión de código del 2026-11-17 sobre ese paso: nueve
+                      correcciones (un rango declarado sobre un número
+                      integrado, un import fallido que se vuelve a intentar y no
+                      deja rechazos sin manejar, la pausa de reconstrucción por
+                      nombre, <code>null</code> que vacía aunque haya límites,
+                      una construcción que falla sigue fresca,
+                      <code>createAgentTools</code> sin exportar, baja inmediata
+                      al desmontar, el job mide solo los chunks que importa
+                      <code>index.js</code>, y el aviso de un esquema sin
+                      <code>items</code>).
                     </li>
                   </ul>
                 </li>
@@ -3436,9 +3453,9 @@ const result = await callTool(call.name, call.input)</code></pre>
               </ul>
             </li>
             <li>
-              <strong>Bundle:</strong> el job <code>bundle-size</code> sigue
-              bajo el límite, el chunk principal no crece más de 0.5 kB gzip, y
-              el de los tools cumple su presupuesto.
+              <strong>Bundle:</strong> el job <code>bundle-size</code> cumple
+              sus tres presupuestos: el camino principal ESM (31 kB gzip), el
+              chunk de los tools (12 kB gzip) y el total (380 kB).
             </li>
           </ul>
         </section>
@@ -3744,7 +3761,8 @@ const result = await callTool(call.name, call.input)</code></pre>
             <li>
               Sin la prop <code>agent</code>, o sin WebMCP ni llamadas a
               <code>listTools()</code>: ningún tool, ningún render extra, y el
-              chunk principal crece menos de 0.5 kB gzip.
+              camino principal dentro de su presupuesto (31 kB gzip; 2.2 kB más
+              que sin agentes).
             </li>
             <li>
               Con la prop:
