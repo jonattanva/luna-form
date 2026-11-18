@@ -16,14 +16,16 @@ type InputOptions = Readonly<{
   onUnmount: (name: string, options?: { keepValue?: boolean }) => void
   sourceTargets?: ReadonlySet<string>
   translations?: Record<string, string>
+  // The form's language, which a message naming a day writes its month in.
+  lang?: string
 }>
 
 export function useInput(field: Field, options: InputOptions) {
-  const { onRegister, onUnmount, sourceTargets, translations } = options
+  const { lang, onRegister, onUnmount, sourceTargets, translations } = options
   const { name } = field
   const schema = useMemo(
-    () => getSchema(field, translations, sourceTargets),
-    [field, translations, sourceTargets]
+    () => getSchema(field, translations, sourceTargets, lang),
+    [field, lang, translations, sourceTargets]
   )
 
   // The options the definition writes, which the submit holds the field's

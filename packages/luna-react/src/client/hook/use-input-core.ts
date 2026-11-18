@@ -136,6 +136,7 @@ export function useInputCore(
   const setHeldListRows = useSetAtom(heldListRowsAtom)
 
   const schema = useInput(props.field, {
+    lang: props.localization?.lang,
     onRegister: props.onRegister,
     onUnmount: props.onUnmount,
     sourceTargets: props.sourceTargets,

@@ -251,3 +251,56 @@ test.describe('Declarative validation', { tag: ['@e2e'] }, () => {
     expect(errors).toEqual([])
   })
 })
+
+// A field whose definition gives no message says why in the library's words,
+// in the language of the form, as its labels and buttons already do.
+test.describe(
+  'Validation messages the definition does not give',
+  { tag: ['@e2e'] },
+  () => {
+    test('should hold a submit back with messages in the language of the form', async ({
+      page,
+    }) => {
+      await inject(
+        page,
+        JSON.stringify({
+          lang: 'es',
+          sections: [
+            {
+              fields: [
+                {
+                  label: 'Nombre',
+                  name: 'name',
+                  required: true,
+                  type: 'input/text',
+                },
+                {
+                  advanced: { length: { min: 3 } },
+                  label: 'Código',
+                  name: 'code',
+                  type: 'input/text',
+                },
+                { label: 'Correo', name: 'email', type: 'input/email' },
+              ],
+            },
+          ],
+        })
+      )
+      await page.goto('')
+
+      await page.locator('input[name="code"]').fill('ab')
+      await page.locator('input[name="email"]').fill('ada')
+      await page.locator('button[type="submit"]').click()
+
+      await expect(page.locator('[id="name-error"]')).toHaveText(
+        'Este campo es obligatorio'
+      )
+      await expect(page.locator('[id="code-error"]')).toHaveText(
+        'Escribe al menos 3 caracteres'
+      )
+      await expect(page.locator('[id="email-error"]')).toHaveText(
+        'Correo electrónico no válido'
+      )
+    })
+  }
+)

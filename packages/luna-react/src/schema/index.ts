@@ -5,6 +5,7 @@ export {
   buildFormSchema,
   buildToolSchema,
   collectIssues,
+  resolveDictionary,
 } from '@luna-form/core'
 
 export type {

@@ -30,6 +30,25 @@ This page documents every key of the `validation` object plus the shared operato
 
 > Emptiness is normalized for validation: an empty string, a whitespace-only string, `null`/`undefined`, and an empty array all count as "no value". So `pattern` and format rules never fire on an empty field — that is `required`/`requiredWhen`'s job.
 
+### When the definition gives no message
+
+Every key above is optional. A field whose definition gives no message for a rule says why in the library's own words, in the language of the form (`lang`), like its labels and buttons:
+
+| Rule                                           | Message                                                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `required`, `requiredWhen`                     | `This field is required`                                                                                                 |
+| `length` on text                               | `Enter at least {min} characters`, `Enter at most {max} characters`                                                      |
+| `length` on a number or a year                 | `Enter {min} or more`, `Enter {max} or less`                                                                             |
+| a number field holding no number               | `Enter a number`; `Enter a whole number` when it declares no `step`                                                      |
+| `step`                                         | `Invalid number: must be a multiple of {step}`, or `must be {base} plus a multiple of {step}` when `length.min` is not 0 |
+| `email`                                        | `Invalid email address`                                                                                                  |
+| `option`                                       | `This option is not available`                                                                                           |
+| `date`, `range`, `reserved`, a day's bound     | `Invalid date`, `Invalid date range`, `This date is not available`, `Date must be on or after {date}`                    |
+| a list's `length`                              | `Add at least {min} items`, `Add at most {max} items`                                                                    |
+| `pattern`, `rules`, `custom` without `message` | `Invalid value`                                                                                                          |
+
+A bound of one says it in the singular: `Enter at least 1 character`. The library ships them in English and Spanish; see [built-in translations](../fields/list.md#built-in-translations). A message the definition gives always wins, and a form's `translations` can replace any of these by its English text. A bound's day is written the way the field shows one, with its month named in the form's language.
+
 ---
 
 ## `requiredWhen`
@@ -265,6 +284,7 @@ if (!result.success) {
 ```
 
 - **`buildFormSchema(sections, translations?, definition?, context?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` and `context` resolve [`$ref` entries](../structure/definition.md), and have to be the same ones the form renders with. A date comes out of it as `yyyy-MM-dd`, as it does from the form's submit.
+- **`resolveDictionary(lang, translations?)`** — the dictionary the form renders with for `lang`: the library's built-in messages for that language under the form's own `translations` for it. Pass it to `buildFormSchema` to get the same messages the form shows, `This field is required` included: `buildFormSchema(sections, resolveDictionary('es', translations))`. A bound's day is the one message it cannot localize, as `buildFormSchema` takes no language: it names its month in English unless the field gives its own `validation.length` message or shows days in numbers.
 - **`collectIssues(error)`** — flattens a `ZodError` into `{ path, message }` entries with **dotted paths** (e.g. `rules.0.value`), including nested list issues.
 
 ### What each path validates

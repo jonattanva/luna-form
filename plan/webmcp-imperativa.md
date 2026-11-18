@@ -1331,7 +1331,12 @@ Preguntas abiertas:
 6. De la fase 0, por revisar en luna:
    - ¿Por qué una lista quedó con dos filas vacías después de un envío exitoso?
    - ¿Por qué los mensajes de campo obligatorio salieron en inglés en un
-     formulario en español?
+     formulario en español? Resuelto el 2026-11-17: sin un mensaje en la
+     definición, cada validación caía en el texto de Zod, técnico y en inglés
+     (`Too small: expected string to have >=1 characters`). Ahora luna da el
+     suyo, en el idioma del formulario, para cada regla que genera; un
+     mensaje de la definición sigue mandando. `resolveDictionary` se exporta
+     de `react-luna-form/schema` para que un servidor use los mismos.
 
 ## 8. Criterios de aceptación
 

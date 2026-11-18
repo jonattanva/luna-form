@@ -77,10 +77,17 @@ const PROBES: Probe[] = [
     replacement: `() => { ${bump('schema')}; return getSchema(field, translations) },`,
   },
   {
-    name: 'schema',
+    name: 'schema (source targets)',
     file: `${LIB}/client/hook/use-input.ts`,
     anchor: '() => getSchema(field, translations, sourceTargets),',
+    legacy: true,
     replacement: `() => { ${bump('schema')}; return getSchema(field, translations, sourceTargets) },`,
+  },
+  {
+    name: 'schema',
+    file: `${LIB}/client/hook/use-input.ts`,
+    anchor: '() => getSchema(field, translations, sourceTargets, lang),',
+    replacement: `() => { ${bump('schema')}; return getSchema(field, translations, sourceTargets, lang) },`,
   },
   // `useValue` read the host's record as a prop until it subscribed to its own
   // entry. The second anchor stops at the call, so it matches every shape the

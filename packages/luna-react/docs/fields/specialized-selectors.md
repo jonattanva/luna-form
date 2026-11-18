@@ -64,7 +64,7 @@ At 03:00 UTC on 1 January the year is already the next one in UTC and still the 
 
 A year select needs both bounds. Without one, or with one that is no whole number, such as `"2026"` written as text or a `$ref` the context does not hold, it offers no year, and a development build names it in the console. A minimum after the maximum is named the same way.
 
-The schema checks the same bounds, so a year outside them, from a host value or a submit made by hand, is held back with `validation.length.min` or `validation.length.max` as the message, or a default such as `Too small: expected number to be >=2026`. A field that offers no year takes none: any year is held back with `This year is not available`. An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
+The schema checks the same bounds, so a year outside them, from a host value or a submit made by hand, is held back with `validation.length.min` or `validation.length.max` as the message, or the library's own, such as `Enter 2026 or more`. A field that offers no year takes none: any year is held back with `This year is not available`. An optional year nobody picked is not submitted at all, and a required one asks for a value, the way an [`input/number`](input.md#empty-and-required-numbers) does.
 
 ### 3. Day Selector (`select/day`)
 

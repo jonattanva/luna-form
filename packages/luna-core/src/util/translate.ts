@@ -26,6 +26,37 @@ export type BuiltInKey =
   | 'Unknown error'
   | 'No'
   | 'Yes'
+  // What a field says about a value its validation holds back, when the
+  // definition gives no message of its own. Kept in the library's words, not
+  // the validator's: `Too small: expected string to have >=1 characters` is
+  // no message for the person filling the form in, in any language.
+  | 'Add at least {min} items'
+  | 'Add at most {max} items'
+  | 'Add at least 1 item'
+  | 'Add at most 1 item'
+  | 'Date must be on or after {date}'
+  | 'Date must be on or before {date}'
+  | 'Enter a number'
+  | 'Enter a whole number'
+  | 'Enter at least {min} characters'
+  | 'Enter at most {max} characters'
+  | 'Enter at least 1 character'
+  | 'Enter at most 1 character'
+  | 'Enter {max} or less'
+  | 'Enter {min} or more'
+  | 'Invalid date'
+  | 'Invalid date range'
+  | 'Invalid email address'
+  | 'Invalid number: must be a multiple of {step}'
+  | 'Invalid number: must be {base} plus a multiple of {step}'
+  | 'Invalid value'
+  | 'This date cannot be checked'
+  | 'This date is not available'
+  | 'This field is required'
+  | 'This list cannot be checked'
+  | 'This option is not available'
+  | 'This value cannot be checked'
+  | 'This year is not available'
 
 // A language ships either every key or none: a half-translated dictionary would
 // mix two languages in one form, which reads worse than staying in English.
@@ -48,6 +79,37 @@ const BUILT_IN: Record<string, Record<BuiltInKey, string>> = {
     'Unknown error': 'Error desconocido',
     No: 'No',
     Yes: 'Sí',
+    'Add at least {min} items': 'Añade al menos {min} elementos',
+    'Add at most {max} items': 'Añade como máximo {max} elementos',
+    'Add at least 1 item': 'Añade al menos 1 elemento',
+    'Add at most 1 item': 'Añade como máximo 1 elemento',
+    'Date must be on or after {date}':
+      'La fecha debe ser igual o posterior a {date}',
+    'Date must be on or before {date}':
+      'La fecha debe ser igual o anterior a {date}',
+    'Enter a number': 'Escribe un número',
+    'Enter a whole number': 'Escribe un número entero',
+    'Enter at least {min} characters': 'Escribe al menos {min} caracteres',
+    'Enter at most {max} characters': 'Escribe como máximo {max} caracteres',
+    'Enter at least 1 character': 'Escribe al menos 1 carácter',
+    'Enter at most 1 character': 'Escribe como máximo 1 carácter',
+    'Enter {max} or less': 'Escribe {max} o menos',
+    'Enter {min} or more': 'Escribe {min} o más',
+    'Invalid date': 'Fecha no válida',
+    'Invalid date range': 'Rango de fechas no válido',
+    'Invalid email address': 'Correo electrónico no válido',
+    'Invalid number: must be a multiple of {step}':
+      'Número no válido: debe ser múltiplo de {step}',
+    'Invalid number: must be {base} plus a multiple of {step}':
+      'Número no válido: debe ser {base} más un múltiplo de {step}',
+    'Invalid value': 'Valor no válido',
+    'This date cannot be checked': 'Esta fecha no se puede comprobar',
+    'This date is not available': 'Esta fecha no está disponible',
+    'This field is required': 'Este campo es obligatorio',
+    'This list cannot be checked': 'Esta lista no se puede comprobar',
+    'This option is not available': 'Esta opción no está disponible',
+    'This value cannot be checked': 'Este valor no se puede comprobar',
+    'This year is not available': 'Este año no está disponible',
   },
 }
 
