@@ -18,11 +18,16 @@ import { join } from 'node:path'
 const SOURCES = ['packages/luna-core/src', 'packages/luna-react/src']
 
 /**
- * Names that look like a module and are not one. An export condition is the
- * only kind so far: React resolves `react-server` to pick an entry point, and
- * a comment explaining that has to be able to say so.
+ * Names that look like a module and are not one: an export condition, which
+ * React resolves (`react-server`) to pick an entry point, and the attributes
+ * the form puts on the page for the host's CSS. A comment explaining either
+ * has to be able to say so.
  */
-const NOT_A_MODULE = new Set(['react-server'])
+const NOT_A_MODULE = new Set([
+  'data-agent-active',
+  'data-agent-filled',
+  'react-server',
+])
 
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,7 +41,12 @@ function sourceFiles(directory: string): string[] {
 
 const files = SOURCES.flatMap(sourceFiles)
 const moduleNames = new Set(
-  files.map((path) => path.split('/').pop()!.replace(/\.tsx?$/, ''))
+  files.map((path) =>
+    path
+      .split('/')
+      .pop()!
+      .replace(/\.tsx?$/, '')
+  )
 )
 
 function isComment(line: string): boolean {

@@ -1152,11 +1152,20 @@ Resultados:
   - Cuenta como leído lo que `<name>_read` devolvió con su valor y todo campo
     con el que respondió un `fill`. Un envío exitoso empieza de nuevo sin nada
     anotado.
-- [ ] Usar `toolactivated` y `toolcancel` para resaltar:
+- [x] Usar `toolactivated` y `toolcancel` para resaltar:
   - el formulario mientras un agente lo usa (`data-agent-active`);
   - los campos que escribió (`data-agent-filled`).
 
   Además, anunciarlo con una región `aria-live`.
+  - Hecho el 2026-11-18, sin escuchar los eventos: según la especificación,
+    `toolactivated` se dispara cuando se invoca el `execute` y `toolcancel`
+    cuando se cancela, con solo `toolName`. El `execute` es del formulario, así
+    que lo sabe sin ellos, y también funciona con `callTool()`.
+  - Solo atributos, sin estilo propio: el host decide cómo se ve. La
+    documentación trae un ejemplo de CSS.
+  - `data-agent-filled` va en el campo de cada valor que el `fill` escribió o
+    que sus eventos llenaron, y se quita cuando la persona lo cambia. La región
+    `aria-live` dice cuántos campos llenó, en el idioma del formulario.
 
 - [ ] Fuentes remotas: que `<name>_options` pida las opciones que todavía no se
       cargaron, según la respuesta a la pregunta abierta.

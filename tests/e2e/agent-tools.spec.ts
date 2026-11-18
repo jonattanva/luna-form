@@ -406,6 +406,66 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should show the person the agent at work, and what it filled', async ({
+    page,
+  }) => {
+    await open(page)
+    const fieldOf = (name: string) =>
+      page
+        .locator(`[name="${name}"]`)
+        .first()
+        .locator('xpath=ancestor::*[@data-slot="field"][1]')
+
+    // On the form while the call runs, and off once it answered.
+    const states = await page.evaluate(async () => {
+      const form = document.querySelector('form')!
+      const seen: boolean[] = []
+      // Each change by itself: one that was not there is put on.
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          seen.push(record.oldValue === null)
+        }
+      })
+      observer.observe(form, {
+        attributeFilter: ['data-agent-active'],
+        attributeOldValue: true,
+      })
+      await (window as Window & { __lunaTools?: Tools }).__lunaTools!.call(
+        'preview_fill',
+        { email: 'ada@example.com', name: 'Ada' }
+      )
+      seen.push(...observer.takeRecords().map((r) => r.oldValue === null))
+      observer.disconnect()
+      return seen
+    })
+    expect(states).toEqual([true, false])
+    await expect(page.locator('form')).not.toHaveAttribute('data-agent-active')
+
+    // What it wrote, and what that set off.
+    for (const name of ['name', 'nickname', 'email']) {
+      await expect(fieldOf(name)).toHaveAttribute('data-agent-filled')
+    }
+    await expect(fieldOf('country')).not.toHaveAttribute('data-agent-filled')
+    await expect(page.locator('[aria-live="polite"]')).toHaveText(
+      'An agent filled 3 fields'
+    )
+
+    // The person's change takes the mark off that field alone.
+    await page.locator('input[name="name"]').fill('Bea')
+    await expect(fieldOf('name')).not.toHaveAttribute('data-agent-filled')
+    await expect(fieldOf('nickname')).toHaveAttribute('data-agent-filled')
+
+    // A list's rows are marked, and a row the person adds takes it off them.
+    await call(page, 'preview_fill', { items: [{ sku: 'A1' }] })
+    const sku = page
+      .locator('input[name$=".sku"]')
+      .first()
+      .locator('xpath=ancestor::*[@data-slot="field"][1]')
+    await expect(sku).toHaveAttribute('data-agent-filled')
+    await page.getByRole('button', { name: 'Add item' }).click()
+    await expect(sku).not.toHaveAttribute('data-agent-filled')
+  })
+
   test("should write one row's field by its route, and leave the others alone", async ({
     page,
   }) => {
