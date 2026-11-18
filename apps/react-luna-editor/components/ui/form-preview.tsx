@@ -3,7 +3,7 @@
 import config from '@/luna.config'
 import { Button } from './button'
 import { Code } from './code'
-import { Form } from 'react-luna-form'
+import { Form, type ValueChange } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
@@ -39,7 +39,7 @@ export function FormPreview() {
     })
   }
 
-  function handleValueChange(input: { name: string; value: unknown }) {
+  function handleValueChange(input: ValueChange) {
     console.log('Form values changed:', input)
     void Toaster.preload()
   }
