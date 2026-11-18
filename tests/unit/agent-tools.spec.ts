@@ -99,9 +99,14 @@ const AGENT: AgentOptions = {
 type Setup = Readonly<{
   // Fields not on the form until a value shows them.
   absent?: readonly string[]
+  // How many rounds the page takes to draw a field a value shows or unlocks,
+  // while the form already holds that it does.
+  drawing?: Readonly<Record<string, number>>
   locked?: readonly string[]
   // Fields that do not take their first value: they have just appeared.
   notReady?: readonly string[]
+  // Fields that never take a value, shown and unlocked as they are.
+  refuses?: readonly string[]
   // Fields whose options are still on their way.
   unloaded?: readonly string[]
   // A locked field that another one unlocks when it holds a value.
@@ -146,6 +151,19 @@ function createForm(setup: Setup = {}) {
   const absent = new Set(setup.absent ?? ['frequency'])
   const locked = new Set(setup.locked)
   const notReady = new Set(setup.notReady)
+  // A field being drawn: the rounds left, and what it is once drawn.
+  const drawing = new Map<
+    string,
+    Readonly<{ done: () => void; left: number }>
+  >()
+  const draw = (target: string, done: () => void) => {
+    const left = setup.drawing?.[target]
+    if (left) {
+      drawing.set(target, { done, left })
+    } else {
+      done()
+    }
+  }
   const values = new Map<string, ToolValue>(Object.entries(setup.values ?? {}))
   const errors: Record<string, string[]> = {}
   const effects: Array<() => void> = []
@@ -194,13 +212,14 @@ function createForm(setup: Setup = {}) {
       }
       if (show) {
         if (value === show.when) {
-          absent.delete(show.target)
+          draw(show.target, () => absent.delete(show.target))
         } else {
+          drawing.delete(show.target)
           absent.add(show.target)
         }
       }
       if (unlock && value === unlock.when) {
-        locked.delete(unlock.target)
+        draw(unlock.target, () => locked.delete(unlock.target))
       }
     })
   }
@@ -208,7 +227,11 @@ function createForm(setup: Setup = {}) {
   const host: FormToolsHost = {
     apply: (name, value, applyOptions) => {
       calls.apply.push([name, value, applyOptions])
-      if (locked.has(name) || notReady.delete(name)) {
+      if (
+        locked.has(name) ||
+        notReady.delete(name) ||
+        setup.refuses?.includes(name)
+      ) {
         return false
       }
       write(name, value)
@@ -227,11 +250,20 @@ function createForm(setup: Setup = {}) {
         ? undefined
         : { hidden: false, locked: locked.has(name) },
     getSubmit: () => submitted,
+    isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
     read: (name) => values.get(name),
     resolve: (route) => (leafOf(route) ? route : undefined),
     settle: async () => {
       calls.settle++
+      for (const [name, { done, left }] of drawing) {
+        if (left > 1) {
+          drawing.set(name, { done, left: left - 1 })
+        } else {
+          drawing.delete(name)
+          done()
+        }
+      }
       for (const effect of effects.splice(0)) {
         effect()
       }
@@ -472,6 +504,63 @@ describe('createFormTools', () => {
       expect(result.applied).toEqual(['plan', 'frequency'])
       expect(result.revealed).toEqual(['frequency'])
       expect(result.ok).toBe(true)
+    })
+
+    test('should wait for the page to draw a field the form already shows', async () => {
+      const { tools } = toolsOf({ drawing: { frequency: 8 } })
+      const result = await call(tools, 'fill', {
+        frequency: 'weekly',
+        plan: 'pro',
+      })
+
+      expect(result.applied).toEqual(['plan', 'frequency'])
+      expect(result.skipped).toEqual([])
+      expect(result.ok).toBe(true)
+    })
+
+    test('should wait for the page to draw a field the form already unlocks', async () => {
+      const { tools } = toolsOf({
+        drawing: { email: 8 },
+        locked: ['email'],
+        unlocks: { country: { target: 'email', when: 'co' } },
+      })
+      const result = await call(tools, 'fill', {
+        country: 'co',
+        email: 'ada@example.com',
+      })
+
+      expect(result.applied).toEqual(['country', 'email'])
+      expect(result.skipped).toEqual([])
+    })
+
+    test('should wait for a field being drawn while another keeps refusing its value', async () => {
+      const { tools } = toolsOf({
+        drawing: { frequency: 8 },
+        refuses: ['email'],
+      })
+      const result = await call(tools, 'fill', {
+        email: 'ada@example.com',
+        frequency: 'weekly',
+        plan: 'pro',
+      })
+
+      expect(result.applied).toEqual(['plan', 'frequency'])
+      expect(result.skipped).toMatchObject([{ code: 'locked', name: 'email' }])
+    })
+
+    test('should stop waiting for a field the page does not draw', async () => {
+      const { calls, tools } = toolsOf({ drawing: { frequency: 1_000 } })
+      const result = await call(tools, 'fill', {
+        frequency: 'weekly',
+        plan: 'pro',
+      })
+
+      expect(result.applied).toEqual(['plan'])
+      expect(result.skipped).toMatchObject([
+        { code: 'hidden', name: 'frequency' },
+      ])
+      // The round that wrote `plan`, and forty rounds of waiting.
+      expect(calls.settle).toBe(41)
     })
 
     test('should skip as hidden a field nothing shows, without failing the call', async () => {

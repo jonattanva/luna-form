@@ -189,6 +189,85 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     ).toContainText('Monthly')
   })
 
+  // A change event writes the store at once, and React draws what it shows or
+  // unlocks in a transition, later on a slow page. Chromium alone lets a test
+  // slow the page down.
+  test(
+    'should write what another value reveals on a slow page',
+    { tag: ['@chromium'] },
+    async ({ page }) => {
+      await openWith(page, {
+        sections: [
+          {
+            fields: [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { hidden: false },
+                      target: 'frequency',
+                      when: 'pro',
+                    },
+                    {
+                      action: 'state',
+                      state: { disabled: false },
+                      target: 'card',
+                      when: 'pro',
+                    },
+                  ],
+                },
+                label: 'Plan',
+                name: 'plan',
+                source: [
+                  { label: 'Free', value: 'free' },
+                  { label: 'Pro', value: 'pro' },
+                ],
+                type: 'select',
+              },
+              {
+                hidden: true,
+                label: 'Frequency',
+                name: 'frequency',
+                source: [
+                  { label: 'Weekly', value: 'weekly' },
+                  { label: 'Monthly', value: 'monthly' },
+                ],
+                type: 'select',
+              },
+              {
+                disabled: true,
+                label: 'Card',
+                name: 'card',
+                type: 'input/text',
+              },
+              ...Array.from({ length: 150 }, (_, index) => ({
+                label: `Extra ${index}`,
+                name: `extra${index}`,
+                type: 'input/text',
+              })),
+            ],
+          },
+        ],
+      })
+
+      const cdp = await page.context().newCDPSession(page)
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 20 })
+
+      const result = await call(page, 'preview_fill', {
+        card: '4242',
+        frequency: 'monthly',
+        plan: 'pro',
+      })
+
+      expect(result).toMatchObject({
+        applied: ['plan', 'frequency', 'card'],
+        ok: true,
+        skipped: [],
+      })
+    }
+  )
+
   test('should skip what it cannot write, and say why', async ({ page }) => {
     await open(page)
     const result = await call(page, 'preview_fill', {

@@ -303,6 +303,31 @@ function createFormHost(
 
     getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store()),
 
+    // What the form holds, against what the page drew: rows a list has not
+    // taken yet, a field a `state` event shows with no handle yet, or one it
+    // unlocks with its handle still locked. A field its own definition makes
+    // read-only, or a form that is, stays locked whatever the event says, and
+    // a list on the form is drawn, read-only or not.
+    isDrawing: (name, path) => {
+      if (store().get(pendingListRowsAtom)[name]) {
+        return true
+      }
+      const state = store().get(fieldStateAtom)[name]
+      if (!state) {
+        return false
+      }
+      const handle = getHandles().get(name)
+      if (!handle) {
+        return state.hidden === false && !lists()[name]
+      }
+      return (
+        state.disabled === false &&
+        handle.isLocked() &&
+        read().readOnly !== true &&
+        fields.get(path)?.readonly !== true
+      )
+    },
+
     resolve: (route) => translateRows(route, lists(), 'id'),
 
     locate: (name) => translateRows(name, lists(), 'position'),
