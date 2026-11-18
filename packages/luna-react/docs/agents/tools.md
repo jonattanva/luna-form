@@ -133,6 +133,12 @@ action returned, `{ ok: false, error, errors }` when it failed, or
 `{ pending: true }` when a submission is still running or the action takes
 more than 15 seconds; `<name>_read` gives the outcome later.
 
+With [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off)
+the values are sent unchecked, and the descriptions say so: `<name>_submit`
+leaves the checking to the action, and `<name>_fill` names no field a
+submission needs. The notes on each field still describe the form's rules,
+which such a submit does not check.
+
 ### Codes
 
 | `code`           | Where      | Meaning                                         |

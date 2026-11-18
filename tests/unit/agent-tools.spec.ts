@@ -457,6 +457,24 @@ describe('createFormTools', () => {
       )
       expect(fill.description).toContain('A submission needs: email.')
     })
+
+    test('should name nothing a submission needs when the submit checks nothing', () => {
+      const fields: Fields = [
+        { name: 'email', required: true, type: 'input/email' },
+      ]
+      const tools = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        createForm().host,
+        { validates: false }
+      )
+      const fill = toolNamed(tools, 'fill').description
+      expect(fill).not.toContain('A submission needs')
+      expect(fill).not.toContain('No field is needed')
+      expect(toolNamed(tools, 'submit').description).toContain(
+        'the values are sent unchecked'
+      )
+    })
   })
 
   describe('fill', () => {

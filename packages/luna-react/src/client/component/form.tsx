@@ -123,6 +123,7 @@ export function Form<
     store,
     submission: props.action ? submission : undefined,
     types: props.config.agentTypes,
+    validates: props.config.validation.submit !== false,
   })
 
   return (
