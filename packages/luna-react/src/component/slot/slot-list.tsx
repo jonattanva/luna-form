@@ -9,7 +9,7 @@ import {
 } from '@luna-form/core'
 import { SlotBase, type SlotComponents } from './slot-base'
 import { useMemo } from 'react'
-import type { Children, Config } from '../../type'
+import type { Children, Config, ValueChange } from '../../type'
 
 export function SlotList(
   props: Readonly<{
@@ -20,7 +20,7 @@ export function SlotList(
     disabled?: boolean
     field: List
     index: number
-    onValueChange?: (input: { name: string; value: unknown }) => void
+    onValueChange?: (input: ValueChange) => void
     style?: Style
     localization?: Localization
     value?: Nullable<Record<string, unknown>>

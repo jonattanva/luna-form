@@ -1,7 +1,7 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
-type ValueChange = { name: string; value: unknown }
+type ValueChange = { name: string; source: string; value: unknown }
 
 const COLLAPSED_LIST_FOUR_ITEMS = `{
   "sections": [
@@ -115,6 +115,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Email', name: 'email' },
             { label: 'Address', name: 'address' },
@@ -131,6 +132,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Address', name: 'address' },
             { label: undefined, name: undefined },
@@ -151,6 +153,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Phone', name: 'phone' },
             { label: 'Address', name: 'address' },
@@ -164,6 +167,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Address', name: 'address' },
             { label: undefined, name: undefined },
@@ -176,6 +180,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [{ label: undefined, name: undefined }],
         })
     })
@@ -191,6 +196,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Email', name: 'email' },
             { label: 'Address', name: 'address' },
@@ -206,6 +212,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Email', name: 'email' },
             { label: 'Address', name: 'address' },
@@ -228,6 +235,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Email', name: 'email' },
             { label: 'Phone', name: 'phone' },
@@ -242,6 +250,7 @@ test.describe(
         .poll(() => lastFieldChange(events))
         .toEqual({
           name: 'field',
+          source: 'user',
           value: [
             { label: 'Email', name: 'email' },
             { label: 'Address', name: 'address' },

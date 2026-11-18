@@ -1,7 +1,7 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
-type ValueChange = { name: string; value: unknown }
+type ValueChange = { name: string; source: string; value: unknown }
 
 // The same two-deep shape as `list-nested-change-propagation`, but read from
 // the other end: there, the inner list is the one that changes and the outer
@@ -83,6 +83,7 @@ test.describe('Nested list outer change', { tag: ['@e2e'] }, () => {
       .poll(() => lastChangeNamed(events, 'rules'))
       .toEqual({
         name: 'rules',
+        source: 'user',
         value: [{ rule: [{ rule: 'a' }] }, { rule: undefined }],
       })
   })
@@ -106,6 +107,7 @@ test.describe('Nested list outer change', { tag: ['@e2e'] }, () => {
       .poll(() => lastChangeNamed(events, 'rules'))
       .toEqual({
         name: 'rules',
+        source: 'user',
         value: [{ rule: [{ rule: 'edited' }] }, { rule: undefined }],
       })
   })
@@ -135,6 +137,7 @@ test.describe('Nested list outer change', { tag: ['@e2e'] }, () => {
       .poll(() => lastChangeNamed(events, 'rules'))
       .toEqual({
         name: 'rules',
+        source: 'user',
         value: [{ rule: [{ rule: 'edited' }] }, { rule: undefined }],
       })
   })
@@ -160,6 +163,7 @@ test.describe('Nested list outer change', { tag: ['@e2e'] }, () => {
       .poll(() => lastChangeNamed(events, 'rules'))
       .toEqual({
         name: 'rules',
+        source: 'user',
         value: [{ rule: [{ rule: 'kept' }] }],
       })
   })

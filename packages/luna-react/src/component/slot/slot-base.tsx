@@ -14,7 +14,7 @@ import { Column } from '../column'
 import type { DescriptionTextProps } from '../description'
 import { Fragment, useCallback } from 'react'
 import { SlotList } from './slot-list'
-import type { Children, Config } from '../../type'
+import type { Children, Config, ValueChange } from '../../type'
 import type { FieldProps } from '../field/field'
 import type { ListProps } from '../field/field-list'
 
@@ -44,7 +44,7 @@ type SlotBaseProps = Readonly<{
   context?: Record<string, unknown>
   disabled?: boolean
   fields?: Fields
-  onValueChange?: (input: { name: string; value: unknown }) => void
+  onValueChange?: (input: ValueChange) => void
   style?: Style
   localization?: Localization
   value?: Nullable<Record<string, unknown>>

@@ -179,6 +179,27 @@ fill answered with; a row's leaf among them tells the rows moved too. A
 submission that succeeds starts the form over, with nothing a person changed
 in it yet.
 
+## What the host hears
+
+A change an agent makes reaches `onValueChange` as a person's does, with
+`source: 'agent'`: a field it writes, and the rows of a list it assigns. What
+that change sets off is the definition's: a `value` event that fills another
+field, or a `state` that hides one and clears it, comes with `source: 'event'`.
+A person's change comes with `source: 'user'`.
+
+```tsx
+<Form
+  sections={sections}
+  config={config}
+  agent={{ name: 'signup' }}
+  onValueChange={({ name, source, value }) => {
+    if (source === 'agent') {
+      audit(name, value)
+    }
+  }}
+/>
+```
+
 ## WebMCP
 
 Where the browser offers `document.modelContext`, the form registers its tools

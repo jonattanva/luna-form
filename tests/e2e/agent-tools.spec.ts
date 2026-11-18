@@ -94,6 +94,20 @@ function call(page: Page, name: string, input: object = {}) {
   )
 }
 
+// Every change the form hands `onValueChange`, which `/reactive` logs, in the
+// order it was logged: each value is read back on its own, and one can come
+// back before the one logged ahead of it.
+function captureChanges(page: Page): () => Promise<Answer[]> {
+  const changes: Array<Promise<Answer>> = []
+  page.on('console', (message) => {
+    const input = message.args()[1]
+    if (message.text().startsWith('Form values changed:') && input) {
+      changes.push(input.jsonValue())
+    }
+  })
+  return () => Promise.all(changes)
+}
+
 function list(page: Page) {
   return page.evaluate(() =>
     (window as Window & { __lunaTools?: Tools }).__lunaTools!.list()
@@ -404,6 +418,41 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
       applied: ['name'],
       ok: true,
     })
+  })
+
+  test('should tell the host who made each change', async ({ page }) => {
+    const changes = captureChanges(page)
+    await open(page)
+    const last = async (name: string) =>
+      (await changes()).filter((change) => change.name === name).at(-1)
+    const sourceOf = async (name: string) => (await last(name))?.source
+
+    await call(page, 'preview_fill', {
+      frequency: 'weekly',
+      items: [{ sku: 'A1' }],
+      name: 'Ada',
+      plan: 'pro',
+    })
+    await expect.poll(() => sourceOf('name')).toBe('agent')
+    await expect.poll(() => sourceOf('nickname')).toBe('event')
+    await expect.poll(() => sourceOf('frequency')).toBe('agent')
+    await expect.poll(() => sourceOf('items')).toBe('agent')
+    await expect.poll(() => sourceOf('items.0.sku')).toBe('agent')
+
+    // Hiding `frequency` clears it, and the clear is the event's, not the
+    // agent's that set it off.
+    await call(page, 'preview_fill', { plan: 'free' })
+    await expect.poll(() => sourceOf('frequency')).toBe('event')
+    expect((await last('frequency'))?.value).toBeUndefined()
+    expect(await sourceOf('plan')).toBe('agent')
+
+    await page.locator('input[name="email"]').fill('ada@example.com')
+    await expect.poll(() => sourceOf('email')).toBe('user')
+
+    await page.getByRole('button', { name: 'Add item' }).click()
+    await expect
+      .poll(() => last('items'))
+      .toMatchObject({ source: 'user', value: [{ sku: 'A1' }, {}] })
   })
 
   test("should write one row's field by its route, and leave the others alone", async ({

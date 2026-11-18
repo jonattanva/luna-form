@@ -201,7 +201,8 @@ The `state` action modifies the interactive state or visibility of other fields 
 
 The clear is reported, not only applied. Every field the clear empties is
 announced through `onValueChange` with `value: undefined`, the same way a
-`value` action announces what it writes.
+`value` action announces what it writes. Both come with `source: 'event'`, not
+the source of the change that set them off.
 
 That is what makes the clear stick on a **controlled** form — one that holds
 the values in its own state and feeds them back through the `value` prop.

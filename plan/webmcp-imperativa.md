@@ -1141,8 +1141,15 @@ Resultados:
 
 ### Fase 2: lo que pida la medición (1 a 2 semanas)
 
-- [ ] `source` en `onValueChange` (`'user'`, `'agent'` o `'event'`) y un
-      registro opcional de llamadas, para auditar.
+- [x] `source` en `onValueChange` (`'user'`, `'agent'` o `'event'`), para
+      auditar.
+  - Hecho el 2026-11-18. Lo que escribe un agente llega como `agent`: un campo,
+    y las filas de una lista. Lo que su cambio desencadena, un evento `value`
+    que llena otro campo o un `state` que oculta uno y lo vacía, llega como
+    `event`. Agregar o quitar una fila con los botones es `user`.
+  - Los tipos `ValueChange` y `ValueSource` se exportan con el `Form`.
+- [ ] Un registro opcional de llamadas, para auditar lo que el agente pidió y
+      lo que se le respondió, también lo que no escribió nada.
 - [x] Persona y agente a la vez: el código `changed` (3.14).
   - Hecho el 2026-11-18, con la revisión implícita en vez de `revision`.
   - El formulario anota lo que cambia una persona: lo que escribe en un campo

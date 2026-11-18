@@ -176,7 +176,7 @@ interactive.
 | `value`         | the current values                                                                                                      |
 | `action`        | server action invoked on submit, receives the form data and the schema — see [forms/submit.md](forms/submit.md)         |
 | `onSuccess`     | called with the parsed data after `action` succeeds                                                                     |
-| `onValueChange` | called with `{ name, value }` on every change                                                                           |
+| `onValueChange` | called with `{ name, source, value }` on every change; `source` is who made it: `user`, `agent` or `event`              |
 | `readOnly`      | renders every field disabled                                                                                            |
 | `translations`  | per-language strings for labels, options and messages                                                                   |
 | `lang`          | the form's language: its translations, its month and day names, its filters and the dates it shows; English without one |
