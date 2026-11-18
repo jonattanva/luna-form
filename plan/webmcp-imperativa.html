@@ -553,9 +553,10 @@
       <main>
         <header class="doc">
           <div class="eyebrow">
-            <span class="chip status">Fase 1 en curso</span>
+            <span class="chip status">Fases 0 y 1 hechas</span>
             <span class="chip">8 de noviembre de 2026</span>
             <span class="chip">Revisado el 12 de noviembre</span>
+            <span class="chip">Fase 1 cerrada el 18 de noviembre</span>
             <span class="chip">luna-form</span>
           </div>
           <h1>Plan: WebMCP imperativo en luna-form</h1>
@@ -2824,7 +2825,7 @@ const result = await callTool(call.name, call.input)</code></pre>
             <div class="card">
               <div class="phase-head">
                 <h3>Fase 1: librería</h3>
-                <span class="chip">en curso</span>
+                <span class="chip">hecha</span>
               </div>
               <ul class="tasks">
                 <li class="done">
@@ -3244,6 +3245,30 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
+                <li class="done">
+                  Cierre del 2026-11-18.
+                  <ul>
+                    <li>
+                      Los criterios de la <a href="#aceptacion">sección 8</a> se
+                      cumplen; la medición, en su versión reducida: una corrida
+                      por formulario y modo, no tres.
+                    </li>
+                    <li>
+                      Lo que quedaba de la fase 0 está resuelto (sección 7,
+                      pregunta 6): los mensajes de validación en el idioma del
+                      formulario, y el formulario que empieza de nuevo después
+                      de un envío exitoso.
+                    </li>
+                    <li>
+                      Bundle en <code>main</code>: 379.3 de 380 kB en total,
+                      30.8 de 31 kB gzip en el camino principal y 10.5 de 12 kB
+                      gzip en el chunk de los tools. Los mensajes de validación
+                      y el formulario que empieza de nuevo, que no son parte de
+                      los tools, se llevaron casi todo el margen.
+                    </li>
+                    <li>Lo que queda pasa a las fases 2 y 3.</li>
+                  </ul>
+                </li>
               </ul>
             </div>
 
@@ -3292,6 +3317,24 @@ const result = await callTool(call.name, call.input)</code></pre>
                   <code>get_definition</code>) para armar formularios desde
                   lenguaje natural.
                 </li>
+                <li>
+                  Margen del bundle: decidir si se suben los presupuestos o se
+                  recorta el camino principal antes de sumar código (379.3 de
+                  380 kB; 30.8 de 31 kB gzip).
+                </li>
+                <li>
+                  <code>settle</code> más robusto bajo carga: su ventana quieta
+                  de 50 ms puede cerrarse antes de que React confirme la
+                  transición que revela un campo. La e2e que escribe en la misma
+                  llamada un campo que otro valor muestra falló una vez en
+                  Firefox con la suite completa; aislada pasa 15 de 15.
+                </li>
+                <li>
+                  Un envío con <code>validation.submit: false</code> no se
+                  resuelve para los tools: el estado queda en
+                  <code>pending</code> y <code>&lt;name&gt;_submit</code> no
+                  vuelve a enviar.
+                </li>
               </ul>
             </div>
 
@@ -3326,6 +3369,16 @@ const result = await callTool(call.name, call.input)</code></pre>
                   Opcional: atributos declarativos en
                   <code>react-luna-form/server</code> para formularios simples
                   sin JavaScript.
+                </li>
+                <li>
+                  Opcional: que <code>useValue</code> avise del valor del host
+                  por un callback, en vez de que los hooks que vienen después
+                  dependan del orden en que se llaman.
+                </li>
+                <li>
+                  Opcional: <code>lang</code> en <code>buildFormSchema</code>,
+                  para que un servidor valide con los mensajes del idioma del
+                  formulario sin resolver el diccionario aparte.
                 </li>
               </ul>
             </div>
@@ -3881,15 +3934,23 @@ const result = await callTool(call.name, call.input)</code></pre>
           </div>
 
           <h3>Preguntas abiertas</h3>
+          <p>
+            Al cerrar la fase 1 quedan abiertas la 3 y la 5, que pasan a la fase
+            2.
+          </p>
           <ol>
             <li>
               ¿Camino inmediato o esperar el debounce de 300 ms? Se decide
-              midiendo en la fase 1 (<a href="#fill">3.4</a>).
+              midiendo en la fase 1 (<a href="#fill">3.4</a>). Resuelta: el
+              inmediato. Un rellenado de 200 campos tarda 100 ms; esperar el
+              debounce sumaría 300 ms por cada pasada con eventos.
             </li>
             <li>
               ¿<code>&lt;name&gt;_options</code> como tool aparte o como
               parámetro de <code>&lt;name&gt;_read</code>? Menos tools ayudan a
               elegir; separados, cada uno tiene una descripción simple.
+              Resuelta: aparte, y solo cuando hay opciones que no van en el
+              esquema.
             </li>
             <li>
               Con una fuente remota que todavía no cargó, ¿<code
@@ -3900,7 +3961,9 @@ const result = await callTool(call.name, call.input)</code></pre>
             <li>
               ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos
               en <code>&lt;name&gt;_read</code>, 24 kB de esquema. Se confirman
-              con la medición.
+              con la medición. Alcanzan en los formularios de referencia: el de
+              200 campos tiene un esquema de 11.2 k caracteres y se rellenó en
+              una llamada. Se revisan con los datos de la fase 2.
             </li>
             <li>
               ¿Con cuántos formularios en una página conviene el modo agrupado?
@@ -3941,14 +4004,15 @@ const result = await callTool(call.name, call.input)</code></pre>
 
         <section id="aceptacion">
           <h2><span class="num">8.</span>Criterios de aceptación</h2>
+          <p>Cumplidos al cerrar la fase 1, el 2026-11-18.</p>
           <ul class="tasks">
-            <li>
+            <li class="done">
               Sin la prop <code>agent</code>, o sin WebMCP ni llamadas a
               <code>listTools()</code>: ningún tool, ningún render extra, y el
               camino principal dentro de su presupuesto (31 kB gzip; 2.2 kB más
               que sin agentes).
             </li>
-            <li>
+            <li class="done">
               Con la prop:
               <ul>
                 <li>
@@ -3997,18 +4061,18 @@ const result = await callTool(call.name, call.input)</code></pre>
                 </li>
               </ul>
             </li>
-            <li>
+            <li class="done">
               Escala: rellenar 100 campos hace un commit por pasada, y el
               esquema de los formularios de referencia cumple su presupuesto.
             </li>
-            <li>
+            <li class="done">
               Tipos, lint, tests unitarios, de contrato y e2e en verde en los
               tres navegadores, incluido el proyecto
               <code>chromium-webmcp</code>.
             </li>
-            <li>
-              La medición de la <a href="#medicion">sección 6</a> está publicada
-              por formulario y por modo, con:
+            <li class="done">
+              La medición de la <a href="#medicion">sección 6</a> está
+              publicada, en su versión reducida, por formulario y por modo, con:
               <ul>
                 <li>la tasa de éxito;</li>
                 <li>el tiempo;</li>
@@ -4017,7 +4081,7 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <li>las métricas de escala.</li>
               </ul>
             </li>
-            <li>
+            <li class="done">
               La documentación (<code>docs/agents/tools.md</code>) describe:
               <ul>
                 <li>
