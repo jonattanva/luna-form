@@ -1,7 +1,7 @@
 # Plan: WebMCP imperativo en luna-form
 
-Estado: la fase 0 está hecha y la fase 1 en curso; las fases 2 y 3, sin
-implementar. Escrito el 2026-11-08. Revisado el 2026-11-12.
+Estado: las fases 0 y 1 están hechas; las fases 2 y 3, sin implementar.
+Escrito el 2026-11-08. Revisado el 2026-11-12. Fase 1 cerrada el 2026-11-18.
 
 Objetivo: que un formulario de luna pueda exponerse como herramientas
 (_tools_) para agentes de IA, generadas desde la misma definición JSON que ya
@@ -932,7 +932,7 @@ Resultados:
   - un envío que falla igual que el anterior no cambia la página, y el tool
     responde `pending` a los 15 s.
 
-### Fase 1: librería (en curso)
+### Fase 1: librería (hecha)
 
 - [x] `packages/luna-core/src/util/tool-schema.ts` con `buildToolSchema` (3.3):
       subconjunto portable, opciones en línea hasta 25 y salida determinista.
@@ -1126,6 +1126,17 @@ Resultados:
   - Fuera de las e2e: `pending` a los 15 s, que necesita una acción lenta;
     queda en los unitarios.
   - Medición de la sección 6: hecha en su versión reducida (ver sección 6).
+- [x] Cierre del 2026-11-18.
+  - Los criterios de la sección 8 se cumplen; la medición, en su versión
+    reducida: una corrida por formulario y modo, no tres.
+  - Lo que quedaba de la fase 0 está resuelto (sección 7, pregunta 6): los
+    mensajes de validación en el idioma del formulario, y el formulario que
+    empieza de nuevo después de un envío exitoso.
+  - Bundle en `main`: 379.3 de 380 kB en total, 30.8 de 31 kB gzip en el
+    camino principal y 10.5 de 12 kB gzip en el chunk de los tools. Los
+    mensajes de validación y el formulario que empieza de nuevo, que no son
+    parte de los tools, se llevaron casi todo el margen.
+  - Lo que queda pasa a las fases 2 y 3.
 
 ### Fase 2: lo que pida la medición (1 a 2 semanas)
 
@@ -1143,6 +1154,15 @@ Resultados:
 - [ ] Si la medición lo pide: el modo agrupado y `<name>_describe` (3.14).
 - [ ] En el editor, tools de autoría (`set_definition`, `get_definition`) para
       armar formularios desde lenguaje natural.
+- [ ] Margen del bundle: decidir si se suben los presupuestos o se recorta el
+      camino principal antes de sumar código (379.3 de 380 kB; 30.8 de 31 kB
+      gzip).
+- [ ] `settle` más robusto bajo carga: su ventana quieta de 50 ms puede
+      cerrarse antes de que React confirme la transición que revela un campo.
+      La e2e que escribe en la misma llamada un campo que otro valor muestra
+      falló una vez en Firefox con la suite completa; aislada pasa 15 de 15.
+- [ ] Un envío con `validation.submit: false` no se resuelve para los tools: el
+      estado queda en `pending` y `<name>_submit` no vuelve a enviar.
 
 ### Fase 3: endurecimiento
 
@@ -1155,6 +1175,11 @@ Resultados:
   - Solo en los campos que la persona no cambió después.
 - [ ] Opcional: atributos declarativos en `react-luna-form/server` para
       formularios simples sin JavaScript.
+- [ ] Opcional: que `useValue` avise del valor del host por un callback, en vez
+      de que los hooks que vienen después dependan del orden en que se llaman.
+- [ ] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con
+      los mensajes del idioma del formulario sin resolver el diccionario
+      aparte.
 
 ## 5. Pruebas
 
@@ -1318,15 +1343,21 @@ Preguntas resueltas en la revisión del 12 de noviembre:
 | ¿`allow` por llamada o por campo?                         | Por llamada                              | Recibe todos los valores y puede rechazar nombrando el campo; excluir un campo es otra opción |
 | ¿Exportar `buildToolSchema` desde la fase 1?              | Sí                                       | Quien registre tools propios usa el mismo esquema                                             |
 
-Preguntas abiertas:
+Preguntas abiertas. Al cerrar la fase 1 quedan abiertas la 3 y la 5, que
+pasan a la fase 2:
 
 1. ¿Camino inmediato o esperar el debounce de 300 ms? Se decide midiendo en la
-   fase 1 (3.4).
+   fase 1 (3.4). Resuelta: el inmediato. Un rellenado de 200 campos tarda
+   100 ms; esperar el debounce sumaría 300 ms por cada pasada con eventos.
 2. ¿`<name>_options` como tool aparte o como parámetro de `<name>_read`? Menos
    tools ayudan a elegir; separados, cada uno tiene una descripción simple.
+   Resuelta: aparte, y solo cuando hay opciones que no van en el esquema.
 3. Con una fuente remota que todavía no cargó, ¿`<name>_options` la pide?
 4. ¿Los umbrales son los correctos? 25 opciones en línea, 100 campos en
-   `<name>_read`, 24 kB de esquema. Se confirman con la medición.
+   `<name>_read`, 24 kB de esquema. Se confirman con la medición. Alcanzan en
+   los formularios de referencia: el de 200 campos tiene un esquema de 11.2 k
+   caracteres y se rellenó en una llamada. Se revisan con los datos de la
+   fase 2.
 5. ¿Con cuántos formularios en una página conviene el modo agrupado?
 6. De la fase 0, por revisar en luna:
    - ¿Por qué una lista quedó con dos filas vacías después de un envío exitoso?
@@ -1348,10 +1379,12 @@ Preguntas abiertas:
 
 ## 8. Criterios de aceptación
 
-- [ ] Sin la prop `agent`, o sin WebMCP ni llamadas a `listTools()`: ningún
+Cumplidos al cerrar la fase 1, el 2026-11-18.
+
+- [x] Sin la prop `agent`, o sin WebMCP ni llamadas a `listTools()`: ningún
       tool, ningún render extra, y el camino principal dentro de su
       presupuesto (31 kB gzip; 2.2 kB más que sin agentes).
-- [ ] Con la prop:
+- [x] Con la prop:
   - `getTools()` y `listTools()` devuelven, con el esquema de 3.3:
     - `<name>_fill` y `<name>_read`;
     - `<name>_options` solo si hay opciones que no van en el esquema;
@@ -1365,18 +1398,18 @@ Preguntas abiertas:
   - `allow` puede rechazar o esperar a una persona.
   - Enviar devuelve el resultado de la acción, o `pending` pasado el tiempo
     límite, y nunca envía dos veces a la vez.
-- [ ] Escala: rellenar 100 campos hace un commit por pasada, y el esquema de los
+- [x] Escala: rellenar 100 campos hace un commit por pasada, y el esquema de los
       formularios de referencia cumple su presupuesto.
-- [ ] Tipos, lint, tests unitarios, de contrato y e2e en verde en los tres
+- [x] Tipos, lint, tests unitarios, de contrato y e2e en verde en los tres
       navegadores, incluido el proyecto `chromium-webmcp`.
-- [ ] La medición de la sección 6 está publicada por formulario y por modo,
-      con:
+- [x] La medición de la sección 6 está publicada por formulario y por modo,
+      en su versión reducida, con:
   - la tasa de éxito;
   - el tiempo;
   - las llamadas a herramientas;
   - los caracteres devueltos;
   - las métricas de escala.
-- [ ] La documentación (`docs/agents/tools.md`) describe:
+- [x] La documentación (`docs/agents/tools.md`) describe:
   - la prop `agent` y `advanced.agent`;
   - el mapeo de tipos;
   - `listTools()` y `callTool()`;
