@@ -764,6 +764,72 @@ describe('createFormTools', () => {
       })
     })
 
+    describe('a type whose schema the host declares', () => {
+      const rating: ToolSchema = { maximum: 5, minimum: 1, type: 'integer' }
+      const code: ToolSchema = {
+        maxLength: 4,
+        minLength: 2,
+        pattern: '^[A-Z]+$',
+        type: 'string',
+      }
+      const fields: Fields = [
+        { name: 'score', type: 'rating' },
+        { name: 'tag', type: 'code' },
+      ]
+
+      function declaredTools() {
+        const form = createForm()
+        const tools = createFormTools(
+          AGENT,
+          buildToolSchema([{ fields }], { types: { code, rating } }),
+          {
+            ...form.host,
+            getField: (name) =>
+              fields.filter(isField).find((field) => field.name === name),
+          },
+          { declared: new Set(['code', 'rating']) }
+        )
+        return { calls: form.calls, tools }
+      }
+
+      test('should write a value within the bounds the schema declares', async () => {
+        const { calls, tools } = declaredTools()
+        const result = await call(tools, 'fill', { score: 4, tag: 'AB' })
+
+        expect(result.ok).toBe(true)
+        expect(calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['score', 4],
+          ['tag', 'AB'],
+        ])
+      })
+
+      test('should skip a value out of the bounds the schema declares', async () => {
+        const { calls, tools } = declaredTools()
+        const result = await call(tools, 'fill', { score: 9, tag: 'abcde' })
+
+        expect(calls.apply).toEqual([])
+        expect(result.skipped).toEqual([
+          {
+            code: 'invalid_option',
+            message: 'Expected a whole number from 1 up to 5.',
+            name: 'score',
+          },
+          {
+            code: 'invalid_format',
+            message: 'Expected 2 to 4 characters.',
+            name: 'tag',
+          },
+        ])
+        expect((await call(tools, 'fill', { tag: 'ab' })).skipped).toEqual([
+          {
+            code: 'invalid_format',
+            message: 'Expected text matching ^[A-Z]+$.',
+            name: 'tag',
+          },
+        ])
+      })
+    })
+
     describe('a leaf of a row, by its route', () => {
       test("should write one row's leaf and report it under its route", async () => {
         const { calls, tools } = toolsOf({

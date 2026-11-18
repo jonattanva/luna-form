@@ -110,6 +110,7 @@ export function FormContent<
     sections: props.sections,
     store,
     submission: props.action ? submission : undefined,
+    types: props.config.agentTypes,
   })
 
   const isShowingError =

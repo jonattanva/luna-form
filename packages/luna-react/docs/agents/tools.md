@@ -294,13 +294,41 @@ of its prompt keeps the cache.
 
 ## Custom types
 
-A field whose type no built-in type describes takes text, unless `types` gives
-its schema:
+A field whose type no built-in type describes takes text, unless its type
+declares what an agent writes into it. Declare it where the type is
+registered, and a form with `agent` describes the field with it:
+
+```ts
+defineCustomInput('rating', Rating, {
+  agent: { schema: { maximum: 5, minimum: 1, type: 'integer' } },
+})
+```
+
+The field's label and description are added to the schema you give, and the
+tools write the value in that shape: a whole number here, handed to the
+component as one. Use the same keywords as the rest of the schema
+([What every consumer reads](#what-every-consumer-reads)).
+
+- **What the tools check.** No rule of the form knows your schema, so the
+  tools check a value against it before writing: its type, its `enum`, a
+  number's `minimum` and `maximum`, a text's `minLength`, `maxLength` and
+  `pattern`, and an array's `minItems` and `maxItems`. A value outside them is
+  skipped with `invalid_option` or `invalid_format`.
+- **What a person types** is checked by the field's own
+  [validation](../validation/overview.md), as for any field: the schema only
+  speaks to agents. Give the field the same rules when a person's value has to
+  keep them too.
+- **A value or a list of values.** A field never holds an object, so a schema
+  of `type: "object"`, or an array of them, is left out with a warning, and the
+  field takes text.
+- **A built-in type** you register your own component for can declare a schema
+  too, and it replaces the one the library would give.
+- The last registration of a type is the one that counts, schema included.
+
+Calling `buildToolSchema` yourself, pass the same schemas as `types`:
 
 ```ts
 buildToolSchema(sections, {
   types: { rating: { maximum: 5, minimum: 1, type: 'integer' } },
 })
 ```
-
-The field's label and description are added to the schema you give.

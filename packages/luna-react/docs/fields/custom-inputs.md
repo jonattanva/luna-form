@@ -26,6 +26,15 @@ export default defineConfig({
 `defineCustomInput(types, component)` takes one name or an array of names. Every
 name becomes a key in `config.inputs`.
 
+A form [offered to agents](../agents/tools.md) describes a field of a custom
+type as text. A third argument says what an agent writes into it instead:
+
+```ts
+defineCustomInput('rating', Rating, {
+  agent: { schema: { maximum: 5, minimum: 1, type: 'integer' } },
+})
+```
+
 **The lookup is an exact string match.** There is no prefix resolution: naming a
 field `people/picker` does not fall back to `people`, and naming it
 `select/mine` does not fall back to `select`. `defineConfig` writes one entry per

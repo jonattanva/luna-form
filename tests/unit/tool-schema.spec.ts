@@ -432,6 +432,14 @@ describe('buildToolSchema', () => {
       ).toEqual(['first', 'last'])
     })
 
+    test('should describe a built-in type by the schema the host declares for it', () => {
+      expect(
+        propertyOf([{ name: 'when', type: 'input/date' }], 'when', {
+          types: { 'input/date': { pattern: '^Q[1-4]$', type: 'string' } },
+        })
+      ).toEqual({ pattern: '^Q[1-4]$', type: 'string' })
+    })
+
     test('should describe a list as rows, with its length and its required leaves', () => {
       const result = build([
         {

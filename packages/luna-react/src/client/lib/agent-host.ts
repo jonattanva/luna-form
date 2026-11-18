@@ -27,6 +27,7 @@ import {
   type Localization,
   type Option,
   type Sections,
+  type ToolSchema,
 } from '@luna-form/core'
 import type { useStore } from 'jotai'
 import type {
@@ -71,6 +72,8 @@ export type AgentForm = Readonly<{
   sections: Sections
   store: Store
   submission?: Submission
+  // The schema each custom type declares for agents. See `defineCustomInput`.
+  types?: Readonly<Record<string, ToolSchema>>
 }>
 
 // How long the form is given to settle after a round of writes: until nothing
@@ -97,6 +100,7 @@ export function createAgentTools(
     context: form.context,
     definition: form.definition,
     localization: form.localization,
+    types: form.types,
   })
 
   const agent: AgentOptions = {
@@ -121,6 +125,7 @@ export function createAgentTools(
     key: JSON.stringify([agent.name, agent.description, agent.submit, built]),
     queue,
     tools: createFormTools(agent, built, host, {
+      declared: new Set(Object.keys(form.types ?? {})),
       queue,
       signal: options.signal,
     }),
