@@ -1,5 +1,5 @@
 import { SlotBase } from './slot-base'
-import type { Children, Config } from '../../type'
+import type { Children, Config, ValueChange } from '../../type'
 import type { Fields, Localization, Nullable, Style } from '@luna-form/core'
 import type { SlotComponents } from './slot-base'
 
@@ -11,7 +11,7 @@ export function createSlot(components: SlotComponents) {
       context?: Record<string, unknown>
       disabled?: boolean
       fields?: Fields
-      onValueChange?: (input: { name: string; value: unknown }) => void
+      onValueChange?: (input: ValueChange) => void
       style?: Style
       localization?: Localization
       value?: Nullable<Record<string, unknown>>

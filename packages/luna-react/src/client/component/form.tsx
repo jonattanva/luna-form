@@ -5,7 +5,7 @@ import { useAgentTools, useSubmission } from '../hook/use-agent-tools'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useApplyRegistry } from '../hook/use-apply'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Config, Control } from '../../type'
+import type { Config, Control, ValueChange } from '../../type'
 import type { Definition, Nullable, Sections, ZodSchema } from '@luna-form/core'
 import type { AgentOptions } from '../lib/agent-tools'
 import type { FormState } from '../hook/use-form-action'
@@ -31,7 +31,7 @@ export function Form<
     definition?: Definition
     lang?: string
     onSuccess?: (data: T) => void
-    onValueChange?: (input: { name: string; value: unknown }) => void
+    onValueChange?: (input: ValueChange) => void
     readOnly?: boolean
     sections: Sections
     translations?: Record<string, Record<string, string>>

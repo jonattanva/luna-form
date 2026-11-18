@@ -55,9 +55,22 @@ export type Config = BaseConfig<React.ComponentProps<React.ElementType>> & {
   alert?: React.ComponentType<AlertProps>
 }
 
-export type InputChange = {
-  data?: DataAttributes
+/**
+ * Who changed a value: a person in the field (`user`), an agent through the
+ * form's tools (`agent`), or a change event of the definition, a `value` that
+ * writes it or a `state` that hides it (`event`).
+ */
+export type ValueSource = 'agent' | 'event' | 'user'
+
+/** A value that changed, as `onValueChange` hands it to the host. */
+export type ValueChange = Readonly<{
   name: string
-  type: string
+  source: ValueSource
   value: unknown
-}
+}>
+
+export type InputChange = ValueChange &
+  Readonly<{
+    data?: DataAttributes
+    type: string
+  }>

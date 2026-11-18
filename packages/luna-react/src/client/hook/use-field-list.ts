@@ -35,6 +35,7 @@ import {
   heldListRowsAtom,
   mountedListsAtom,
   pendingListRowsAtom,
+  type PendingRows,
 } from '../lib/list-store'
 import { useKeepsValue } from '../context/keep-value-context'
 import { resolveValue } from '../lib/resolve-value'
@@ -42,11 +43,12 @@ import { useEntryAtom } from './use-entry-atom'
 import { useLatest } from './use-latest'
 import { touchAtom, valueAtom } from '../lib/value-store'
 import { omitUnder } from '../lib/store-helper'
+import type { ValueChange, ValueSource } from '../../type'
 
 export function useFieldList(
   field: List,
   value?: Nullable<Record<string, unknown>>,
-  onValueChange?: (input: { name: string; value: unknown }) => void
+  onValueChange?: (input: ValueChange) => void
 ) {
   const { min, max } = getListBounds(field)
 
@@ -234,9 +236,10 @@ export function useFieldList(
   )
 
   const emitChange = useCallback(
-    (rows: ListRows) => {
+    (rows: ListRows, source: ValueSource) => {
       onValueChangeRef.current?.({
         name: translatePathRef.current(field.name),
+        source,
         value: rows,
       })
     },
@@ -253,8 +256,8 @@ export function useFieldList(
   // construction. Adding a row rewrites nothing that was there, and keeps to the
   // array.
   const emitRows = useCallback(
-    (from: number, previous: ListRows, next: ListRows) => {
-      emitChange(next)
+    (from: number, previous: ListRows, next: ListRows, source: ValueSource) => {
+      emitChange(next, source)
 
       const report = onValueChangeRef.current
       if (!report) {
@@ -263,7 +266,7 @@ export function useFieldList(
 
       const base = translatePathRef.current(field.name)
       for (const entry of positionalEntries(base, from, previous, next)) {
-        report(entry)
+        report({ ...entry, source })
       }
     },
     [emitChange, field.name, onValueChangeRef, translatePathRef]
@@ -279,7 +282,7 @@ export function useFieldList(
 
     setItems(nextItems)
     touch(field.name)
-    emitChange(computeListValue(nextItems, store.get(valueAtom)))
+    emitChange(computeListValue(nextItems, store.get(valueAtom)), 'user')
   }, [computeListValue, emitChange, field.name, itemsRef, max, store, touch])
 
   const handleRemove = useCallback(
@@ -306,7 +309,7 @@ export function useFieldList(
       setItems(nextItems)
       setValues(nextValues)
       touch(field.name)
-      emitRows(index, previousRows, nextRows)
+      emitRows(index, previousRows, nextRows, 'user')
     },
     [
       computeListValue,
@@ -384,7 +387,7 @@ export function useFieldList(
     useEntryAtom(pendingListRowsAtom, field.name)
   )
 
-  const applyRows = useEffectEvent((rows: Array<Record<string, unknown>>) => {
+  const applyRows = useEffectEvent(({ rows, source }: PendingRows) => {
     // What the assignment is worth once this list's own rules are applied:
     // every leaf spelled in, the count clamped to `min`/`max`, and a leaf that
     // is a list of its own carrying rows normalised against *its* fields. See
@@ -427,7 +430,7 @@ export function useFieldList(
 
     // Rows this assignment owes to the lists inside its rows, gathered so the
     // whole tree is one write to the atom rather than one per inner list.
-    const deliveries: Record<string, Array<Record<string, unknown>>> = {}
+    const deliveries: Record<string, PendingRows> = {}
 
     nextItems.forEach((stableId, index) => {
       const row = assigned[index]
@@ -454,7 +457,10 @@ export function useFieldList(
         // effects are torn down, and it is what the delivery falls back to if
         // the inner list is not on screen to take it.
         if (isList(leaf)) {
-          deliveries[key] = value as Array<Record<string, unknown>>
+          deliveries[key] = {
+            rows: value as Array<Record<string, unknown>>,
+            source,
+          }
         }
       }
     })
@@ -472,7 +478,7 @@ export function useFieldList(
     // about a tree that is one commit out of date, which for a consumer that
     // saves what it is handed means saving the old rows. Every position is
     // reported from the first, since an assignment can rewrite all of them.
-    emitRows(0, previousRows, assigned)
+    emitRows(0, previousRows, assigned, source)
   })
 
   useEffect(() => {

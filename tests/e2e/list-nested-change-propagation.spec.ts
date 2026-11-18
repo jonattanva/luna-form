@@ -1,7 +1,7 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
-type ValueChange = { name: string; value: unknown }
+type ValueChange = { name: string; source: string; value: unknown }
 
 // Nested list: `rules` (groups) -> `rule` (conditions). A single leaf per rule
 // keeps the repro minimal.
@@ -72,7 +72,7 @@ test.describe('Nested list change propagation', { tag: ['@e2e'] }, () => {
     // `rules.0.rule.0.rule`.
     await expect
       .poll(() => lastChangeNamed(events, 'rules.0.rule'))
-      .toEqual({ name: 'rules.0.rule', value: [{ rule: 'a' }] })
+      .toEqual({ name: 'rules.0.rule', source: 'user', value: [{ rule: 'a' }] })
   })
 
   test('adding an item to a NESTED list emits onValueChange to the root', async ({
@@ -91,6 +91,7 @@ test.describe('Nested list change propagation', { tag: ['@e2e'] }, () => {
       .poll(() => lastChangeNamed(events, 'rules.0.rule'))
       .toEqual({
         name: 'rules.0.rule',
+        source: 'user',
         value: [{ rule: 'a' }, { rule: 'b' }, { rule: undefined }],
       })
   })

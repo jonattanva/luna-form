@@ -313,7 +313,7 @@ function createFormHost(
       }
       store().set(pendingListRowsAtom, {
         ...store().get(pendingListRowsAtom),
-        [name]: rows.map((row) => ({ ...row })),
+        [name]: { rows: rows.map((row) => ({ ...row })), source: 'agent' },
       })
       return true
     },

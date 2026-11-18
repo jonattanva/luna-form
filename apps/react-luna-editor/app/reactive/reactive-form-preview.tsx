@@ -9,6 +9,7 @@ import {
   listTools,
   withDeclaredFields,
   type AgentOptions,
+  type ValueChange,
 } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
@@ -193,7 +194,7 @@ export function ReactiveFormPreview() {
     }
   }, [])
 
-  function handleValueChange(input: { name: string; value: unknown }) {
+  function handleValueChange(input: ValueChange) {
     console.log('Form values changed:', input)
     setValues((prev) =>
       nested
