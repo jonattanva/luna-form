@@ -116,6 +116,7 @@ export function Form<
     agent: props.agent,
     context: props.context,
     definition: props.definition,
+    formRef,
     getHandles,
     localization,
     readOnly: props.readOnly,

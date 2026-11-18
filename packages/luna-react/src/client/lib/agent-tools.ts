@@ -163,6 +163,13 @@ export type FormToolsHost = Readonly<{
    * before is no longer news to it.
    */
   seen: (names: readonly string[]) => void
+  /**
+   * Tells the person a fill wrote the fields named, and what their change
+   * events filled in: the page shows it, and says it to a screen reader.
+   */
+  filled: (names: readonly string[]) => void
+  /** Whether an agent is using the form: a call runs, until it answers. */
+  using: (active: boolean) => void
   /** Submits the form as its submit button does, and resolves with the outcome. */
   submit: (signal: AbortSignal) => Promise<SubmitStatus>
   /**
@@ -446,11 +453,17 @@ export function createFormTools(
     (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
       return (
-        queue(() =>
-          callSignal.aborted
-            ? Promise.resolve(CANCELLED)
-            : run(input, callSignal)
-        ) ?? Promise.resolve(BUSY)
+        queue(async () => {
+          if (callSignal.aborted) {
+            return CANCELLED
+          }
+          host.using(true)
+          try {
+            return await run(input, callSignal)
+          } finally {
+            host.using(false)
+          }
+        }) ?? Promise.resolve(BUSY)
       )
     }
 
@@ -828,19 +841,30 @@ export function createFormTools(
       )
 
     // The answer tells the agent what every field in it holds now: what it
-    // wrote, what that set off, and what a person had changed.
-    // By the names the call wrote and kept under, and the rest by the rows
-    // the form holds now.
+    // wrote, what that set off, and what a person had changed. By the names
+    // the call wrote and kept under, and the rest by the rows the form holds
+    // now.
+    //
+    // What the call changed is shown to the person: a value that changed, not
+    // one a person had, or changed while the call ran.
     const told = new Set(
       [...written.values(), ...kept.values()].map(({ target }) => target)
     )
+    const changed: string[] = []
     for (const name of Object.keys(values)) {
       const target = ownProperty(properties, name) ? name : host.resolve(name)
-      if (target !== undefined) {
-        told.add(target)
+      if (target === undefined) {
+        continue
+      }
+      told.add(target)
+      if (!kept.has(name) && !host.isChanged(target)) {
+        changed.push(target)
       }
     }
     host.seen([...told])
+    if (changed.length > 0) {
+      host.filled(changed)
+    }
 
     return {
       ...(cancelled && {

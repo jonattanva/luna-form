@@ -15,6 +15,9 @@ export type BuiltInKey =
   | '(Optional)'
   | 'Add item'
   | 'An unexpected error occurred submitting the form.'
+  // What a screen reader is told when an agent fills fields in.
+  | 'An agent filled 1 field'
+  | 'An agent filled {count} fields'
   | 'Collapse {label} {index}'
   | 'Collapse {name} ({label} {index})'
   | 'Expand {label} {index}'
@@ -66,6 +69,8 @@ const BUILT_IN: Record<string, Record<BuiltInKey, string>> = {
     'Add item': 'Añadir elemento',
     'An unexpected error occurred submitting the form.':
       'Ocurrió un error inesperado al enviar el formulario.',
+    'An agent filled 1 field': 'Un agente llenó 1 campo',
+    'An agent filled {count} fields': 'Un agente llenó {count} campos',
     'Collapse {label} {index}': 'Contraer {label} {index}',
     'Collapse {name} ({label} {index})': 'Contraer {name} ({label} {index})',
     'Expand {label} {index}': 'Expandir {label} {index}',

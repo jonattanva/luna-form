@@ -174,8 +174,10 @@ function createForm(setup: Setup = {}) {
 
   const calls = {
     apply: [] as Array<[string, ToolValue, object | undefined]>,
+    filled: [] as Array<readonly string[]>,
     rows: [] as Array<[string, readonly ToolRow[]]>,
     settle: 0,
+    using: [] as boolean[],
     validate: [] as Array<readonly string[]>,
   }
 
@@ -245,6 +247,9 @@ function createForm(setup: Setup = {}) {
       write(name, rows.slice(0, 2))
       return true
     },
+    filled: (names) => {
+      calls.filled.push(names)
+    },
     getErrors: () => errors,
     getField: (name) => definitions.get(name),
     getOptions: (path, name) => options.get(name ?? path),
@@ -276,6 +281,9 @@ function createForm(setup: Setup = {}) {
       for (const effect of effects.splice(0)) {
         effect()
       }
+    },
+    using: (active) => {
+      calls.using.push(active)
     },
     submit: async (signal) => {
       submitted = { status: 'pending' }
@@ -508,6 +516,18 @@ describe('createFormTools', () => {
         skipped: [],
         values: { country: 'mx', email: 'ada@example.com' },
       })
+    })
+
+    test('should show the person what it filled, and that a call is running', async () => {
+      const { calls, tools } = toolsOf({
+        changed: ['country'],
+        fills: { email: () => ['age', '30'] },
+        values: { country: 'co' },
+      })
+      await call(tools, 'fill', { country: 'mx', email: 'ada@example.com' })
+
+      expect(calls.filled).toEqual([['email', 'age']])
+      expect(calls.using).toEqual([true, false])
     })
 
     test('should not write over what someone else changed, and say what it holds', async () => {

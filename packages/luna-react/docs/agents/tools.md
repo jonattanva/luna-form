@@ -179,6 +179,32 @@ fill answered with; a row's leaf among them tells the rows moved too. A
 submission that succeeds starts the form over, with nothing a person changed
 in it yet.
 
+## What the person sees
+
+The form shows the person an agent at work, through attributes for your CSS;
+it brings no style of its own.
+
+- **`data-agent-active`** is on the `<form>` while a call of any of its tools
+  runs, until it answers, a cancelled call included.
+- **`data-agent-filled`** is on the field (`[data-slot="field"]`) of each value
+  a fill changed, and of each one its change events filled in, until the
+  person changes that field, or adds or removes a row of a list it is in. A
+  value the field already held is not marked. A field drawn again, when a value
+  hides and shows it, or a form started over after a success, comes back
+  without it.
+- A polite live region inside the form says how many fields a fill filled, in
+  the form's language: `An agent filled 3 fields`.
+
+```css
+form[data-agent-active] {
+  outline: 2px solid rgb(99 102 241 / 0.4);
+}
+
+[data-slot='field'][data-agent-filled] input {
+  background: rgb(99 102 241 / 0.08);
+}
+```
+
 ## What the host hears
 
 A change an agent makes reaches `onValueChange` as a person's does, with

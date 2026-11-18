@@ -22,6 +22,7 @@ import {
   isString,
   logger,
   prepare,
+  translateBuiltIn,
   type Definition,
   type Field,
   type Fields,
@@ -50,6 +51,9 @@ type Store = ReturnType<typeof useStore>
 
 // What the tools are told of the changes a person makes. See `watchChanges`.
 type Changes = Pick<FormToolsHost, 'isChanged' | 'seen'>
+
+// What the person is shown of an agent at work. See `showAgent`.
+type Signs = Pick<FormToolsHost, 'filled' | 'using'>
 
 /** The last submission as the form keeps it, before it is told to an agent. */
 export type Submitted = Readonly<{
@@ -84,6 +88,8 @@ export type AgentForm = Readonly<{
   agent?: AgentOptions
   context?: Record<string, unknown>
   definition?: Definition
+  // The `<form>` on the page: a start over draws a new one.
+  formRef: RefObject<HTMLFormElement | null>
   getHandles: () => ReadonlyMap<string, FieldHandle>
   localization: Localization
   readOnly?: boolean
@@ -116,6 +122,7 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
   const life = new AbortController()
   let queue: Queue | undefined
   const changes = watchChanges(() => read().store)
+  const signs = showAgent(read, life.signal)
 
   // The tools built last, what tells whether a build would give the same ones,
   // and the signal that unregisters them.
@@ -139,6 +146,7 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
         changes,
         queue,
         signal: life.signal,
+        signs,
       })
       queue = built.queue
       if (current?.key === built.key) {
@@ -190,12 +198,17 @@ function registerTools(
  * again: the agent's own options and the schema, as text. Two builds with the
  * same `key` describe the same tools, so there is nothing to register again.
  *
- * `queue` and `changes` are the form's, kept from one build to the next;
- * `signal` is the life of the form.
+ * `queue`, `changes` and `signs` are the form's, kept from one build to the
+ * next; `signal` is the life of the form.
  */
 function createAgentTools(
   read: () => AgentForm,
-  options: Readonly<{ changes: Changes; queue?: Queue; signal: AbortSignal }>
+  options: Readonly<{
+    changes: Changes
+    queue?: Queue
+    signal: AbortSignal
+    signs: Signs
+  }>
 ): Readonly<{ key: string; queue: Queue; tools: Tool[] }> {
   const form = read()
   const built = buildToolSchema(form.sections, {
@@ -220,7 +233,7 @@ function createAgentTools(
   const host = createFormHost(
     read,
     indexFields(prepareFields(form.sections, form.definition, form.context)),
-    options.changes
+    { ...options.changes, ...options.signs }
   )
   const queue = options.queue ?? createQueue()
 
@@ -280,7 +293,7 @@ function indexFields(
 function createFormHost(
   read: () => AgentForm,
   fields: ReadonlyMap<string, Field>,
-  changes: Changes
+  parts: Changes & Signs
 ): FormToolsHost {
   // The store as the form holds it now: a success starts the form over on a
   // new one, and the tools built before it go on reading and writing the form.
@@ -289,7 +302,7 @@ function createFormHost(
   const lists = () => store().get(mountedListsAtom)
 
   return {
-    ...changes,
+    ...parts,
 
     apply: (name, value, options) =>
       getHandles().get(name)?.apply(value, options) ?? false,
@@ -496,6 +509,162 @@ function watchChanges(current: () => Store): Changes {
         if (concerns(key, names)) {
           told.set(key, at)
         }
+      }
+    },
+  }
+}
+
+// Hidden from sight, not from a screen reader.
+const UNSEEN =
+  'position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap'
+
+// How long a live region waits before it speaks: one put on the page and given
+// its text at once is not always heard.
+const ANNOUNCE_DELAY = 100
+
+/**
+ * What the person sees of an agent at work on a form, for the host to style:
+ *
+ * - `data-agent-active` on the `<form>` while a call runs;
+ * - `data-agent-filled` on the field (`[data-slot="field"]`) of each value a
+ *   fill changed, or that its change events did, until the person changes it
+ *   or the rows of a list it is in;
+ * - a polite live region in the form that says how many fields a fill
+ *   filled, in the form's language.
+ *
+ * Attributes on elements React renders, which it leaves alone because it did
+ * not set them; a field drawn again, or a form started over, has none.
+ */
+function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
+  let active = 0
+  let region: HTMLElement | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  // The fields marked, by the name of their control, with what the form had
+  // noted of a person's change to it, or to a list it is in, then.
+  const marked = new Map<string, string>()
+  let watched: Store | undefined
+  let stop = () => {}
+
+  const fieldOf = (control: Element) => control.closest('[data-slot="field"]')
+
+  const noted = (
+    name: string,
+    touched: Readonly<Record<string, number>>
+  ): string =>
+    Object.entries(touched)
+      .filter(([key]) => isUnder(name, [key]))
+      .map(([key, at]) => `${key}:${at}`)
+      .join(' ')
+
+  const clear = (name: string) => {
+    marked.delete(name)
+    for (const control of read().formRef.current?.querySelectorAll(
+      `[name="${CSS.escape(name)}"]`
+    ) ?? []) {
+      fieldOf(control)?.removeAttribute('data-agent-filled')
+    }
+  }
+
+  // A person's change takes the mark off.
+  const unmark = () => {
+    const touched = watched?.get(touchedAtom) ?? {}
+    for (const [name, at] of marked) {
+      if (noted(name, touched) !== at) {
+        clear(name)
+      }
+    }
+  }
+
+  // In the form, so a form in a modal dialog is heard; put back when a start
+  // over draws a new one.
+  const announce = (form: HTMLFormElement, text: string) => {
+    if (!region) {
+      region = document.createElement('div')
+      region.setAttribute('aria-live', 'polite')
+      region.setAttribute('aria-atomic', 'true')
+      region.style.cssText = UNSEEN
+    }
+    if (region.parentElement !== form) {
+      form.append(region)
+    }
+    const speaking = region
+    speaking.textContent = ''
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      speaking.textContent = text
+    }, ANNOUNCE_DELAY)
+  }
+
+  signal.addEventListener(
+    'abort',
+    () => {
+      stop()
+      clearTimeout(timer)
+      region?.remove()
+      for (const name of marked.keys()) {
+        clear(name)
+      }
+      read().formRef.current?.removeAttribute('data-agent-active')
+    },
+    { once: true }
+  )
+
+  return {
+    filled: (names) => {
+      const form = read().formRef.current
+      if (!form || signal.aborted) {
+        return
+      }
+
+      // A new store is a form started over: its fields are drawn anew.
+      const { store } = read()
+      if (store !== watched) {
+        stop()
+        marked.clear()
+        watched = store
+        stop = store.sub(touchedAtom, unmark)
+      }
+
+      // A list's name marks the fields of its rows.
+      const touched = store.get(touchedAtom)
+      const fields = new Set<Element>()
+      for (const name of names) {
+        const escaped = CSS.escape(name)
+        for (const control of form.querySelectorAll(
+          `[name="${escaped}"], [name^="${escaped}."]`
+        )) {
+          const field = fieldOf(control)
+          const controlName = control.getAttribute('name')
+          if (field && controlName) {
+            field.setAttribute('data-agent-filled', '')
+            marked.set(controlName, noted(controlName, touched))
+            fields.add(field)
+          }
+        }
+      }
+
+      if (fields.size > 0) {
+        const translations = read().localization.translations
+        announce(
+          form,
+          fields.size === 1
+            ? translateBuiltIn('An agent filled 1 field', translations)
+            : translateBuiltIn(
+                'An agent filled {count} fields',
+                translations
+              ).replace('{count}', String(fields.size))
+        )
+      }
+    },
+
+    using: (on) => {
+      active += on ? 1 : -1
+      const form = read().formRef.current
+      if (active > 0) {
+        form?.setAttribute('data-agent-active', '')
+      } else {
+        form?.removeAttribute('data-agent-active')
       }
     },
   }

@@ -3333,7 +3333,7 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Usar <code>toolactivated</code> y <code>toolcancel</code> para
                   resaltar:
                   <ul>
@@ -3346,6 +3346,28 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                   Además, anunciarlo con una región <code>aria-live</code>.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18, sin escuchar los eventos: según la
+                      especificación, <code>toolactivated</code> se dispara
+                      cuando se invoca el <code>execute</code> y
+                      <code>toolcancel</code> cuando se cancela, con solo
+                      <code>toolName</code>. El <code>execute</code> es del
+                      formulario, así que lo sabe sin ellos, y también funciona
+                      con <code>callTool()</code>.
+                    </li>
+                    <li>
+                      Solo atributos, sin estilo propio: el host decide cómo se
+                      ve. La documentación trae un ejemplo de CSS.
+                    </li>
+                    <li>
+                      <code>data-agent-filled</code> va en el campo de cada
+                      valor que el <code>fill</code> escribió o que sus eventos
+                      llenaron, y se quita cuando la persona lo cambia. La
+                      región <code>aria-live</code> dice cuántos campos llenó,
+                      en el idioma del formulario.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Fuentes remotas: que <code>&lt;name&gt;_options</code> pida
