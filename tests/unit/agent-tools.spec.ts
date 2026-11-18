@@ -99,6 +99,8 @@ const AGENT: AgentOptions = {
 type Setup = Readonly<{
   // Fields not on the form until a value shows them.
   absent?: readonly string[]
+  // Fields a person changed since the agent last read the form.
+  changed?: readonly string[]
   // How many rounds the page takes to draw a field a value shows or unlocks,
   // while the form already holds that it does.
   drawing?: Readonly<Record<string, number>>
@@ -165,6 +167,7 @@ function createForm(setup: Setup = {}) {
     }
   }
   const values = new Map<string, ToolValue>(Object.entries(setup.values ?? {}))
+  const changed = new Set(setup.changed)
   const errors: Record<string, string[]> = {}
   const effects: Array<() => void> = []
   let submitted: SubmitStatus = { status: 'idle' }
@@ -250,10 +253,16 @@ function createForm(setup: Setup = {}) {
         ? undefined
         : { hidden: false, locked: locked.has(name) },
     getSubmit: () => submitted,
+    isChanged: (name) => changed.has(name),
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
     read: (name) => values.get(name),
     resolve: (route) => (leafOf(route) ? route : undefined),
+    seen: (names) => {
+      for (const name of names) {
+        changed.delete(name)
+      }
+    },
     settle: async () => {
       calls.settle++
       for (const [name, { done, left }] of drawing) {
@@ -499,6 +508,42 @@ describe('createFormTools', () => {
         skipped: [],
         values: { country: 'mx', email: 'ada@example.com' },
       })
+    })
+
+    test('should not write over what someone else changed, and say what it holds', async () => {
+      const { calls, tools } = toolsOf({
+        changed: ['email'],
+        values: { email: 'person@example.com' },
+      })
+      const result = await call(tools, 'fill', {
+        country: 'mx',
+        email: 'agent@example.com',
+      })
+
+      expect(calls.apply).toEqual([
+        ['country', 'mx', { immediate: true, validate: false }],
+      ])
+      expect(result).toMatchObject({
+        applied: ['country'],
+        ok: false,
+        skipped: [{ code: 'changed', name: 'email' }],
+        values: { country: 'mx', email: 'person@example.com' },
+      })
+
+      // Told what it holds, the agent may write over it.
+      const again = await call(tools, 'fill', { email: 'agent@example.com' })
+      expect(again).toMatchObject({ applied: ['email'], ok: true })
+    })
+
+    test('should write what a person changed when it already holds the value sent', async () => {
+      const { tools } = toolsOf({
+        changed: ['email'],
+        values: { email: 'ada@example.com' },
+      })
+
+      expect(
+        await call(tools, 'fill', { email: 'ada@example.com' })
+      ).toMatchObject({ applied: ['email'], ok: true, skipped: [] })
     })
 
     test('should report what a value event filled in, and only what changed', async () => {
@@ -1373,6 +1418,18 @@ describe('createFormTools', () => {
         locked: ['email'],
         submit: { status: 'idle' },
         values: { country: 'xx', email: 'ada@example.com' },
+      })
+    })
+
+    test('should leave the agent free to write over the fields it read, and only those', async () => {
+      const { tools } = toolsOf({ changed: ['country', 'email'] })
+      await call(tools, 'read', { fields: ['email'] })
+
+      expect(
+        await call(tools, 'fill', { country: 'mx', email: 'ada@example.com' })
+      ).toMatchObject({
+        applied: ['email'],
+        skipped: [{ code: 'changed', name: 'country' }],
       })
     })
 

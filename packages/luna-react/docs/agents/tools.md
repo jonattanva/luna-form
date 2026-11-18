@@ -97,15 +97,18 @@ so the list's description is where an agent learns them.
 - **`values`** holds the final value of every field that changed during the
   call, the ones a change event filled included (`city`), in the formats of
   the schema. A list the call did not send whole, holding the same rows, is
-  told by the leaves that changed, under their route.
+  told by the leaves that changed, under their route. A field skipped as
+  [`changed`](#a-person-and-an-agent-at-once) is there too, with what it
+  holds.
 - **`skipped`** holds what was not written, with a [code](#codes).
 - **`errors`** name a row's leaf by its route too: `items.2.quantity`.
 - A time is written and read back as the schema gives it, `HH:mm`, or
   `HH:mm:ss` when the field shows seconds, whatever format it shows. It
   reaches the action with its seconds, `09:30:00`, as a time input sends it
   when a person picks one.
-- **`ok`** is `false` when a value did not fit its field or broke a rule. A
-  field skipped as `hidden` or `locked` does not make it `false`.
+- **`ok`** is `false` when a value did not fit its field, broke a rule or was
+  skipped as `changed`. A field skipped as `hidden` or `locked` does not make
+  it `false`.
 - What was written stays written when another field fails, as when a person
   writes.
 
@@ -147,6 +150,7 @@ which such a submit does not check.
 | `invalid_option` | `skipped`  | Not one of its options; the message lists them  |
 | `invalid_format` | `skipped`  | A day or a time written wrong                   |
 | `unknown`        | `skipped`  | No field so named, or one left out of the tools |
+| `changed`        | `skipped`  | A person changed it since the agent read it     |
 | `hidden`         | `skipped`  | The field is not on the form                    |
 | `locked`         | `skipped`  | The field is disabled or read-only              |
 | `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
@@ -157,6 +161,23 @@ which such a submit does not check.
 A form answers its calls one at a time, in the order they come. Every tool
 declares an `outputSchema`, and what an agent can correct comes back in the
 answer with a `code`, never as an error thrown.
+
+## A person and an agent at once
+
+A person can keep writing in the form while an agent fills it. A fill does not
+write over a field a person changed since the agent last read it: the field is
+skipped as `changed`, and `values` has what it holds now. The agent decides
+with that, and a second fill of the field writes it. A field that already
+holds what the agent sends is written as any other.
+
+A person's change is what they write in a field and the rows they add or
+remove; a row they add or remove protects the whole list, since a row named by
+its position may be another one now. What a change event writes, what the
+host puts in through `value` and what the agent writes are not. What counts as
+read: the fields a `<name>_read` returned with their values, and every field a
+fill answered with; a row's leaf among them tells the rows moved too. A
+submission that succeeds starts the form over, with nothing a person changed
+in it yet.
 
 ## What the host hears
 

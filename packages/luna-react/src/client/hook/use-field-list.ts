@@ -41,7 +41,7 @@ import { useKeepsValue } from '../context/keep-value-context'
 import { resolveValue } from '../lib/resolve-value'
 import { useEntryAtom } from './use-entry-atom'
 import { useLatest } from './use-latest'
-import { valueAtom } from '../lib/value-store'
+import { touchAtom, valueAtom } from '../lib/value-store'
 import { omitUnder } from '../lib/store-helper'
 import type { ValueChange, ValueSource } from '../../type'
 
@@ -87,6 +87,7 @@ export function useFieldList(
   const nextId = useRef(items.reduce((next, id) => Math.max(next, id + 1), 0))
 
   const setValues = useSetAtom(valueAtom)
+  const touch = useSetAtom(touchAtom)
   const setPendingListRows = useSetAtom(pendingListRowsAtom)
   const setHeldRows = useSetAtom(heldListRowsAtom)
 
@@ -280,8 +281,9 @@ export function useFieldList(
     const nextItems = [...itemsRef.current, id]
 
     setItems(nextItems)
+    touch(field.name)
     emitChange(computeListValue(nextItems, store.get(valueAtom)), 'user')
-  }, [computeListValue, emitChange, itemsRef, max, store])
+  }, [computeListValue, emitChange, field.name, itemsRef, max, store, touch])
 
   const handleRemove = useCallback(
     (index: number) => {
@@ -306,6 +308,7 @@ export function useFieldList(
 
       setItems(nextItems)
       setValues(nextValues)
+      touch(field.name)
       emitRows(index, previousRows, nextRows, 'user')
     },
     [
@@ -317,6 +320,7 @@ export function useFieldList(
       setHeldRows,
       setValues,
       store,
+      touch,
     ]
   )
 

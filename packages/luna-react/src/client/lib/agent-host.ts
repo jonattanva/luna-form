@@ -1,4 +1,5 @@
 import { composeListValue } from './compose-list-value'
+import { isUnder } from './store-helper'
 import { createFormTools, createQueue, type Queue } from './agent-tools'
 import { fieldStateAtom } from './state-store'
 import { inputErrorAtom } from './error-store'
@@ -8,7 +9,7 @@ import {
   type MountedList,
 } from './list-store'
 import { sourceAtom } from './source-store'
-import { valueAtom } from './value-store'
+import { touchedAtom, valueAtom } from './value-store'
 import {
   buildToolSchema,
   flattenOptions,
@@ -46,6 +47,9 @@ import type {
 import type { FieldHandle } from '../hook/use-apply'
 
 type Store = ReturnType<typeof useStore>
+
+// What the tools are told of the changes a person makes. See `watchChanges`.
+type Changes = Pick<FormToolsHost, 'isChanged' | 'seen'>
 
 /** The last submission as the form keeps it, before it is told to an agent. */
 export type Submitted = Readonly<{
@@ -107,9 +111,11 @@ const SETTLE_LIMIT = 2_000
  * refuses what `allow` was still being asked: the form is gone.
  */
 export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
-  // The life of the form, and the queue every set of its tools shares.
+  // The life of the form, the queue every set of its tools shares, and what
+  // the agent was told of the changes a person made.
   const life = new AbortController()
   let queue: Queue | undefined
+  const changes = watchChanges(() => read().store)
 
   // The tools built last, what tells whether a build would give the same ones,
   // and the signal that unregisters them.
@@ -129,7 +135,11 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
         return current.tools
       }
 
-      const built = createAgentTools(read, { queue, signal: life.signal })
+      const built = createAgentTools(read, {
+        changes,
+        queue,
+        signal: life.signal,
+      })
       queue = built.queue
       if (current?.key === built.key) {
         return current.tools
@@ -180,12 +190,12 @@ function registerTools(
  * again: the agent's own options and the schema, as text. Two builds with the
  * same `key` describe the same tools, so there is nothing to register again.
  *
- * `queue` is the form's, kept from one build to the next; `signal` is the life
- * of the form.
+ * `queue` and `changes` are the form's, kept from one build to the next;
+ * `signal` is the life of the form.
  */
 function createAgentTools(
   read: () => AgentForm,
-  options: Readonly<{ queue?: Queue; signal: AbortSignal }>
+  options: Readonly<{ changes: Changes; queue?: Queue; signal: AbortSignal }>
 ): Readonly<{ key: string; queue: Queue; tools: Tool[] }> {
   const form = read()
   const built = buildToolSchema(form.sections, {
@@ -209,7 +219,8 @@ function createAgentTools(
 
   const host = createFormHost(
     read,
-    indexFields(prepareFields(form.sections, form.definition, form.context))
+    indexFields(prepareFields(form.sections, form.definition, form.context)),
+    options.changes
   )
   const queue = options.queue ?? createQueue()
 
@@ -268,7 +279,8 @@ function indexFields(
  */
 function createFormHost(
   read: () => AgentForm,
-  fields: ReadonlyMap<string, Field>
+  fields: ReadonlyMap<string, Field>,
+  changes: Changes
 ): FormToolsHost {
   // The store as the form holds it now: a success starts the form over on a
   // new one, and the tools built before it go on reading and writing the form.
@@ -277,6 +289,8 @@ function createFormHost(
   const lists = () => store().get(mountedListsAtom)
 
   return {
+    ...changes,
+
     apply: (name, value, options) =>
       getHandles().get(name)?.apply(value, options) ?? false,
 
@@ -445,6 +459,46 @@ function declaredOptions(
 
   const options = getPreviewOptions(field, form.localization)
   return options && flattenOptions(options)
+}
+
+/**
+ * What a person changed in a form that the agent was not told of: a field, a
+ * value in a row, or a list's rows. What the form notes a person changed is
+ * kept against what an agent was told it held, by the number each change
+ * takes; one that changed since is news to the agent. A success starts the
+ * form over on a new store with nothing noted, and what was changed before is
+ * gone with what it held.
+ */
+function watchChanges(current: () => Store): Changes {
+  const told = new Map<string, number>()
+  let watched: Store | undefined
+  const untold = () => {
+    const store = current()
+    if (store !== watched) {
+      watched = store
+      told.clear()
+    }
+    return Object.entries(store.get(touchedAtom)).filter(
+      ([name, at]) => told.get(name) !== at
+    )
+  }
+
+  // A value under the name, or the rows of a list it is or is in: a row named
+  // by its position is another row once they moved, and the agent told what
+  // one row holds now has been told they moved.
+  const concerns = (key: string, names: readonly string[]) =>
+    isUnder(key, names) || names.some((name) => isUnder(name, [key]))
+
+  return {
+    isChanged: (name) => untold().some(([key]) => concerns(key, [name])),
+    seen: (names) => {
+      for (const [key, at] of untold()) {
+        if (concerns(key, names)) {
+          told.set(key, at)
+        }
+      }
+    },
+  }
 }
 
 // Waits until nothing the form holds has changed for one step: the change
