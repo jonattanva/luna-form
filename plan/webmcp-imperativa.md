@@ -1153,6 +1153,10 @@ Resultados:
 - [ ] Fuentes remotas: que `<name>_options` pida las opciones que todavía no se
       cargaron, según la respuesta a la pregunta abierta.
 - [ ] Si la medición lo pide: el modo agrupado y `<name>_describe` (3.14).
+  - Medido el 2026-11-18 (sección 6): una página de cinco formularios no lo
+    pide. `<name>_describe` tampoco: el formulario de 200 campos queda en 12.4 k
+    caracteres de esquema, bajo el aviso de 24 kB. Queda para cuando una página
+    real pase ese umbral.
 - [ ] En el editor, tools de autoría (`set_definition`, `get_definition`) para
       armar formularios desde lenguaje natural.
 - [x] Margen del bundle: decidir si se suben los presupuestos o se recorta el
@@ -1334,6 +1338,41 @@ se registran en WebMCP. El tiempo incluye lo que el agente razona entre pasos.
   de los tools en cada turno, que en un formulario chico pesa como mirar la
   página, sin sus capturas.
 
+### Página con cinco formularios, 2026-11-18
+
+Lo que registra cada formulario, medido con `listTools()` en el editor (build
+de producción). "Lo que ve el modelo" es nombre, título, descripción y esquema
+de entrada; los esquemas de salida van aparte, porque ni `getTools` de WebMCP
+ni las APIs de modelos los usan.
+
+| Formulario                                      | Tools | Descripciones | Esquemas de entrada | Lo que ve el modelo | Esquemas de salida |
+| ----------------------------------------------- | ----- | ------------- | ------------------- | ------------------- | ------------------ |
+| Perfil: nombre y dos avisos                     | 3     | 1.7 k         | 0.5 k               | 2.5 k               | 2.1 k              |
+| Plan: un `value` y un `state`                   | 3     | 1.7 k         | 0.7 k               | 2.7 k               | 2.1 k              |
+| Pedido: fecha, zona horaria y una lista         | 4     | 2.2 k         | 1.1 k               | 3.7 k               | 2.4 k              |
+| Encuesta: 200 campos, 18 selects de 30 opciones | 4     | 2.5 k         | 12.4 k              | 15.2 k              | 2.4 k              |
+| Contacto: correo, tema y mensaje                | 3     | 1.7 k         | 0.6 k               | 2.6 k               | 2.1 k              |
+| **Página**                                      | 17    | 9.8 k         | 15.4 k              | 26.6 k              | 11.0 k             |
+
+- **Lo que pesa:** el esquema de entrada de un formulario grande, no la
+  cantidad de formularios. Sin la encuesta, los otros cuatro suman 11.3 k
+  caracteres (unos 3 k tokens) por turno.
+- **El modo agrupado, estimado:** seis tools de página con descripciones como
+  las de hoy suman unos 3.5 k fijos, más el esquema de cada formulario que el
+  agente pide con `<grupo>_describe`, que queda en la conversación desde ahí.
+  - Si el agente usa un formulario chico: unos 4.6 k en lugar de 26.6 k.
+  - Si usa la encuesta: unos 16 k, porque su esquema llega igual.
+  - Si usa los cinco: unos 19 k, con una llamada más por formulario.
+- **Lo que cuesta agruparlos:** `<grupo>_fill` recibe valores sin tipar, porque
+  el esquema llega en una respuesta y no en la definición del tool. El
+  agente pierde la validación del cliente MCP antes de llamar, y gasta una
+  llamada más por formulario.
+- **La caché de prompts** reutiliza la definición de los tools entre turnos
+  mientras no cambia (3.14), así que el piso fijo se cobra completo una vez y
+  después a una fracción.
+- **17 tools** quedan lejos de la cantidad con la que un modelo empieza a
+  elegir peor; el modo agrupado bajaría a 6.
+
 ## 7. Riesgos y preguntas abiertas
 
 Riesgos:
@@ -1382,6 +1421,12 @@ pasan a la fase 2:
    caracteres y se rellenó en una llamada. Se revisan con los datos de la
    fase 2.
 5. ¿Con cuántos formularios en una página conviene el modo agrupado?
+   Respondida con la medición del 2026-11-18 (sección 6): no lo decide la
+   cantidad de formularios sino el texto que suman. Cinco formularios
+   comunes son unos 11 k caracteres por turno, y no lo justifican. Conviene
+   cuando una página ofrece formularios que el agente casi nunca usa y el
+   texto de sus tools pasa de 24 kB, el mismo umbral del aviso por
+   formulario.
 6. De la fase 0, por revisar en luna:
    - ¿Por qué una lista quedó con dos filas vacías después de un envío exitoso?
      Resuelto el 2026-11-17: un éxito vaciaba los valores pero la lista
