@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795113128072,
+  "lastUpdate": 1795113396510,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "a4128172fcd6e426f199f47f2087cb7990321047",
-          "message": "Merge pull request #85 from jonattanva/fix/collapsed-submit\n\nfix(collapsible): hide what is collapsed without taking it out of the form",
-          "timestamp": "2026-09-15T15:53:09-05:00",
-          "tree_id": "43dc1f2cdb241ec44f5aa26fc57a41588b201e09",
-          "url": "https://github.com/jonattanva/luna-form/commit/a4128172fcd6e426f199f47f2087cb7990321047"
-        },
-        "date": 1789505660908,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 192,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 144,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "0552776035aa3c31559229113b3595fbcfe0861c",
           "message": "Merge pull request #86 from jonattanva/fix/readonly-submit\n\nfix(submit): submit a read-only field, and let an optional one go unsent",
           "timestamp": "2026-09-15T22:55:34-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "057920a52aba4069b5a67817f0f78a6560d60b0d",
+          "message": "Merge pull request #175 from jonattanva/claude/schema-text-length\n\nfix(core): keep long host text out of what an agent reads first",
+          "timestamp": "2026-11-19T13:31:18-05:00",
+          "tree_id": "b725ecd406be5d8003fe87995298e64f8ca2f4b8",
+          "url": "https://github.com/jonattanva/luna-form/commit/057920a52aba4069b5a67817f0f78a6560d60b0d"
+        },
+        "date": 1795113396477,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 38.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.8,
             "unit": "ms"
           }
         ]
