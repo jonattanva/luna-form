@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795113619950,
+  "lastUpdate": 1795113650525,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "0552776035aa3c31559229113b3595fbcfe0861c",
-          "message": "Merge pull request #86 from jonattanva/fix/readonly-submit\n\nfix(submit): submit a read-only field, and let an optional one go unsent",
-          "timestamp": "2026-09-15T22:55:34-05:00",
-          "tree_id": "cbd6c4815d1dd24fe2a18dd3d4f8c5ef7b0a7d27",
-          "url": "https://github.com/jonattanva/luna-form/commit/0552776035aa3c31559229113b3595fbcfe0861c"
-        },
-        "date": 1789531014296,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 201,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 142,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "eb2aca7b0a66e6aaf0561b1d71d2e416f7f213c4",
           "message": "Merge pull request #87 from jonattanva/fix/unflatten-prototype\n\nfix(extract): a dotted name addresses own properties, not the prototype",
           "timestamp": "2026-09-16T08:48:47-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8fa8adf4ce6e2924e60b3bfe3ccd848717dffd21",
+          "message": "Merge pull request #179 from jonattanva/claude/remove-preserve-values\n\nrefactor(react): remove the preserveValues option",
+          "timestamp": "2026-11-19T13:39:22-05:00",
+          "tree_id": "a8eb48c515a0930ca7e75d893f68e194c2504c36",
+          "url": "https://github.com/jonattanva/luna-form/commit/8fa8adf4ce6e2924e60b3bfe3ccd848717dffd21"
+        },
+        "date": 1795113650479,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 39.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.1,
             "unit": "ms"
           }
         ]
