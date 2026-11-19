@@ -47,6 +47,7 @@ import type {
   Fields,
   Input,
   List,
+  Localization,
   PatternRule,
   Schema,
   Schemas,
@@ -759,25 +760,36 @@ function getArraySchema(input: Input, translations?: Record<string, string>) {
 // produces a NESTED object schema (`z.array(z.object(...))` for lists), reusing
 // the per-field `getSchema`. This is the single source of truth consumed both
 // by the runtime (submit validation) and headless callers (server-side).
-//
-// PHASE 0 scope: structural walk + per-field schema + nested arrays for lists.
-// The declarative rule vocabulary (requiredWhen, pattern, rules, list min/max)
-// lands in the next phase on top of this walker.
 // ---------------------------------------------------------------------------
 
-// `context` is what the host knows when it renders -- the same object the form
-// was given -- and a `$ref` into `#/context/` reads it. Pass it here as well,
-// or the server validates against values the form never saw.
+// What a form is read with, wherever it is built from: the same `context`,
+// `definition` and `localization` the form renders with.
+export type FormSchemaOptions = Readonly<{
+  // What the host knows when it renders, which a `$ref` into `#/context/`
+  // reads. Without it the server validates against values the form never saw.
+  context?: Record<string, unknown>
+  // What a `$ref` into `#/definition/` reads.
+  definition?: Definition
+  // The form's language and its dictionary: see `resolveLocalization`. The
+  // messages come in it, a day's month too, as the form writes them.
+  localization?: Localization
+}>
+
+// Every option is an object, so a dictionary of strings where the options go
+// does not type-check.
 export function buildFormSchema(
   sections: Sections,
-  translations?: Record<string, string>,
-  definition?: Definition,
-  context?: Record<string, unknown>
+  options: FormSchemaOptions & Readonly<Record<string, object | undefined>> = {}
 ): z.ZodType {
+  const { context, definition, localization } = options
   const resolved = resolveRefs(sections, definition, context) as Sections
   const fields = collectSectionFields(resolved)
 
-  return buildObject(fields, translations, collectSourceTargets(fields), '')
+  return buildObject(
+    fields,
+    { ...localization, sourceTargets: collectSourceTargets(fields) },
+    ''
+  )
 }
 
 // Sections are visual grouping only: every field shares one object namespace,
@@ -803,10 +815,10 @@ function collectSectionFields(sections: Sections): Fields {
 // does there.
 function buildObject(
   fields: Fields,
-  translations: Record<string, string> | undefined,
-  sourceTargets: ReadonlySet<string>,
+  reading: Localization & { sourceTargets: ReadonlySet<string> },
   prefix: string
 ): z.ZodType {
+  const { lang, sourceTargets, translations } = reading
   const shape: Schemas = {}
   const leaves: Field[] = []
 
@@ -817,12 +829,7 @@ function buildObject(
       } else if (isList(entry)) {
         const items = applyListLength(
           z.array(
-            buildObject(
-              entry.fields,
-              translations,
-              sourceTargets,
-              `${prefix}${entry.name}.0.`
-            )
+            buildObject(entry.fields, reading, `${prefix}${entry.name}.0.`)
           ),
           entry,
           translations
@@ -848,7 +855,8 @@ function buildObject(
         const leaf = getSchema(
           { ...field, name: `${prefix}${field.name}`, required },
           translations,
-          sourceTargets
+          sourceTargets,
+          lang
         )
         shape[field.name] = required ? leaf : leaf.optional()
         leaves.push(field)

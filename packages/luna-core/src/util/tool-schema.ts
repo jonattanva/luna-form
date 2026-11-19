@@ -33,18 +33,17 @@ import { prepare } from './prepare'
 import {
   collectSourceEvents,
   getOfferedOptions,
+  type FormSchemaOptions,
   withoutDeclarativeRules,
 } from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
   Date as DateField,
-  Definition,
   Description,
   Field,
   Fields,
   List,
-  Localization,
   Sections,
   Select,
   WhenRule,
@@ -75,18 +74,16 @@ export type ToolSchema = Readonly<{
   type: 'array' | 'boolean' | 'integer' | 'number' | 'object' | 'string'
 }>
 
-export type ToolSchemaOptions = Readonly<{
-  context?: Record<string, unknown>
-  definition?: Definition
-  localization?: Localization
-  // The schema of each custom type, by type, for the fields no built-in type
-  // describes. Without one such a field takes text.
-  types?: Readonly<Record<string, ToolSchema>>
-  // Whether a submit checks the values against the form's rules:
-  // `validation.submit`. When it does not, the schema holds no rule only a
-  // submit checks.
-  validates?: boolean
-}>
+export type ToolSchemaOptions = FormSchemaOptions &
+  Readonly<{
+    // The schema of each custom type, by type, for the fields no built-in type
+    // describes. Without one such a field takes text.
+    types?: Readonly<Record<string, ToolSchema>>
+    // Whether a submit checks the values against the form's rules:
+    // `validation.submit`. When it does not, the schema holds no rule only a
+    // submit checks.
+    validates?: boolean
+  }>
 
 export type ToolSchemaResult = Readonly<{
   // The lists that keep the rows they have, by their whole name, through the

@@ -1,5 +1,6 @@
 import { baseLanguage, toLocale } from './date'
 import { isObject, isString } from './is-type'
+import type { Localization } from '../type'
 
 // Every string the library renders on its own behalf. A form cannot name these
 // in its schema — they are not in its JSON — so the library owns both the key
@@ -160,6 +161,14 @@ export function resolveDictionary(
   }
 
   return Object.assign({}, ...layers)
+}
+
+/** How a form renders its text: its language, with the dictionary for it. */
+export function resolveLocalization(
+  lang?: string,
+  translations?: Record<string, Record<string, string>>
+): Localization {
+  return { lang, translations: resolveDictionary(lang, translations) }
 }
 
 export function translate(

@@ -1,6 +1,6 @@
 import { FormContent } from './form-content'
 import { Provider, createStore } from 'jotai'
-import { resolveDictionary } from '@luna-form/core'
+import { resolveLocalization } from '@luna-form/core'
 import { useAgentTools, useSubmission } from '../hook/use-agent-tools'
 import { hostValueAtom } from '../lib/host-value-store'
 import { useApplyRegistry } from '../hook/use-apply'
@@ -105,10 +105,7 @@ export function Form<
   // are built on this identity, and a fresh one on every render would rebuild
   // every field's schema on every keystroke.
   const localization = useMemo(
-    () => ({
-      lang: props.lang,
-      translations: resolveDictionary(props.lang, props.translations),
-    }),
+    () => resolveLocalization(props.lang, props.translations),
     [props.lang, props.translations]
   )
 

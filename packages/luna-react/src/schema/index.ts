@@ -7,6 +7,7 @@ export {
   checkDefinition,
   collectIssues,
   resolveDictionary,
+  resolveLocalization,
 } from '@luna-form/core'
 
 export type {
@@ -15,6 +16,7 @@ export type {
   DefinitionProblem,
   Field,
   Fields,
+  FormSchemaOptions,
   List,
   Operator,
   PatternRule,

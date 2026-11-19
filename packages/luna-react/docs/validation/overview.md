@@ -283,8 +283,11 @@ if (!result.success) {
 }
 ```
 
-- **`buildFormSchema(sections, translations?, definition?, context?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. `translations` maps messages to localized strings; `definition` and `context` resolve [`$ref` entries](../structure/definition.md), and have to be the same ones the form renders with. A date comes out of it as `yyyy-MM-dd`, as it does from the form's submit.
-- **`resolveDictionary(lang, translations?)`** — the dictionary the form renders with for `lang`: the library's built-in messages for that language under the form's own `translations` for it. Pass it to `buildFormSchema` to get the same messages the form shows, `This field is required` included: `buildFormSchema(sections, resolveDictionary('es', translations))`. A bound's day is the one message it cannot localize, as `buildFormSchema` takes no language: it names its month in English unless the field gives its own `validation.length` message or shows days in numbers.
+- **`buildFormSchema(sections, options?)`** — walks the form tree (sections → columns → lists → fields) and returns a Zod schema. Lists become arrays of objects, so nested `requiredWhen`/`rules` resolve in **item scope**. A date comes out of it as `yyyy-MM-dd`, as it does from the form's submit. Its options:
+  - `definition` and `context` resolve [`$ref` entries](../structure/definition.md), and have to be the same ones the form renders with.
+  - `localization` is the form's language and its dictionary, as `resolveLocalization` gives them. The messages come in it, a bound's month included, as the form writes them.
+- **`resolveLocalization(lang, translations?)`** — the language and the dictionary the form renders with: `{ lang, translations: resolveDictionary(lang, translations) }`. Pass it to `buildFormSchema` to get the messages the form shows: `buildFormSchema(sections, { localization: resolveLocalization('es', translations) })`.
+- **`resolveDictionary(lang, translations?)`** — the dictionary alone: the library's built-in messages for `lang` under the form's own `translations` for it.
 - **`collectIssues(error)`** — flattens a `ZodError` into `{ path, message }` entries with **dotted paths** (e.g. `rules.0.value`), including nested list issues.
 
 ### What each path validates
