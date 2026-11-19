@@ -123,8 +123,8 @@ No objetivos, al menos en las fases 0 y 1:
 - Tools de autoría en el editor, como `set_definition`. Se evalúan en la fase 2.
 - Un puente genérico para toda la página: luna expone formularios, no
   componentes.
-- Un historial de cambios. Deshacer lo que escribió el agente queda como opción
-  en la fase 3.
+- Un historial de cambios. Deshacer lo que escribió el agente se evaluó en la
+  fase 3 y se descartó: la persona corrige el campo.
 
 ## 3. Diseño
 
@@ -1297,9 +1297,12 @@ Resultados:
     caracteres se busca con `<name>_options`.
 - [ ] Seguir los cambios de la API y del origin trial, versión por versión de
       Chrome.
-- [ ] Opcional: deshacer lo que escribió el agente.
+- [x] ~~Opcional: deshacer lo que escribió el agente.~~
   - Usa los valores previos que `<name>_fill` ya conoce.
   - Solo en los campos que la persona no cambió después.
+  - Descartado el 2026-11-19: si el agente se equivoca, la persona corrige el
+    campo. `<name>_fill` no pisa lo que ella cambió, y `allow` puede pedirle
+    confirmación antes de escribir.
 - [ ] Opcional: atributos declarativos en `react-luna-form/server` para
       formularios simples sin JavaScript.
 - [ ] Opcional: que `useValue` avise del valor del host por un callback, en vez

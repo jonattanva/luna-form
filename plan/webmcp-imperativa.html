@@ -806,8 +806,9 @@ dictionary ModelContextTool {
                   formularios, no componentes.
                 </li>
                 <li>
-                  Un historial de cambios. Deshacer lo que escribió el agente
-                  queda como opción en la fase 3.
+                  Un historial de cambios. Deshacer lo que escribió el agente se
+                  evaluó en la fase 3 y se descartó: la persona corrige el
+                  campo.
                 </li>
               </ul>
             </div>
@@ -3633,8 +3634,8 @@ const result = await callTool(call.name, call.input)</code></pre>
                   Seguir los cambios de la API y del origin trial, versión por
                   versión de Chrome.
                 </li>
-                <li>
-                  Opcional: deshacer lo que escribió el agente.
+                <li class="done">
+                  <s>Opcional: deshacer lo que escribió el agente.</s>
                   <ul>
                     <li>
                       Usa los valores previos que
@@ -3642,6 +3643,13 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                     <li>
                       Solo en los campos que la persona no cambió después.
+                    </li>
+                    <li>
+                      Descartado el 2026-11-19: si el agente se equivoca, la
+                      persona corrige el campo.
+                      <code>&lt;name&gt;_fill</code> no pisa lo que ella cambió,
+                      y <code>allow</code> puede pedirle confirmación antes de
+                      escribir.
                     </li>
                   </ul>
                 </li>
