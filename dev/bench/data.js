@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795109650769,
+  "lastUpdate": 1795109676757,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "14a90c28d2f7df96411187c845809c8121da5296",
-          "message": "Merge pull request #79 from jonattanva/fix/chained-state-reveal\n\nfix(state): take back what a hidden field's own rules revealed",
-          "timestamp": "2026-09-13T00:09:39-05:00",
-          "tree_id": "e4196a07881f5ea6a47e87f583c0aee78a73cd36",
-          "url": "https://github.com/jonattanva/luna-form/commit/14a90c28d2f7df96411187c845809c8121da5296"
-        },
-        "date": 1789276253574,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 272,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 570,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "d375271f777908cf4d3cd3c170f4d9a576a2b8b0",
           "message": "Merge pull request #81 from jonattanva/test/render-budgets\n\ntest(render): count what a keystroke costs, in CI",
           "timestamp": "2026-09-13T14:45:20-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 19.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aaf6992e49e551a07c026b6c0d33d86b033df0d8",
+          "message": "Merge pull request #172 from jonattanva/claude/authoring-tools\n\nfeat(editor): let an agent read, write and check the form the editor holds",
+          "timestamp": "2026-11-19T12:33:25-05:00",
+          "tree_id": "7acbac4382daf45535e373146d078367a3c8f5a9",
+          "url": "https://github.com/jonattanva/luna-form/commit/aaf6992e49e551a07c026b6c0d33d86b033df0d8"
+        },
+        "date": 1795109676715,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 49.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 14.5,
             "unit": "ms"
           }
         ]
