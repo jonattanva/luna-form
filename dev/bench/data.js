@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795121032540,
+  "lastUpdate": 1795121064424,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "7373970b8b23089185302fbfdcc8bdc417a59a6e",
-          "message": "Merge pull request #95 from jonattanva/perf/field-errors\n\nperf(field): a field is handed its errors, not a record built around them",
-          "timestamp": "2026-09-19T22:46:48-05:00",
-          "tree_id": "8fa62778f4e776b7f0e8d6cb2ed6cae53bc902f5",
-          "url": "https://github.com/jonattanva/luna-form/commit/7373970b8b23089185302fbfdcc8bdc417a59a6e"
-        },
-        "date": 1789876076815,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 218,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 440,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "725eba1c0c4dd788f6dfd4a1a9203b8a5955c7e0",
           "message": "Merge pull request #100 from jonattanva/fix/slot-key-identity\n\nfix(slot): a slot is keyed by what it is, not by where it sits",
           "timestamp": "2026-09-20T01:02:06-05:00",
@@ -8811,6 +8777,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 44.2,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e8ff36c3c40dfd5f0401fa3e38fe19de89336b4c",
+          "message": "Merge pull request #191 from jonattanva/claude/audit-registry-dup01-u01\n\nMark DUP-01 and U-01 fixed in the audit registry",
+          "timestamp": "2026-11-19T15:43:07-05:00",
+          "tree_id": "9fdb68f9d963eca9bba61cdc3a1b018a3c0fbb95",
+          "url": "https://github.com/jonattanva/luna-form/commit/e8ff36c3c40dfd5f0401fa3e38fe19de89336b4c"
+        },
+        "date": 1795121064312,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 41.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 14.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 40.8,
             "unit": "ms"
           }
         ]
