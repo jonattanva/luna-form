@@ -291,7 +291,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'pruebas',
       st: 'probado',
-      stLabel: 'En el PR de la rama claude/busy-swanson-fe8379',
+      stLabel: 'En el PR #188',
       audit: 'test-audit-2026-11-19',
       sections: [
         {
@@ -327,7 +327,7 @@ window.AUDIT = {
           label: 'Corrección',
           audit: 'test-audit-2026-11-19',
           html:
-            '<p>Commit <code>test(e2e): submit a day typed in the date field\'s own format</code> en la rama <code>claude/busy-swanson-fe8379</code>, desde <code>main</code> en <code>5b26630</code>. Los dos archivos se reemplazan por <code>tests/e2e/date-submission-format.spec.ts</code>, con un caso por formato que escribe <code>15/06/2024</code> en <code>dd/MM/yyyy</code> y <code>06/15/2024</code> en <code>MM/dd/yyyy</code>, espera a que el campo se vea (FLK-01) y espera <code>"birth_date": "2024-06-15"</code> en el envío.</p>' +
+            '<p>Commit <code>test(e2e): submit a day typed in the date field\'s own format</code> en la rama <code>claude/busy-swanson-fe8379</code>, desde <code>main</code> en <code>5b26630</code>, en el <a href="https://github.com/jonattanva/luna-form/pull/188">PR #188</a>. Los dos archivos se reemplazan por <code>tests/e2e/date-submission-format.spec.ts</code>, con un caso por formato que escribe <code>15/06/2024</code> en <code>dd/MM/yyyy</code> y <code>06/15/2024</code> en <code>MM/dd/yyyy</code>, espera a que el campo se vea (FLK-01) y espera <code>"birth_date": "2024-06-15"</code> en el envío.</p>' +
             '<p>El campo de fecha del editor le pasa al formulario el texto tal como se escribe. El formulario lo lee en el formato del campo y guarda el día como <code>yyyy-MM-dd</code>. Al perder el foco, el campo muestra ese día en su formato, y eso es lo que manda el <code>FormData</code> del envío. Por eso <code>2024-06-15</code> escrito en un campo <code>dd/MM/yyyy</code> se envía como <code>15/06/2024</code>, sin pasar por la rama ISO.</p>' +
             '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes: dd-mm y mm-dd</th><th>Después: <code>date-submission-format</code>, 2 casos</th><th><code>date-submission-default</code>, 4 casos</th></tr></thead><tbody>' +
             '<tr><td>E2 <code>getDateFormat</code> ignora <code>advanced.format</code></td><td>pasan</td><td>fallan los 2</td><td>pasan los 4</td></tr>' +
