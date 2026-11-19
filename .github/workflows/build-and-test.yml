@@ -275,6 +275,15 @@ jobs:
         browser: [chromium, firefox, webkit]
         shard: [1, 2]
         shards: [2]
+        # Experiment: Firefox and WebKit against production, Chromium on
+        # `next dev` so StrictMode still runs in e2e.
+        include:
+          - browser: chromium
+            server: serve
+          - browser: firefox
+            server: start
+          - browser: webkit
+            server: start
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -303,7 +312,7 @@ jobs:
       # that times out.
       - name: Start application server
         run: |
-          pnpm serve > server.log 2>&1 &
+          pnpm ${{ matrix.server }} > server.log 2>&1 &
           for attempt in $(seq 1 60); do
             curl -sf http://localhost:3000 > /dev/null && exit 0
             sleep 1
