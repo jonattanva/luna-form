@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795118490932,
+  "lastUpdate": 1795118778038,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "3ee85780597d647f78540839510c56becd6c122f",
-          "message": "Merge pull request #92 from jonattanva/fix/refs-in-render\n\nfix(render): a ref is written when the render commits, not while it renders",
-          "timestamp": "2026-09-17T20:28:16-05:00",
-          "tree_id": "20119bda275b6844a86887a438147ef65d3927f6",
-          "url": "https://github.com/jonattanva/luna-form/commit/3ee85780597d647f78540839510c56becd6c122f"
-        },
-        "date": 1789694973428,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 321,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 643,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 17.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ba5ea61d00b1402aaf4deb32e2025c53e7558b8",
+          "message": "Merge pull request #186 from jonattanva/claude/heuristic-bose-fe6153\n\ntest(audit): record the feature x level matrix and unit coverage map",
+          "timestamp": "2026-11-19T15:00:34-05:00",
+          "tree_id": "99e51b7dbedc459b0c344b8436f10c716eddfce1",
+          "url": "https://github.com/jonattanva/luna-form/commit/1ba5ea61d00b1402aaf4deb32e2025c53e7558b8"
+        },
+        "date": 1795118778005,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 35.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.2,
             "unit": "ms"
           }
         ]
