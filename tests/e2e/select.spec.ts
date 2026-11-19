@@ -164,11 +164,6 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
   test('should display the object value of a disabled select with a remote source', async ({
     page,
   }) => {
-    // Audit BUG-03: the client hands `resolveSource` the field's own value, which
-    // `buildOptions` reads by the field's name, so the select renders blank.
-    // Drop .fail once fixed.
-    test.fail()
-
     let requests = 0
     await page.route('**/api/locked-fruits', (route) => {
       requests += 1

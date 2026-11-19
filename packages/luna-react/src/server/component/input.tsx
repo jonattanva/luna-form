@@ -1,6 +1,7 @@
 import { InputGroup } from '../../component/input-group'
 import { renderIfExists } from '../../lib/render-If-exists'
 import {
+  isObject,
   prepareDefaultValue,
   prepareInputProps,
   resolveSource,
@@ -25,7 +26,9 @@ export function Input(
     value?: Record<string, unknown>
   }>
 ) {
-  const source = resolveSource(props.field, props.value)
+  // `resolveSource` reads the field's own value; the server holds the record.
+  const own = props.value?.[props.field.name]
+  const source = resolveSource(props.field, isObject(own) ? own : null)
 
   const { commonPropsWithOptions, defaultValue } = prepareInputProps(
     props.field,

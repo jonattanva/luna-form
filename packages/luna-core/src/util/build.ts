@@ -5,15 +5,16 @@ import { isCheckbox, isChips, isList, isRadio, isSelect } from './is-input'
 import { logger } from './logger'
 import type { Field, Input, List, Nullable, Select } from '../type'
 
+// A disabled select fetches nothing, so the object it holds stands in as its
+// only option and a saved selection stays readable. `value` is the field's own
+// value, not the form's record: the client holds one entry per field, and the
+// server picks this field's entry out of its record before asking.
 export function buildOptions(
   field: Field,
-  values: Nullable<Record<string, unknown>> = {}
+  value?: Nullable<Record<string, unknown>>
 ) {
-  if (isSelect(field) && field.disabled) {
-    const current = field.name ? values?.[field.name] : undefined
-    if (current && isObject(current)) {
-      return [current]
-    }
+  if (isSelect(field) && field.disabled && isObject(value)) {
+    return [value]
   }
 }
 

@@ -629,7 +629,7 @@ window.AUDIT = {
       sev: 'optim',
       cat: 'pruebas',
       st: 'corregido',
-      stLabel: 'Corregido en este PR; la afirmación B abrió BUG-03',
+      stLabel: 'Corregido en #192, con BUG-03',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -674,7 +674,8 @@ window.AUDIT = {
       sev: 'mejora',
       sevNote: 'contradice la documentación',
       cat: 'contrato',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #192',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         {
@@ -696,6 +697,10 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>Que el cliente le dé a <code>resolveSource</code> lo mismo que el servidor, o que <code>buildOptions</code> reciba el valor del campo y la entrada de servidor lo extraiga antes; una sola forma para los dos. Después, quitar el <code>.fail</code> y agregar una unitaria con lo que de verdad le llega.</p>',
+        },
+        {
+          label: 'Corrección',
+          html: '<p><code>buildOptions</code> y <code>resolveSource</code> reciben el valor del propio campo, que es lo que el cliente ya les daba; la entrada de servidor saca la entrada del campo de su registro antes de llamarlas (<code>server/component/input.tsx</code>), con la misma búsqueda por nombre que hacía <code>buildOptions</code>. Las dos unitarias que pasaban un registro ahora pasan el valor del campo. Se quitó el <code>.fail</code> de <code>select.spec.ts:164</code>: pasa en Chromium, Firefox y WebKit (120 de 120 con <code>select</code>, <code>server-entry</code>, <code>option-not-offered</code> y <code>options-written</code>), y las 766 e2e de Chromium pasan. La entrada de servidor no se probó con un <code>select</code> deshabilitado: la página <code>/server</code> no tiene ninguno.</p>',
         },
       ],
     },
