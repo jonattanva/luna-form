@@ -166,9 +166,9 @@ more than 15 seconds; `<name>_read` gives the outcome later.
 
 With [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off)
 the values are sent unchecked, and the descriptions say so: `<name>_submit`
-leaves the checking to the action, and `<name>_fill` names no field a
-submission needs. The notes on each field still describe the form's rules,
-which such a submit does not check.
+leaves the checking to the action, `<name>_fill` names no field a submission
+needs, and the schema holds no rule only a submit checks (see
+[Text the agent reads](#text-the-agent-reads)).
 
 ### Codes
 
@@ -324,6 +324,7 @@ const { lookup, required, schema } = buildToolSchema(sections, {
   definition,
   localization: { lang: 'es', translations: dictionary },
   types,
+  validates,
 })
 ```
 
@@ -343,7 +344,8 @@ const { lookup, required, schema } = buildToolSchema(sections, {
 `definition` and `context` resolve [`$ref` entries](../structure/definition.md)
 and have to be the ones the form renders with. `localization.translations` is
 the dictionary for the form's language: titles, descriptions and option labels
-are translated with it.
+are translated with it. `validates` is `false` when the form's submit checks
+nothing, [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off).
 
 ## What a field becomes
 
@@ -404,6 +406,10 @@ These fields are not in the schema, and the tools refuse them:
   field's own description followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
   a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
+- A submit that checks nothing leaves out of the schema what only a submit
+  checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
+  The rest stays, since the field checks it as it is written: its bounds, a
+  whole number, a required `checkbox`, and a `custom`, whose note says so.
 - A field whose `advanced.length` the form cannot read, such as `"min": "x"`,
   has no bounds in the schema, and its description says the submit refuses any
   value for it.
@@ -429,7 +435,8 @@ The schema uses only these keywords: `type`, `properties`, `required`,
 model APIs reads a subset of OpenAPI that does not document them. A pattern goes
 in only when it has no flags and compiles in Unicode mode, the way JSON Schema
 reads it; any other pattern is checked on submit and only mentioned in the
-description.
+description. A form whose submit checks nothing has neither (see
+[Text the agent reads](#text-the-agent-reads)).
 
 The same definition in the same language gives the same schema, byte for byte:
 nothing in it depends on the time or on what a person typed. A tool registered

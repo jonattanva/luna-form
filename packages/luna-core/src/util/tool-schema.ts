@@ -30,7 +30,11 @@ import {
 import { getListBounds } from './list'
 import { resolveTarget } from './path'
 import { prepare } from './prepare'
-import { collectSourceEvents, getOfferedOptions } from './schema'
+import {
+  collectSourceEvents,
+  getOfferedOptions,
+  withoutDeclarativeRules,
+} from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
@@ -78,6 +82,10 @@ export type ToolSchemaOptions = Readonly<{
   // The schema of each custom type, by type, for the fields no built-in type
   // describes. Without one such a field takes text.
   types?: Readonly<Record<string, ToolSchema>>
+  // Whether a submit checks the values against the form's rules:
+  // `validation.submit`. When it does not, the schema holds no rule only a
+  // submit checks.
+  validates?: boolean
 }>
 
 export type ToolSchemaResult = Readonly<{
@@ -148,6 +156,7 @@ type Walk = Readonly<{
   revealers: ReadonlyMap<string, readonly Revealer[]>
   sourceTargets: ReadonlySet<string>
   types?: Readonly<Record<string, ToolSchema>>
+  validates: boolean
   // The slots whose writability is being decided, so that two fields that
   // reveal each other answer no instead of asking forever.
   visiting: Set<string>
@@ -195,6 +204,7 @@ export function buildToolSchema(
     revealers: collectRevealers(fields),
     sourceTargets: new Set(sources.keys()),
     types: options.types,
+    validates: options.validates !== false,
     visiting: new Set(),
     writable: new Map(),
   }
@@ -373,10 +383,15 @@ function buildList(
 }
 
 function buildLeaf(field: Field, walk: Walk, name: string): ToolSchema {
+  // A submit that checks nothing has none of the rules only a submit checks.
+  const checked = walk.validates ? field : withoutDeclarativeRules(field)
   const notes: string[] = []
-  const schema = describeValue(field, walk, name, notes)
+  const schema = describeValue(checked, walk, name, notes)
 
-  notes.push(...availabilityNotes(field, walk, name), ...ruleNotes(field))
+  notes.push(
+    ...availabilityNotes(field, walk, name),
+    ...ruleNotes(checked, walk)
+  )
   return withText(schema, field, notes, walk)
 }
 
@@ -689,7 +704,9 @@ function availabilityNotes(
   return notes
 }
 
-function ruleNotes(field: Field): string[] {
+// The rules of a field no keyword says. A `custom` the field checks as it is
+// written, and the submit again when it checks.
+function ruleNotes(field: Field, walk: Walk): string[] {
   const notes: string[] = []
   const validation = field.validation
 
@@ -700,7 +717,11 @@ function ruleNotes(field: Field): string[] {
   }
 
   if (validation?.rules?.length || validation?.custom) {
-    notes.push('The submit checks more rules for it.')
+    notes.push(
+      walk.validates
+        ? 'The submit checks more rules for it.'
+        : 'More rules are checked as it is written.'
+    )
   }
   return notes
 }
