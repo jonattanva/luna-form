@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795117691918,
+  "lastUpdate": 1795117750490,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "864d8e31d05513e468d57c2016f574e6248618a8",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-09-17T12:24:25-05:00",
-          "tree_id": "e90222894e2edccda40127ccf3b442b70ece0fb0",
-          "url": "https://github.com/jonattanva/luna-form/commit/864d8e31d05513e468d57c2016f574e6248618a8"
-        },
-        "date": 1789665938796,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 292,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 618,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 18.4,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "876f23e33b9139ce3c9d001a87ca9ed2e901025b",
+          "message": "Merge pull request #185 from jonattanva/claude/notes-unchecked-submit\n\nfix(core): leave out of the agent schema the rules a submit that checks nothing skips",
+          "timestamp": "2026-11-19T14:47:05-05:00",
+          "tree_id": "223f7ca5005e9801cc9fcdc1768d9a4601bf1580",
+          "url": "https://github.com/jonattanva/luna-form/commit/876f23e33b9139ce3c9d001a87ca9ed2e901025b"
+        },
+        "date": 1795117750455,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 34.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 17.1,
             "unit": "ms"
           }
         ]
