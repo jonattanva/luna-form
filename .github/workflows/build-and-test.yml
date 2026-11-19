@@ -271,10 +271,23 @@ jobs:
       options: --user 1001
     strategy:
       fail-fast: false
+      # Firefox and WebKit run against production (`next start`), as the
+      # Next.js testing guide recommends, in three shards each: they are the
+      # slowest browsers, and production takes a fifth off their run. Chromium
+      # stays on `next dev`, so StrictMode's doubled renders and effects are
+      # still exercised end to end. Measured over six runs each in
+      # test-audit-2026-11-19 (OPT-01, OPT-03): the verdict went from 822 s to
+      # 584 s, with no case passing only on retry.
       matrix:
-        browser: [chromium, firefox, webkit]
-        shard: [1, 2]
-        shards: [2]
+        include:
+          - { browser: chromium, server: serve, shard: 1, shards: 2 }
+          - { browser: chromium, server: serve, shard: 2, shards: 2 }
+          - { browser: firefox, server: start, shard: 1, shards: 3 }
+          - { browser: firefox, server: start, shard: 2, shards: 3 }
+          - { browser: firefox, server: start, shard: 3, shards: 3 }
+          - { browser: webkit, server: start, shard: 1, shards: 3 }
+          - { browser: webkit, server: start, shard: 2, shards: 3 }
+          - { browser: webkit, server: start, shard: 3, shards: 3 }
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -303,7 +316,7 @@ jobs:
       # that times out.
       - name: Start application server
         run: |
-          pnpm serve > server.log 2>&1 &
+          pnpm ${{ matrix.server }} > server.log 2>&1 &
           for attempt in $(seq 1 60); do
             curl -sf http://localhost:3000 > /dev/null && exit 0
             sleep 1
