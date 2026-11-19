@@ -390,7 +390,7 @@ function buildLeaf(field: Field, walk: Walk, name: string): ToolSchema {
 
   notes.push(
     ...availabilityNotes(field, walk, name),
-    ...ruleNotes(checked, walk)
+    ...ruleNotes(checked, walk, name !== field.name)
   )
   return withText(schema, field, notes, walk)
 }
@@ -706,14 +706,18 @@ function availabilityNotes(
 
 // The rules of a field no keyword says. A `custom` the field checks as it is
 // written, and the submit again when it checks.
-function ruleNotes(field: Field, walk: Walk): string[] {
+function ruleNotes(field: Field, walk: Walk, inRow: boolean): string[] {
   const notes: string[] = []
   const validation = field.validation
 
+  // A rule in a row reads the fields of its own row.
   const requiredWhen = validation?.requiredWhen
   if (requiredWhen) {
     const rules = Array.isArray(requiredWhen) ? requiredWhen : [requiredWhen]
-    notes.push(`Required when ${rules.map(describeWhen).join(' or ')}.`)
+    const scope = inRow ? "this row's " : ''
+    notes.push(
+      `Required when ${rules.map((rule) => scope + describeWhen(rule)).join(' or ')}.`
+    )
   }
 
   if (validation?.rules?.length || validation?.custom) {

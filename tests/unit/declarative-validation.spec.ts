@@ -1,6 +1,10 @@
+import { z } from 'zod'
 import {
   buildFormSchema,
+  buildSchema,
   collectIssues,
+  flatten,
+  inRow,
 } from '@/packages/luna-core/src/util/schema'
 import {
   afterEach,
@@ -11,7 +15,7 @@ import {
   vi,
   type MockInstance,
 } from 'vitest'
-import type { Sections, Validation } from '@/packages/luna-core/src/type'
+import type { Field, Sections, Validation } from '@/packages/luna-core/src/type'
 
 describe('declarative validation vocabulary', () => {
   test('requiredWhen makes a field required only when the condition holds', () => {
@@ -123,6 +127,69 @@ describe('declarative validation vocabulary', () => {
       expect(collectIssues(missing.error)).toContainEqual({
         path: 'rules.0.value',
         message: 'Enter the value to compare against',
+      })
+    }
+  })
+
+  // The form's submit reads every field by its whole name, out of flat data:
+  // a row's leaves come renamed into their row, and so do the fields their
+  // rules compare them to.
+  test('should read the rules of a row in its own row, as the form submits it', () => {
+    const leaves: Field[] = [
+      { name: 'mode', type: 'input' },
+      {
+        name: 'value',
+        type: 'input',
+        validation: {
+          requiredWhen: { field: 'mode', operator: 'eq', value: 'strict' },
+        },
+      },
+      {
+        name: 'limit',
+        type: 'input',
+        validation: {
+          rules: [
+            {
+              assert: 'required',
+              message: 'Give a limit',
+              when: { all: [{ field: 'mode', operator: 'eq', value: 'cap' }] },
+            },
+          ],
+        },
+      },
+      {
+        name: 'confirm',
+        type: 'input',
+        validation: {
+          custom: { field: 'value', message: 'Does not match' },
+        },
+      },
+    ]
+    const fields = [3, 7].flatMap((row) =>
+      leaves.map((leaf) => inRow(leaf, `items.${row}`))
+    )
+    const schema = buildSchema(
+      Object.fromEntries(
+        fields.map((field) => [field.name, z.string().optional()])
+      ),
+      fields
+    )
+
+    // Row 3 sets the mode that requires its value; row 7 does not, and the
+    // mode of a row never reaches the other.
+    const result = schema.safeParse({
+      'items.3.mode': 'strict',
+      'items.3.value': '',
+      'items.3.confirm': '',
+      'items.7.mode': 'cap',
+      'items.7.value': 'a',
+      'items.7.confirm': 'a',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(flatten(result.error)).toEqual({
+        'items.3.value': ['This field is required'],
+        'items.7.limit': ['Give a limit'],
       })
     }
   })
