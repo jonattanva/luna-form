@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795123539564,
+  "lastUpdate": 1795123581252,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "77ae8ca09aaef5dba1a320775bd22e9b538cdc8e",
-          "message": "Merge pull request #101 from jonattanva/perf/atoms-per-component\n\nperf: the four changes that merged into each other instead of into main",
-          "timestamp": "2026-09-20T20:07:48-05:00",
-          "tree_id": "15d6be6e5ccf6707f3509ca4aa86d4cbf8050131",
-          "url": "https://github.com/jonattanva/luna-form/commit/77ae8ca09aaef5dba1a320775bd22e9b538cdc8e"
-        },
-        "date": 1789952932390,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 176,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 112,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "82fc0a64b01f070924564c2addb51def807a4bf6",
           "message": "Merge pull request #102 from jonattanva/fix/server-entry-rsc\n\nfix(server): the server entry loads under the react-server condition again",
           "timestamp": "2026-09-21T06:25:11-05:00",
@@ -8821,6 +8787,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 39.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ab7071c2b892a99bea2a78b8589c480fc98282d5",
+          "message": "Merge pull request #192 from jonattanva/claude/gracious-greider-2f6afe\n\nPin the shared source request and fix the locked remote select",
+          "timestamp": "2026-11-19T16:24:54-05:00",
+          "tree_id": "25e8a281a72df90f9864d7be803297aaa0a2b00f",
+          "url": "https://github.com/jonattanva/luna-form/commit/ab7071c2b892a99bea2a78b8589c480fc98282d5"
+        },
+        "date": 1795123581094,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 52.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 23.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 50.7,
             "unit": "ms"
           }
         ]
