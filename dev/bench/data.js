@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795124585904,
+  "lastUpdate": 1795124623632,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "7f9614d9d47e1526ae1e31b139ecdb6be0617629",
-          "message": "Merge pull request #103 from jonattanva/fix/use-client-banner\n\nfix(build): the client bundle says \"use client\" for the project importing it",
-          "timestamp": "2026-09-21T06:25:30-05:00",
-          "tree_id": "400c257cdc59966aab86f08a2b53f533dbd75dca",
-          "url": "https://github.com/jonattanva/luna-form/commit/7f9614d9d47e1526ae1e31b139ecdb6be0617629"
-        },
-        "date": 1789990010849,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 294,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 215,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "da3f724f75e529e59ba403a80984ecac7a66d320",
           "message": "Merge pull request #104 from jonattanva/fix/validation-merge\n\nfix(config): validation merges into the defaults instead of replacing them",
           "timestamp": "2026-09-21T06:26:15-05:00",
@@ -8831,6 +8797,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 44.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fea86d4f841c4df6ecb3356d3f81f97280a040a1",
+          "message": "Merge pull request #195 from jonattanva/claude/plan-security-done\n\ndocs(plan): mark the two security optionals done",
+          "timestamp": "2026-11-19T16:42:16-05:00",
+          "tree_id": "203ed65de6186ff2167371e4a2ada92fbf811842",
+          "url": "https://github.com/jonattanva/luna-form/commit/fea86d4f841c4df6ecb3356d3f81f97280a040a1"
+        },
+        "date": 1795124623509,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 42.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 45.3,
             "unit": "ms"
           }
         ]
