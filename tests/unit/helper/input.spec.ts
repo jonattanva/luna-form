@@ -269,9 +269,10 @@ describe('Input Helper', () => {
       type: 'select',
       disabled: true,
     }
-    const values = { gender: { label: 'Male', value: 'male' } }
-    const result = resolveSource(field, values)
-    expect(result).toEqual([values.gender])
+    // The field's own value, as the client holds it (audit BUG-03).
+    const value = { label: 'Male', value: 'male' }
+    const result = resolveSource(field, value)
+    expect(result).toEqual([value])
   })
 
   test('should return undefined if no source or options available', () => {

@@ -315,6 +315,9 @@ function defineConstraints(
   return result
 }
 
+// The options a field is rendered from: its declared source, or for a disabled
+// select the object `value` holds. `value` is the field's own, see
+// `buildOptions`.
 export function resolveSource(
   field: Field,
   value?: Nullable<Record<string, unknown>>

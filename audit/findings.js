@@ -628,7 +628,8 @@ window.AUDIT = {
         'Dos afirmaciones de data-source.md no tienen prueba y no se pudieron probar con una mutación',
       sev: 'optim',
       cat: 'pruebas',
-      st: 'investigar',
+      st: 'corregido',
+      stLabel: 'Corregido en #192, con BUG-03',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -643,6 +644,63 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>En la próxima corrida: localizar el código del <code>select</code> deshabilitado con valor objeto y mutarlo; para el pedido compartido, una e2e que cuente las peticiones con <code>page.route</code> y una mutación que cambie la clave de <code>useSWR</code> en <code>use-fetch.ts</code>.</p>',
+        },
+        {
+          label: 'Prueba',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: "<p>Dos casos nuevos en <code>tests/e2e/select.spec.ts</code>, sobre <code>/</code> con <code>inject</code> y el origen respondido por <code>page.route</code>:</p><ul><li><b>A</b>, <code>:211</code> <i>should share one request between two selects with the same source</i>: dos <code>select</code> con el mismo <code>source</code> relativo; abre cada uno, espera la opción y cuenta los pedidos de la ruta. La afirmación se cumple: 1 pedido.</li><li><b>B</b>, <code>:164</code> <i>should display the object value of a disabled select with a remote source</i>: <code>disabled</code>, <code>defaultValue</code> <code>{ value: 'banana', label: 'Banana' }</code> y un origen remoto. La afirmación <b>es falsa</b> en el cliente: el disparador queda vacío (0 pedidos, como dice la página, pero sin opción). Queda como <code>test.fail</code> con <code>// Audit BUG-03</code>.</li></ul>",
+        },
+        {
+          label: 'Evidencia',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: "<p>Antes de escribir la prueba se corrió cada afirmación en Chromium contra <code>main</code> en <code>afc8a06</code>: A pasa, B falla con <code>Received string: &quot;&quot;</code>. Para B, un script con <code>tsx</code> sobre el código fuente: <code>resolveSource(field, { value: 'banana', label: 'Banana' })</code>, lo que le pasa el cliente, da <code>undefined</code>; <code>resolveSource(field, { fruit: {...} })</code>, un registro, da <code>[{ value: 'banana', label: 'Banana' }]</code>. Con una corrección de sondeo (el cliente le pasa <code>{ [field.name]: value }</code>, revertida) B pasa, así que falla solo por BUG-03. Los dos casos, con B como fallo esperado: 162 de 162 en Chromium, Firefox y WebKit con <code>--repeat-each=3</code> y <code>--retries=0</code>, 4 workers, <code>next dev</code> propio en el puerto 3241.</p>",
+        },
+        {
+          label: 'Mutaciones',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Caso nuevo</th><th>Resto</th></tr></thead><tbody><tr><td>MA <code>use-fetch.ts:21</code>: la clave de <code>useSWR</code> pasa de <code>buildSource(...)</code> a ese origen con <code>headers: { \'X-Mutant\': useId() }</code>, una clave por campo</td><td>A falla: <code>Expected: 1</code>, <code>Received: 2</code></td><td>pasan las otras 764 e2e de Chromium; B falla igual, por BUG-03 (4,1 min, 4 workers, carga 7,7 a 24)</td></tr><tr><td>MB <code>build.ts:15</code> (<code>buildOptions</code>): <code>return [current]</code> → <code>return undefined</code>, sobre la corrección de sondeo</td><td>B falla</td><td>pasan las otras 34 de <code>select</code>, <code>option-not-offered</code> y <code>options-written</code>; fallan 2 unitarias (<code>build.spec.ts</code> y <code>helper/input.spec.ts</code>), que llaman a <code>buildOptions</code> con un registro</td></tr></tbody></table></div><p>Sin la corrección de sondeo, MB no la atrapa ninguna e2e: BUG-03 ya deja el <code>select</code> vacío. Cada mutación se aplicó al código fuente con <code>pnpm build</code>, verificación de que el bundle de <code>dist</code> la contenía y reinicio del servidor; se revirtió y se reconstruyó (<code>git status</code> limpio en <code>packages/</code>).</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: '<p>Las dos afirmaciones tienen prueba: A la protege el caso nuevo, que MA demuestra; B, falsa, queda fijada como fallo esperado y pasa a BUG-03.</p>',
+        },
+      ],
+    },
+    {
+      code: 'BUG-03',
+      title:
+        'Un select deshabilitado con origen remoto y valor objeto se ve vacío en el cliente, no con ese objeto como única opción',
+      sev: 'mejora',
+      sevNote: 'contradice la documentación',
+      cat: 'contrato',
+      st: 'corregido',
+      stLabel: 'Corregido en #192',
+      audit: 'test-audit-2026-11-19-matriz',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/src/client/hook/use-data-source.ts:13</code> llama a <code>resolveSource(field, value)</code> con el valor del propio campo; <code>buildOptions</code> (<code>packages/luna-core/src/util/build.ts:13</code>) lo lee como un registro, por el nombre del campo: <code>values?.[field.name]</code>. La entrada de servidor (<code>server/component/input.tsx:28</code>) le pasa un registro.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: "<p><code>docs/fields/data-source.md</code> dice que un <code>select</code> deshabilitado con origen remoto y valor objeto muestra ese objeto como única opción, para que una selección guardada se lea en un formulario que no se edita. En el cliente, <code>{ value: 'banana', label: 'Banana' }['fruit']</code> es <code>undefined</code>: el campo no pide nada y no tiene opciones, y el disparador queda vacío.</p>",
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/e2e/select.spec.ts:164</code> <i>should display the object value of a disabled select with a remote source</i>, como <code>test.fail</code> con <code>// Audit BUG-03</code>. Al corregirlo se quita el <code>.fail</code>.</p>',
+        },
+        {
+          label: 'Evidencia',
+          html: '<p>Ver INV-02: el caso falla en Chromium, Firefox y WebKit; con la corrección de sondeo (el cliente le pasa <code>{ [field.name]: value }</code>, revertida) pasa, y la mutación de <code>buildOptions</code> lo vuelve a romper. Las unitarias de <code>buildOptions</code> pasan porque le dan un registro, no lo que le da el cliente.</p>',
+        },
+        {
+          label: 'Propuesta',
+          html: '<p>Que el cliente le dé a <code>resolveSource</code> lo mismo que el servidor, o que <code>buildOptions</code> reciba el valor del campo y la entrada de servidor lo extraiga antes; una sola forma para los dos. Después, quitar el <code>.fail</code> y agregar una unitaria con lo que de verdad le llega.</p>',
+        },
+        {
+          label: 'Corrección',
+          html: "<p><code>buildOptions</code> y <code>resolveSource</code> reciben el valor del propio campo, que es lo que el cliente ya les daba; la entrada de servidor saca la entrada del campo de su registro antes de llamarlas (<code>server/component/input.tsx</code>), con la misma búsqueda por nombre que hacía <code>buildOptions</code>. Las dos unitarias que pasaban un registro ahora pasan el valor del campo. Se quitó el <code>.fail</code> de <code>select.spec.ts:164</code>: pasa en Chromium, Firefox y WebKit (120 de 120 con <code>select</code>, <code>server-entry</code>, <code>option-not-offered</code> y <code>options-written</code>), y las 766 e2e de Chromium pasan. La entrada de servidor la fija <code>tests/e2e/server-entry.spec.ts</code> <i>should show the object value of a disabled select with a remote source</i>: la página <code>/server</code> declara un <code>select</code> deshabilitado con origen remoto, y el host le pasa <code>{ label: 'Colombia', value: 'co' }</code>. Para eso el <code>Select</code> del editor (<code>components/ui/wrapper/select.tsx</code>) declara <code>'use client'</code>, como el combobox y los chips: sin eso no se podía pintar desde un Server Component. Mutación: el servidor le pasa a <code>resolveSource</code> el registro entero en vez de la entrada del campo (<code>server/component/input.tsx</code>); falla solo ese caso, y pasan los otros 23 de <code>server-entry</code> y <code>select</code>. Con la corrección: 144 de 144 en los tres navegadores con <code>--repeat-each=2</code>, y 767 de 767 e2e de Chromium.</p>",
         },
       ],
     },

@@ -97,4 +97,27 @@ test.describe('Server entry', { tag: ['@e2e'] }, () => {
     expect(input('code')).toMatch(/\sdisabled=""/)
     expect(input('name')).toMatch(/^<input(?![^>]*\sdisabled="")/)
   })
+
+  // A disabled select fetches nothing, so the object the host passes stands
+  // in as its only option: the server picks this field's entry out of the
+  // record it holds, and the saved choice still reads.
+  test('should show the object value of a disabled select with a remote source', async ({
+    page,
+  }) => {
+    let requests = 0
+    await page.route('**/api/countries', (route) => {
+      requests += 1
+      return route.fulfill({
+        body: JSON.stringify([{ label: 'Peru', value: 'pe' }]),
+        contentType: 'application/json',
+      })
+    })
+
+    await page.goto('/server')
+
+    const select = page.getByRole('combobox', { name: /Country/ })
+    await expect(select).toBeDisabled()
+    await expect(select).toContainText('Colombia')
+    expect(requests).toBe(0)
+  })
 })

@@ -97,11 +97,8 @@ describe('Build', () => {
       disabled: true,
     }
 
-    const values = {
-      country: { label: 'USA', value: 'us' },
-    }
-
-    const options = buildOptions(field, values)
+    // The field's own value, as the client holds it: not the form's record.
+    const options = buildOptions(field, { label: 'USA', value: 'us' })
     expect(options).toEqual([{ label: 'USA', value: 'us' }])
   })
 
@@ -112,11 +109,7 @@ describe('Build', () => {
       disabled: false,
     }
 
-    const values = {
-      country: { label: 'USA', value: 'us' },
-    }
-
-    const options = buildOptions(field, values)
+    const options = buildOptions(field, { label: 'USA', value: 'us' })
     expect(options).toBeUndefined()
   })
 
@@ -126,11 +119,7 @@ describe('Build', () => {
       name: 'username',
     }
 
-    const values = {
-      username: 'john_doe',
-    }
-
-    const options = buildOptions(field, values)
+    const options = buildOptions(field, { label: 'John', value: 'john_doe' })
     expect(options).toBeUndefined()
   })
 
