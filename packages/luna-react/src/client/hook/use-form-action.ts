@@ -30,10 +30,9 @@ export type FormState<T> = {
 
 export type FormActionOptions<T> = {
   onSuccess?: (data: T) => void
-  // A success that does not keep the values starts the form over: whoever
-  // renders the form mounts it anew, on a store of its own. See `Form`.
+  // What the action answers as a success starts the form over: whoever renders
+  // the form mounts it anew, on a store of its own. See `Form`.
   onReset?: () => void
-  preserveValues?: boolean
   translations?: Record<string, string>
   validation?: boolean
 }
@@ -47,13 +46,7 @@ export function useFormState<T, F = Record<string, unknown>>(
   action?: (formData: F, schema?: ZodSchema) => Promise<FormState<T>>,
   options?: FormActionOptions<T>
 ) {
-  const {
-    onReset,
-    onSuccess,
-    preserveValues = false,
-    validation = true,
-    translations,
-  } = options ?? {}
+  const { onReset, onSuccess, validation = true, translations } = options ?? {}
 
   const store = useStore()
   const setError = useSetAtom(reportErrorAtom)
@@ -77,26 +70,23 @@ export function useFormState<T, F = Record<string, unknown>>(
       // form over, a failure is shown, and a throw is caught.
       const answer = async (
         run: NonNullable<typeof action>,
-        input: F,
-        sent: Nullable<T>
+        input: F
       ): Promise<FormState<T>> => {
         try {
           const result = await run(input, schema)
           if (!result.success) {
-            return failure(sent, result.error)
+            return failure(result.error)
           }
 
           onSuccess?.(result.data as T)
-          if (!preserveValues) {
-            startTransition(() => {
-              onReset?.()
-            })
-          }
+          startTransition(() => {
+            onReset?.()
+          })
 
-          return success(sent, preserveValues)
+          return success()
         } catch (error) {
           logger.error('Error executing form action:', error)
-          return failure(sent, {
+          return failure({
             title: translateBuiltIn(
               'An unexpected error occurred submitting the form.',
               translations
@@ -109,7 +99,7 @@ export function useFormState<T, F = Record<string, unknown>>(
       // Nothing checked: the action is handed the raw `FormData`, for a form
       // whose action parses it itself. With no action there is nothing to do.
       if (validation === false) {
-        return action ? answer(action, formData as F, null) : prevState
+        return action ? answer(action, formData as F) : prevState
       }
 
       // A date leaves the schema as `yyyy-MM-dd` whatever the field showed, so
@@ -131,7 +121,7 @@ export function useFormState<T, F = Record<string, unknown>>(
           setError(errors)
         })
 
-        return failure(form as T, {
+        return failure({
           description: translateBuiltIn(
             'Please correct the errors and try again.',
             translations
@@ -145,13 +135,13 @@ export function useFormState<T, F = Record<string, unknown>>(
       }
 
       if (!action) {
-        return success(validated.data as T, preserveValues)
+        return success()
       }
 
       const unflattened = unflatten(
         validated.data as Record<string, unknown>
-      ) as F & T
-      return answer(action, unflattened, unflattened)
+      ) as F
+      return answer(action, unflattened)
     },
     initialState
   )
@@ -192,21 +182,17 @@ function buildError(error: unknown, translations?: Record<string, string>) {
   return [translateBuiltIn('Unknown error', translations)]
 }
 
-function success<T>(value: Nullable<T>, preserveValues = false): FormState<T> {
-  const data = preserveValues ? value : null
+function success<T>(): FormState<T> {
   return {
-    data,
+    data: null,
     error: null,
     success: true,
   }
 }
 
-function failure<T>(
-  value: Nullable<T>,
-  error: Nullable<FormStateError>
-): FormState<T> {
+function failure<T>(error: Nullable<FormStateError>): FormState<T> {
   return {
-    data: value,
+    data: null,
     error,
     success: false,
   }
