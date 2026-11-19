@@ -3,8 +3,21 @@ name: Build and test
 on:
   push:
     branches: [main]
+    # A change that only touches documentation, the audit registry, plans or
+    # agent instructions runs no code, so it runs no checks. A change that
+    # also touches code runs everything. The docs ship in the package, but no
+    # test or build step reads them.
+    paths-ignore: &docs-only
+      - '**/*.md'
+      - 'LICENSE'
+      - 'audit/**'
+      - 'plan/**'
+      - '.claude/**'
+      - '.agents/**'
+      - '.vscode/**'
   pull_request:
     types: [opened, synchronize]
+    paths-ignore: *docs-only
 
 permissions:
   contents: read
