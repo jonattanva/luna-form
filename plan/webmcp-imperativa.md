@@ -118,7 +118,8 @@ No objetivos, al menos en las fases 0 y 1:
 
 - La API declarativa (atributos `toolname` en el `<form>`). Infiere el esquema
   de controles nativos y rellena el DOM, y la mayoría de los widgets de luna son
-  personalizados. Queda como posible fase posterior para la entrada de servidor.
+  personalizados. Se evaluó para la entrada de servidor en la fase 3 y se
+  descartó.
 - Exponer tools a otros orígenes (`exposedTo`).
 - Tools de autoría en el editor, como `set_definition`. Se evalúan en la fase 2.
 - Un puente genérico para toda la página: luna expone formularios, no
@@ -1303,8 +1304,11 @@ Resultados:
   - Descartado el 2026-11-19: si el agente se equivoca, la persona corrige el
     campo. `<name>_fill` no pisa lo que ella cambió, y `allow` puede pedirle
     confirmación antes de escribir.
-- [ ] Opcional: atributos declarativos en `react-luna-form/server` para
-      formularios simples sin JavaScript.
+- [x] ~~Opcional: atributos declarativos en `react-luna-form/server` para
+      formularios simples sin JavaScript.~~
+  - Descartado el 2026-11-19: el `Form` de servidor solo se muestra, sin
+    `action`, así que un agente no tendría qué enviar, y el navegador solo
+    infiere controles nativos, que en luna son pocos.
 - [ ] Opcional: que `useValue` avise del valor del host por un callback, en vez
       de que los hooks que vienen después dependan del orden en que se llaman.
 - [ ] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con

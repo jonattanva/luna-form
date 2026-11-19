@@ -791,8 +791,8 @@ dictionary ModelContextTool {
                   La API declarativa (atributos <code>toolname</code> en el
                   <code>&lt;form&gt;</code>). Infiere el esquema de controles
                   nativos y rellena el DOM, y la mayoría de los widgets de luna
-                  son personalizados. Queda como posible fase posterior para la
-                  entrada de servidor.
+                  son personalizados. Se evaluó para la entrada de servidor en
+                  la fase 3 y se descartó.
                 </li>
                 <li>
                   Exponer tools a otros orígenes (<code>exposedTo</code>).
@@ -3653,10 +3653,20 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
-                  Opcional: atributos declarativos en
-                  <code>react-luna-form/server</code> para formularios simples
-                  sin JavaScript.
+                <li class="done">
+                  <s
+                    >Opcional: atributos declarativos en
+                    <code>react-luna-form/server</code> para formularios simples
+                    sin JavaScript.</s
+                  >
+                  <ul>
+                    <li>
+                      Descartado el 2026-11-19: el <code>Form</code> de servidor
+                      solo se muestra, sin <code>action</code>, así que un
+                      agente no tendría qué enviar, y el navegador solo infiere
+                      controles nativos, que en luna son pocos.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Opcional: que <code>useValue</code> avise del valor del host
