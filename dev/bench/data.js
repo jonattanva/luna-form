@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795120088680,
+  "lastUpdate": 1795120129768,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "cb54a0c3316bf00e813662fcb9f107d6994f0c31",
-          "message": "Merge pull request #94 from jonattanva/perf/visibility-guard\n\nperf(guard): a state change renders only the guard whose answer changed",
-          "timestamp": "2026-09-19T21:24:37-05:00",
-          "tree_id": "6d541840f147db826404a170b4d7f2fb5d4a3a32",
-          "url": "https://github.com/jonattanva/luna-form/commit/cb54a0c3316bf00e813662fcb9f107d6994f0c31"
-        },
-        "date": 1789871153794,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 242,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 167,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "7373970b8b23089185302fbfdcc8bdc417a59a6e",
           "message": "Merge pull request #95 from jonattanva/perf/field-errors\n\nperf(field): a field is handed its errors, not a record built around them",
           "timestamp": "2026-09-19T22:46:48-05:00",
@@ -8806,6 +8772,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 35.4,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "afc8a061df65a09b88e7a71017577016cb9a7488",
+          "message": "Merge pull request #190 from jonattanva/claude/youthful-carson-896dd3\n\nfix(editor): forward the form's ARIA attributes to the focused element",
+          "timestamp": "2026-11-19T15:27:25-05:00",
+          "tree_id": "8a7d38303d9162ec8f3f9f10fc0bee12be9ab541",
+          "url": "https://github.com/jonattanva/luna-form/commit/afc8a061df65a09b88e7a71017577016cb9a7488"
+        },
+        "date": 1795120129659,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 41.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 44.2,
             "unit": "ms"
           }
         ]
