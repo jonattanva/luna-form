@@ -32,6 +32,15 @@ const sections = [
         description: 'Issued as {value}.',
       },
       {
+        // Disabled, so its source is never fetched: the object the host
+        // passes below is its only option, and the saved choice still reads.
+        label: 'Country',
+        name: 'country',
+        type: 'select',
+        disabled: true,
+        source: { url: '/api/countries' },
+      },
+      {
         // `advanced.data` names the same attribute the form writes for the
         // format; the form's value has to win on the server too.
         label: 'Check-in',
@@ -58,7 +67,10 @@ const context = {
   zone: 'America/Bogota',
 }
 
-const value = { code: 'LF-0042' }
+const value = {
+  code: 'LF-0042',
+  country: { label: 'Colombia', value: 'co' },
+}
 
 export default function ServerPage() {
   return (
