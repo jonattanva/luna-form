@@ -118,13 +118,14 @@ No objetivos, al menos en las fases 0 y 1:
 
 - La API declarativa (atributos `toolname` en el `<form>`). Infiere el esquema
   de controles nativos y rellena el DOM, y la mayoría de los widgets de luna son
-  personalizados. Queda como posible fase posterior para la entrada de servidor.
+  personalizados. Se evaluó para la entrada de servidor en la fase 3 y se
+  descartó.
 - Exponer tools a otros orígenes (`exposedTo`).
 - Tools de autoría en el editor, como `set_definition`. Se evalúan en la fase 2.
 - Un puente genérico para toda la página: luna expone formularios, no
   componentes.
-- Un historial de cambios. Deshacer lo que escribió el agente queda como opción
-  en la fase 3.
+- Un historial de cambios. Deshacer lo que escribió el agente se evaluó en la
+  fase 3 y se descartó: la persona corrige el campo.
 
 ## 3. Diseño
 
@@ -1248,9 +1249,15 @@ Resultados:
     era lo que el modelo necesita (cuándo `ok` es falso, el valor final, el
     timeout de un envío que sigue corriendo). Los esquemas de salida pesan más
     (2415 caracteres) y son el recorte que queda.
+  - Recortados el 2026-11-19: de 2124 a 1932 caracteres en un formulario con
+    fill, read y submit, un 9 %. Se quitó la descripción de `values`, que repetía
+    la de fill, y se acortó la de `errors`; se conservan los `required` y los
+    `enum`, que el test de contrato exige.
   - Con `validation.submit: false`, `<name>_fill` ya no nombra los campos que
     el envío necesita y `<name>_submit` dice que los valores van sin revisar.
-    Las notas de cada campo siguen describiendo las reglas del formulario.
+    Desde el 2026-11-19 el esquema tampoco lleva las reglas que solo revisa el
+    envío (`requiredWhen`, `rules`, `pattern`): `buildToolSchema` recibe
+    `validates`.
 
 ### Fase 3: endurecimiento
 
@@ -1274,23 +1281,40 @@ Resultados:
     (sobre-parametrización). Ahora pide lo que la persona dio para el
     formulario y nada más, y la documentación recomienda ofrecer solo los
     campos que el formulario necesita.
-- [ ] Opcional: en el editor, limitar los `source` con `remotePatterns`. Con
+- [x] Opcional: en el editor, limitar los `source` con `remotePatterns`. Con
       `set_definition`, un agente inyectado podría apuntar un `source` con
       `{value}` a cualquier host y llevarse lo que la persona escribe en la
       vista previa.
-- [ ] Opcional: recortar el largo de las etiquetas y descripciones en el
+  - Hecho el 2026-11-19. El editor solo deja pasar los hosts de sus ejemplos,
+    y se cerró un bypass: una URL relativa o con espacios se resuelve contra un
+    origen interno antes de compararla.
+- [x] Opcional: recortar el largo de las etiquetas y descripciones en el
       esquema (por ejemplo, a 200 caracteres). Las que llegan por `#/context/`
       entran sin límite; la especificación pide limitar el largo contra el
       envenenamiento de metadatos. El aviso `UNTRUSTED` ya las cubre.
+  - Hecho el 2026-11-19: 200 caracteres para una etiqueta y 500 para una
+    descripción, contados por punto de código. Una opción no se corta, porque
+    el agente la nombra por su etiqueta: un campo cuyas opciones pasan de 1000
+    caracteres se busca con `<name>_options`.
 - [ ] Seguir los cambios de la API y del origin trial, versión por versión de
       Chrome.
-- [ ] Opcional: deshacer lo que escribió el agente.
+- [x] ~~Opcional: deshacer lo que escribió el agente.~~
   - Usa los valores previos que `<name>_fill` ya conoce.
   - Solo en los campos que la persona no cambió después.
-- [ ] Opcional: atributos declarativos en `react-luna-form/server` para
-      formularios simples sin JavaScript.
-- [ ] Opcional: que `useValue` avise del valor del host por un callback, en vez
-      de que los hooks que vienen después dependan del orden en que se llaman.
+  - Descartado el 2026-11-19: si el agente se equivoca, la persona corrige el
+    campo. `<name>_fill` no pisa lo que ella cambió, y `allow` puede pedirle
+    confirmación antes de escribir.
+- [x] ~~Opcional: atributos declarativos en `react-luna-form/server` para
+      formularios simples sin JavaScript.~~
+  - Descartado el 2026-11-19: el `Form` de servidor solo se muestra, sin
+    `action`, así que un agente no tendría qué enviar, y el navegador solo
+    infiere controles nativos, que en luna son pocos.
+- [x] ~~Opcional: que `useValue` avise del valor del host por un callback, en
+      vez de que los hooks que vienen después dependan del orden en que se
+      llaman.~~
+  - Descartado el 2026-11-19: funciona, lo cubren los e2e de eventos de valor y
+    de estado, y no arregla nada que falle. Se retoma si hay que tocar esos
+    hooks por otra razón.
 - [ ] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con
       los mensajes del idioma del formulario sin resolver el diccionario
       aparte.

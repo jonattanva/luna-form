@@ -791,8 +791,8 @@ dictionary ModelContextTool {
                   La API declarativa (atributos <code>toolname</code> en el
                   <code>&lt;form&gt;</code>). Infiere el esquema de controles
                   nativos y rellena el DOM, y la mayoría de los widgets de luna
-                  son personalizados. Queda como posible fase posterior para la
-                  entrada de servidor.
+                  son personalizados. Se evaluó para la entrada de servidor en
+                  la fase 3 y se descartó.
                 </li>
                 <li>
                   Exponer tools a otros orígenes (<code>exposedTo</code>).
@@ -806,8 +806,9 @@ dictionary ModelContextTool {
                   formularios, no componentes.
                 </li>
                 <li>
-                  Un historial de cambios. Deshacer lo que escribió el agente
-                  queda como opción en la fase 3.
+                  Un historial de cambios. Deshacer lo que escribió el agente se
+                  evaluó en la fase 3 y se descartó: la persona corrige el
+                  campo.
                 </li>
               </ul>
             </div>
@@ -3530,11 +3531,22 @@ const result = await callTool(call.name, call.input)</code></pre>
                       queda.
                     </li>
                     <li>
+                      Recortados el 2026-11-19: de 2124 a 1932 caracteres en un
+                      formulario con fill, read y submit, un 9 %. Se quitó la
+                      descripción de <code>values</code>, que repetía la de
+                      fill, y se acortó la de <code>errors</code>; se conservan
+                      los <code>required</code> y los <code>enum</code>, que el
+                      test de contrato exige.
+                    </li>
+                    <li>
                       Con <code>validation.submit: false</code>,
                       <code>&lt;name&gt;_fill</code> ya no nombra los campos que
                       el envío necesita y <code>&lt;name&gt;_submit</code> dice
-                      que los valores van sin revisar. Las notas de cada campo
-                      siguen describiendo las reglas del formulario.
+                      que los valores van sin revisar. Desde el 2026-11-19 el
+                      esquema tampoco lleva las reglas que solo revisa el envío
+                      (<code>requiredWhen</code>, <code>rules</code>,
+                      <code>pattern</code>): <code>buildToolSchema</code> recibe
+                      <code>validates</code>.
                     </li>
                   </ul>
                 </li>
@@ -3586,26 +3598,44 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Opcional: en el editor, limitar los <code>source</code> con
                   <code>remotePatterns</code>. Con <code>set_definition</code>,
                   un agente inyectado podría apuntar un <code>source</code> con
                   <code>{value}</code> a cualquier host y llevarse lo que la
                   persona escribe en la vista previa.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-19. El editor solo deja pasar los hosts
+                      de sus ejemplos, y se cerró un bypass: una URL relativa o
+                      con espacios se resuelve contra un origen interno antes de
+                      compararla.
+                    </li>
+                  </ul>
                 </li>
-                <li>
+                <li class="done">
                   Opcional: recortar el largo de las etiquetas y descripciones
                   en el esquema (por ejemplo, a 200 caracteres). Las que llegan
                   por <code>#/context/</code> entran sin límite; la
                   especificación pide limitar el largo contra el envenenamiento
                   de metadatos. El aviso <code>UNTRUSTED</code> ya las cubre.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-19: 200 caracteres para una etiqueta y
+                      500 para una descripción, contados por punto de código.
+                      Una opción no se corta, porque el agente la nombra por su
+                      etiqueta: un campo cuyas opciones pasan de 1000 caracteres
+                      se busca con
+                      <code>&lt;name&gt;_options</code>.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Seguir los cambios de la API y del origin trial, versión por
                   versión de Chrome.
                 </li>
-                <li>
-                  Opcional: deshacer lo que escribió el agente.
+                <li class="done">
+                  <s>Opcional: deshacer lo que escribió el agente.</s>
                   <ul>
                     <li>
                       Usa los valores previos que
@@ -3614,17 +3644,43 @@ const result = await callTool(call.name, call.input)</code></pre>
                     <li>
                       Solo en los campos que la persona no cambió después.
                     </li>
+                    <li>
+                      Descartado el 2026-11-19: si el agente se equivoca, la
+                      persona corrige el campo.
+                      <code>&lt;name&gt;_fill</code> no pisa lo que ella cambió,
+                      y <code>allow</code> puede pedirle confirmación antes de
+                      escribir.
+                    </li>
                   </ul>
                 </li>
-                <li>
-                  Opcional: atributos declarativos en
-                  <code>react-luna-form/server</code> para formularios simples
-                  sin JavaScript.
+                <li class="done">
+                  <s
+                    >Opcional: atributos declarativos en
+                    <code>react-luna-form/server</code> para formularios simples
+                    sin JavaScript.</s
+                  >
+                  <ul>
+                    <li>
+                      Descartado el 2026-11-19: el <code>Form</code> de servidor
+                      solo se muestra, sin <code>action</code>, así que un
+                      agente no tendría qué enviar, y el navegador solo infiere
+                      controles nativos, que en luna son pocos.
+                    </li>
+                  </ul>
                 </li>
-                <li>
-                  Opcional: que <code>useValue</code> avise del valor del host
-                  por un callback, en vez de que los hooks que vienen después
-                  dependan del orden en que se llaman.
+                <li class="done">
+                  <s
+                    >Opcional: que <code>useValue</code> avise del valor del
+                    host por un callback, en vez de que los hooks que vienen
+                    después dependan del orden en que se llaman.</s
+                  >
+                  <ul>
+                    <li>
+                      Descartado el 2026-11-19: funciona, lo cubren los e2e de
+                      eventos de valor y de estado, y no arregla nada que falle.
+                      Se retoma si hay que tocar esos hooks por otra razón.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Opcional: <code>lang</code> en <code>buildFormSchema</code>,
