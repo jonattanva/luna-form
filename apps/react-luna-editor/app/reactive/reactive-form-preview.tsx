@@ -154,9 +154,9 @@ export function ReactiveFormPreview() {
   const { agent: offered, host, ...formProps } = form
 
   // How the preview is offered to an agent. A test changes its name,
-  // description or submit in the injected JSON, decides what `allow`
-  // answers through `window.__lunaAllow`, and hears of each call through
-  // `window.__lunaOnCall`.
+  // description or submit in the injected JSON, or offers none with
+  // `"agent": false`, decides what `allow` answers through
+  // `window.__lunaAllow`, and hears of each call through `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
     () => ({
       ...AGENT,
@@ -238,7 +238,7 @@ export function ReactiveFormPreview() {
         value={formValue}
         config={formConfig}
         action={action}
-        agent={agent}
+        agent={offered === false ? undefined : agent}
         onSuccess={handleSuccess}
         onValueChange={handleValueChange}
       >

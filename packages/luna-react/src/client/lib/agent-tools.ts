@@ -17,6 +17,7 @@ import {
 import type { ApplyOptions } from '../hook/use-apply'
 import type {
   Field,
+  JsonValue,
   Option,
   ToolSchema,
   ToolSchemaResult,
@@ -24,13 +25,7 @@ import type {
 } from '@luna-form/core'
 
 /** A value as JSON carries it: what an agent sends and what a tool answers. */
-export type ToolJson =
-  | string
-  | number
-  | boolean
-  | null
-  | readonly ToolJson[]
-  | { readonly [key: string]: ToolJson }
+export type ToolJson = JsonValue
 
 /** What a tool answers: an object, with `ok` and a `code` when it failed. */
 export type ToolResult = { readonly [key: string]: ToolJson }

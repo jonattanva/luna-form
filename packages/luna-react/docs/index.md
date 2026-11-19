@@ -32,6 +32,7 @@ between the client and server `Form`.
 | Writing a `{placeholder}` in a label, a description or an event              | [interpolation/overview.md](interpolation/overview.md)             |
 | Formatting an interpolated value as currency, a date or a duration           | [interpolation/format-filters.md](interpolation/format-filters.md) |
 | Letting an AI agent fill a form, or keeping a field from one                 | [agents/tools.md](agents/tools.md)                                 |
+| Checking a form an AI agent wrote before rendering it                        | [agents/tools.md](agents/tools.md#a-form-an-agent-writes)          |
 
 ## Two things that surprise people
 
@@ -53,5 +54,5 @@ Read the relevant page before writing the field, not after debugging it.
 | ------------------------ | ------------------------------------------------------------------------------------------- |
 | `react-luna-form`        | The `Form` component and client hooks                                                       |
 | `react-luna-form/config` | `defineConfig`, `defineInput`, `defineCustomInput` and the rest of the registration helpers |
-| `react-luna-form/schema` | The Zod schema derived from `sections`, and the schema of an agent's tool                   |
+| `react-luna-form/schema` | The Zod schema derived from `sections`, the schema of an agent's tool, and a form's check   |
 | `react-luna-form/server` | Server-safe helpers, usable under the `react-server` condition                              |

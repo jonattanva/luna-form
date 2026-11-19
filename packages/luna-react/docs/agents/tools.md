@@ -254,6 +254,21 @@ changes registers them again half a second later, and only when the tools
 come out different. A page that turns tools off with
 `Permissions-Policy: tools=()` gets none, and the form works as before.
 
+Tools of your own page, beside those of its forms, register the same way
+with `registerTools(tools, signal)`: each `Tool` is a `ToolDefinition` with
+its `execute(input)`, it stays until `signal` is aborted, and without WebMCP
+nothing happens. A page that turned tools off, or a signal aborted before the
+tools were in, is not reported; any other failure is warned about in the
+console.
+
+```tsx
+useEffect(() => {
+  const controller = new AbortController()
+  registerTools(tools, controller.signal)
+  return () => controller.abort()
+}, [])
+```
+
 ## Without WebMCP
 
 `listTools()` and `callTool()` give any agent the tools of every form with
@@ -434,3 +449,38 @@ buildToolSchema(sections, {
   types: { rating: { maximum: 5, minimum: 1, type: 'integer' } },
 })
 ```
+
+## A form an agent writes
+
+An agent can also write the form itself: its JSON, from a request in natural
+language. Before rendering JSON that came from somewhere you do not control,
+`checkDefinition` says what would keep it from rendering as written, so the
+agent can be answered and correct it:
+
+```ts
+import { checkDefinition } from 'react-luna-form/schema'
+
+const problems = checkDefinition(form, Object.keys(config.inputs))
+// [{ path: 'sections[0].fields[1]', message: 'No input is registered for ...' }]
+```
+
+`form` is the parsed JSON, with `sections` and, if it has one, `definition`;
+the second argument is the field types your config registers. It resolves
+`$ref` first, then checks:
+
+- `sections` is an array of objects, and every `fields` an array;
+- every field has a `name`, and a `type` the config registers: a type nothing
+  implements [renders nothing](../index.md#two-things-that-surprise-people);
+- every `$ref` into `#/definition/` resolves;
+- every [change event](../events/change.md) targets a field the form has,
+  read the way the form reads it: a plain name from the top of the form,
+  `list/leaf` from the row the sender sits in, and a position such as
+  `groups.0.checks` in any row.
+
+A `$ref` into `#/context/` is left to the host. Where it stands for a field,
+its name cannot be known, so the targets of events go unchecked. Two fields
+under one name are not a problem: they hold one value.
+
+An empty array is a form with none of these problems. It does not check the
+other keys of a field, its validation or its conditions: those render, and do
+what they say or fail where they are.

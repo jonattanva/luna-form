@@ -1188,8 +1188,21 @@ Resultados:
     pide. `<name>_describe` tampoco: el formulario de 200 campos queda en 12.4 k
     caracteres de esquema, bajo el aviso de 24 kB. Queda para cuando una página
     real pase ese umbral.
-- [ ] En el editor, tools de autoría (`set_definition`, `get_definition`) para
+- [x] En el editor, tools de autoría (`set_definition`, `get_definition`) para
       armar formularios desde lenguaje natural.
+  - Hecho el 2026-11-18. El editor (`/`) registra en WebMCP `get_definition`,
+    `set_definition` y `get_reference`, que lee una página de `docs/` del
+    paquete instalado, empezando por el índice. Su vista previa ofrece
+    `preview_fill` y `preview_read`, sin submit, para probar lo que el agente
+    armó.
+  - `set_definition` no aplica un formulario con problemas: responde
+    `problems` con qué y dónde. El chequeo es liviano y vive en la librería,
+    `checkDefinition` en `react-luna-form/schema`: secciones y `fields` como
+    arreglos, `name` y `type` registrado en la config, `$ref` a
+    `#/definition/` que resuelve y destinos de eventos que existen, leídos
+    con `resolveTarget` desde el campo que los manda. Dos campos con un mismo
+    nombre no son un problema: guardan un valor. No revisa el resto de las
+    claves ni la validación.
 - [x] Margen del bundle: decidir si se suben los presupuestos o se recorta el
       camino principal antes de sumar código (379.3 de 380 kB; 30.8 de 31 kB
       gzip).

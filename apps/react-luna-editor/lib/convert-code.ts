@@ -5,7 +5,11 @@ export function convertCodeToForm(code?: string) {
     }
 
     const parsed = JSON.parse(code)
-    if (typeof parsed !== 'object' || parsed === null) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       throw new Error('Parsed code is not a valid object')
     }
 

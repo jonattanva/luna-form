@@ -4,6 +4,7 @@
 export {
   buildFormSchema,
   buildToolSchema,
+  checkDefinition,
   collectIssues,
   resolveDictionary,
 } from '@luna-form/core'
@@ -11,6 +12,7 @@ export {
 export type {
   AssertRule,
   Column,
+  DefinitionProblem,
   Field,
   Fields,
   List,
