@@ -3682,10 +3682,24 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Opcional: <code>lang</code> en <code>buildFormSchema</code>,
                   para que un servidor valide con los mensajes del idioma del
                   formulario sin resolver el diccionario aparte.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-19 (#198):
+                      <code
+                        >buildFormSchema(sections, { context, definition,
+                        localization })</code
+                      >, la forma de <code>buildToolSchema</code>, con
+                      <code>resolveLocalization(lang, translations)</code> para
+                      armar el idioma y su diccionario, como lo hacen los dos
+                      <code>Form</code>. El mes de un límite de fecha sale en el
+                      idioma del formulario. La forma posicional deja de
+                      compilar.
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>

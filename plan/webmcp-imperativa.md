@@ -1315,9 +1315,14 @@ Resultados:
   - Descartado el 2026-11-19: funciona, lo cubren los e2e de eventos de valor y
     de estado, y no arregla nada que falle. Se retoma si hay que tocar esos
     hooks por otra razón.
-- [ ] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con
+- [x] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con
       los mensajes del idioma del formulario sin resolver el diccionario
       aparte.
+  - Hecho el 2026-11-19 (#198): `buildFormSchema(sections, { context,
+definition, localization })`, la forma de `buildToolSchema`, con
+    `resolveLocalization(lang, translations)` para armar el idioma y su
+    diccionario, como lo hacen los dos `Form`. El mes de un límite de fecha
+    sale en el idioma del formulario. La forma posicional deja de compilar.
 
 ## 5. Pruebas
 
