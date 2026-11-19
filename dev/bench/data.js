@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795119611739,
+  "lastUpdate": 1795119651374,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "d300fd6052fe447ebfa76fa75fda1439760e3db6",
-          "message": "Merge pull request #93 from jonattanva/perf/row-subscription\n\nperf(list): a row reads the form's values only when it has a condition",
-          "timestamp": "2026-09-19T16:48:56-05:00",
-          "tree_id": "c0a62790fe1dd46a45404de458bf5c458794d222",
-          "url": "https://github.com/jonattanva/luna-form/commit/d300fd6052fe447ebfa76fa75fda1439760e3db6"
-        },
-        "date": 1789854620531,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 288,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 591,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "cb54a0c3316bf00e813662fcb9f107d6994f0c31",
           "message": "Merge pull request #94 from jonattanva/perf/visibility-guard\n\nperf(guard): a state change renders only the guard whose answer changed",
           "timestamp": "2026-09-19T21:24:37-05:00",
@@ -8801,6 +8767,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 17.3,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ed25fe195404a2ab3a15a6d2462f3e37c4259cd",
+          "message": "Merge pull request #189 from jonattanva/claude/measure-remount\n\ntest(perf): measure a 200-field form starting over after a submit",
+          "timestamp": "2026-11-19T15:19:45-05:00",
+          "tree_id": "96209f4a8bc64fa8218364ea7924096c39d89eab",
+          "url": "https://github.com/jonattanva/luna-form/commit/4ed25fe195404a2ab3a15a6d2462f3e37c4259cd"
+        },
+        "date": 1795119651077,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 38.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 13.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 35.4,
             "unit": "ms"
           }
         ]
