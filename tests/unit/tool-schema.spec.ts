@@ -743,6 +743,32 @@ describe('buildToolSchema', () => {
       ).toBe('Required when kind eq "company".')
     })
 
+    test('should say a rule in a row reads its own row', () => {
+      const result = build([
+        {
+          fields: [
+            { name: 'mode', type: 'input/text' },
+            {
+              name: 'value',
+              type: 'input/text',
+              validation: {
+                requiredWhen: {
+                  field: 'mode',
+                  operator: 'eq',
+                  value: 'strict',
+                },
+              },
+            },
+          ],
+          name: 'items',
+          type: 'list',
+        },
+      ])
+      expect(
+        result.schema.properties?.items?.items?.properties?.value?.description
+      ).toContain('Required when this row\'s mode eq "strict".')
+    })
+
     test('should hold no rule only a submit checks when it checks none', () => {
       const fields: Fields = [
         {

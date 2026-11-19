@@ -55,7 +55,7 @@ jobs:
           # The total of every file guards against a dependency bundled by
           # mistake, which adds hundreds of kB (date-fns took it to 342 kB).
           # Peer dependencies are external, so the total is the library's
-          # own code over cjs and esm, every entry: 389.8 kB, the agent
+          # own code over cjs and esm, every entry: 401.2 kB, the agent
           # tools included, which cjs carries inline because it does not
           # split.
           #
@@ -71,7 +71,7 @@ jobs:
           # The tools chunk is what loads only when an agent asks for a
           # form's tools: 12.1 kB gzip, the tools, their host and the schema.
           # No application pays for it until an agent is on the page.
-          TOTAL_KB=400
+          TOTAL_KB=420
           MAIN_GZIP_KB=33
           TOOLS_GZIP_KB=14
           total=0

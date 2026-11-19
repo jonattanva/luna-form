@@ -49,9 +49,9 @@ a rule that does not apply cannot block a submit.
 
 The consequence is that the browser check is narrower than the
 [headless one](../validation/overview.md#headless-validation).
-`buildFormSchema` walks the whole tree, item-scoped rules and list lengths
-included. A server that re-validates with it is not repeating the client's work;
-it is doing the part the client structurally cannot.
+`buildFormSchema` walks the whole tree, list lengths included. A server that
+re-validates with it is not repeating the client's work; it is doing the part
+the client structurally cannot.
 
 ## What `action` receives and returns
 

@@ -81,7 +81,7 @@ Provide a single rule or an array. **An array is OR** — the field is required 
 
 ### Item scope inside lists
 
-When a `requiredWhen` field lives inside a [`list`](../fields/list.md), its `field` reference resolves **within the same item**, not the form root. This lets each row validate against its own siblings:
+When a field with a `requiredWhen`, `rules` or `custom` lives inside a [`list`](../fields/list.md), the `field` each one names resolves **within the same item**, not the form root. This lets each row validate against its own siblings:
 
 ```json
 {
@@ -105,7 +105,7 @@ When a `requiredWhen` field lives inside a [`list`](../fields/list.md), its `fie
 }
 ```
 
-Here `value` is required unless this row's `operator` is `truthy` or `exists`. Item-scoped `requiredWhen` is resolved by the [headless builder](#headless-validation).
+Here `value` is required unless this row's `operator` is `truthy` or `exists`. The form's submit and the [headless builder](#headless-validation) read it the same way. A field of the form root is out of a row's reach: a rule in a row that names one reads nothing there.
 
 ---
 
@@ -296,10 +296,10 @@ if (!result.success) {
 | `requiredWhen` (top-level)                                                 | ✅                       | ✅                           |
 | `pattern`                                                                  | ✅                       | ✅                           |
 | `rules` (top-level)                                                        | ✅                       | ✅                           |
-| `requiredWhen` **inside a list** (item scope)                              | —                        | ✅                           |
+| `requiredWhen`, `rules`, `custom` **inside a list** (item scope)           | ✅                       | ✅                           |
 | List `length`                                                              | —                        | ✅                           |
 
-The headless builder is the superset: item-scoped conditions and list length require the nested tree it produces.
+The headless builder is the superset: list length requires the nested tree it produces.
 
 ### Nested (dotted) field names
 

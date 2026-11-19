@@ -1,4 +1,5 @@
 import {
+  inRow,
   isColumn,
   isField,
   isList,
@@ -43,22 +44,17 @@ export function SlotList(
   const { index } = props
 
   const fields = useMemo(() => {
+    const row = `${listName}.${index}`
     return Array.isArray(rowFields)
       ? rowFields.map((field) => {
           if (isField(field) || isList(field)) {
-            return {
-              ...field,
-              name: `${listName}.${index}.${field.name}`,
-            }
+            return inRow(field, row)
           }
 
           if (isColumn(field)) {
             return {
               ...field,
-              fields: field.fields.map((columnField) => ({
-                ...columnField,
-                name: `${listName}.${index}.${columnField.name}`,
-              })),
+              fields: field.fields.map((entry) => inRow(entry, row)),
             }
           }
 

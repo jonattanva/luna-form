@@ -38,6 +38,7 @@ import { resolveRefs } from './prepare'
 import { isTargetOf } from './path'
 import * as z from 'zod'
 import type {
+  AnyField,
   AssertRule,
   CustomValidation,
   DateFormat,
@@ -1169,6 +1170,37 @@ function fieldIssues(
   }
 
   return issues
+}
+
+/**
+ * A field or a list of a list row, renamed into it: `value` of row 3 of `items` is
+ * `items.3.value`, and the fields its `requiredWhen`, `rules` and `custom`
+ * compare it to are named the same way. A rule in a row reads the fields of
+ * its own row, as `buildFormSchema` reads them, where the form's submit sees
+ * every field by its whole name.
+ */
+export function inRow<T extends AnyField | List>(slot: T, row: string): T {
+  return {
+    ...slot,
+    name: `${row}.${slot.name}`,
+    ...(slot.validation && { validation: inRowRules(slot.validation, row) }),
+  }
+}
+
+// Every `field` key, at any depth, prefixed with the row.
+function inRowRules<T>(value: T, row: string): T {
+  if (Array.isArray(value)) {
+    return value.map((entry) => inRowRules(entry, row)) as T
+  }
+  if (!isObject(value)) {
+    return value
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      key === 'field' ? `${row}.${entry}` : inRowRules(entry, row),
+    ])
+  ) as T
 }
 
 // Evaluates a single WhenRule against sibling data. Reuses `extract` (path

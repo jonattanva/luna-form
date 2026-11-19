@@ -1,11 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { inject } from './support/inject'
 
-// End-to-end coverage for the declarative validation vocabulary (Phase 1) as it
-// flows through the rendered <Form> submit path (buildSchema -> applyDeclarativeRules).
-// Scope: top-level requiredWhen + pattern, which the flat runtime supports.
-// List-scoped requiredWhen and list length are covered headlessly (unit) and in
-// luna-flow, since the flat runtime does not resolve item scope.
+// End-to-end coverage for the declarative validation vocabulary as it flows
+// through the rendered <Form> submit path (buildSchema -> applyDeclarativeRules):
+// requiredWhen and pattern, at the top level and in a list's rows. List length
+// is covered headlessly (unit).
 test.describe('Declarative validation', { tag: ['@e2e'] }, () => {
   test('requiredWhen shows the error when the condition holds', async ({
     page,
@@ -304,3 +303,104 @@ test.describe(
     })
   }
 )
+
+test.describe('Declarative validation in a list', { tag: ['@e2e'] }, () => {
+  test('should read the requiredWhen of a row in its own row', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              { label: 'Mode', name: 'mode', type: 'input/text' },
+              {
+                fields: [
+                  { label: 'Row mode', name: 'mode', type: 'input/text' },
+                  {
+                    label: 'Value',
+                    name: 'value',
+                    type: 'input/text',
+                    validation: {
+                      requiredWhen: {
+                        field: 'mode',
+                        message: 'Value is required in strict mode',
+                        operator: 'eq',
+                        value: 'strict',
+                      },
+                    },
+                  },
+                ],
+                label: 'Items',
+                name: 'items',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('/reactive')
+
+    // The mode at the top is not the one a row reads: only the second row asks
+    // for its value.
+    await page.locator('input[name="mode"]').fill('strict')
+    await page.getByRole('button', { name: 'Add item' }).click()
+    await page.locator('input[name$=".mode"]').nth(0).fill('loose')
+    await page.locator('input[name$=".mode"]').nth(1).fill('strict')
+    await page.getByRole('button', { name: 'Submit' }).click()
+
+    const message = page.getByText('Value is required in strict mode', {
+      exact: true,
+    })
+    await expect(message).toHaveCount(1)
+    await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
+
+    await page.locator('input[name$=".value"]').nth(1).fill('42')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+  })
+
+  test('should compare a custom rule with its own row', async ({ page }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                fields: [
+                  { label: 'Value', name: 'value', type: 'input/text' },
+                  {
+                    label: 'Confirm',
+                    name: 'confirm',
+                    type: 'input/text',
+                    validation: {
+                      custom: { field: 'value', message: 'Does not match' },
+                    },
+                  },
+                ],
+                label: 'Items',
+                name: 'items',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('/reactive')
+
+    await page.locator('input[name$=".value"]').fill('42')
+    await page.locator('input[name$=".confirm"]').fill('41')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(
+      page.getByText('Does not match', { exact: true })
+    ).toBeVisible()
+
+    await page.locator('input[name$=".confirm"]').fill('42')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+  })
+})
