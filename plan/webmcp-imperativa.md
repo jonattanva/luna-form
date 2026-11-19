@@ -1309,8 +1309,12 @@ Resultados:
   - Descartado el 2026-11-19: el `Form` de servidor solo se muestra, sin
     `action`, así que un agente no tendría qué enviar, y el navegador solo
     infiere controles nativos, que en luna son pocos.
-- [ ] Opcional: que `useValue` avise del valor del host por un callback, en vez
-      de que los hooks que vienen después dependan del orden en que se llaman.
+- [x] ~~Opcional: que `useValue` avise del valor del host por un callback, en
+      vez de que los hooks que vienen después dependan del orden en que se
+      llaman.~~
+  - Descartado el 2026-11-19: funciona, lo cubren los e2e de eventos de valor y
+    de estado, y no arregla nada que falle. Se retoma si hay que tocar esos
+    hooks por otra razón.
 - [ ] Opcional: `lang` en `buildFormSchema`, para que un servidor valide con
       los mensajes del idioma del formulario sin resolver el diccionario
       aparte.
