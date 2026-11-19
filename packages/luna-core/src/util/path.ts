@@ -4,15 +4,38 @@ export function resolveTarget(target: string, name: string): string {
   }
 
   const [parent, field] = target.split('/')
+  const segments = name.split('.')
+  const end = findRowEnd(segments, parent.split('.'))
 
-  const regex = new RegExp(`(^|.*\\.)(${parent}\\.\\d+\\.)`)
-  const match = name.match(regex)
-
-  if (match) {
-    return `${match[0]}${field}`
+  if (end === -1) {
+    return field
   }
 
-  return field
+  return [...segments.slice(0, end), field].join('.')
+}
+
+// Where the row of the list `list` ends in `segments`: the index just past
+// the row number, or -1 when the name sits in no row of that list. A row at
+// the start of the name wins; otherwise the last row on the way down does.
+// The row must be followed by at least one more segment, the field itself.
+function findRowEnd(segments: string[], list: string[]): number {
+  let end = -1
+
+  for (let start = 0; start + list.length + 1 < segments.length; start++) {
+    const index = start + list.length
+    const isRow =
+      list.every((segment, offset) => segments[start + offset] === segment) &&
+      /^\d+$/.test(segments[index])
+
+    if (isRow) {
+      end = index + 1
+      if (start === 0) {
+        break
+      }
+    }
+  }
+
+  return end
 }
 
 // Whether an event's `target` names the field called `name`, read the way
