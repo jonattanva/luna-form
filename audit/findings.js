@@ -59,6 +59,25 @@ window.AUDIT = {
         '<p class="muted">8 corridas exitosas de <code>build-and-test.yml</code> entre el 18 y el 19/11 (<code>gh run view --json jobs</code>). En los jobs e2e, la corrida de pruebas es casi todo: instalar y construir otra vez tarda menos de 5 s cada uno gracias a la caché de turbo, y el contenedor de Playwright 23 s. Las mutaciones se aplicaron sobre el código fuente, con la librería reconstruida y el servidor reiniciado antes de cada corrida e2e, y se revirtieron (<code>git status</code> limpio).</p>' +
         '<p>Quedó fuera: la matriz completa de funcionalidad por nivel y el mapa de cobertura (INV-01), y las e2e de Firefox y WebKit con varios workers.</p>',
     },
+    {
+      id: 'audit-2026-11-19',
+      title: 'Auditoría de la librería',
+      date: '2026-11-19',
+      summary:
+        '<p>Primera auditoría de la librería, sobre <code>main</code> en <code>3e06819</code>. Rendimiento y renders están dentro de sus presupuestos; lo que aparece está en cómo se arman textos y URLs con valores que vienen de afuera, en dos checks que nadie corre, y en el banco de pruebas.</p>' +
+        '<p><b>7 hallazgos: 4 mejoras y 3 optimizaciones.</b> Lo más urgente es que un valor interpolado en una descripción se lee como enlace markdown (SEC-01) y que un valor entra sin codificar en la URL de un origen remoto (BUG-01). Cada uno tiene una prueba marcada como fallo esperado, que pasa a rojo el día que se corrija. Sin regresiones: es la primera corrida.</p>' +
+        '<div class="table-wrap"><table><thead><tr><th>Medición</th><th>Resultado</th><th>Condiciones</th></tr></thead><tbody>' +
+        '<tr><td>Bundle: total de todos los archivos</td><td>390,5 de 400 kB</td><td rowspan="3">el cálculo del job <code>bundle-size</code>, después de <code>pnpm build</code>; todo lo externo es peer</td></tr>' +
+        '<tr><td>Bundle: camino principal, esm, gzip</td><td>31,1 de 33 kB</td></tr>' +
+        '<tr><td>Bundle: chunk de agent tools, gzip</td><td>12,3 de 14 kB</td></tr>' +
+        '<tr><td>Presupuestos de renders (<code>@render</code>)</td><td>13 de 13 pasan</td><td>producción con sondas (<code>benchmark:probes --strict</code>, 12 aplicadas), Chromium</td></tr>' +
+        '<tr><td>Agregar una fila a una lista de 5 o 20 filas</td><td>2 renders de campo, 2 esquemas, 1 fila</td><td>igual en <code>/</code> y <code>/reactive</code>, 3 corridas idénticas</td></tr>' +
+        '<tr><td>Quitar la primera fila de N</td><td>0 renders de campo; N filas y 2N efectos en <code>/</code>, 4N en <code>/reactive</code></td><td>lineal por el renombre posicional de las filas que se corren; queda como línea base</td></tr>' +
+        '<tr><td><code>pnpm benchmark</code></td><td>6 casos, el más lento <code>resolveRefs</code> con 20 <code>$ref</code>: 0,0095 ms</td><td>mitata, local, carga 5</td></tr>' +
+        '</tbody></table></div>' +
+        '<p>Pruebas agregadas, todas como fallo esperado: <code>tests/e2e/description-value-link.spec.ts</code> (SEC-01), <code>tests/unit/source-event.spec.ts</code> (BUG-01), <code>tests/unit/path.spec.ts</code> (BUG-02) y <code>tests/e2e/select-aria-invalid.spec.ts</code> (U-01). Cada una se corrió sin la marca para ver que falla por la razón que dice, y las e2e con la marca en los tres navegadores, 3 veces.</p>' +
+        '<p>Quedó fuera o a medias: la revisión de React 19 y Jotai más allá de los presupuestos, la entrada de servidor y la hidratación, las agent tools frente a <code>docs/agents/tools.md</code>, y la verificación de cada afirmación de <code>docs/</code>. La guarda de <code>extract.ts</code> sin prueba está en HUE-01, de la auditoría de pruebas.</p>',
+    },
   ],
   findings: [
     {
@@ -366,6 +385,209 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>En la próxima corrida: instalar el proveedor de cobertura si se aprueba, armar la matriz con la lista de flujos críticos del comando, y mutar los módulos que solo cubren las e2e.</p>',
+        },
+      ],
+    },
+    {
+      code: 'SEC-01',
+      title:
+        'Un valor interpolado en una descripción se lee como enlace markdown y aparece como enlace dentro del formulario',
+      sev: 'mejora',
+      cat: 'seguridad',
+      st: 'probado',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/src/client/component/formatted-description.tsx:56</code>: <code>interpolateIfNeeded</code> resuelve <code>{value}</code> y el contexto, y después <code>formatMarkdown</code> (<code>packages/luna-react/src/lib/string.tsx:3</code>) busca <code>[texto](url)</code> en el resultado.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>El orden hace que un valor sea markdown. Con la descripción <code>You entered: {value}</code>, escribir <code>[Verify your account](https://attacker.example/login)</code> pinta un <code>&lt;a href="https://attacker.example/login" target="_blank"&gt;</code> dentro del formulario. Lo mismo pasa con un <code>value</code> del host, un valor que escribe un evento o uno que llena un agente. La documentación dice que el título y la descripción toman enlaces markdown (<code>docs/structure/sections.md</code>), pero no que un valor también.</p>',
+        },
+        {
+          label: 'Riesgo',
+          html: '<p>No es XSS: React 19 cambia un <code>javascript:</code> por una URL que lanza un error (comprobado con un valor del host). Sí es inyección de enlaces: quien controla un valor que se muestra en una descripción (un host que reenvía datos de terceros, una respuesta remota, un agente) puede poner un enlace con el aspecto del formulario, que se abre en otra pestaña.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/e2e/description-value-link.spec.ts :: is shown as text, not as a link</code>, en Chromium, Firefox y WebKit.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> SEC-01. <b>Crear primero:</b> la prueba de arriba. <b>Antes:</b> el valor escrito aparece como enlace en los tres navegadores. <b>Después:</b> se muestra como texto y los enlaces que escribió el autor siguen funcionando: leer el markdown de la plantilla antes de interpolar, o tratar lo que llega de un placeholder como texto. Documentarlo en <code>docs/interpolation/overview.md</code>. <b>Mejora esperada:</b> un valor no puede cambiar lo que el formulario enlaza.</p>',
+        },
+      ],
+    },
+    {
+      code: 'BUG-01',
+      title:
+        'Un valor entra sin codificar en la URL de un origen remoto: R&D se envía como dept=R',
+      sev: 'mejora',
+      cat: 'errores',
+      st: 'probado',
+      sevNote: 'también de seguridad',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/handle/source-event.ts:22</code>: <code>interpolate(source.url, selected, options)</code>.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Un evento <code>source</code> arma la URL de otro campo con el valor de la opción elegida tal cual. Medido con <code>interpolate</code>: <code>/api/cities?country={value}</code> con <code>pe&amp;admin=1</code> da <code>?country=pe&amp;admin=1</code>, con <code>a b/c?d#e</code> manda un fragmento que el navegador no envía, y <code>/api/countries/{value}/cities</code> con <code>../../admin</code> cambia la ruta. Una plantilla que empieza con <code>{value}</code> y un valor <code>//attacker.example</code> cambia el host, y sin <code>remotePatterns</code> cualquier host está permitido.</p>',
+        },
+        {
+          label: 'Riesgo',
+          html: '<p>Lo elegido suele salir de opciones escritas o de una respuesta remota, así que lo más probable es un pedido equivocado con datos legítimos (un departamento <code>R&amp;D</code>, una ciudad con espacio). Con una respuesta remota comprometida, el valor puede agregar parámetros, salir de la ruta o, al inicio de la plantilla, ir a otro host.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url &gt; should send a value with url syntax in it as one value</code>. Compara lo que lee el servidor (<code>searchParams</code>), no la codificación, porque las pruebas existentes esperan comas sin codificar (<code>amount=1,234,567</code>).</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 2.</b> BUG-01. <b>Crear primero:</b> la prueba de arriba, más un caso de ruta (<code>../</code>). <b>Antes:</b> <code>dept=R</code> y un parámetro <code>D</code> de más. <b>Después:</b> un valor en la consulta o en un segmento de la ruta se codifica como componente, y una plantilla que es solo <code>{value}</code> (un endpoint elegido de una lista) se decide aparte y se documenta en <code>docs/fields/data-source.md</code>. <b>Mejora esperada:</b> un valor no cambia la forma del pedido.</p>',
+        },
+      ],
+    },
+    {
+      code: 'S-01',
+      title:
+        'knip y prettier:check fallan en main y CI no corre ninguno de los dos; knip además informa casi todo mal',
+      sev: 'mejora',
+      cat: 'código muerto',
+      st: 'medido',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>.github/workflows/build-and-test.yml</code> (el job <code>lint</code> corre <code>pnpm run lint</code> y <code>pnpm run typescript</code>, nada más), <code>knip.ts</code>, y <code>packages/luna-react/tsconfig.json</code>, que resuelve <code>@luna-form/core</code> a <code>../luna-core/dist/types/index.d.ts</code>.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html:
+            '<p><code>AGENTS.md</code> pide que pasen todos los checks, pero en <code>main</code> fallan dos, sin que nadie se entere:</p><ul>' +
+            '<li><code>pnpm prettier:check</code> marca <code>tests/e2e/date-submission-default.spec.ts</code>, así desde <code>165caa2</code> (3/10).</li>' +
+            '<li><code>pnpm knip</code> responde distinto según el estado del árbol: 5 avisos si no existe <code>packages/luna-core/dist</code> y 30 después de <code>pnpm build</code>, porque <code>luna-react</code> resuelve <code>@luna-form/core</code> a los <code>.d.ts</code> generados y <code>knip</code> deja de ver qué usa de las fuentes de <code>luna-core</code>.</li></ul>' +
+            '<p>De los 29 exports y tipos que informa con el build hecho, 27 son falsos: se les quitó el <code>export</code> de a uno, reconstruyendo <code>luna-core</code> y <code>luna-react</code> cada vez, y los 27 rompen el build (<code>INPUTS</code>, <code>getLabelId</code>, <code>interpolateIfNeeded</code>, <code>listOptions</code>…). <code>Source</code> y <code>Operator</code>, que informa en los dos estados, son API pública que <code>luna-react</code> reexporta. Lo real está en S-02.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p>Medición: <code>pnpm knip</code> con y sin <code>packages/luna-core/dist</code>, la tabla de exports quitados de a uno (build, <code>tsc</code> de los tres paquetes y unitarias), y <code>pnpm prettier:check</code>.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 5.</b> S-01. <b>Crear primero:</b> <code>pnpm knip</code> en un árbol sin build y en uno con build, que hoy dan 5 y 30. <b>Antes:</b> dos checks rojos en <code>main</code> que CI no corre. <b>Después:</b> <code>knip</code> resuelve <code>@luna-form/core</code> a las fuentes (por ejemplo, con <code>paths</code> propios en su config) y da lo mismo en los dos estados; <code>date-submission-default.spec.ts</code> formateado; y los dos checks como pasos del job <code>lint</code>. <b>Mejora esperada:</b> un export muerto o un archivo sin formato se ve en el PR que lo trae.</p>',
+        },
+      ],
+    },
+    {
+      code: 'BUG-02',
+      title:
+        'resolveTarget mete el nombre de la lista en una regex sin escaparlo: tags[]/label apunta a otro campo y a[ lanza',
+      sev: 'mejora',
+      cat: 'errores',
+      st: 'probado',
+      sevNote: 'nombres con caracteres de regex',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/util/path.ts:8</code>: <code>new RegExp(`(^|.*\\.)(${parent}\\.\\d+\\.)`)</code>. Lo usan los eventos <code>state</code>, <code>value</code> y <code>source</code> en <code>use-input-core.ts:316</code>, <code>:484</code> y <code>:509</code>, y el esquema de las agent tools en <code>tool-schema.ts:761</code>.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Un destino de fila como <code>tags[]/label</code>, desde <code>tags[].0.flag</code>, resuelve a <code>label</code> del nivel de arriba en vez de <code>tags[].0.label</code>: el cambio cae en otro campo, o en ninguno. Lo mismo con <code>items(1)</code> o <code>a+</code>. Un nombre como <code>a[</code> es una regex inválida y <code>resolveTarget</code> lanza <code>SyntaxError</code>. <code>isTargetOf</code>, en el mismo archivo, compara segmentos como texto y no tiene el problema.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/unit/path.spec.ts :: should read a list name as written</code> y <code>:: should not throw on a list name that is no regex</code>.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 2.</b> BUG-02. <b>Crear primero:</b> las dos pruebas. <b>Antes:</b> <code>label</code> y <code>SyntaxError</code>. <b>Después:</b> <code>resolveTarget</code> busca el segmento por texto, como <code>isTargetOf</code>. <b>Mejora esperada:</b> un nombre de lista con corchetes, como los que usan muchos formularios HTML, funciona igual que cualquier otro.</p>',
+        },
+      ],
+    },
+    {
+      code: 'U-01',
+      title:
+        'El select del editor no le pasa aria-invalid ni aria-errormessage al botón que toma el foco, y ninguna e2e puede verificarlo',
+      sev: 'optim',
+      cat: 'a11y',
+      st: 'probado',
+      sevNote: 'banco de pruebas',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>apps/react-luna-editor/components/ui/wrapper/select.tsx:24</code>: <code>{...selectProps}</code> va a la raíz de Radix y <code>SelectTrigger</code> recibe solo <code>id</code>. Lo mismo en el combobox de zona horaria y en los chips (<code>wrapper/chips.tsx</code> toma solo los <code>aria-label*</code>).</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>La librería entrega <code>aria-invalid</code> y <code>aria-errormessage</code> a cada input (<code>buildAriaAttributes</code>), como dice <code>docs/fields/custom-inputs.md</code>. Después de un envío fallido con 12 tipos de campo requeridos, los tienen el texto, número, email, textarea, fecha, hora, radio, checkbox y switch, pero no el select, la zona horaria ni los chips. El editor es el banco de las e2e y el ejemplo que se copia, así que hoy ninguna prueba puede comprobar el estado de error de esos controles.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/e2e/select-aria-invalid.spec.ts :: says it is invalid and where its message is</code>, en los tres navegadores.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 5.</b> U-01. <b>Crear primero:</b> la prueba de arriba. <b>Antes:</b> el combobox sin los dos atributos. <b>Después:</b> los wrappers del editor pasan los atributos ARIA al elemento que toma el foco, y una prueba igual para la zona horaria y los chips. <b>Mejora esperada:</b> el estado de error de cada tipo de campo se puede probar.</p>',
+        },
+      ],
+    },
+    {
+      code: 'U-02',
+      title: 'Después de un envío fallido el foco se queda en Submit',
+      sev: 'optim',
+      cat: 'a11y',
+      st: 'medido',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p>El envío de <code>packages/luna-react/src/client/hook/use-form-action.ts</code>.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Con 12 campos requeridos vacíos, después del clic el foco sigue en el botón Submit. El aviso «There were validation errors submitting the form.» está en el <code>Alert</code> del editor, con <code>role="alert"</code>, así que se anuncia, pero quien usa teclado tiene que buscar el primer campo con error. La documentación no promete nada sobre el foco, así que es una decisión a tomar, no un incumplimiento.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p>Medición: <code>document.activeElement</code> después del envío, en Chromium, sobre <code>next start</code>.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 5.</b> U-02. <b>Crear primero:</b> decidir si el formulario mueve el foco al primer campo inválido, y escribirlo en <code>docs/forms/submit.md</code>. <b>Antes:</b> el foco en Submit. <b>Después:</b> lo que diga la documentación, con su prueba. <b>Mejora esperada:</b> menos pasos para corregir un envío con teclado.</p>',
+        },
+      ],
+    },
+    {
+      code: 'S-02',
+      title:
+        'Los tipos Apply y Submission se exportan sin que nadie los importe',
+      sev: 'optim',
+      cat: 'código muerto',
+      st: 'probado',
+      audit: 'audit-2026-11-19',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/src/client/hook/use-apply.ts:26</code> (<code>Apply</code>) y <code>packages/luna-react/src/client/lib/agent-host.ts:70</code> (<code>Submission</code>). <code>knip</code> informa además <code>@types/react-dom</code> como devDependency sin uso de <code>luna-react</code>, que no se verificó.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Sin el <code>export</code>, el build de los dos paquetes, <code>tsc</code> de <code>luna-core</code>, <code>luna-react</code> y el editor, y las 1257 unitarias pasan. Son los únicos 2 de los 29 que informa <code>knip</code> con los que pasa eso (ver S-01).</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p>Medición: quitar el <code>export</code> de a uno y correr build, <code>tsc</code> y unitarias.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 5.</b> S-02, junto con S-01. <b>Antes:</b> 2 exports sin uso. <b>Después:</b> sin <code>export</code>, y <code>@types/react-dom</code> quitado si <code>luna-react</code> compila sin él.</p>',
         },
       ],
     },
