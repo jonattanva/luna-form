@@ -305,7 +305,7 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
   })
 })
 
-// A success that does not keep the values starts the form over: what the
+// A success starts the form over: what the
 // definition gives it, or what the host still holds through `value`. Clearing
 // the values alone left a list with the rows it had, emptied, and a field the
 // host held blank.
