@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795122566851,
+  "lastUpdate": 1795122602413,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "725eba1c0c4dd788f6dfd4a1a9203b8a5955c7e0",
-          "message": "Merge pull request #100 from jonattanva/fix/slot-key-identity\n\nfix(slot): a slot is keyed by what it is, not by where it sits",
-          "timestamp": "2026-09-20T01:02:06-05:00",
-          "tree_id": "a1994a73e0b0fb8f247d93c58ad07f6b33615a82",
-          "url": "https://github.com/jonattanva/luna-form/commit/725eba1c0c4dd788f6dfd4a1a9203b8a5955c7e0"
-        },
-        "date": 1789884203339,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 220,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 161,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "77ae8ca09aaef5dba1a320775bd22e9b538cdc8e",
           "message": "Merge pull request #101 from jonattanva/perf/atoms-per-component\n\nperf: the four changes that merged into each other instead of into main",
           "timestamp": "2026-09-20T20:07:48-05:00",
@@ -8816,6 +8782,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 40.8,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "19d92769d6ac55bff00fbc16b0adc7ef75e180e7",
+          "message": "Merge pull request #193 from jonattanva/claude/row-scoped-rules\n\nfix(react): read a list row's requiredWhen, rules and custom in its own row",
+          "timestamp": "2026-11-19T16:08:50-05:00",
+          "tree_id": "42ea8d6f29624080227d05a6671ff5b96ccc992d",
+          "url": "https://github.com/jonattanva/luna-form/commit/19d92769d6ac55bff00fbc16b0adc7ef75e180e7"
+        },
+        "date": 1795122602313,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 37.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 13.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 39.8,
             "unit": "ms"
           }
         ]
