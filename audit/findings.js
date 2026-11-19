@@ -523,6 +523,7 @@ window.AUDIT = {
       sev: 'optim',
       cat: 'a11y',
       st: 'probado',
+      stLabel: 'Corregido en el PR de la rama claude/youthful-carson-896dd3',
       sevNote: 'banco de pruebas',
       audit: 'audit-2026-11-19',
       sections: [
@@ -541,6 +542,11 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 5.</b> U-01. <b>Crear primero:</b> la prueba de arriba. <b>Antes:</b> el combobox sin los dos atributos. <b>Después:</b> los wrappers del editor pasan los atributos ARIA al elemento que toma el foco, y una prueba igual para la zona horaria y los chips. <b>Mejora esperada:</b> el estado de error de cada tipo de campo se puede probar.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html: '<p>Un solo commit en la rama <code>claude/youthful-carson-896dd3</code>, desde <code>main</code> (<code>876f23e</code>). Una función del editor, <code>splitAria</code> en <code>apps/react-luna-editor/lib/utils.ts</code>, separa los atributos <code>aria-*</code> que entrega el formulario del resto de las props, y cada wrapper los pone en el elemento que toma el foco: el botón del select, el input del combobox de zona horaria y el grupo de los chips. El nombre sigue saliendo del label (<code>aria-labelledby</code>) o de <code>advanced.aria</code>, y las demás props siguen yendo a la raíz. La librería no cambia. <b>Antes:</b> con el mensaje de error visible, ninguno de los tres controles tenía <code>aria-invalid</code> ni <code>aria-errormessage</code>; la prueba del select pasaba solo como fallo esperado, y las de zona horaria y chips fallaban sin la marca. <b>Después:</b> los tres los tienen, y <code>tests/e2e/select-aria-invalid.spec.ts</code> los comprueba sin <code>.fail</code>. Pasan <code>pnpm build</code>, <code>lint</code>, <code>typescript</code> y las unitarias, 273 e2e de estos controles en Chromium, Firefox y WebKit, y las 36 de <code>agent-tools.spec.ts</code> en Chromium. <code>knip</code> y <code>prettier:check</code> ya fallaban en <code>main</code> por archivos que este cambio no toca.</p>',
         },
       ],
     },

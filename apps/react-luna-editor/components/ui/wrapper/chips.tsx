@@ -1,6 +1,6 @@
 'use client'
 
-import { cn, toggleSelection } from '@/lib/utils'
+import { cn, splitAria, toggleSelection } from '@/lib/utils'
 
 type Option = {
   label: string
@@ -8,8 +8,6 @@ type Option = {
 }
 
 export function Chips({
-  'aria-label': ariaLabel,
-  'aria-labelledby': labelledBy,
   disabled,
   id,
   name,
@@ -17,12 +15,8 @@ export function Chips({
   options = [],
   value = [],
   multiple = true,
-}: {
-  // A row of buttons has no one element a `<label for>` can name, so the
-  // group takes the label the form points it at, or the name `advanced.aria`
-  // gives it instead.
-  'aria-label'?: string
-  'aria-labelledby'?: string
+  ...props
+}: React.AriaAttributes & {
   // A disabled field is neither changed nor sent: every button is disabled,
   // and so is every hidden input, which the browser then leaves out.
   disabled?: boolean
@@ -37,6 +31,11 @@ export function Chips({
   value?: string[]
   multiple?: boolean
 }) {
+  // A row of buttons has no one element a `<label for>` can name, so the
+  // group takes the label the form points it at, or the name `advanced.aria`
+  // gives it instead, and says when the value is rejected.
+  const [aria] = splitAria(props)
+
   function toggleDay(dayValue: string) {
     onChange?.({
       target: { value: toggleSelection(value, dayValue, multiple) },
@@ -44,13 +43,7 @@ export function Chips({
   }
 
   return (
-    <div
-      aria-label={ariaLabel}
-      aria-labelledby={labelledBy}
-      className="flex w-full flex-wrap gap-2"
-      id={id}
-      role="group"
-    >
+    <div {...aria} className="flex w-full flex-wrap gap-2" id={id} role="group">
       {name &&
         value.map((v) => (
           <input

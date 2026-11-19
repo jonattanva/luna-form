@@ -12,7 +12,7 @@ import {
   ComboboxCollection,
   ComboboxSeparator,
 } from '@/components/ui/combobox'
-import { reportValue } from '@/lib/utils'
+import { reportValue, splitAria } from '@/lib/utils'
 
 type OptionItem = { value: string; label: string }
 type OptionGroup = { label: string; items: OptionItem[] }
@@ -37,8 +37,8 @@ export function ComboboxWithGroup({
   options = [],
   placeholder = 'Select an option',
   value,
-  ...selectProps
-}: {
+  ...props
+}: React.AriaAttributes & {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   options?: OptionGroup[]
   placeholder?: string
@@ -57,6 +57,9 @@ export function ComboboxWithGroup({
     return null
   }
 
+  // The name and the error state the form gives go to the input that takes
+  // focus, not to the root.
+  const [aria, selectProps] = splitAria(props)
   const report = reportValue(onChange)
 
   function handleValueChange(item: OptionItem | null) {
@@ -73,7 +76,7 @@ export function ComboboxWithGroup({
       itemToStringValue={toValue}
       {...selectProps}
     >
-      <ComboboxInput placeholder={placeholder} />
+      <ComboboxInput placeholder={placeholder} {...aria} />
       <ComboboxContent>
         <ComboboxEmpty>No options found.</ComboboxEmpty>
         <ComboboxList>
