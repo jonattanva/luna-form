@@ -489,6 +489,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'errores',
       st: 'probado',
+      stLabel: 'En el PR #178',
       sevNote: 'nombres con caracteres de regex',
       audit: 'audit-2026-11-19',
       sections: [
@@ -507,6 +508,11 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 2.</b> BUG-02. <b>Crear primero:</b> las dos pruebas. <b>Antes:</b> <code>label</code> y <code>SyntaxError</code>. <b>Después:</b> <code>resolveTarget</code> busca el segmento por texto, como <code>isTargetOf</code>. <b>Mejora esperada:</b> un nombre de lista con corchetes, como los que usan muchos formularios HTML, funciona igual que cualquier otro.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html: '<p>Commit <code>fdb6758</code> en la rama <code>claude/bug-02-resolve-target</code>, desde <code>main</code>, en el <a href="https://github.com/jonattanva/luna-form/pull/178">PR #178</a>. <code>resolveTarget</code> compara segmentos como texto y conserva qué fila elige: la primera si el nombre empieza con la lista, la última en el camino si no. <b>Antes:</b> <code>label</code> para <code>tags[]/label</code>, <code>orderXlines.2.qty</code> para <code>order.lines/qty</code> y <code>SyntaxError</code> para <code>a[</code>. <b>Después:</b> <code>tags[].0.label</code>, <code>qty</code> y <code>a[.0.b</code>. <code>tests/unit/path.spec.ts</code> fija también el comportamiento que no cambia. Pasan build, lint, tipos, 1278 unitarias y las e2e de eventos relativos a una fila en los tres navegadores (87 corridas), según la sesión que lo hizo.</p>',
         },
       ],
     },
@@ -543,7 +549,8 @@ window.AUDIT = {
       title: 'Después de un envío fallido el foco se queda en Submit',
       sev: 'optim',
       cat: 'a11y',
-      st: 'medido',
+      st: 'probado',
+      stLabel: 'En el PR #180',
       audit: 'audit-2026-11-19',
       sections: [
         {
@@ -562,6 +569,11 @@ window.AUDIT = {
           label: 'Plan de corrección',
           html: '<p><b>Fase 5.</b> U-02. <b>Crear primero:</b> decidir si el formulario mueve el foco al primer campo inválido, y escribirlo en <code>docs/forms/submit.md</code>. <b>Antes:</b> el foco en Submit. <b>Después:</b> lo que diga la documentación, con su prueba. <b>Mejora esperada:</b> menos pasos para corregir un envío con teclado.</p>',
         },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html: '<p>Commit <code>2e0fc61</code> en la rama <code>claude/brave-boyd-aee2b6</code>, desde <code>main</code>, en el <a href="https://github.com/jonattanva/luna-form/pull/180">PR #180</a>. Cuando la validación frena un envío, el foco pasa al campo del primer error en el orden de la página, como hace el navegador con su propia validación. El campo se encuentra por el <code>id</code> que nombra su label y, si no, por el <code>aria-errormessage</code>; un control que no toma el foco (un grupo de botones) se lo da al primero de adentro; un campo en una sección o fila colapsada recibe el foco cuando se abre lo que lo contiene. Si el foco estaba fuera del formulario, no se mueve, y un error que devuelve la acción no mueve nada. <b>Antes:</b> el foco en Submit. <b>Después:</b> el foco en el primer campo con error. Documentado en <code>docs/forms/submit.md</code>, con la prueba <code>tests/e2e/failed-submit-focus.spec.ts</code>. Según la sesión que lo hizo, pasan todos los checks y las 135 e2e relacionadas en Chromium, Firefox y WebKit.</p>',
+        },
       ],
     },
     {
@@ -570,7 +582,8 @@ window.AUDIT = {
         'Los tipos Apply y Submission se exportan sin que nadie los importe',
       sev: 'optim',
       cat: 'código muerto',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #177',
       audit: 'audit-2026-11-19',
       sections: [
         {
@@ -588,6 +601,11 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 5.</b> S-02, junto con S-01. <b>Antes:</b> 2 exports sin uso. <b>Después:</b> sin <code>export</code>, y <code>@types/react-dom</code> quitado si <code>luna-react</code> compila sin él.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html: '<p>Commit <code>a3d5139</code> en la rama <code>claude/s-02-unused-exports</code>, desde <code>main</code> en <code>1df3fd4</code>, integrado en el <a href="https://github.com/jonattanva/luna-form/pull/177">PR #177</a> (<code>3496fc9</code>). <code>Apply</code> y <code>Submission</code> dejan de exportarse, y <code>@types/react-dom</code> sale de <code>luna-react</code> (el editor conserva el suyo). <b>Antes:</b> <code>knip</code> los informaba con y sin build. <b>Después:</b> no los informa en ninguno de los dos estados. El JavaScript construido es idéntico byte a byte (10 archivos, mismo md5 antes y después); cambian solo los <code>.d.ts</code>. Pasan build, <code>pnpm lint</code>, <code>pnpm typescript</code> y las 1268 unitarias, con una instalación limpia: una primera prueba falló al construir el editor (<code>tslib</code> sin resolver) porque <code>pnpm remove</code> dejó los enlaces a medias, y con <code>node_modules</code> nuevo pasa. Sin e2e: no cambia nada de lo que corre en el navegador.</p>',
         },
       ],
     },
