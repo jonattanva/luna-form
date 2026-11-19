@@ -66,7 +66,7 @@ export type Submitted = Readonly<{
  * how it went. `wait` answers with the outcome of the submission about to
  * start. See `useSubmission`.
  */
-export type Submission = Readonly<{
+type Submission = Readonly<{
   formRef: RefObject<HTMLFormElement | null>
   getStatus: () => Submitted
   wait: () => Promise<Submitted>
