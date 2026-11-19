@@ -409,6 +409,88 @@ test.describe('Event form', { tag: ['@e2e'] }, () => {
     await expect(blaze).toBeVisible()
   })
 
+  // The editor's config lets a source call only the hosts these tests use: a
+  // definition written to send what the person types elsewhere sends nothing,
+  // however it spells that host.
+  test('should not call a host the config does not let through', async ({
+    page,
+  }) => {
+    // The spellings the guard reads in tests/unit/url.spec.ts; here, one
+    // plain and one the browser resolves against the page.
+    const blocked = [
+      'https://collector.test/a/{value}',
+      '/\\collector.test/b/{value}',
+    ]
+    const called: string[] = []
+    await page.route(
+      (url) => url.hostname === 'collector.test',
+      async (route) => {
+        called.push(route.request().url())
+        await route.fulfill({ json: [] })
+      }
+    )
+    // Any answer will do: the typed value is no fixture of `routePokeapi`,
+    // and what matters is that the request goes out.
+    await page.route(
+      (url) => url.hostname === 'pokeapi.co',
+      (route) => route.fulfill({ json: [] })
+    )
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                event: {
+                  change: [
+                    // A host the config lets through, called in the same
+                    // change: once it is, the others would have been too.
+                    {
+                      action: 'source',
+                      source: {
+                        url: 'https://pokeapi.co/api/v2/pokemon/{value}',
+                      },
+                      target: 'allowed',
+                    },
+                    ...blocked.map((url, index) => ({
+                      action: 'source',
+                      source: { url },
+                      target: `echo${index}`,
+                    })),
+                  ],
+                },
+                label: 'Secret',
+                name: 'secret',
+                type: 'input/text',
+              },
+              { label: 'Allowed', name: 'allowed', type: 'select' },
+              ...blocked.map((_, index) => ({
+                label: `Echo ${index}`,
+                name: `echo${index}`,
+                type: 'select',
+              })),
+            ],
+          },
+        ],
+      })
+    )
+
+    await page.goto('')
+    const allowed = page.waitForRequest(
+      (request) => new URL(request.url()).hostname === 'pokeapi.co'
+    )
+    const input = page.locator('input[name="secret"]')
+    await input.fill('hunter2')
+    await input.blur()
+
+    // Both sources are set in one change, but each field asks on its own: the
+    // quiet network after the allowed one is what leaves no request pending.
+    await allowed
+    await page.waitForLoadState('networkidle')
+    expect(called).toEqual([])
+  })
+
   test('should set new value on event trigger', async ({ page }) => {
     await inject(
       page,

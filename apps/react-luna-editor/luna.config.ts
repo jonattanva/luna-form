@@ -22,6 +22,16 @@ import {
 
 export default defineConfig({
   alert: AlertForm,
+  // The hosts a source may call with an absolute URL; a relative one is this
+  // page's and always called. The form in the editor can be written by an
+  // agent, and a source's URL or body can carry what the person types to the
+  // host it names: only the ones the tests use are let through.
+  fetcher: {
+    remotePatterns: [
+      { hostname: 'jsonplaceholder.typicode.com', protocol: 'https' },
+      { hostname: 'pokeapi.co', protocol: 'https' },
+    ],
+  },
   inputs: [
     defineCheckbox(Checkbox),
     defineChips(Chips),

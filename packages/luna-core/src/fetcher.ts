@@ -1,6 +1,7 @@
 import { COMMON_URL } from './util/constant'
 import { isInterpolated } from './util/string'
 import { isString } from './util/is-type'
+import { resolveUrl } from './util/url'
 import { stringify } from './util/stringify'
 import type { DataSource } from './type'
 
@@ -42,11 +43,11 @@ export async function fetcher(dataSource: DataSource) {
 
 function buildRequest(dataSource: DataSource) {
   const current = dataSource.url?.trim()
-  if (!current || !isValid(current)) {
+  const url = current && isValid(current) ? resolveUrl(current) : null
+  if (!url) {
     throw new Error(`Invalid URL: ${dataSource.url}`)
   }
 
-  const url = new URL(current, COMMON_URL)
   const method = buildMethod(dataSource)
 
   if (dataSource.body && isGetMethod(method)) {

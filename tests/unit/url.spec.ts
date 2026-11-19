@@ -1,27 +1,18 @@
 import { describe, expect, test } from 'vitest'
-import {
-  isExternalUrl,
-  matchRemotePattern,
-  mergeUrl,
-} from '@/packages/luna-core/src/util/url'
+import { matchRemotePattern, mergeUrl } from '@/packages/luna-core/src/util/url'
 
 describe('URL Helper', () => {
-  test('should return true for absolute http URLs', () => {
-    expect(isExternalUrl('http://example.com')).toBe(true)
+  // An empty list lets through only what the page calls itself.
+  test('should block an absolute or protocol-relative URL with no pattern', () => {
+    expect(matchRemotePattern('http://example.com', [])).toBe(false)
+    expect(matchRemotePattern('https://example.com', [])).toBe(false)
+    expect(matchRemotePattern('//example.com', [])).toBe(false)
   })
 
-  test('should return true for absolute https URLs', () => {
-    expect(isExternalUrl('https://example.com')).toBe(true)
-  })
-
-  test('should return true for protocol-relative URLs', () => {
-    expect(isExternalUrl('//example.com')).toBe(true)
-  })
-
-  test('should return false for relative URLs', () => {
-    expect(isExternalUrl('/api/data')).toBe(false)
-    expect(isExternalUrl('api/data')).toBe(false)
-    expect(isExternalUrl('./api/data')).toBe(false)
+  test('should let a relative URL through with no pattern', () => {
+    expect(matchRemotePattern('/api/data', [])).toBe(true)
+    expect(matchRemotePattern('api/data', [])).toBe(true)
+    expect(matchRemotePattern('./api/data', [])).toBe(true)
   })
 
   test('should return true if patterns is undefined', () => {
@@ -73,6 +64,23 @@ describe('URL Helper', () => {
     expect(matchRemotePattern('not-a-url', [{ hostname: 'example.com' }])).toBe(
       true
     )
+  })
+
+  // Each of these is fetched from evil.com, so each has to be checked as the
+  // external URL it is.
+  test('should read a URL the way the fetcher does', () => {
+    const patterns = [{ hostname: 'example.com' }]
+    for (const url of [
+      'HTTPS://evil.com/x',
+      ' https://evil.com/x',
+      '\thttps://evil.com/x',
+      '/\\evil.com/x',
+      '\\\\evil.com/x',
+      'https:evil.com/x',
+    ]) {
+      expect(matchRemotePattern(url, patterns), url).toBe(false)
+    }
+    expect(matchRemotePattern(' HTTPS://example.com/x', patterns)).toBe(true)
   })
 
   test('should return false for invalid external URLs', () => {

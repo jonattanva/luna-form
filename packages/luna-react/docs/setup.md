@@ -127,6 +127,13 @@ A pattern may constrain `protocol`, `hostname` and `port`; every part is
 optional and an omitted part matches anything. Relative URLs count as internal
 and are always allowed.
 
+Set it when the definition comes from somewhere you do not control, such as an
+AI agent that writes the form. A source's URL and body can interpolate what the
+person typed, `{value}` or any other field, and send it to the host the URL
+names; with a list here, only the hosts in it can be named. It covers sources
+alone: a link in a description, also interpolated, still goes wherever it
+points once clicked, so read what such a definition links to.
+
 ```ts
 fetcher: {
   remotePatterns: [{ protocol: 'https', hostname: 'api.example.com' }]
