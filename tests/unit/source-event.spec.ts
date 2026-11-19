@@ -183,3 +183,26 @@ describe('handleSourceEvent language', () => {
     expect(calls[0].source?.url).toBe('/api?n=1.234,5')
   })
 })
+
+describe('handleSourceEvent values in a url', () => {
+  // Audit BUG-01: a value lands in the url as written, so `R&D` sends `dept=R`
+  // and a stray `D` parameter. Drop .fails once fixed.
+  test.fails('should send a value with url syntax in it as one value', () => {
+    const calls: { name: string; source: DataSource | undefined }[] = []
+    const events: SourceEvent[] = [
+      {
+        action: 'source',
+        target: 'people',
+        source: { url: '/api/people?dept={value}' },
+      },
+    ]
+
+    handleSourceEvent({ value: 'R&D' }, events, (name, source) =>
+      calls.push({ name, source })
+    )
+
+    const url = new URL(calls[0].source?.url ?? '', 'http://localhost')
+    expect(url.searchParams.get('dept')).toBe('R&D')
+    expect([...url.searchParams.keys()]).toEqual(['dept'])
+  })
+})

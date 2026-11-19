@@ -64,7 +64,7 @@ these slots cover the scaffolding around them.
 | `react-luna-form`        | `Form` (client), `withDeclaredFields`, and the `Sections`, `Source` and `ZodSchema` types |
 | `react-luna-form/server` | `Form` (server) and `Fallback`, usable under the `react-server` condition                 |
 | `react-luna-form/config` | `defineConfig` and the `define*` registration helpers                                     |
-| `react-luna-form/schema` | `buildFormSchema`, `buildToolSchema` and `collectIssues`                                  |
+| `react-luna-form/schema` | `buildFormSchema`, `buildToolSchema`, `checkDefinition` and `collectIssues`               |
 
 The client bundle is published carrying a `'use client'` directive, so an App
 Router project imports `Form` straight from a Server Component and needs no
@@ -126,6 +126,13 @@ Which hosts a field's remote `source` may call — the source itself is document
 A pattern may constrain `protocol`, `hostname` and `port`; every part is
 optional and an omitted part matches anything. Relative URLs count as internal
 and are always allowed.
+
+Set it when the definition comes from somewhere you do not control, such as an
+AI agent that writes the form. A source's URL and body can interpolate what the
+person typed, `{value}` or any other field, and send it to the host the URL
+names; with a list here, only the hosts in it can be named. It covers sources
+alone: a link in a description, also interpolated, still goes wherever it
+points once clicked, so read what such a definition links to.
 
 ```ts
 fetcher: {
@@ -264,5 +271,6 @@ Use them to validate on the server against the same rules the form applies in
 the browser.
 
 `buildToolSchema(sections)` derives, from the same descriptors, the JSON Schema
-of a tool an AI agent fills the form with. See
+of a tool an AI agent fills the form with, and `checkDefinition(form, types)`
+says what would keep a form an agent wrote from rendering. See
 [agents/tools.md](agents/tools.md).

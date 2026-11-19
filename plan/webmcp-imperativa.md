@@ -755,15 +755,15 @@ const result = await callTool(call.name, call.input)
 La base son las consideraciones de seguridad de MCP, que valen para cualquier
 tool. Cómo las cumple luna:
 
-| Consideración         | En luna                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| Validar las entradas  | Las dos validaciones de 3.4, el bloqueo de campos y Zod, igual que lo que se escribe a mano            |
-| Controlar el acceso   | `advanced.agent: false`, `input/password` fuera siempre, `submit` opt-in y `allow`                     |
-| Limitar las llamadas  | Cola de a una, con 10 en espera como máximo (3.10)                                                     |
-| Sanear las salidas    | `untrustedContentHint` en los cuatro tools, el aviso en cada descripción (3.8) y textos sin interpolar |
-| Confirmar lo sensible | `consequentialHint` en el envío, y `allow` para pedir confirmación                                     |
-| Tiempos límite        | 15 s para el envío y 5 minutos para `allow`                                                            |
-| Registrar el uso      | `allow` ve cada llamada que escribe o envía; `source` y un registro de llamadas en la fase 2           |
+| Consideración         | En luna                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| Validar las entradas  | Las dos validaciones de 3.4, el bloqueo de campos y Zod, igual que lo que se escribe a mano             |
+| Controlar el acceso   | `advanced.agent: false`, `input/password` fuera siempre, `submit` opt-in y `allow`                      |
+| Limitar las llamadas  | Cola de a una, con 10 en espera como máximo (3.10)                                                      |
+| Sanear las salidas    | `untrustedContentHint` en los cuatro tools, el aviso en cada descripción (3.8) y textos sin interpolar  |
+| Confirmar lo sensible | `consequentialHint` en el envío, y `allow` para pedir confirmación                                      |
+| Tiempos límite        | 15 s para el envío y 5 minutos para `allow`                                                             |
+| Registrar el uso      | `allow` ve cada llamada que escribe o envía, y `onCall` cada llamada respondida, también las rechazadas |
 
 Además:
 
@@ -1188,8 +1188,21 @@ Resultados:
     pide. `<name>_describe` tampoco: el formulario de 200 campos queda en 12.4 k
     caracteres de esquema, bajo el aviso de 24 kB. Queda para cuando una página
     real pase ese umbral.
-- [ ] En el editor, tools de autoría (`set_definition`, `get_definition`) para
+- [x] En el editor, tools de autoría (`set_definition`, `get_definition`) para
       armar formularios desde lenguaje natural.
+  - Hecho el 2026-11-18. El editor (`/`) registra en WebMCP `get_definition`,
+    `set_definition` y `get_reference`, que lee una página de `docs/` del
+    paquete instalado, empezando por el índice. Su vista previa ofrece
+    `preview_fill` y `preview_read`, sin submit, para probar lo que el agente
+    armó.
+  - `set_definition` no aplica un formulario con problemas: responde
+    `problems` con qué y dónde. El chequeo es liviano y vive en la librería,
+    `checkDefinition` en `react-luna-form/schema`: secciones y `fields` como
+    arreglos, `name` y `type` registrado en la config, `$ref` a
+    `#/definition/` que resuelve y destinos de eventos que existen, leídos
+    con `resolveTarget` desde el campo que los manda. Dos campos con un mismo
+    nombre no son un problema: guardan un valor. No revisa el resto de las
+    claves ni la validación.
 - [x] Margen del bundle: decidir si se suben los presupuestos o se recorta el
       camino principal antes de sumar código (379.3 de 380 kB; 30.8 de 31 kB
       gzip).
@@ -1241,8 +1254,34 @@ Resultados:
 
 ### Fase 3: endurecimiento
 
-- [ ] Revisión de seguridad contra los riesgos de la spec (inyección, intención
+- [x] Revisión de seguridad contra los riesgos de la spec (inyección, intención
       mal representada, sobre-parametrización).
+  - Hecha el 2026-11-19 contra la sección 6 de la especificación. Ya estaban
+    cubiertos: `untrustedContentHint` en los cuatro tools y el aviso en cada
+    descripción (inyección en la salida), `consequentialHint` en el envío
+    (intención mal representada), nada expuesto a otros orígenes (sin
+    `exposedTo`), nombres de hasta 56 caracteres (el límite es 128), campos
+    excluidos que responden `unknown`, la cola y los tiempos límite. La
+    carrera de la especificación (issue #92, argumentos viejos contra un
+    esquema nuevo) no afecta: `fill` revisa cada nombre contra los campos de
+    ese momento.
+  - Corregido: una lista con `advanced.fixed` no deja a una persona agregar ni
+    quitar filas, pero `fill` sí podía. Es el riesgo de "UI y tool con distinta
+    validación". Ahora se salta como `rows_fixed` si trae otro número de filas
+    o `null`, y `buildToolSchema` devuelve `fixed` con esas listas.
+  - Corregido: la descripción de `fill` decía "Pass every value you know",
+    que invita a aportar datos personales que la persona no dio
+    (sobre-parametrización). Ahora pide lo que la persona dio para el
+    formulario y nada más, y la documentación recomienda ofrecer solo los
+    campos que el formulario necesita.
+- [ ] Opcional: en el editor, limitar los `source` con `remotePatterns`. Con
+      `set_definition`, un agente inyectado podría apuntar un `source` con
+      `{value}` a cualquier host y llevarse lo que la persona escribe en la
+      vista previa.
+- [ ] Opcional: recortar el largo de las etiquetas y descripciones en el
+      esquema (por ejemplo, a 200 caracteres). Las que llegan por `#/context/`
+      entran sin límite; la especificación pide limitar el largo contra el
+      envenenamiento de metadatos. El aviso `UNTRUSTED` ya las cubre.
 - [ ] Seguir los cambios de la API y del origin trial, versión por versión de
       Chrome.
 - [ ] Opcional: deshacer lo que escribió el agente.

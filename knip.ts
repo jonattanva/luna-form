@@ -45,7 +45,9 @@ const config: KnipConfig = {
   },
   // Outside the pnpm workspace (`apps/*` and `packages/*`) on purpose: the
   // examples are there to be read and copied, not built with the monorepo.
-  ignore: ['examples/**'],
+  // `audit/` is the findings registry, a page opened in the browser and read
+  // by the audit commands: nothing imports it.
+  ignore: ['examples/**', 'audit/**'],
 }
 
 export default config

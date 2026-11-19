@@ -2332,8 +2332,9 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <tr>
                   <td>Registrar el uso</td>
                   <td>
-                    <code>allow</code> ve cada llamada que escribe o envía;
-                    <code>source</code> y un registro de llamadas en la fase 2
+                    <code>allow</code> ve cada llamada que escribe o envía, y
+                    <code>onCall</code> cada llamada respondida, también las
+                    rechazadas
                   </td>
                 </tr>
               </tbody>
@@ -3405,10 +3406,36 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   En el editor, tools de autoría (<code>set_definition</code>,
                   <code>get_definition</code>) para armar formularios desde
                   lenguaje natural.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18. El editor (<code>/</code>) registra
+                      en WebMCP <code>get_definition</code>,
+                      <code>set_definition</code> y <code>get_reference</code>,
+                      que lee una página de <code>docs/</code> del paquete
+                      instalado, empezando por el índice. Su vista previa ofrece
+                      <code>preview_fill</code> y <code>preview_read</code>, sin
+                      submit, para probar lo que el agente armó.
+                    </li>
+                    <li>
+                      <code>set_definition</code> no aplica un formulario con
+                      problemas: responde <code>problems</code> con qué y dónde.
+                      El chequeo es liviano y vive en la librería,
+                      <code>checkDefinition</code> en
+                      <code>react-luna-form/schema</code>: secciones y
+                      <code>fields</code> como arreglos, <code>name</code> y
+                      <code>type</code> registrado en la config,
+                      <code>$ref</code> a <code>#/definition/</code> que
+                      resuelve y destinos de eventos que existen, leídos con
+                      <code>resolveTarget</code> desde el campo que los manda.
+                      Dos campos con un mismo nombre no son un problema: guardan
+                      un valor. No revisa el resto de las claves ni la
+                      validación.
+                    </li>
+                  </ul>
                 </li>
                 <li class="done">
                   Margen del bundle: decidir si se suben los presupuestos o se
@@ -3520,10 +3547,58 @@ const result = await callTool(call.name, call.input)</code></pre>
                 <span class="chip">continua</span>
               </div>
               <ul class="tasks">
-                <li>
+                <li class="done">
                   Revisión de seguridad contra los riesgos de la spec
                   (inyección, intención mal representada,
                   sobre-parametrización).
+                  <ul>
+                    <li>
+                      Hecha el 2026-11-19 contra la sección 6 de la
+                      especificación. Ya estaban cubiertos:
+                      <code>untrustedContentHint</code> en los cuatro tools y el
+                      aviso en cada descripción (inyección en la salida),
+                      <code>consequentialHint</code> en el envío (intención mal
+                      representada), nada expuesto a otros orígenes (sin
+                      <code>exposedTo</code>), nombres de hasta 56 caracteres
+                      (el límite es 128), campos excluidos que responden
+                      <code>unknown</code>, la cola y los tiempos límite. La
+                      carrera de la especificación (issue #92, argumentos viejos
+                      contra un esquema nuevo) no afecta:
+                      <code>fill</code> revisa cada nombre contra los campos de
+                      ese momento.
+                    </li>
+                    <li>
+                      Corregido: una lista con <code>advanced.fixed</code> no
+                      deja a una persona agregar ni quitar filas, pero
+                      <code>fill</code> sí podía. Es el riesgo de "UI y tool con
+                      distinta validación". Ahora se salta como
+                      <code>rows_fixed</code> si trae otro número de filas o
+                      <code>null</code>, y <code>buildToolSchema</code> devuelve
+                      <code>fixed</code> con esas listas.
+                    </li>
+                    <li>
+                      Corregido: la descripción de <code>fill</code> decía "Pass
+                      every value you know", que invita a aportar datos
+                      personales que la persona no dio (sobre-parametrización).
+                      Ahora pide lo que la persona dio para el formulario y nada
+                      más, y la documentación recomienda ofrecer solo los campos
+                      que el formulario necesita.
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Opcional: en el editor, limitar los <code>source</code> con
+                  <code>remotePatterns</code>. Con <code>set_definition</code>,
+                  un agente inyectado podría apuntar un <code>source</code> con
+                  <code>{value}</code> a cualquier host y llevarse lo que la
+                  persona escribe en la vista previa.
+                </li>
+                <li>
+                  Opcional: recortar el largo de las etiquetas y descripciones
+                  en el esquema (por ejemplo, a 200 caracteres). Las que llegan
+                  por <code>#/context/</code> entran sin límite; la
+                  especificación pide limitar el largo contra el envenenamiento
+                  de metadatos. El aviso <code>UNTRUSTED</code> ya las cubre.
                 </li>
                 <li>
                   Seguir los cambios de la API y del origin trial, versión por

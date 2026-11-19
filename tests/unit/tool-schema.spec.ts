@@ -418,6 +418,31 @@ describe('buildToolSchema', () => {
   })
 
   describe('structure', () => {
+    test('should name the fixed lists, a nested one through the first row of its list', () => {
+      const result = build([
+        {
+          advanced: { fixed: true },
+          fields: [{ name: 'sku', type: 'input/text' }],
+          name: 'items',
+          type: 'list',
+        },
+        {
+          fields: [
+            {
+              advanced: { fixed: true },
+              fields: [{ name: 'check', type: 'input/text' }],
+              name: 'checks',
+              type: 'list',
+            },
+          ],
+          name: 'groups',
+          type: 'list',
+        },
+      ])
+
+      expect(result.fixed).toEqual(['items', 'groups.0.checks'])
+    })
+
     test('should merge a column into the level that holds it', () => {
       expect(
         namesOf([

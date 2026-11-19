@@ -81,6 +81,14 @@ A route to a row the list does not hold answers `unknown`. A row the same call
 adds can be written into by its route too. The schema cannot declare routes,
 so the list's description is where an agent learns them.
 
+A list with [`advanced.fixed`](../fields/list.md) keeps its rows from an agent
+as it does from a person: sent with another number of rows than it holds, or
+`null`, it is skipped as `rows_fixed` and keeps them. The same holds for one in
+a row of a list sent whole: a row the list holds keeps its rows, and a row the
+call adds holds the ones such a list opens with. Rows that a value written in
+the same call brings, through a `value` event, are waited for. Its rows are
+corrected by sending them all, in order, or one leaf by its route.
+
 ```json
 {
   "ok": false,
@@ -173,6 +181,7 @@ which such a submit does not check.
 | `changed`        | `skipped`  | A person changed it since the agent read it     |
 | `hidden`         | `skipped`  | The field is not on the form                    |
 | `locked`         | `skipped`  | The field is disabled or read-only              |
+| `rows_fixed`     | `skipped`  | A fixed list sent with another number of rows   |
 | `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
 | `refused`        | answer     | `allow` refused the call                        |
 | `busy`           | answer     | Ten calls are waiting already                   |
@@ -254,6 +263,21 @@ changes registers them again half a second later, and only when the tools
 come out different. A page that turns tools off with
 `Permissions-Policy: tools=()` gets none, and the form works as before.
 
+Tools of your own page, beside those of its forms, register the same way
+with `registerTools(tools, signal)`: each `Tool` is a `ToolDefinition` with
+its `execute(input)`, it stays until `signal` is aborted, and without WebMCP
+nothing happens. A page that turned tools off, or a signal aborted before the
+tools were in, is not reported; any other failure is warned about in the
+console.
+
+```tsx
+useEffect(() => {
+  const controller = new AbortController()
+  registerTools(tools, controller.signal)
+  return () => controller.abort()
+}, [])
+```
+
 ## Without WebMCP
 
 `listTools()` and `callTool()` give any agent the tools of every form with
@@ -285,6 +309,11 @@ says so in its description. Leave a field out of the tools with
 be the one to ask for it; a password is always left out, and a field left out
 answers `unknown`, as one that does not exist.
 
+Every field in the schema is one an agent may be tempted to fill with what it
+knows about the person. `<name>_fill` asks for the values the person gave for
+this form and nothing else, but the schema is the real limit: offer only the
+fields the form needs, and leave optional personal data out of the tools.
+
 ## Building the schema
 
 ```ts
@@ -307,6 +336,9 @@ const { lookup, required, schema } = buildToolSchema(sections, {
 - **`lookup`** lists the fields whose options are not in the schema: more than
   25, more than 1000 characters to list, fetched from a source, or installed by
   a `source` event. An agent needs another tool to search them.
+- **`fixed`** lists the lists with `advanced.fixed`, whose rows an agent can
+  correct but not add or remove, by their whole name: a nested one through the
+  first row of its list, `groups.0.checks`.
 
 `definition` and `context` resolve [`$ref` entries](../structure/definition.md)
 and have to be the ones the form renders with. `localization.translations` is
@@ -444,3 +476,38 @@ buildToolSchema(sections, {
   types: { rating: { maximum: 5, minimum: 1, type: 'integer' } },
 })
 ```
+
+## A form an agent writes
+
+An agent can also write the form itself: its JSON, from a request in natural
+language. Before rendering JSON that came from somewhere you do not control,
+`checkDefinition` says what would keep it from rendering as written, so the
+agent can be answered and correct it:
+
+```ts
+import { checkDefinition } from 'react-luna-form/schema'
+
+const problems = checkDefinition(form, Object.keys(config.inputs))
+// [{ path: 'sections[0].fields[1]', message: 'No input is registered for ...' }]
+```
+
+`form` is the parsed JSON, with `sections` and, if it has one, `definition`;
+the second argument is the field types your config registers. It resolves
+`$ref` first, then checks:
+
+- `sections` is an array of objects, and every `fields` an array;
+- every field has a `name`, and a `type` the config registers: a type nothing
+  implements [renders nothing](../index.md#two-things-that-surprise-people);
+- every `$ref` into `#/definition/` resolves;
+- every [change event](../events/change.md) targets a field the form has,
+  read the way the form reads it: a plain name from the top of the form,
+  `list/leaf` from the row the sender sits in, and a position such as
+  `groups.0.checks` in any row.
+
+A `$ref` into `#/context/` is left to the host. Where it stands for a field,
+its name cannot be known, so the targets of events go unchecked. Two fields
+under one name are not a problem: they hold one value.
+
+An empty array is a form with none of these problems. It does not check the
+other keys of a field, its validation or its conditions: those render, and do
+what they say or fail where they are.

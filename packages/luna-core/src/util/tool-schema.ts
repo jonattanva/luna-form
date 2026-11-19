@@ -81,6 +81,9 @@ export type ToolSchemaOptions = Readonly<{
 }>
 
 export type ToolSchemaResult = Readonly<{
+  // The lists that keep the rows they have, by their whole name, through the
+  // first row of a list they are in: a person can neither add nor remove one.
+  fixed: readonly string[]
   // The fields whose options are not in the schema -- too many to list, or
   // only known at run time -- by their whole name.
   lookup: readonly string[]
@@ -138,6 +141,7 @@ type Revealer = Readonly<{
 // What the walk carries from one level to the next.
 type Walk = Readonly<{
   dictionary?: Record<string, string>
+  fixed: Set<string>
   lang?: string
   lookup: Set<string>
   // By the slot they reach.
@@ -185,6 +189,7 @@ export function buildToolSchema(
   const sources = collectSourceEvents(fields)
   const walk: Walk = {
     dictionary: options.localization?.translations,
+    fixed: new Set(),
     lang: options.localization?.lang,
     lookup: new Set(),
     revealers: collectRevealers(fields),
@@ -196,6 +201,7 @@ export function buildToolSchema(
 
   const level = buildLevel(fields, walk, '')
   return {
+    fixed: [...walk.fixed],
     lookup: [...walk.lookup],
     required: [...level.required],
     sources: Object.fromEntries(sources),
@@ -337,6 +343,7 @@ function buildList(
 
   const notes: string[] = []
   if (list.advanced?.fixed) {
+    walk.fixed.add(name)
     notes.push('It keeps the rows it has: send each of them, in order.')
   }
   notes.push(describeRoutes(name))
