@@ -776,6 +776,55 @@ describe('buildToolSchema', () => {
       })
     })
 
+    // What the host puts in through `#/context/` can hold text people wrote,
+    // and a long text is room for instructions in what an agent reads first.
+    test('should cut a long label or description', () => {
+      const fields: Fields = JSON.parse(`[
+        {
+          "description": { "$ref": "#/context/help" },
+          "label": { "$ref": "#/context/label" },
+          "name": "note",
+          "type": "input/text"
+        }
+      ]`)
+      const note = propertyOf(fields, 'note', {
+        context: { help: 'a'.repeat(600), label: 'a'.repeat(250) },
+      })
+
+      expect(note?.title).toBe(`${'a'.repeat(197)}...`)
+      expect(note?.description).toBe(`${'a'.repeat(497)}...`)
+    })
+
+    // An agent names an option by its value or its label, so neither is cut:
+    // a field whose options take more than 1000 characters to list is looked
+    // up, through a tool whose answer is untrusted.
+    test('should look up the options of a field that take too long to list', () => {
+      const options = (count: number, length: number) =>
+        Array.from({ length: count }, (_, index) => ({
+          label: String(index).padStart(length, 'a'),
+          value: `v${index}`,
+        }))
+      const result = build([
+        { name: 'one', source: options(1, 1001), type: 'select' },
+        { name: 'many', source: options(20, 50), type: 'radio' },
+        { name: 'fits', source: options(10, 50), type: 'select' },
+      ])
+
+      expect(result.lookup).toEqual(['one', 'many'])
+      expect(result.schema.properties?.one?.enum).toBeUndefined()
+      expect(result.schema.properties?.many?.enum).toBeUndefined()
+      expect(result.schema.properties?.fits?.enum).toHaveLength(10)
+    })
+
+    // Counted in code points: one outside the basic plane is two UTF-16 units.
+    test('should keep a label as long as the limit, counted in code points', () => {
+      const label = `${'b'.repeat(199)}\u{10400}`
+      expect(label.length).toBe(201)
+      expect(
+        propertyOf([{ label, name: 'one', type: 'input/text' }], 'one')?.title
+      ).toBe(label)
+    })
+
     test('should leave out text that interpolates a value', () => {
       expect(
         propertyOf(
