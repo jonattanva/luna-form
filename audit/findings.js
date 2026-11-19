@@ -370,8 +370,8 @@ window.AUDIT = {
         'date-submission-dd-mm-yyyy y mm-dd-yyyy atrapan lo mismo que date-submission-default y no prueban el formato que nombran',
       sev: 'mejora',
       cat: 'pruebas',
-      st: 'probado',
-      stLabel: 'En el PR #188',
+      st: 'corregido',
+      stLabel: 'Corregido en #188',
       audit: 'test-audit-2026-11-19',
       sections: [
         {
@@ -780,8 +780,8 @@ window.AUDIT = {
         'El select del editor no le pasa aria-invalid ni aria-errormessage al botón que toma el foco, y ninguna e2e puede verificarlo',
       sev: 'optim',
       cat: 'a11y',
-      st: 'probado',
-      stLabel: 'Corregido en el PR de la rama claude/youthful-carson-896dd3',
+      st: 'corregido',
+      stLabel: 'Corregido en #190',
       sevNote: 'banco de pruebas',
       audit: 'audit-2026-11-19',
       sections: [
