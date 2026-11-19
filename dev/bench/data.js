@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795122602413,
+  "lastUpdate": 1795123539564,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "0c28fb5a66f203bee47d762c7b5558f01d7c66df",
-          "message": "Merge pull request #108 from jonattanva/docs/peer-and-entry-drift\n\ndocs: the library the pages describe is the one that ships",
-          "timestamp": "2026-09-21T08:18:43-05:00",
-          "tree_id": "9b3d0026cd9bbbd3a9fc430527101ec41cdbc508",
-          "url": "https://github.com/jonattanva/luna-form/commit/0c28fb5a66f203bee47d762c7b5558f01d7c66df"
-        },
-        "date": 1789996764715,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00021452945999999998,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0006707009000000005,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00005842690000000005,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0002365101199999998,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.00035808800000000017,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.0170735054,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.013771755739999999,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ab7071c2b892a99bea2a78b8589c480fc98282d5",
+          "message": "Merge pull request #192 from jonattanva/claude/gracious-greider-2f6afe\n\nPin the shared source request and fix the locked remote select",
+          "timestamp": "2026-11-19T16:24:54-05:00",
+          "tree_id": "25e8a281a72df90f9864d7be803297aaa0a2b00f",
+          "url": "https://github.com/jonattanva/luna-form/commit/ab7071c2b892a99bea2a78b8589c480fc98282d5"
+        },
+        "date": 1795123538666,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00027918813999999997,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0009612754200000001,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00016479063999999994,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00041239582000000043,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0005293786,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.021990854900000002,
             "unit": "ms"
           }
         ]
