@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795123884446,
+  "lastUpdate": 1795123921368,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "82fc0a64b01f070924564c2addb51def807a4bf6",
-          "message": "Merge pull request #102 from jonattanva/fix/server-entry-rsc\n\nfix(server): the server entry loads under the react-server condition again",
-          "timestamp": "2026-09-21T06:25:11-05:00",
-          "tree_id": "a5556984539768bbc2c6919f10f7188277f3d85d",
-          "url": "https://github.com/jonattanva/luna-form/commit/82fc0a64b01f070924564c2addb51def807a4bf6"
-        },
-        "date": 1789989981465,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 305,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 678,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "7f9614d9d47e1526ae1e31b139ecdb6be0617629",
           "message": "Merge pull request #103 from jonattanva/fix/use-client-banner\n\nfix(build): the client bundle says \"use client\" for the project importing it",
           "timestamp": "2026-09-21T06:25:30-05:00",
@@ -8826,6 +8792,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 50.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0404f3afb5793e8add193e3819b1155fbcfee654",
+          "message": "Merge pull request #194 from jonattanva/claude/check-row-rules\n\nfeat(core): tell a rule that names a field the form does not have",
+          "timestamp": "2026-11-19T16:30:36-05:00",
+          "tree_id": "816787fa759e60f1a85e5074c6bdf37864d8b84a",
+          "url": "https://github.com/jonattanva/luna-form/commit/0404f3afb5793e8add193e3819b1155fbcfee654"
+        },
+        "date": 1795123921138,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 60.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 44.9,
             "unit": "ms"
           }
         ]
