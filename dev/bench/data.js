@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795110907982,
+  "lastUpdate": 1795110937412,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "403a24d7f29daf2862e8e7d9459363248dbc24ee",
-          "message": "Merge pull request #82 from jonattanva/fix/failed-submit-host-value\n\nfix(submit): leave the form as it was after a failed submit",
-          "timestamp": "2026-09-14T22:22:21-05:00",
-          "tree_id": "a624569c1d798e6dbc5b236fafc59f1af8b3af2f",
-          "url": "https://github.com/jonattanva/luna-form/commit/403a24d7f29daf2862e8e7d9459363248dbc24ee"
-        },
-        "date": 1789442619053,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 307,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 601,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "76afb726a82f76bf24ffacbfeefc6ec220ad4a72",
           "message": "Merge pull request #83 from jonattanva/fix/list-remove-nonlast-typed\n\nfix(list): tell the host every name a removed row shifts",
           "timestamp": "2026-09-14T22:29:12-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 18.3,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1df3fd47b44456d9bec1da51f129e978bc47d667",
+          "message": "Merge pull request #174 from jonattanva/claude/editor-remote-patterns\n\nfix(core): read a source's URL for remotePatterns the way the fetcher calls it",
+          "timestamp": "2026-11-19T12:54:20-05:00",
+          "tree_id": "55bd70e726e2f628f20b21885d187beee8c5146a",
+          "url": "https://github.com/jonattanva/luna-form/commit/1df3fd47b44456d9bec1da51f129e978bc47d667"
+        },
+        "date": 1795110937308,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 57.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.4,
             "unit": "ms"
           }
         ]
