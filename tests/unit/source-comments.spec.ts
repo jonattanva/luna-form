@@ -24,6 +24,7 @@ const SOURCES = ['packages/luna-core/src', 'packages/luna-react/src']
  * has to be able to say so.
  */
 const NOT_A_MODULE = new Set([
+  'aria-errormessage',
   'data-agent-active',
   'data-agent-filled',
   'react-server',

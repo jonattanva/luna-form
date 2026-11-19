@@ -118,6 +118,29 @@ on screen too: the section or row holding it opens. The form does not take over
 `value` either. What you pass is still what the fields read, so you can change
 it, or put it back, while the errors are showing.
 
+## The focus moves to the first error
+
+When validation holds a submit back, the focus moves to the first field with an
+error, in the order of the page, as a browser does for its own validation. It
+happens on every failed submit, whether the user clicked the button or pressed
+Enter in a field. A field inside a collapsed section or list row gets the focus
+once what holds it has opened.
+
+The field is found the way its label finds it: by the `id` your component
+received, then by the element carrying the `aria-errormessage` the form handed
+it. If that element cannot take the focus itself, such as a `role="group"`
+holding a row of buttons, the first control inside it that can take the focus
+gets it. See
+[custom inputs](../fields/custom-inputs.md#forwarding-id-is-what-gives-the-field-its-name)
+for where the `id` belongs.
+
+The focus is left where it is when it was somewhere else on the page, outside
+the form, so a submit made by code, an
+[agent's](../agents/tools.md) included, does not take the user away from what
+they were doing. A failure your `action` returns marks no field, so the focus
+does not move to one; the alert is what tells the user. There is no option to
+turn this off.
+
 ## Turning submit validation off
 
 `defineConfig({ validation: { submit: false } })` skips the parse entirely. The
