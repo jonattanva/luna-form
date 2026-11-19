@@ -1183,14 +1183,27 @@ export function inRow<T extends AnyField | List>(slot: T, row: string): T {
   return {
     ...slot,
     name: `${row}.${slot.name}`,
-    ...(slot.validation && { validation: inRowRules(slot.validation, row) }),
+    ...(slot.validation && {
+      validation: mapRuleFields(slot.validation, (field) => `${row}.${field}`),
+    }),
   }
 }
 
-// Every `field` key, at any depth, prefixed with the row.
-function inRowRules<T>(value: T, row: string): T {
+/**
+ * Every field a field's `validation` names -- the `field` of a `requiredWhen`,
+ * of a rule's `when`, of a `custom` -- at any depth of it, replaced by what
+ * `name` gives for it. `path` is where the rule naming it sits, as
+ * `.requiredWhen[1]`.
+ */
+export function mapRuleFields<T>(
+  value: T,
+  name: (field: string, path: string) => string,
+  path = ''
+): T {
   if (Array.isArray(value)) {
-    return value.map((entry) => inRowRules(entry, row)) as T
+    return value.map((entry, index) =>
+      mapRuleFields(entry, name, `${path}[${index}]`)
+    ) as T
   }
   if (!isObject(value)) {
     return value
@@ -1198,7 +1211,9 @@ function inRowRules<T>(value: T, row: string): T {
   return Object.fromEntries(
     Object.entries(value).map(([key, entry]) => [
       key,
-      key === 'field' ? `${row}.${entry}` : inRowRules(entry, row),
+      key === 'field' && isString(entry)
+        ? name(entry, path)
+        : mapRuleFields(entry, name, `${path}.${key}`),
     ])
   ) as T
 }

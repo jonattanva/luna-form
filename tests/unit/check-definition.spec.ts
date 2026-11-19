@@ -221,6 +221,82 @@ describe('checkDefinition', () => {
     ])
   })
 
+  test('should tell a rule that compares a field the form does not have', () => {
+    const problems = checkDefinition(
+      form([
+        field('password'),
+        field('kind', 'input/text', {
+          validation: {
+            requiredWhen: [
+              { field: 'mode', value: 'x' },
+              { field: 'mode', value: 'y' },
+              // A row of a list, by its position, and the group dotted names
+              // make in a row: both are there.
+              { field: 'items.1.mode', operator: 'exists' },
+              { field: 'items.0.address', operator: 'exists' },
+            ],
+          },
+        }),
+        {
+          fields: [
+            field('mode'),
+            field('address.city'),
+            // Its own row: none of these is a problem.
+            field('value', 'input/text', {
+              validation: {
+                custom: [{ field: 'address.city' }, { field: 'address' }],
+                requiredWhen: [{ field: 'mode', value: 'strict' }],
+                rules: [
+                  {
+                    assert: 'required',
+                    message: 'x',
+                    when: { any: [{ field: 'mode', value: 'cap' }] },
+                  },
+                ],
+              },
+            }),
+            // The top of the form, which a row does not reach.
+            field('confirm', 'input/text', {
+              validation: { custom: { field: 'password' } },
+            }),
+          ],
+          name: 'items',
+          type: 'list',
+        },
+      ]),
+      TYPES
+    )
+    expect(problems).toEqual([
+      {
+        message: 'The rule names "mode", which no field is.',
+        path: 'sections[0].fields[1].validation.requiredWhen[0]',
+      },
+      {
+        message: 'The rule names "mode", which no field is.',
+        path: 'sections[0].fields[1].validation.requiredWhen[1]',
+      },
+      {
+        message:
+          'The rule names "password", which its row has no field called: a rule in a row reads the fields of its own row.',
+        path: 'sections[0].fields[2].fields[3].validation.custom',
+      },
+    ])
+  })
+
+  test('should not check the rules of a form with a field the host puts in', () => {
+    expect(
+      checkDefinition(
+        form([
+          { $ref: '#/context/field' },
+          field('kind', 'input/text', {
+            validation: { requiredWhen: { field: 'extra', value: 'x' } },
+          }),
+        ]),
+        TYPES
+      )
+    ).toEqual([])
+  })
+
   test('should read a target the way the form does, from where the field that sends it is', () => {
     const groups = {
       fields: [

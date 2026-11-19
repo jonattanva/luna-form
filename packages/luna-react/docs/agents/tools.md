@@ -509,12 +509,15 @@ the second argument is the field types your config registers. It resolves
 - every [change event](../events/change.md) targets a field the form has,
   read the way the form reads it: a plain name from the top of the form,
   `list/leaf` from the row the sender sits in, and a position such as
-  `groups.0.checks` in any row.
+  `groups.0.checks` in any row;
+- every field a `requiredWhen`, `rules` or `custom` compares one to is a field
+  the form has, and one of its own row for a rule in a
+  [list's row](../validation/overview.md#item-scope-inside-lists).
 
 A `$ref` into `#/context/` is left to the host. Where it stands for a field,
-its name cannot be known, so the targets of events go unchecked. Two fields
-under one name are not a problem: they hold one value.
+its name cannot be known, so the targets of events and the fields rules name go
+unchecked. Two fields under one name are not a problem: they hold one value.
 
 An empty array is a form with none of these problems. It does not check the
-other keys of a field, its validation or its conditions: those render, and do
-what they say or fail where they are.
+other keys of a field, or its conditions: those render, and do what they say
+or fail where they are.
