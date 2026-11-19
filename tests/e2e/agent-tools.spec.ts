@@ -1315,8 +1315,8 @@ test.describe(
     test('should register nothing for a form without agent', async ({
       page,
     }) => {
-      await inject(page, JSON.stringify(NAME_ONLY))
-      await page.goto('/')
+      await inject(page, JSON.stringify({ ...NAME_ONLY, agent: false }))
+      await page.goto('/reactive')
       await page.locator('input[name="name"]').waitFor()
       await page.evaluate(
         () => new Promise((resolve) => setTimeout(resolve, 800))

@@ -3,13 +3,13 @@
 import config from '@/luna.config'
 import { Button } from './button'
 import { Code } from './code'
-import { Form, type ValueChange } from 'react-luna-form'
+import { Form, type AgentOptions, type ValueChange } from 'react-luna-form'
 import { action } from '@/app/action'
 import { codeAtom } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { lazyComponent } from './wrapper/lazy'
 import { useAtomValue } from 'jotai'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 // The toasts, which this page alone raises, and only once a submit succeeds.
 // Mounted from the root layout, sonner was part of every page from the first
@@ -21,9 +21,19 @@ const Toaster = lazyComponent(() =>
   import('./sonner').then((mod) => mod.Toaster)
 )
 
+// The preview offered to an agent, for it to try a form it wrote with the
+// editor's own tools: filling and reading it, never sending it.
+const AGENT: AgentOptions = {
+  description:
+    'The form the luna editor previews. Filling it changes nothing outside this page.',
+  name: 'preview',
+}
+
 export function FormPreview() {
   const code = useAtomValue(codeAtom)
-  const form = convertCodeToForm(code)
+  // Parsed once per text: the form's tools compare what it is handed by
+  // identity, and a render that changes nothing else would build them again.
+  const form = useMemo(() => convertCodeToForm(code), [code])
   const [notified, setNotified] = useState(false)
 
   function handleSuccess(response: {
@@ -53,6 +63,7 @@ export function FormPreview() {
               {...form}
               config={config}
               action={action}
+              agent={AGENT}
               onSuccess={handleSuccess}
               onValueChange={handleValueChange}
             >

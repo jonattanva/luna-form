@@ -3405,10 +3405,36 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   En el editor, tools de autoría (<code>set_definition</code>,
                   <code>get_definition</code>) para armar formularios desde
                   lenguaje natural.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18. El editor (<code>/</code>) registra
+                      en WebMCP <code>get_definition</code>,
+                      <code>set_definition</code> y <code>get_reference</code>,
+                      que lee una página de <code>docs/</code> del paquete
+                      instalado, empezando por el índice. Su vista previa ofrece
+                      <code>preview_fill</code> y <code>preview_read</code>, sin
+                      submit, para probar lo que el agente armó.
+                    </li>
+                    <li>
+                      <code>set_definition</code> no aplica un formulario con
+                      problemas: responde <code>problems</code> con qué y dónde.
+                      El chequeo es liviano y vive en la librería,
+                      <code>checkDefinition</code> en
+                      <code>react-luna-form/schema</code>: secciones y
+                      <code>fields</code> como arreglos, <code>name</code> y
+                      <code>type</code> registrado en la config,
+                      <code>$ref</code> a <code>#/definition/</code> que
+                      resuelve y destinos de eventos que existen, leídos con
+                      <code>resolveTarget</code> desde el campo que los manda.
+                      Dos campos con un mismo nombre no son un problema: guardan
+                      un valor. No revisa el resto de las claves ni la
+                      validación.
+                    </li>
+                  </ul>
                 </li>
                 <li class="done">
                   Margen del bundle: decidir si se suben los presupuestos o se

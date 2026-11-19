@@ -1,3 +1,4 @@
+import { AuthoringTools } from '@/components/authoring-tools'
 import { CodeEditor } from '@/components/ui/code-editor'
 import { FormPreview } from '@/components/ui/form-preview'
 
@@ -18,6 +19,7 @@ export default function Page() {
           </div>
         </div>
       </main>
+      <AuthoringTools />
     </div>
   )
 }

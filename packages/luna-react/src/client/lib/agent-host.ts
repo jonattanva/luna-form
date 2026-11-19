@@ -20,7 +20,6 @@ import {
   isObject,
   isSelectTimezone,
   isString,
-  logger,
   prepare,
   translateBuiltIn,
   type Definition,
@@ -32,7 +31,7 @@ import {
   type Sections,
   type ToolSchema,
 } from '@luna-form/core'
-import { getModelContext, type ModelContext } from './model-context'
+import { registerTools } from './model-context'
 import type { RefObject } from 'react'
 import type { useStore } from 'jotai'
 import type {
@@ -160,36 +159,9 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
       })
       current = { key: built.key, registration, tools: built.tools }
 
-      const modelContext = getModelContext()
-      if (modelContext) {
-        registerTools(modelContext, built.tools, registration.signal)
-      }
+      registerTools(built.tools, registration.signal)
       return built.tools
     },
-  }
-}
-
-/**
- * Registers each tool until `signal` is aborted. A page that turned tools off
- * (`NotAllowedError`) and a form gone before its tools were in (`AbortError`)
- * are no fault of the form; anything else is reported, and the form goes on
- * without that tool.
- */
-function registerTools(
-  modelContext: ModelContext,
-  tools: readonly Tool[],
-  signal: AbortSignal
-) {
-  for (const tool of tools) {
-    // A browser on an older draft returns nothing or throws instead of
-    // rejecting, so both end up in the same `catch`.
-    Promise.resolve()
-      .then(() => modelContext.registerTool(tool, { signal }))
-      .catch((error: Error) => {
-        if (error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-          logger.warn(`The tool ${tool.name} was not registered.`, error)
-        }
-      })
   }
 }
 
