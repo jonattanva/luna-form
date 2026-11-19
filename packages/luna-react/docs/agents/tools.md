@@ -81,6 +81,14 @@ A route to a row the list does not hold answers `unknown`. A row the same call
 adds can be written into by its route too. The schema cannot declare routes,
 so the list's description is where an agent learns them.
 
+A list with [`advanced.fixed`](../fields/list.md) keeps its rows from an agent
+as it does from a person: sent with another number of rows than it holds, or
+`null`, it is skipped as `rows_fixed` and keeps them. The same holds for one in
+a row of a list sent whole: a row the list holds keeps its rows, and a row the
+call adds holds the ones such a list opens with. Rows that a value written in
+the same call brings, through a `value` event, are waited for. Its rows are
+corrected by sending them all, in order, or one leaf by its route.
+
 ```json
 {
   "ok": false,
@@ -173,6 +181,7 @@ which such a submit does not check.
 | `changed`        | `skipped`  | A person changed it since the agent read it     |
 | `hidden`         | `skipped`  | The field is not on the form                    |
 | `locked`         | `skipped`  | The field is disabled or read-only              |
+| `rows_fixed`     | `skipped`  | A fixed list sent with another number of rows   |
 | `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
 | `refused`        | answer     | `allow` refused the call                        |
 | `busy`           | answer     | Ten calls are waiting already                   |
@@ -285,6 +294,11 @@ says so in its description. Leave a field out of the tools with
 be the one to ask for it; a password is always left out, and a field left out
 answers `unknown`, as one that does not exist.
 
+Every field in the schema is one an agent may be tempted to fill with what it
+knows about the person. `<name>_fill` asks for the values the person gave for
+this form and nothing else, but the schema is the real limit: offer only the
+fields the form needs, and leave optional personal data out of the tools.
+
 ## Building the schema
 
 ```ts
@@ -307,6 +321,9 @@ const { lookup, required, schema } = buildToolSchema(sections, {
 - **`lookup`** lists the fields whose options are not in the schema: more than
   25, fetched from a source, or installed by a `source` event. An agent needs
   another tool to search them.
+- **`fixed`** lists the lists with `advanced.fixed`, whose rows an agent can
+  correct but not add or remove, by their whole name: a nested one through the
+  first row of its list, `groups.0.checks`.
 
 `definition` and `context` resolve [`$ref` entries](../structure/definition.md)
 and have to be the ones the form renders with. `localization.translations` is

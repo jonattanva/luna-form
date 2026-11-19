@@ -1103,6 +1103,183 @@ test.describe(
       })
       await expect(page.locator('input[name="name"]')).toHaveValue('Ada')
     })
+
+    // A person can neither add nor remove a row of a fixed list, and neither
+    // can an agent: not of one inside a row of another list sent whole.
+    test('should keep the rows of a fixed list nested in a list sent whole', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        sections: [
+          {
+            fields: [
+              {
+                fields: [
+                  { label: 'Title', name: 'title', type: 'input/text' },
+                  {
+                    advanced: { fixed: true, length: { min: 1 } },
+                    fields: [
+                      { label: 'Check', name: 'check', type: 'input/text' },
+                    ],
+                    name: 'checks',
+                    type: 'list',
+                  },
+                ],
+                name: 'groups',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+        value: {
+          groups: [{ checks: [{ check: 'x' }, { check: 'y' }], title: 'A' }],
+        },
+      })
+      const second = page.locator('input[name="groups.0.checks.1.check"]')
+      await expect(second).toHaveValue('y')
+
+      // One row less in a row the list holds, and one more in a row the call
+      // adds, which opens with one.
+      for (const groups of [
+        [{ checks: [{ check: 'z' }], title: 'B' }],
+        [
+          { checks: [{ check: 'x' }, { check: 'y' }], title: 'A' },
+          { checks: [{ check: 'p' }, { check: 'q' }], title: 'C' },
+        ],
+      ]) {
+        const answer = await call(page, 'preview_fill', { groups })
+        expect(answer.ok).toBe(false)
+        expect(answer.skipped).toEqual([
+          expect.objectContaining({ code: 'rows_fixed', name: 'groups' }),
+        ])
+      }
+      await expect(second).toHaveValue('y')
+      await expect(page.locator('input[name="groups.0.title"]')).toHaveValue(
+        'A'
+      )
+
+      // The rows it holds, corrected, and a new row with the one it opens
+      // with.
+      expect(
+        await call(page, 'preview_fill', {
+          groups: [
+            { checks: [{ check: 'x1' }, { check: 'y1' }], title: 'B' },
+            { checks: [{ check: 'p' }], title: 'C' },
+          ],
+        })
+      ).toMatchObject({ applied: ['groups'], ok: true })
+      await expect(second).toHaveValue('y1')
+      await expect(
+        page.locator('input[name="groups.1.checks.0.check"]')
+      ).toHaveValue('p')
+    })
+
+    // A row keeps its name when a person removes the one before it, so the
+    // rows a fixed list in it holds are found by position, not by that name.
+    test('should count the rows of a nested fixed list by position after a person removes a row', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        sections: [
+          {
+            fields: [
+              {
+                fields: [
+                  { label: 'Title', name: 'title', type: 'input/text' },
+                  {
+                    advanced: { fixed: true, length: { min: 1 } },
+                    fields: [
+                      { label: 'Check', name: 'check', type: 'input/text' },
+                    ],
+                    name: 'checks',
+                    type: 'list',
+                  },
+                ],
+                label: 'Groups',
+                name: 'groups',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+        value: {
+          groups: [
+            { checks: [{ check: 'a' }], title: 'A' },
+            { checks: [{ check: 'x' }, { check: 'y' }], title: 'B' },
+          ],
+        },
+      })
+      await page.getByRole('button', { name: 'Remove Groups item 1' }).click()
+      await expect(page.locator('input[value="A"]')).toHaveCount(0)
+      // What a person changed is not written over until the agent reads it.
+      await call(page, 'preview_read')
+
+      const one = await call(page, 'preview_fill', {
+        groups: [{ checks: [{ check: 'z' }], title: 'B' }],
+      })
+      expect(one.skipped).toEqual([
+        expect.objectContaining({ code: 'rows_fixed', name: 'groups' }),
+      ])
+
+      expect(
+        await call(page, 'preview_fill', {
+          groups: [{ checks: [{ check: 'x1' }, { check: 'y1' }], title: 'B' }],
+        })
+      ).toMatchObject({
+        ok: true,
+        values: {
+          groups: [{ checks: [{ check: 'x1' }, { check: 'y1' }], title: 'B' }],
+        },
+      })
+    })
+
+    // The rows a fixed list is corrected in come from somewhere else: here, a
+    // value the same call writes first.
+    test('should write a fixed list whose rows a value the same call writes brings', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        sections: [
+          {
+            fields: [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'value',
+                      value: {
+                        items: [{ sku: 'a' }, { sku: 'b' }, { sku: 'c' }],
+                      },
+                    },
+                  ],
+                },
+                label: 'Order',
+                name: 'order',
+                type: 'input/text',
+              },
+              {
+                advanced: { fixed: true, length: { min: 0 } },
+                fields: [{ label: 'SKU', name: 'sku', type: 'input/text' }],
+                name: 'items',
+                type: 'list',
+              },
+            ],
+          },
+        ],
+      })
+
+      expect(
+        await call(page, 'preview_fill', {
+          items: [{ sku: 'A' }, { sku: 'B' }, { sku: 'C' }],
+          order: 'o-1',
+        })
+      ).toMatchObject({ ok: true, skipped: [] })
+      for (const [index, sku] of ['A', 'B', 'C'].entries()) {
+        await expect(
+          page.locator(`input[name="items.${index}.sku"]`)
+        ).toHaveValue(sku)
+      }
+    })
   }
 )
 

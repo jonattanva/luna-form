@@ -211,6 +211,7 @@ type SkipCode =
   | 'invalid_option'
   | 'invalid_type'
   | 'locked'
+  | 'rows_fixed'
   | 'unknown'
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
@@ -238,8 +239,13 @@ type Checked =
 type Check = Readonly<{
   declared: boolean
   field?: Field
+  // How many rows a fixed list holds, which a person can neither add to nor
+  // remove: undefined for one in a row the call adds, which holds the rows it
+  // opens with. Counted only for a value that is rows.
+  fixed?: () => number | undefined
   lookup: boolean
-  of: (name: string) => Check
+  // A leaf of the list's rows, in the row at `index`.
+  of: (leaf: string, index: number) => Check
   options?: readonly Option[]
   optionsTool: string
   path: string
@@ -338,6 +344,7 @@ const FILL_OUTPUT: ToolSchema = {
               'invalid_option',
               'invalid_type',
               'locked',
+              'rows_fixed',
               'unknown',
             ],
             type: 'string',
@@ -473,6 +480,7 @@ export function createFormTools(
   const properties = built.schema.properties ?? {}
   const fields = Object.keys(properties)
   const lookup = new Set(built.lookup)
+  const fixed = new Set(built.fixed)
   const queue = form.queue ?? createQueue()
 
   // Every call goes through the queue, and finds out there whether the agent
@@ -582,12 +590,29 @@ export function createFormTools(
   }
 
   // `name` is the field in the form the value goes to, whose options are the
-  // ones it offers now; a row of a list sent whole has none yet.
-  const checkOf = (path: string, name?: string): Check => ({
+  // ones it offers now; a row of a list sent whole has none yet. `holds` reads
+  // what is there now, for the rows a fixed list keeps: a leaf of a row reads
+  // it from the rows of its list, by position.
+  const checkOf = (
+    path: string,
+    name: string | undefined,
+    holds: () => ToolJson | undefined
+  ): Check => ({
     declared: form.declared?.has(host.getField(path)?.type ?? '') === true,
     field: host.getField(path),
+    ...(fixed.has(path) && {
+      fixed: () => {
+        const held = holds()
+        return isToolList(held) ? held.length : undefined
+      },
+    }),
     lookup: lookup.has(path),
-    of: (leaf) => checkOf(leaf),
+    of: (leaf, index) =>
+      checkOf(`${path}.0.${leaf}`, undefined, () => {
+        const rows = holds()
+        const row = isToolList(rows) ? rows[index] : undefined
+        return isToolObject(row) ? row[leaf] : undefined
+      }),
     options: host.getOptions(path, name),
     optionsTool: names.options,
     path,
@@ -697,6 +722,10 @@ export function createFormTools(
       Readonly<{ schema: ToolSchema; target: string }>
     >()
 
+    // The fixed lists sent with another number of rows than they hold, told
+    // as such if their rows have not come by the last round.
+    const deferred = new Map<string, Skip>()
+
     // The values a person changed, left as they are, with what tells
     // what they hold.
     const kept = new Map<
@@ -769,11 +798,19 @@ export function createFormTools(
         const checked = checkValue(
           entry.schema,
           entry.value,
-          checkOf(entry.path, target)
+          checkOf(entry.path, target, () => host.read(target))
         )
         if (!checked.ok) {
-          pending.delete(name)
-          skipped.push({ code: checked.code, message: checked.message, name })
+          const skip = { code: checked.code, message: checked.message, name }
+          // The rows of a fixed list may be on their way from a value written
+          // in this call: it is checked again once the form settles, and
+          // skipped only if they never come.
+          if (checked.code === 'rows_fixed') {
+            deferred.set(name, skip)
+          } else {
+            pending.delete(name)
+            skipped.push(skip)
+          }
           continue
         }
 
@@ -808,6 +845,11 @@ export function createFormTools(
     }
 
     for (const [name, entry] of pending) {
+      const late = deferred.get(name)
+      if (late) {
+        skipped.push(late)
+        continue
+      }
       const { status, target } = placeOf(name, entry)
       skipped.push(
         target === undefined
@@ -895,6 +937,7 @@ export function createFormTools(
       skipped.every(
         ({ code }) =>
           code !== 'changed' &&
+          code !== 'rows_fixed' &&
           code !== 'unknown' &&
           !code.startsWith('invalid_')
       )
@@ -1141,7 +1184,8 @@ export function createFormTools(
       description: [
         agent.description,
         'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
-        "Pass every value you know in one call, keyed by field name, in the schema's formats; a field another value reveals can go in the same call. Fields left out keep their value.",
+        "Pass in one call the values the person gave for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
+        'Leave out what they did not give, such as personal data you know about them: fields left out keep their value.',
         `It returns the final value of each field that changed, what was skipped and why, and the errors: no need to call ${names.read} after.`,
         'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
         'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
@@ -1455,6 +1499,17 @@ function checkValue(
   value: ToolJson,
   check: Check
 ): Checked {
+  // A fixed list is counted before its rows are checked: `null` empties it.
+  if (check.fixed && (value === null || isToolList(value))) {
+    const keeps = check.fixed() ?? schema.minItems ?? 0
+    if ((value?.length ?? 0) !== keeps) {
+      return rejected(
+        'rows_fixed',
+        `It keeps the ${keeps} rows it has: send each of them, in order, or write one field of a row by its route.`
+      )
+    }
+  }
+
   // `null` empties the field, which its bounds do not speak to.
   const checked = checkShape(schema, value, check)
   return checked.ok && check.declared && value !== null
@@ -1775,11 +1830,7 @@ function checkRows(schema: ToolSchema, value: ToolJson, check: Check): Checked {
         return rejected('invalid_type', `${where} has no field "${leaf}".`)
       }
 
-      const checked = checkValue(
-        leafSchema,
-        inner,
-        check.of(`${check.path}.0.${leaf}`)
-      )
+      const checked = checkValue(leafSchema, inner, check.of(leaf, index))
       if (!checked.ok) {
         return { ...checked, message: `${where}, ${leaf}: ${checked.message}` }
       }

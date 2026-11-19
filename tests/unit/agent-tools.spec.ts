@@ -1201,6 +1201,48 @@ describe('createFormTools', () => {
         })
       })
 
+      test('should keep the rows of a fixed list, which a person can neither add to nor remove', async () => {
+        const form = createForm({
+          values: { items: [{ sku: 'A1' }, { sku: 'B2' }] },
+        })
+        const fields = FIELDS.map((slot) =>
+          isList(slot)
+            ? { ...slot, advanced: { ...slot.advanced, fixed: true } }
+            : slot
+        )
+        const tools = createFormTools(
+          AGENT,
+          buildToolSchema([{ fields }]),
+          form.host
+        )
+        const skipped = {
+          code: 'rows_fixed',
+          message:
+            'It keeps the 2 rows it has: send each of them, in order, or write one field of a row by its route.',
+          name: 'items',
+        }
+
+        for (const items of [[{ sku: 'A1' }], [], null]) {
+          const result = await call(tools, 'fill', { items })
+          expect(result.ok).toBe(false)
+          expect(result.skipped).toEqual([skipped])
+        }
+        expect(form.calls.rows).toEqual([])
+
+        // The rows it has, corrected, and one field of a row by its route.
+        const result = await call(tools, 'fill', {
+          items: [{ sku: 'A9' }, { sku: 'B2' }],
+          'items.1.qty': 3,
+        })
+        expect(result.ok).toBe(true)
+        expect(form.calls.rows).toEqual([
+          ['items', [{ sku: 'A9' }, { sku: 'B2' }]],
+        ])
+        expect(form.calls.apply.map(([name, value]) => [name, value])).toEqual([
+          ['items.1.qty', '3'],
+        ])
+      })
+
       test('should skip a list with a row it cannot take, saying which', async () => {
         const { calls, tools } = toolsOf()
         const result = await call(tools, 'fill', {
