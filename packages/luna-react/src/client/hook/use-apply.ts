@@ -23,7 +23,7 @@ export type ApplyOptions = Readonly<{
  * value afterwards; `false` when it did not take it: it is locked, it refuses
  * the value (a select left empty), or nothing named so is mounted.
  */
-export type Apply = (value: Value, options?: ApplyOptions) => boolean
+type Apply = (value: Value, options?: ApplyOptions) => boolean
 
 /**
  * A mounted field, as something outside it reaches it: written through its own
