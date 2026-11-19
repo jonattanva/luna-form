@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795127377585,
+  "lastUpdate": 1795127408116,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "da3f724f75e529e59ba403a80984ecac7a66d320",
-          "message": "Merge pull request #104 from jonattanva/fix/validation-merge\n\nfix(config): validation merges into the defaults instead of replacing them",
-          "timestamp": "2026-09-21T06:26:15-05:00",
-          "tree_id": "1e541609be1e52d1d393ab41d355a21c6a91d715",
-          "url": "https://github.com/jonattanva/luna-form/commit/da3f724f75e529e59ba403a80984ecac7a66d320"
-        },
-        "date": 1789990046481,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 304,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 635,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "98b03c564d5a7a805f1d906a0e807b6c2a1d75de",
           "message": "Merge pull request #107 from jonattanva/docs/stale-comments\n\ndocs(src): a comment points at something a reader can open",
           "timestamp": "2026-09-21T08:07:21-05:00",
@@ -8836,6 +8802,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 45.3,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74bd258b4b880c801c0bd855e0407a5637ca3c34",
+          "message": "Merge pull request #198 from jonattanva/claude/build-form-schema-lang\n\nfeat(core): validate on the server in the form's language",
+          "timestamp": "2026-11-19T17:28:57-05:00",
+          "tree_id": "8e0883f8348e57d35680d16e0b3c3b92eb0138a0",
+          "url": "https://github.com/jonattanva/luna-form/commit/74bd258b4b880c801c0bd855e0407a5637ca3c34"
+        },
+        "date": 1795127408070,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 46.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 50.1,
             "unit": "ms"
           }
         ]
