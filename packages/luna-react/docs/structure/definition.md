@@ -124,12 +124,12 @@ the same object, is not something the form can notice.
 ## Pass it everywhere the sections go
 
 `definition` and `context` are props of both the client and the server `Form`,
-and the third and fourth arguments of the headless builder:
+and options of the headless builder:
 
 ```ts
 import { buildFormSchema } from 'react-luna-form/schema'
 
-const schema = buildFormSchema(sections, translations, definition, context)
+const schema = buildFormSchema(sections, { context, definition })
 ```
 
 A schema built without them sees `$ref` objects where the form sees

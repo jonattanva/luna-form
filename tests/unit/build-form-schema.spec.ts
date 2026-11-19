@@ -3,7 +3,8 @@ import {
   collectIssues,
 } from '@/packages/luna-core/src/util/schema'
 import { describe, expect, test, vi } from 'vitest'
-import type { Sections } from '@/packages/luna-core/src/type'
+import type { Localization, Sections } from '@/packages/luna-core/src/type'
+import { resolveLocalization } from '@/packages/luna-core/src/util/translate'
 
 describe('buildFormSchema (headless)', () => {
   test('derives a required leaf field from the form definition', () => {
@@ -225,7 +226,7 @@ describe('buildFormSchema (headless)', () => {
     ]
 
     // No definition needed here, but a definition-carrying form must not throw.
-    const schema = buildFormSchema(sections, undefined, { options: [] })
+    const schema = buildFormSchema(sections, { definition: { options: [] } })
     expect(schema.safeParse({ permission: 'owner' }).success).toBe(true)
   })
 
@@ -374,7 +375,9 @@ describe('buildFormSchema (headless)', () => {
     ]
 
     function messagesFor(translations?: Record<string, string>) {
-      const schema = buildFormSchema(sections, translations)
+      const schema = buildFormSchema(sections, {
+        localization: { translations },
+      })
       const result = schema.safeParse({ items: [{ label: 'x' }] })
 
       expect(result.success).toBe(false)
@@ -434,12 +437,7 @@ describe('buildFormSchema with dates and context', () => {
       fields: { email: { name: 'email', type: 'input/email', required: true } },
     }
 
-    const result = buildFormSchema(
-      sections,
-      undefined,
-      undefined,
-      context
-    ).safeParse({})
+    const result = buildFormSchema(sections, { context }).safeParse({})
 
     expect(result.success).toBe(false)
     expect(collectIssues(result.error!).map((issue) => issue.path)).toEqual([
@@ -469,8 +467,10 @@ describe('buildFormSchema with dates and context', () => {
         ],
       },
     ] as unknown as Sections
-    const schema = buildFormSchema(sections, undefined, undefined, {
-      booked: ['2026-12-24'],
+    const schema = buildFormSchema(sections, {
+      context: {
+        booked: ['2026-12-24'],
+      },
     })
 
     expect(
@@ -500,8 +500,10 @@ describe('buildFormSchema with dates and context', () => {
       ] as unknown as Sections
 
     test('holds back a day the list holds', () => {
-      const schema = buildFormSchema(form(), undefined, undefined, {
-        booked: ['2026-12-24', '2026-12-25'],
+      const schema = buildFormSchema(form(), {
+        context: {
+          booked: ['2026-12-24', '2026-12-25'],
+        },
       })
 
       expect(
@@ -518,7 +520,7 @@ describe('buildFormSchema with dates and context', () => {
     test('checks the list as the host holds it at each request', () => {
       const booked = ['2026-12-24']
       const request = () =>
-        buildFormSchema(form(), undefined, undefined, { booked }).safeParse({
+        buildFormSchema(form(), { context: { booked } }).safeParse({
           night: '2026-12-26',
         }).success
 
@@ -568,8 +570,10 @@ describe('buildFormSchema with dates and context', () => {
       ] as unknown as Sections
 
     test('holds back a year outside the ones the context gives', () => {
-      const schema = buildFormSchema(form(), undefined, undefined, {
-        years: { current: 2026, last: 2031 },
+      const schema = buildFormSchema(form(), {
+        context: {
+          years: { current: 2026, last: 2031 },
+        },
       })
 
       expect(schema.parse({ expiry: '2028' })).toEqual({ expiry: 2028 })
@@ -601,8 +605,10 @@ describe('buildFormSchema with dates and context', () => {
       warn.mock.calls.map((call) => call.slice(1).join(' '))
 
     test('holds back a day before it', () => {
-      const schema = buildFormSchema(form(), undefined, undefined, {
-        today: '2026-10-03',
+      const schema = buildFormSchema(form(), {
+        context: {
+          today: '2026-10-03',
+        },
       })
 
       expect(schema.parse({ check_in: '2026-10-03' })).toEqual({
@@ -628,8 +634,10 @@ describe('buildFormSchema with dates and context', () => {
     test('holds back every day, and is named, when the context holds nothing there', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       try {
-        const schema = buildFormSchema(form(), undefined, undefined, {
-          today: undefined,
+        const schema = buildFormSchema(form(), {
+          context: {
+            today: undefined,
+          },
         })
 
         expect(schema.safeParse({ check_in: '2099-01-01' }).success).toBe(false)
@@ -711,8 +719,10 @@ describe('buildFormSchema with a length bound it cannot read', () => {
       ] as unknown as Sections
 
     test('checks the bound the context gives', () => {
-      const schema = buildFormSchema(form(), undefined, undefined, {
-        limits: { note: 3 },
+      const schema = buildFormSchema(form(), {
+        context: {
+          limits: { note: 3 },
+        },
       })
 
       expect(schema.parse({ note: 'abc' })).toEqual({ note: 'abc' })
@@ -893,9 +903,7 @@ describe('buildFormSchema with options written in the definition', () => {
           ],
         },
       ],
-      undefined,
-      undefined,
-      { fruits }
+      { context: { fruits } }
     )
 
     expect(schema.safeParse({ fruit: 'apple' }).success).toBe(true)
@@ -974,7 +982,11 @@ describe('buildFormSchema with options written in the definition', () => {
           ],
         },
       ],
-      { fruit_missing: 'Pick a fruit from the list' }
+      {
+        localization: {
+          translations: { fruit_missing: 'Pick a fruit from the list' },
+        },
+      }
     )
 
     expect(issues(schema, { fruit: 'cherry' })).toEqual([
@@ -1071,7 +1083,7 @@ describe('buildFormSchema with options written in the definition', () => {
     ]
 
     expect(
-      issues(buildFormSchema(sections, undefined, { fruits }), {
+      issues(buildFormSchema(sections, { definition: { fruits } }), {
         fruit: 'cherry',
       })
     ).toEqual([{ path: 'fruit', message: NOT_OFFERED }])
@@ -1224,5 +1236,64 @@ describe('buildFormSchema with options written in the definition', () => {
         field: [{ type: ['group'], inner: [{ type: ['group'] }] }],
       })
     ).toEqual([{ path: 'field.0.inner.0.type', message: NOT_OFFERED }])
+  })
+})
+
+describe('buildFormSchema in the language of the form', () => {
+  const sections: Sections = [
+    {
+      fields: [
+        {
+          advanced: { length: { min: '2026-01-01' } },
+          name: 'day',
+          required: true,
+          type: 'input/date',
+        },
+        {
+          fields: [
+            {
+              name: 'name',
+              required: true,
+              type: 'input/text',
+              validation: { required: 'name_required' },
+            },
+          ],
+          name: 'people',
+          type: 'list',
+        },
+      ],
+    },
+  ]
+
+  const messagesOf = (value: object, localization?: Localization) => {
+    const result = buildFormSchema(sections, { localization }).safeParse(value)
+    return result.success ? [] : collectIssues(result.error)
+  }
+
+  test('should say what the form says, the month of a bound included', () => {
+    const localization = resolveLocalization('es', {
+      es: { name_required: 'Dinos tu nombre' },
+    })
+    expect(
+      messagesOf({ day: '2025-05-05', people: [{ name: '' }] }, localization)
+    ).toEqual([
+      {
+        message: 'La fecha debe ser igual o posterior a enero 1, 2026',
+        path: 'day',
+      },
+      { message: 'Dinos tu nombre', path: 'people.0.name' },
+    ])
+    expect(messagesOf({ people: [] }, localization)).toEqual([
+      { message: 'Este campo es obligatorio', path: 'day' },
+    ])
+  })
+
+  test('should keep to English with no language', () => {
+    expect(messagesOf({ day: '2025-05-05', people: [] })).toEqual([
+      {
+        message: 'Date must be on or after January 1, 2026',
+        path: 'day',
+      },
+    ])
   })
 })
