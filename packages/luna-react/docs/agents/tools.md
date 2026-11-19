@@ -37,6 +37,16 @@ field's transforms, change events and validation all run.
   is given; a promise is waited for, as while a person confirms. `signal` is
   aborted when the agent cancels, when the form unmounts, or after five
   minutes, and the call is refused then. An `allow` that throws refuses it.
+- **`onCall(call)`** is told of every call once it was answered, to audit
+  what an agent asked and what it got, a call that wrote nothing included:
+  `{ tool, input, output, duration }`, with `tool` one of `fill`, `read`,
+  `options` or `submit` and `duration` in milliseconds, waiting in line
+  included. A refused, cancelled or busy call is told too, and one that threw
+  comes with `error` instead of `output`. `input` is what the agent sent, a
+  name that is no field included, such as `password`, though nothing is
+  written to it. It runs after the answer, on copies: a slow log keeps no
+  agent waiting, and what it changes reaches no one. What it throws, or a
+  promise it returns that fails, is logged and changes nothing.
 
 The tools are built from the schema [below](#building-the-schema). Nothing is
 built, and the code that builds them is not loaded, until WebMCP is on the

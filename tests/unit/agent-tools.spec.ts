@@ -1355,6 +1355,76 @@ describe('createFormTools', () => {
     })
   })
 
+  describe('onCall', () => {
+    test('should be told of every call once it was answered, a busy one included', async () => {
+      const onCall = vi.fn()
+      let release = () => {}
+      const allow = () =>
+        new Promise<boolean>((resolve) => {
+          release = () => resolve(true)
+        })
+      const { tools } = toolsOf({}, { ...AGENT, allow, onCall })
+
+      const filled = call(tools, 'fill', { email: 'ada@example.com' })
+      const waiting = Array.from({ length: 9 }, () => call(tools, 'read'))
+      const busy = await call(tools, 'read')
+      release()
+      const answer = await filled
+      await Promise.all(waiting)
+
+      expect(onCall).toHaveBeenCalledTimes(11)
+      expect(onCall.mock.calls[0][0]).toEqual({
+        duration: expect.any(Number),
+        input: {},
+        output: busy,
+        tool: 'read',
+      })
+      expect(onCall.mock.calls[1][0]).toEqual({
+        duration: expect.any(Number),
+        input: { email: 'ada@example.com' },
+        output: answer,
+        tool: 'fill',
+      })
+    })
+
+    test('should be told of a call that threw, with what it threw', async () => {
+      const onCall = vi.fn()
+      const form = createForm()
+      const tools = createFormTools(
+        { ...AGENT, onCall },
+        buildToolSchema([{ fields: FIELDS }]),
+        {
+          ...form.host,
+          apply: () => {
+            throw new Error('The field broke')
+          },
+        }
+      )
+
+      await expect(
+        toolNamed(tools, 'fill').execute({ email: 'ada@example.com' })
+      ).rejects.toThrow('The field broke')
+      await vi.waitFor(() =>
+        expect(onCall).toHaveBeenCalledWith(
+          expect.objectContaining({ error: 'The field broke', tool: 'fill' })
+        )
+      )
+    })
+
+    test('should answer the call whatever onCall throws', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const onCall = () => {
+        throw new Error('The log is down')
+      }
+      const { tools } = toolsOf({}, { ...AGENT, onCall })
+
+      expect(await call(tools, 'read', { fields: ['email'] })).toMatchObject({
+        values: {},
+      })
+      expect(error).toHaveBeenCalled()
+    })
+  })
+
   describe('queue', () => {
     test('should answer the calls of a form one at a time, in the order they came', async () => {
       const order: string[] = []

@@ -47,11 +47,29 @@ export type AgentCall = Readonly<{
   values: ToolResult
 }>
 
+/** A call an agent made, as `onCall` is told of it once it was answered. */
+export type AgentCallRecord = Readonly<{
+  /** Milliseconds from the call to its answer, waiting in line included. */
+  duration: number
+  /** What the call threw, when it threw instead of answering. */
+  error?: string
+  /**
+   * What the agent sent, as it sent it: a name that is no field, such as
+   * `password`, included, though nothing is written to it.
+   */
+  input: ToolJson
+  /** What it was answered. */
+  output?: ToolResult
+  tool: 'fill' | 'options' | 'read' | 'submit'
+}>
+
 /**
  * How a form is offered to an agent. `allow` answers `true` to go on, or
  * `false` or the reason to refuse, which the agent is given; its `signal` is
  * aborted when the agent cancels the call, when the tools are taken down, or
- * after five minutes.
+ * after five minutes. `onCall` is told of every call once it was answered,
+ * a refused, cancelled or busy one included; what it throws is logged and
+ * changes nothing.
  */
 export type AgentOptions = Readonly<{
   allow?: (
@@ -60,6 +78,7 @@ export type AgentOptions = Readonly<{
   ) => boolean | string | Promise<boolean | string>
   description: string
   name: string
+  onCall?: (call: AgentCallRecord) => void
   submit?: boolean
 }>
 
@@ -458,14 +477,37 @@ export function createFormTools(
 
   // Every call goes through the queue, and finds out there whether the agent
   // gave up while it waited.
+  //
+  // What each call was answered is told to `onCall`, once it was.
   const queued =
     (
+      tool: AgentCallRecord['tool'],
       run: (input: ToolJson, signal: AbortSignal) => Promise<ToolResult>
     ): Tool['execute'] =>
-    (input, options) => {
+    async (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
-      return (
-        queue(async () => {
+      const started = performance.now()
+
+      // After the answer, so a slow log keeps no agent waiting, and with
+      // copies, so what it does to them changes no answer.
+      const tell = (answered: Pick<AgentCallRecord, 'error' | 'output'>) => {
+        const onCall = agent.onCall
+        if (!onCall) {
+          return
+        }
+        const record: AgentCallRecord = {
+          ...structuredClone(answered),
+          duration: Math.round(performance.now() - started),
+          input: structuredClone(input),
+          tool,
+        }
+        void Promise.resolve()
+          .then(() => onCall(record))
+          .catch((error: Error) => logger.error('onCall failed.', error))
+      }
+
+      try {
+        const output = await (queue(async () => {
           if (callSignal.aborted) {
             return CANCELLED
           }
@@ -475,8 +517,13 @@ export function createFormTools(
           } finally {
             host.using(false)
           }
-        }) ?? Promise.resolve(BUSY)
-      )
+        }) ?? BUSY)
+        tell({ output })
+        return output
+      } catch (error) {
+        tell({ error: error instanceof Error ? error.message : String(error) })
+        throw error
+      }
     }
 
   const ask = async (
@@ -1107,7 +1154,7 @@ export function createFormTools(
           : []),
         UNTRUSTED,
       ].join(' '),
-      execute: queued(fill),
+      execute: queued('fill', fill),
       inputSchema: built.schema,
       name: names.fill,
       outputSchema: FILL_OUTPUT,
@@ -1122,7 +1169,7 @@ export function createFormTools(
         `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
         UNTRUSTED,
       ].join(' '),
-      execute: queued(read),
+      execute: queued('read', read),
       inputSchema: READ_INPUT,
       name: names.read,
       outputSchema: READ_OUTPUT,
@@ -1140,7 +1187,7 @@ export function createFormTools(
         `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
         UNTRUSTED,
       ].join(' '),
-      execute: queued(options),
+      execute: queued('options', options),
       inputSchema: {
         additionalProperties: false,
         properties: {
@@ -1168,7 +1215,7 @@ export function createFormTools(
         `It returns what the action answered or the errors that stopped it. An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
         UNTRUSTED,
       ].join(' '),
-      execute: queued(submit),
+      execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
       name: names.submit,
       outputSchema: SUBMIT_OUTPUT,

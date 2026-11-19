@@ -669,6 +669,39 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should tell the host of every call, with what it was answered', async ({
+    page,
+  }) => {
+    await open(page)
+    await page.evaluate(() => {
+      const log: Answer[] = []
+      Object.assign(window, { __log: log })
+      window.__lunaOnCall = (call) => {
+        log.push(call)
+      }
+    })
+
+    const answer = await call(page, 'preview_fill', { name: 'Ada' })
+    await call(page, 'preview_read', { fields: ['name'] })
+
+    const log = await page.evaluate(
+      () => (window as Window & { __log?: Answer[] }).__log
+    )
+    expect(log).toEqual([
+      {
+        duration: expect.any(Number),
+        input: { name: 'Ada' },
+        output: answer,
+        tool: 'fill',
+      },
+      expect.objectContaining({
+        input: { fields: ['name'] },
+        output: expect.objectContaining({ values: { name: 'Ada' } }),
+        tool: 'read',
+      }),
+    ])
+  })
+
   test('should wait for the options a field fetches, and say which field brings them', async ({
     page,
   }) => {

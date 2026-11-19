@@ -3302,10 +3302,20 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Un registro opcional de llamadas, para auditar lo que el
                   agente pidió y lo que se le respondió, también lo que no
                   escribió nada.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-18: <code>agent.onCall</code> recibe cada
+                      llamada al responderse, con <code>tool</code>,
+                      <code>input</code>, <code>output</code> y
+                      <code>duration</code>, también las rechazadas, canceladas
+                      o <code>busy</code>. Lo que lanza se registra y no cambia
+                      la respuesta.
+                    </li>
+                  </ul>
                 </li>
                 <li class="done">
                   Persona y agente a la vez: el código <code>changed</code> (<a
