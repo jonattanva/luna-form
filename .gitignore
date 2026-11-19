@@ -17,6 +17,8 @@ packages/**/dist
 /playwright-report/
 /playwright/.auth/
 /playwright/.cache/
+/.playwright-mcp/
+/.playwright-cli/
 
 # logs
 *.log
