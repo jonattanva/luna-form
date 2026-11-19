@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795123921368,
+  "lastUpdate": 1795124585904,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "dab47866b31fd34f5843a83ba7b7d44326b8bd2c",
-          "message": "docs(interpolation): env.locale reaches labels and descriptions, not event payloads\n\n\"Locale resolution\" in format-filters.md said `config.env.locale` applies\nwherever a filter is written, a `value` payload included. It does not:\n`handleValueEvent` and `handleSourceEvent` interpolate without a locale, so\nfilters in a `value` payload and in `source.url` / `source.body` format with\nthe runtime default even when `env.locale` is set.\n\nThe page now says so, with the example run in /reactive (es-ES env, en-US\nbrowser): 1234567 through `| number` reads 1.234.567 in a description and\n1,234,567 in a value target, a source url and a POST body.\n\nTwo unit tests pin the behaviour the page describes, compared against\n`Intl.NumberFormat()` so they hold under any host locale.",
-          "timestamp": "2026-10-04T21:29:56-05:00",
-          "tree_id": "f563886eac52831e39d4a81d56992411752a58b1",
-          "url": "https://github.com/jonattanva/luna-form/commit/dab47866b31fd34f5843a83ba7b7d44326b8bd2c"
-        },
-        "date": 1791167440715,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0003088045,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0010403275399999995,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00007423103999999967,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.00036734827999999995,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0005534617800000001,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.0263759563,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.01632228146,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fea86d4f841c4df6ecb3356d3f81f97280a040a1",
+          "message": "Merge pull request #195 from jonattanva/claude/plan-security-done\n\ndocs(plan): mark the two security optionals done",
+          "timestamp": "2026-11-19T16:42:16-05:00",
+          "tree_id": "203ed65de6186ff2167371e4a2ada92fbf811842",
+          "url": "https://github.com/jonattanva/luna-form/commit/fea86d4f841c4df6ecb3356d3f81f97280a040a1"
+        },
+        "date": 1795124584383,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0004025135999999998,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0009383826000000005,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00014463678000000072,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0003395352200000002,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0004994453599999997,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.01785049286,
             "unit": "ms"
           }
         ]
