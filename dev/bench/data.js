@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795116105705,
+  "lastUpdate": 1795116158911,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "b4689422a65edde22b5f5b7bdebf954d5e120f8b",
-          "message": "Merge pull request #90 from jonattanva/fix/definition-swap\n\nfix(schema): a field registers again when its definition changes, in a registry keyed by name",
-          "timestamp": "2026-09-17T10:18:57-05:00",
-          "tree_id": "cb1fabfad595543faf1ee04dfcaa6b5dde2606c9",
-          "url": "https://github.com/jonattanva/luna-form/commit/b4689422a65edde22b5f5b7bdebf954d5e120f8b"
-        },
-        "date": 1789658426219,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 305,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 648,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "de56beef76cf395c5f5b7ae775da76e172656722",
           "message": "Merge pull request #91 from jonattanva/docs/pattern-authored\n\ndocs(validation): a pattern runs as written, so its author keeps it from backtracking",
           "timestamp": "2026-09-17T11:44:28-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 14.6,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b2663075d393e62a2cb79e53651aef37e29b045",
+          "message": "Merge pull request #183 from jonattanva/claude/nice-gould-5736e0\n\nchore: add the Playwright MCP server and playwright-cli skill for agents",
+          "timestamp": "2026-11-19T14:20:48-05:00",
+          "tree_id": "888c6be825314f544c27c6dac88adc2973b3a315",
+          "url": "https://github.com/jonattanva/luna-form/commit/5b2663075d393e62a2cb79e53651aef37e29b045"
+        },
+        "date": 1795116158878,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 33.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.7,
             "unit": "ms"
           }
         ]
