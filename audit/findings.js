@@ -291,6 +291,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'pruebas',
       st: 'probado',
+      stLabel: 'En el PR de la rama claude/busy-swanson-fe8379',
       audit: 'test-audit-2026-11-19',
       sections: [
         {
@@ -321,6 +322,20 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>Convertirlos en lo que prometen: escribir el día en el formato del campo (<code>15/06/2024</code> y <code>06/15/2024</code>) y esperar <code>2024-06-15</code> en el envío, en un solo archivo con un loop por formato. Así atrapan E2, que hoy solo atrapan <code>date-picker</code> y <code>date-initial-value</code> por el lado de lo que se muestra.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html:
+            '<p>Commit <code>test(e2e): submit a day typed in the date field\'s own format</code> en la rama <code>claude/busy-swanson-fe8379</code>, desde <code>main</code> en <code>5b26630</code>. Los dos archivos se reemplazan por <code>tests/e2e/date-submission-format.spec.ts</code>, con un caso por formato que escribe <code>15/06/2024</code> en <code>dd/MM/yyyy</code> y <code>06/15/2024</code> en <code>MM/dd/yyyy</code>, espera a que el campo se vea (FLK-01) y espera <code>"birth_date": "2024-06-15"</code> en el envío.</p>' +
+            '<p>El campo de fecha del editor le pasa al formulario el texto tal como se escribe. El formulario lo lee en el formato del campo y guarda el día como <code>yyyy-MM-dd</code>. Al perder el foco, el campo muestra ese día en su formato, y eso es lo que manda el <code>FormData</code> del envío. Por eso <code>2024-06-15</code> escrito en un campo <code>dd/MM/yyyy</code> se envía como <code>15/06/2024</code>, sin pasar por la rama ISO.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes: dd-mm y mm-dd</th><th>Después: <code>date-submission-format</code>, 2 casos</th><th><code>date-submission-default</code>, 4 casos</th></tr></thead><tbody>' +
+            '<tr><td>E2 <code>getDateFormat</code> ignora <code>advanced.format</code></td><td>pasan</td><td>fallan los 2</td><td>pasan los 4</td></tr>' +
+            '<tr><td>E3 sin la rama ISO de <code>readDay</code></td><td>pasan (medido otra vez)</td><td>fallan los 2</td><td>pasan los 4</td></tr>' +
+            '<tr><td>E4 <code>toNativeDate</code> escribe <code>yyyy-dd-MM</code></td><td>fallan</td><td>fallan los 2</td><td>fallan 3, pasa el que retiene un texto que no es fecha</td></tr>' +
+            '</tbody></table></div>' +
+            '<p>Las 3 mutaciones siguen fallando con la suite resultante. Que el caso nuevo atrape E3 depende de hacer clic en Submit desde el campo: con un <code>blur</code> explícito antes, el día escrito en el formato del campo también se envía bien con E3. No es lo que la prueba promete, así que E3 no cuenta como protección de este archivo.</p>' +
+            '<p class="muted">Chromium, <code>next dev</code> en un puerto propio, librería reconstruida y servidor reiniciado por mutación, revertida después (<code>git status</code> limpio). En verde: <code>date-submission-format</code>, <code>date-submission-default</code>, <code>date-picker</code> y <code>date-initial-value</code> en Chromium, Firefox y WebKit (102 casos). Pasan build, lint, tipos y unitarias. <code>knip</code> falla por exportaciones sin usar de <code>luna-core</code> que este cambio no toca.</p>',
         },
         {
           label: 'Plan de corrección',
