@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795049534649,
+  "lastUpdate": 1795049558282,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "72453b618e114132b8c80d1b81e994de9990b8a9",
-          "message": "Merge pull request #75 from jonattanva/perf/atom-family-release\n\nperf: land #74, #75 and #76 -- a field renders when its own value moves",
-          "timestamp": "2026-09-12T13:46:59-05:00",
-          "tree_id": "2df1d802b291909228a9d54168df176c6789f5b3",
-          "url": "https://github.com/jonattanva/luna-form/commit/72453b618e114132b8c80d1b81e994de9990b8a9"
-        },
-        "date": 1789238893346,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 285,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 566,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "14a90c28d2f7df96411187c845809c8121da5296",
           "message": "Merge pull request #79 from jonattanva/fix/chained-state-reveal\n\nfix(state): take back what a hidden field's own rules revealed",
           "timestamp": "2026-09-13T00:09:39-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 15.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3e0681903bf69b2758ffb812edd4a9c3477e7051",
+          "message": "Merge pull request #171 from jonattanva/claude/agent-call-log\n\nfeat(react): tell the host of every call an agent makes",
+          "timestamp": "2026-11-18T19:51:27-05:00",
+          "tree_id": "00c2ab1f283e668ff6f760d991db660b40dc2014",
+          "url": "https://github.com/jonattanva/luna-form/commit/3e0681903bf69b2758ffb812edd4a9c3477e7051"
+        },
+        "date": 1795049558230,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 58.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 19.6,
             "unit": "ms"
           }
         ]
