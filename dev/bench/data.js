@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795114080078,
+  "lastUpdate": 1795114103801,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "7299bd99e1f6494371901546bb050b68a69a83a6",
-          "message": "Merge pull request #88 from jonattanva/fix/number-values\n\nfix(schema): a number is absent until given, required means present, and a step says what it accepts",
-          "timestamp": "2026-09-16T18:21:24-05:00",
-          "tree_id": "e48b403a4a08501a03fdc8b1261c0b52865a159f",
-          "url": "https://github.com/jonattanva/luna-form/commit/7299bd99e1f6494371901546bb050b68a69a83a6"
-        },
-        "date": 1789600978535,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 282,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 594,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "c3c532b114f95b781e98328d8b277cd2bb09c160",
           "message": "Merge pull request #89 from jonattanva/fix/invalid-pattern\n\nfix(schema): a pattern that does not compile holds the value back instead of taking the form down",
           "timestamp": "2026-09-16T23:05:36-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 17,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8df8ac5250fcd33134f76ed5b2ef93d06c296651",
+          "message": "Merge pull request #180 from jonattanva/claude/brave-boyd-aee2b6\n\nfix(react): move the focus to the first field with an error after a failed submit",
+          "timestamp": "2026-11-19T13:47:07-05:00",
+          "tree_id": "3f193e7ca5fa79eca88a08a65ee2c6f1ca2a6ae6",
+          "url": "https://github.com/jonattanva/luna-form/commit/8df8ac5250fcd33134f76ed5b2ef93d06c296651"
+        },
+        "date": 1795114103712,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 59.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.1,
             "unit": "ms"
           }
         ]
