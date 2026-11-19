@@ -1,0 +1,1659 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Luna auditorías</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+      /* shadcn zinc tokens with an accent color. */
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.141 0.005 285.823);
+        --card: oklch(1 0 0);
+        --popover: oklch(1 0 0);
+        --primary: oklch(0.558 0.288 302.321);
+        --primary-soft: oklch(0.558 0.288 302.321 / 0.1);
+        --muted: oklch(0.967 0.001 286.375);
+        --muted-foreground: oklch(0.552 0.016 285.938);
+        --accent: oklch(0.967 0.001 286.375);
+        --border: oklch(0.92 0.004 286.32);
+        --input: oklch(0.92 0.004 286.32);
+        --ring: oklch(0.705 0.015 286.067 / 0.5);
+        --ring-strong: oklch(0.705 0.015 286.067);
+        --destructive: oklch(0.505 0.213 27.518);
+        --destructive-soft: oklch(0.505 0.213 27.518 / 0.1);
+        --warning: oklch(0.555 0.13 70);
+        --warning-soft: oklch(0.769 0.165 70 / 0.16);
+        --info: oklch(0.488 0.217 264);
+        --info-soft: oklch(0.488 0.217 264 / 0.1);
+        --success: oklch(0.527 0.137 150);
+        --success-soft: oklch(0.627 0.17 150 / 0.12);
+        --sidebar: oklch(0.985 0 0);
+        --radius: 0.625rem;
+        --tk-keyword: #cf222e;
+        --tk-string: #0a3069;
+        --tk-number: #0550ae;
+        --tk-function: #8250df;
+        --tk-type: #953800;
+        --tk-comment: #6e7781;
+        --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif;
+        --font-mono: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --background: oklch(0.141 0.005 285.823);
+          --foreground: oklch(0.985 0 0);
+          --card: oklch(0.21 0.006 285.885);
+          --popover: oklch(0.21 0.006 285.885);
+          --primary: oklch(0.714 0.203 305.504);
+          --primary-soft: oklch(0.627 0.265 303.9 / 0.18);
+          --muted: oklch(0.274 0.006 286.033);
+          --muted-foreground: oklch(0.705 0.015 286.067);
+          --accent: oklch(0.274 0.006 286.033);
+          --border: oklch(1 0 0 / 10%);
+          --input: oklch(1 0 0 / 15%);
+          --ring: oklch(0.552 0.016 285.938 / 0.5);
+          --ring-strong: oklch(0.552 0.016 285.938);
+          --destructive: oklch(0.704 0.191 22.216);
+          --destructive-soft: oklch(0.704 0.191 22.216 / 0.16);
+          --warning: oklch(0.828 0.189 84.429);
+          --warning-soft: oklch(0.828 0.189 84.429 / 0.14);
+          --info: oklch(0.707 0.165 254.624);
+          --info-soft: oklch(0.707 0.165 254.624 / 0.15);
+          --success: oklch(0.792 0.209 151.711);
+          --success-soft: oklch(0.792 0.209 151.711 / 0.13);
+          --sidebar: oklch(0.21 0.006 285.885);
+          --tk-keyword: #ff7b72;
+          --tk-string: #a5d6ff;
+          --tk-number: #79c0ff;
+          --tk-function: #d2a8ff;
+          --tk-type: #ffa657;
+          --tk-comment: #8b949e;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --background: oklch(0.141 0.005 285.823);
+        --foreground: oklch(0.985 0 0);
+        --card: oklch(0.21 0.006 285.885);
+        --popover: oklch(0.21 0.006 285.885);
+        --primary: oklch(0.714 0.203 305.504);
+        --primary-soft: oklch(0.627 0.265 303.9 / 0.18);
+        --muted: oklch(0.274 0.006 286.033);
+        --muted-foreground: oklch(0.705 0.015 286.067);
+        --accent: oklch(0.274 0.006 286.033);
+        --border: oklch(1 0 0 / 10%);
+        --input: oklch(1 0 0 / 15%);
+        --ring: oklch(0.552 0.016 285.938 / 0.5);
+        --ring-strong: oklch(0.552 0.016 285.938);
+        --destructive: oklch(0.704 0.191 22.216);
+        --destructive-soft: oklch(0.704 0.191 22.216 / 0.16);
+        --warning: oklch(0.828 0.189 84.429);
+        --warning-soft: oklch(0.828 0.189 84.429 / 0.14);
+        --info: oklch(0.707 0.165 254.624);
+        --info-soft: oklch(0.707 0.165 254.624 / 0.15);
+        --success: oklch(0.792 0.209 151.711);
+        --success-soft: oklch(0.792 0.209 151.711 / 0.13);
+        --sidebar: oklch(0.21 0.006 285.885);
+        --tk-keyword: #ff7b72;
+        --tk-string: #a5d6ff;
+        --tk-number: #79c0ff;
+        --tk-function: #d2a8ff;
+        --tk-type: #ffa657;
+        --tk-comment: #8b949e;
+        color-scheme: dark;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        border-color: var(--border);
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      svg.icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--muted);
+        padding: 0.1em 0.35em;
+        border-radius: calc(var(--radius) * 0.5);
+        overflow-wrap: anywhere;
+      }
+      pre {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        line-height: 1.6;
+        background: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.8);
+        padding: 12px 14px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+
+      /* Bloque de código al estilo de shadcn: cabecera con el lenguaje y copiar */
+      .code-block {
+        margin: 12px 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        overflow: hidden;
+      }
+      .code-block figcaption {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        padding: 0 8px 0 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--muted);
+        color: var(--muted-foreground);
+        font-size: 12.5px;
+      }
+      .code-block figcaption svg.icon {
+        width: 14px;
+        height: 14px;
+      }
+      .code-block .copy-code {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        margin-left: auto;
+        border: 0;
+        border-radius: calc(var(--radius) * 0.6);
+        background: none;
+        color: var(--muted-foreground);
+      }
+      .code-block .copy-code:hover {
+        background: var(--accent);
+        color: var(--foreground);
+      }
+      .code-block pre {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .hljs-keyword,
+      .hljs-meta,
+      .hljs-selector-tag {
+        color: var(--tk-keyword);
+      }
+      .hljs-string,
+      .hljs-regexp,
+      .hljs-template-tag,
+      .hljs-template-variable {
+        color: var(--tk-string);
+      }
+      .hljs-number,
+      .hljs-literal,
+      .hljs-attr,
+      .hljs-attribute,
+      .hljs-property,
+      .hljs-variable.constant_ {
+        color: var(--tk-number);
+      }
+      .hljs-title,
+      .hljs-title.function_,
+      .hljs-section {
+        color: var(--tk-function);
+      }
+      .hljs-type,
+      .hljs-built_in,
+      .hljs-title.class_,
+      .hljs-params {
+        color: var(--tk-type);
+      }
+      .hljs-comment,
+      .hljs-quote {
+        color: var(--tk-comment);
+        font-style: italic;
+      }
+      a {
+        color: var(--primary);
+        text-underline-offset: 3px;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: minmax(380px, 40%) minmax(0, 1fr);
+        height: 100vh;
+      }
+
+      /* ---------- Lista ---------- */
+      .list-pane {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        background: var(--sidebar);
+        border-right: 1px solid var(--border);
+      }
+      .list-head {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(0, 1fr);
+        padding: 16px 16px 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      /* Buscador con calificadores, al estilo de GitHub */
+      .search {
+        position: relative;
+      }
+      .qbox {
+        display: flex;
+        align-items: stretch;
+        height: 36px;
+        border: 1px solid var(--input);
+        border-radius: calc(var(--radius) * 0.8);
+        background: var(--card);
+        box-shadow: 0 1px 2px oklch(0 0 0 / 0.05);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .qbox:focus-within {
+        border-color: var(--ring-strong);
+        box-shadow: 0 0 0 3px var(--ring);
+      }
+      .qfield {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+      .qfield input,
+      .qfield .mirror {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0 10px;
+        border: 0;
+        font: 14px/34px var(--font-sans);
+        letter-spacing: 0;
+        white-space: pre;
+      }
+      .qfield .mirror {
+        overflow: hidden;
+        pointer-events: none;
+        color: var(--foreground);
+      }
+      .qfield input {
+        background: transparent;
+        color: transparent;
+        caret-color: var(--foreground);
+        outline: none;
+        z-index: 1;
+      }
+      .qfield input::placeholder {
+        color: var(--muted-foreground);
+      }
+      .qfield input::selection {
+        background: var(--ring);
+        color: transparent;
+      }
+      .q-key {
+        color: var(--muted-foreground);
+      }
+      .q-val {
+        color: var(--foreground);
+        background: var(--accent);
+        border-radius: 3px;
+      }
+      .q-neg {
+        color: var(--destructive);
+      }
+      .q-bad {
+        color: var(--destructive);
+        text-decoration: wavy underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 4px;
+      }
+      .qbtn {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        border: 0;
+        background: none;
+        color: var(--muted-foreground);
+      }
+      .qbtn:hover {
+        color: var(--foreground);
+      }
+      .qclear[hidden] {
+        display: none;
+      }
+      .qclear span {
+        display: grid;
+        place-items: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--muted-foreground);
+        color: var(--card);
+      }
+      .qclear svg.icon {
+        width: 12px;
+        height: 12px;
+        stroke-width: 3;
+      }
+      .qsubmit {
+        border-left: 1px solid var(--input);
+      }
+      .suggest {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        z-index: 20;
+        max-height: 320px;
+        overflow-y: auto;
+        background: var(--popover);
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) * 0.8);
+        box-shadow:
+          0 10px 30px oklch(0 0 0 / 0.12),
+          0 2px 6px oklch(0 0 0 / 0.08);
+        padding: 4px;
+        list-style: none;
+        margin: 0;
+      }
+      .suggest[hidden] {
+        display: none;
+      }
+      .suggest .heading {
+        padding: 6px 8px 4px;
+        font-size: 12px;
+        color: var(--muted-foreground);
+      }
+      .suggest .opt {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: calc(var(--radius) * 0.6);
+        cursor: pointer;
+      }
+      .suggest .opt[aria-selected='true'] {
+        background: var(--accent);
+      }
+      .suggest .opt .k {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+      }
+      .suggest .opt .k {
+        color: var(--muted-foreground);
+      }
+      .suggest .opt .k b {
+        color: var(--foreground);
+        font-weight: 500;
+      }
+      .suggest .opt .d {
+        color: var(--muted-foreground);
+        font-size: 12.5px;
+        margin-left: auto;
+        text-align: right;
+      }
+
+      /* Pendientes / Cerrados / Todos */
+      .tabs {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: calc(var(--radius) * 0.8);
+        background: none;
+        color: var(--muted-foreground);
+        font-weight: 500;
+      }
+      .tab:hover {
+        background: var(--accent);
+        color: var(--foreground);
+      }
+      .tab[aria-pressed='true'] {
+        background: var(--card);
+        color: var(--foreground);
+        box-shadow:
+          0 0 0 1px var(--border),
+          0 1px 2px oklch(0 0 0 / 0.05);
+      }
+      .tab .n {
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--muted);
+        color: var(--muted-foreground);
+      }
+      .tab[aria-pressed='true'] .n {
+        background: var(--accent);
+        color: var(--foreground);
+      }
+      .tabs .spacer {
+        flex: 1;
+      }
+      .linkbtn {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: var(--muted-foreground);
+        font-size: 12.5px;
+      }
+      .linkbtn:hover {
+        color: var(--foreground);
+      }
+
+      .rows {
+        list-style: none;
+        margin: 0;
+        padding: 4px 20px 20px 16px;
+        scrollbar-gutter: stable;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .card {
+        position: relative;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 2px 10px;
+        padding: 12px 12px 12px 10px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition:
+          border-color 0.12s,
+          box-shadow 0.12s;
+      }
+      .card:hover {
+        border-color: var(--muted-foreground);
+      }
+      .card[aria-selected='true'],
+      .card:focus-visible {
+        border-color: var(--primary);
+        outline: none;
+      }
+      .card .st-icon {
+        grid-row: 1 / span 3;
+        margin-top: 1px;
+      }
+      .card .top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .card .code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--muted-foreground);
+      }
+      .card .top .badge-sev {
+        margin-left: auto;
+      }
+      .card .title {
+        font-weight: 500;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+      }
+      .card .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .st-open {
+        color: var(--success);
+      }
+      .st-closed {
+        color: var(--muted-foreground);
+      }
+
+      /* Badge de shadcn: h-5, rounded-full, px-2, text-xs font-medium */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: fit-content;
+        height: 20px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+        transition:
+          background-color 0.15s,
+          color 0.15s;
+      }
+      .badge svg.icon {
+        width: 12px;
+        height: 12px;
+        stroke-width: 2.25;
+      }
+      /* secondary */
+      .badge-secondary {
+        background: var(--muted);
+        color: var(--foreground);
+      }
+      button.badge-secondary:hover {
+        background: var(--border);
+      }
+      /* outline */
+      .badge-outline,
+      .badge-st {
+        background: none;
+        border-color: var(--border);
+        color: var(--foreground);
+      }
+      button.badge-outline:hover,
+      button.badge-st:hover {
+        background: var(--muted);
+      }
+      .badge-st.st-open svg.icon {
+        color: var(--success);
+      }
+      .badge-st.st-closed svg.icon {
+        color: var(--muted-foreground);
+      }
+      /* destructive y sus variantes de color */
+      .badge-sev.sev-crit {
+        background: var(--destructive-soft);
+        color: var(--destructive);
+      }
+      .badge-sev.sev-mejora {
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+      .badge-sev.sev-optim {
+        background: var(--info-soft);
+        color: var(--info);
+      }
+      button.badge-sev:hover {
+        filter: brightness(1.15);
+      }
+      .empty {
+        padding: 40px 16px;
+        color: var(--muted-foreground);
+        text-align: center;
+      }
+
+      /* ---------- Detalle ---------- */
+      .detail-pane {
+        min-width: 0;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .detail {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 32px 40px 80px;
+      }
+      .back {
+        display: none;
+      }
+      .d-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--muted-foreground);
+      }
+      .copy {
+        border: 0;
+        background: none;
+        padding: 2px;
+        color: var(--muted-foreground);
+        border-radius: 4px;
+        display: inline-grid;
+      }
+      .copy:hover {
+        color: var(--foreground);
+        background: var(--accent);
+      }
+      .copy svg.icon {
+        width: 14px;
+        height: 14px;
+      }
+      .detail h2 {
+        margin: 6px 0 12px;
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        overflow-wrap: anywhere;
+      }
+      .d-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .d-source {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        margin-top: 12px;
+        color: var(--muted-foreground);
+        font-size: 13px;
+      }
+      .d-source a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .d-source svg.icon {
+        width: 12px;
+        height: 12px;
+      }
+      .section {
+        margin-top: 24px;
+        min-width: 0;
+      }
+      .section h4 {
+        margin: 0 0 6px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .section .content {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .section .content > :first-child {
+        margin-top: 0;
+      }
+      .section .content > :last-child {
+        margin-bottom: 0;
+      }
+      .section .content p {
+        margin: 0 0 8px;
+      }
+      .section .content ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .section .content li + li {
+        margin-top: 4px;
+      }
+      .group {
+        margin-top: 32px;
+        padding: 4px 18px 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--sidebar);
+      }
+      .group > .group-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 14px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .group .section {
+        margin-top: 16px;
+      }
+      .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--border);
+        overflow-wrap: anywhere;
+      }
+      th {
+        color: var(--muted-foreground);
+        font-weight: 500;
+      }
+      .tag,
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        background: var(--muted);
+      }
+      .muted {
+        color: var(--muted-foreground);
+      }
+
+      .overview h2 {
+        margin-top: 0;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 20px 0 32px;
+      }
+      .stat {
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        text-align: left;
+      }
+      button.stat:hover {
+        border-color: var(--ring-strong);
+      }
+      .stat b {
+        display: block;
+        font-size: 26px;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat span {
+        color: var(--muted-foreground);
+        font-size: 13px;
+      }
+      .audit-card {
+        padding: 16px 0;
+        border-top: 1px solid var(--border);
+      }
+      .audit-card h3 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .audit-card .summary {
+        margin-top: 8px;
+        overflow-wrap: anywhere;
+      }
+      .audit-card .summary p {
+        margin: 0 0 6px;
+      }
+      kbd {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 1px 5px;
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        background: var(--card);
+      }
+
+      @media (max-width: 860px) {
+        body {
+          overflow: auto;
+        }
+        .app {
+          grid-template-columns: minmax(0, 1fr);
+          height: auto;
+          min-height: 100vh;
+        }
+        .list-pane {
+          border-right: 0;
+          min-height: 100vh;
+        }
+        .detail-pane {
+          position: fixed;
+          inset: 0;
+          z-index: 30;
+          display: none;
+          background: var(--background);
+        }
+        .app.showing .detail-pane {
+          display: block;
+        }
+        .detail {
+          padding: 16px 16px 64px;
+        }
+        .back {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          height: 32px;
+          padding: 0 12px;
+          margin-bottom: 16px;
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) * 0.8);
+          background: var(--card);
+        }
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </symbol>
+      <symbol id="i-open" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="2" fill="currentColor" />
+      </symbol>
+      <symbol id="i-closed" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8.5 12 2.5 2.5 4.5-5" />
+      </symbol>
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <path d="m12 19-7-7 7-7" />
+        <path d="M19 12H5" />
+      </symbol>
+      <symbol id="i-link" viewBox="0 0 24 24">
+        <path d="M15 3h6v6" />
+        <path d="M10 14 21 3" />
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect width="14" height="14" x="8" y="8" rx="2" />
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </symbol>
+      <symbol id="i-code" viewBox="0 0 24 24">
+        <path d="m16 18 6-6-6-6" />
+        <path d="m8 6-6 6 6 6" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="M20 6 9 17l-5-5" />
+      </symbol>
+    </svg>
+
+    <div class="app" id="app">
+      <section class="list-pane" aria-label="Hallazgos">
+        <div class="list-head">
+          <div class="brand">
+            <h1>Luna</h1>
+          </div>
+          <div class="search">
+            <div class="qbox">
+              <div class="qfield">
+                <div class="mirror" id="mirror" aria-hidden="true"></div>
+                <input
+                  id="q"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  placeholder="Buscar o filtrar: sev:critico cat:seguridad"
+                  aria-label="Buscar y filtrar hallazgos"
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-controls="suggest"
+                  aria-autocomplete="list"
+                />
+              </div>
+              <button
+                class="qbtn qclear"
+                id="clear"
+                type="button"
+                aria-label="Limpiar la búsqueda"
+                hidden
+              >
+                <span
+                  ><svg class="icon"><use href="#i-x" /></svg
+                ></span>
+              </button>
+              <button
+                class="qbtn qsubmit"
+                id="submit"
+                type="button"
+                aria-label="Buscar"
+              >
+                <svg class="icon"><use href="#i-search" /></svg>
+              </button>
+            </div>
+            <ul class="suggest" id="suggest" role="listbox" hidden></ul>
+          </div>
+          <div class="tabs" role="group" aria-label="Estado">
+            <button class="tab" type="button" data-is="pendiente">
+              <svg class="icon st-open"><use href="#i-open" /></svg>Pendientes
+              <span class="n" id="n-open"></span>
+            </button>
+            <button class="tab" type="button" data-is="cerrado">
+              <svg class="icon st-closed"><use href="#i-closed" /></svg>Cerrados
+              <span class="n" id="n-closed"></span>
+            </button>
+            <button class="tab" type="button" data-is="">
+              Todos <span class="n" id="n-all"></span>
+            </button>
+            <span class="spacer"></span>
+            <button class="linkbtn" type="button" id="help">
+              Filtros <kbd>/</kbd>
+            </button>
+          </div>
+        </div>
+        <ul class="rows" id="rows" role="listbox" aria-label="Hallazgos"></ul>
+      </section>
+      <section class="detail-pane" id="detail-pane">
+        <div class="detail" id="detail"></div>
+      </section>
+    </div>
+
+    <script src="findings.js"></script>
+    <script>
+      const { audits: AUDITS, findings: FINDINGS } = window.AUDIT
+
+      const SEV = {
+        crit: { label: 'Crítico', slug: 'critico', order: 0 },
+        mejora: { label: 'Mejora', slug: 'mejora', order: 1 },
+        optim: { label: 'Optimización', slug: 'optimizacion', order: 2 },
+      }
+      // Pendiente es todo lo que no se corrigió, tenga o no prueba, medición o
+      // evidencia estática.
+      const ST = {
+        pendiente: { label: 'Pendiente', open: true, order: 0 },
+        probado: { label: 'Probado', open: true, order: 1 },
+        medido: { label: 'Medido', open: true, order: 2 },
+        estatico: { label: 'Estático', open: true, order: 3 },
+        investigar: { label: 'Para investigar', open: true, order: 4 },
+        'sin-estado': { label: 'Sin estado', open: true, order: 5 },
+        corregido: { label: 'Corregido', open: false, order: 6 },
+        plan: { label: 'Aplicado al plan', open: false, order: 7 },
+      }
+      const AUDIT_BY_ID = Object.fromEntries(AUDITS.map((a) => [a.id, a]))
+      const AUDIT_ORDER = Object.fromEntries(AUDITS.map((a, i) => [a.id, i]))
+      const isOpen = (f) => ST[f.st]?.open ?? true
+      const stLabel = (f) => f.stLabel ?? ST[f.st]?.label ?? f.st
+
+      const $ = (id) => document.getElementById(id)
+      const esc = (s) =>
+        String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+      const fold = (s) =>
+        String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+      const slug = (s) => fold(s).trim().replace(/\s+/g, '-')
+      const icon = (id, cls = '') =>
+        `<svg class="icon ${cls}"><use href="#i-${id}"/></svg>`
+      const textOf = (html) => {
+        const div = document.createElement('div')
+        div.innerHTML = html
+        return div.textContent
+      }
+      for (const f of FINDINGS) {
+        f._cat = slug(f.cat)
+        f._text = fold(
+          [
+            f.code,
+            f.title,
+            f.cat,
+            stLabel(f),
+            AUDIT_BY_ID[f.audit]?.title,
+            ...f.sections.map((s) => s.label + ' ' + textOf(s.html)),
+          ].join(' ')
+        )
+      }
+
+      // ---------- Calificadores ----------
+      const count = (pred) => FINDINGS.filter(pred).length
+      const QUALIFIERS = {
+        is: {
+          desc: 'pendiente o cerrado',
+          values: () => [
+            ['pendiente', 'sin corregir', count(isOpen)],
+            [
+              'cerrado',
+              'corregido o aplicado al plan',
+              count((f) => !isOpen(f)),
+            ],
+          ],
+          test: (f, v) => (v === 'pendiente' ? isOpen(f) : !isOpen(f)),
+        },
+        sev: {
+          desc: 'severidad',
+          values: () =>
+            Object.entries(SEV).map(([k, s]) => [
+              s.slug,
+              s.label,
+              count((f) => f.sev === k),
+            ]),
+          test: (f, v) => SEV[f.sev].slug === v,
+        },
+        st: {
+          desc: 'estado exacto',
+          values: () =>
+            Object.entries(ST).map(([k, s]) => [
+              k,
+              s.label,
+              count((f) => f.st === k),
+            ]),
+          test: (f, v) => f.st === v,
+        },
+        cat: {
+          desc: 'categoría',
+          values: () =>
+            [...new Set(FINDINGS.map((f) => f._cat))]
+              .sort((a, b) => a.localeCompare(b, 'es'))
+              .map((c) => [c, '', count((f) => f._cat === c)]),
+          test: (f, v) => f._cat === v,
+        },
+        audit: {
+          desc: 'auditoría',
+          values: () =>
+            AUDITS.map((a) => [
+              a.id,
+              a.title,
+              count(
+                (f) =>
+                  f.audit === a.id || f.sections.some((s) => s.audit === a.id)
+              ),
+            ]),
+          test: (f, v) =>
+            f.audit === v || f.sections.some((s) => s.audit === v),
+        },
+      }
+      const ALIASES = {
+        open: 'pendiente',
+        abierto: 'pendiente',
+        pendientes: 'pendiente',
+        closed: 'cerrado',
+        cerrados: 'cerrado',
+        corregido: 'cerrado',
+        crit: 'critico',
+        optim: 'optimizacion',
+      }
+      const validValues = {}
+      for (const [k, q] of Object.entries(QUALIFIERS))
+        validValues[k] = new Set(q.values().map((v) => v[0]))
+      const normValue = (key, v) => {
+        const s = slug(v)
+        return (key === 'is' || key === 'sev') && ALIASES[s] ? ALIASES[s] : s
+      }
+      const QRE = /^(-?)([a-z]+):(.*)$/i
+
+      function parse(q) {
+        const filters = []
+        const words = []
+        for (const tok of q.split(/\s+/).filter(Boolean)) {
+          const m = tok.match(QRE)
+          const key = m?.[2].toLowerCase()
+          if (m && QUALIFIERS[key]) {
+            const values = m[3]
+              .split(',')
+              .filter(Boolean)
+              .map((v) => normValue(key, v))
+            if (values.length) filters.push({ neg: m[1] === '-', key, values })
+          } else words.push(fold(tok))
+        }
+        return { filters, words }
+      }
+      const matches = (f, { filters, words }, skip) =>
+        filters.every(
+          (x) =>
+            x.key === skip ||
+            x.values.some((v) => QUALIFIERS[x.key].test(f, v)) !== x.neg
+        ) && words.every((w) => f._text.includes(w))
+
+      // ---------- Estado ----------
+      const state = { q: 'is:pendiente ', selected: null }
+      let current = []
+
+      function sortFindings(list) {
+        return list.sort(
+          (a, b) =>
+            Number(isOpen(b)) - Number(isOpen(a)) ||
+            SEV[a.sev].order - SEV[b.sev].order ||
+            (ST[a.st]?.order ?? 9) - (ST[b.st]?.order ?? 9) ||
+            AUDIT_ORDER[a.audit] - AUDIT_ORDER[b.audit]
+        )
+      }
+
+      // Con `add`, la etiqueta es un botón que suma ese calificador a la búsqueda.
+      const badge = (cls, inner, add) =>
+        add
+          ? `<button type="button" class="badge ${cls}" data-add="${esc(add)}" title="Filtrar por ${esc(add)}">${inner}</button>`
+          : `<span class="badge ${cls}">${inner}</span>`
+      const sevBadge = (f, clickable) =>
+        badge(
+          `badge-sev sev-${f.sev}`,
+          SEV[f.sev].label,
+          clickable && `sev:${SEV[f.sev].slug}`
+        )
+      const stBadge = (f, clickable) => {
+        const open = isOpen(f)
+        return badge(
+          `badge-st ${open ? 'st-open' : 'st-closed'}`,
+          icon(open ? 'open' : 'closed') + esc(stLabel(f)),
+          clickable && `st:${f.st}`
+        )
+      }
+      const catBadge = (f, clickable) =>
+        badge('badge-secondary', esc(f.cat), clickable && `cat:${f._cat}`)
+
+      function renderList() {
+        const parsed = parse(state.q)
+        current = sortFindings(FINDINGS.filter((f) => matches(f, parsed)))
+        const base = FINDINGS.filter((f) => matches(f, parsed, 'is'))
+        $('n-open').textContent = base.filter(isOpen).length
+        $('n-closed').textContent = base.filter((f) => !isOpen(f)).length
+        $('n-all').textContent = base.length
+        const is = parsed.filters.filter((x) => x.key === 'is' && !x.neg)
+        const active =
+          is.length === 1 && is[0].values.length === 1 ? is[0].values[0] : ''
+        document
+          .querySelectorAll('.tab')
+          .forEach((b) =>
+            b.setAttribute('aria-pressed', String(b.dataset.is === active))
+          )
+        $('rows').innerHTML = current.length
+          ? current
+              .map((f) => {
+                const open = isOpen(f)
+                return `
+          <li class="card sev-${f.sev}" role="option" tabindex="-1" data-code="${esc(f.code)}" aria-selected="${f.code === state.selected}">
+            ${icon(open ? 'open' : 'closed', 'st-icon ' + (open ? 'st-open' : 'st-closed'))}
+            <div class="top"><span class="code">${esc(f.code)}</span>${sevBadge(f, true)}</div>
+            <div class="title">${esc(f.title)}</div>
+            <div class="meta">${stBadge(f, true)}${catBadge(f, true)}</div>
+          </li>`
+              })
+              .join('')
+          : '<li class="empty">Ningún hallazgo coincide con esa búsqueda.</li>'
+      }
+
+      const auditLink = (a) =>
+        a
+          ? `${a.doc ? `<a href="${esc(a.doc)}" target="_blank" rel="noopener">${esc(a.title)}${icon('link')}</a>` : `<span>${esc(a.title)}</span>`}<span>${esc(a.date ?? '')}</span>`
+          : ''
+
+      function renderDetail() {
+        const f = FINDINGS.find((x) => x.code === state.selected)
+        $('app').classList.toggle('showing', Boolean(f))
+        if (!f) return renderOverview()
+        const groups = []
+        for (const s of f.sections) {
+          const key = s.audit ?? f.audit
+          let g = groups.find((x) => x.key === key)
+          if (!g) groups.push((g = { key, items: [] }))
+          g.items.push(s)
+        }
+        const section = (s) => `
+          <div class="section">
+            <h4>${esc(s.label)}</h4>
+            <div class="content">${s.html}</div>
+          </div>`
+        $('detail').innerHTML = `
+          <button type="button" class="back" id="back">${icon('back')}Volver</button>
+          <div class="d-code">${esc(f.code)}
+            <button type="button" class="copy" id="copy" aria-label="Copiar el código">${icon('copy')}</button>
+          </div>
+          <h2>${esc(f.title)}</h2>
+          <div class="d-meta">${stBadge(f)}${catBadge(f)}${sevBadge(f)}${
+            f.sevNote
+              ? `<span class="badge badge-secondary">${esc(f.sevNote)}</span>`
+              : ''
+          }</div>
+          <div class="d-source">${auditLink(AUDIT_BY_ID[f.audit])}</div>
+          ${groups
+            .map((g) =>
+              g.key === f.audit
+                ? g.items.map(section).join('')
+                : `<div class="group"><div class="group-title">También en ${esc(AUDIT_BY_ID[g.key]?.title ?? g.key)} <span class="muted">${esc(AUDIT_BY_ID[g.key]?.date ?? '')}</span></div>${g.items.map(section).join('')}</div>`
+            )
+            .join('')}`
+        enhanceCode($('detail'))
+        $('detail-pane').scrollTop = 0
+        $('back').addEventListener('click', () => select(null))
+        $('copy').addEventListener('click', (e) => {
+          const btn = e.currentTarget
+          navigator.clipboard?.writeText(f.code).then(
+            () => {
+              btn.innerHTML = icon('check')
+            },
+            () => {}
+          )
+        })
+      }
+
+      // Cada <pre> pasa a ser un bloque con cabecera, resaltado y copiar.
+      // El código del proyecto es TypeScript: JavaScript se muestra como tal.
+      const LANGS = {
+        typescript: 'TypeScript',
+        javascript: 'TypeScript',
+        json: 'JSON',
+        bash: 'Shell',
+        sql: 'SQL',
+      }
+      function enhanceCode(root) {
+        for (const pre of root.querySelectorAll('pre:not(.code-block pre)')) {
+          const text = pre.textContent
+          let lang = 'Texto'
+          let html = esc(text)
+          // Con flechas o comillas angulares es evidencia escrita, no código.
+          if (window.hljs && !/[→«»]/.test(text)) {
+            const r = window.hljs.highlightAuto(text, Object.keys(LANGS))
+            if (r.language && r.relevance >= 3) {
+              lang = LANGS[r.language]
+              html = r.value
+            }
+          }
+          const figure = document.createElement('figure')
+          figure.className = 'code-block'
+          figure.innerHTML = `
+            <figcaption>${icon('code')}<span>${lang}</span>
+              <button type="button" class="copy-code" aria-label="Copiar el código">${icon('copy')}</button>
+            </figcaption>
+            <pre><code class="hljs">${html}</code></pre>`
+          figure.querySelector('.copy-code').addEventListener('click', (e) => {
+            const btn = e.currentTarget
+            navigator.clipboard?.writeText(text).then(
+              () => {
+                btn.innerHTML = icon('check')
+                setTimeout(() => (btn.innerHTML = icon('copy')), 1500)
+              },
+              () => {}
+            )
+          })
+          pre.replaceWith(figure)
+        }
+      }
+
+      function renderOverview() {
+        const open = FINDINGS.filter(isOpen)
+        const bySev = (k) => open.filter((f) => f.sev === k).length
+        const stat = (n, label, q, color) =>
+          `<button type="button" class="stat" data-q="${esc(q)}"><b${color ? ` style="color:var(${color})"` : ''}>${n}</b><span>${label}</span></button>`
+        $('detail').innerHTML = `
+          <div class="overview">
+            <h2>Resumen</h2>
+            <p class="muted">Los hallazgos de todas las auditorías del proyecto. Pendiente es todo lo que no se corrigió, tenga o no prueba, medición o evidencia estática. Pulsá <kbd>/</kbd> para buscar: los calificadores como <code>sev:critico</code> o <code>cat:seguridad</code> se combinan con texto libre, varios valores van separados por coma y un <code>-</code> delante excluye.</p>
+            <div class="stats">
+              ${stat(open.length, `pendientes de ${FINDINGS.length}`, 'is:pendiente ')}
+              ${stat(bySev('crit'), 'críticos pendientes', 'is:pendiente sev:critico ', '--destructive')}
+              ${stat(bySev('mejora'), 'mejoras pendientes', 'is:pendiente sev:mejora ', '--warning')}
+              ${stat(bySev('optim'), 'optimizaciones pendientes', 'is:pendiente sev:optimizacion ', '--info')}
+              ${stat(
+                count((f) => f.st === 'corregido'),
+                'corregidos',
+                'st:corregido '
+              )}
+              ${stat(
+                count((f) => f.st === 'sin-estado'),
+                'sin estado confirmado',
+                'st:sin-estado '
+              )}
+            </div>
+            <h2 style="font-size:16px">Auditorías</h2>
+            ${AUDITS.slice()
+              .reverse()
+              .map((a) => {
+                const mine = FINDINGS.filter((f) => f.audit === a.id)
+                return `
+              <div class="audit-card">
+                <h3>${esc(a.title)}<button type="button" class="badge badge-outline" data-q="audit:${esc(a.id)} ">${mine.filter(isOpen).length} pendientes de ${mine.length}</button></h3>
+                <div class="d-source" style="margin-top:0">${auditLink(a)}</div>
+                <div class="summary">${a.summary ?? ''}</div>
+              </div>`
+              })
+              .join('')}
+          </div>`
+      }
+
+      function select(code, focus) {
+        state.selected = code
+        try {
+          history.replaceState(
+            null,
+            '',
+            code ? '#' + encodeURIComponent(code) : location.pathname
+          )
+        } catch {}
+        document.querySelectorAll('.card').forEach((r) => {
+          const on = r.dataset.code === code
+          r.setAttribute('aria-selected', String(on))
+          if (on && focus) {
+            r.focus({ preventScroll: true })
+            r.scrollIntoView({ block: 'nearest' })
+          }
+        })
+        renderDetail()
+      }
+
+      // ---------- Buscador ----------
+      const input = $('q')
+      const mirror = $('mirror')
+      const menu = $('suggest')
+      let options = []
+      let active = 0
+
+      function paint() {
+        mirror.innerHTML = input.value
+          .split(/(\s+)/)
+          .map((part) => {
+            const m = part.match(QRE)
+            const key = m?.[2].toLowerCase()
+            if (!m || !QUALIFIERS[key]) return esc(part)
+            const vals = m[3]
+              .split(',')
+              .map((v) =>
+                !v || validValues[key].has(normValue(key, v))
+                  ? `<span class="q-val">${esc(v)}</span>`
+                  : `<span class="q-bad">${esc(v)}</span>`
+              )
+              .join(',')
+            return `${m[1] ? '<span class="q-neg">-</span>' : ''}<span class="q-key">${esc(m[2])}:</span>${vals}`
+          })
+          .join('')
+        mirror.scrollLeft = input.scrollLeft
+        $('clear').hidden = !input.value
+      }
+
+      function tokenAtCaret() {
+        const pos = input.selectionStart ?? input.value.length
+        const v = input.value
+        let start = pos
+        while (start > 0 && !/\s/.test(v[start - 1])) start--
+        let end = pos
+        while (end < v.length && !/\s/.test(v[end])) end++
+        return { start, end, text: v.slice(start, pos) }
+      }
+
+      function suggestions() {
+        const { text } = tokenAtCaret()
+        const neg = text.startsWith('-') ? '-' : ''
+        const t = text.slice(neg.length)
+        const colon = t.indexOf(':')
+        if (colon === -1) {
+          const p = fold(t)
+          return {
+            heading: 'Calificadores',
+            items: Object.entries(QUALIFIERS)
+              .filter(([k]) => k.startsWith(p))
+              .map(([k, q]) => ({
+                insert: `${neg}${k}:`,
+                html: `<span class="k"><b>${k}:</b></span>`,
+                desc: esc(q.desc),
+                keepOpen: true,
+              })),
+          }
+        }
+        const key = t.slice(0, colon).toLowerCase()
+        if (!QUALIFIERS[key]) return { items: [] }
+        const done = t.slice(colon + 1).split(',')
+        const partial = slug(done.pop())
+        const prefix = `${neg}${key}:${done.length ? done.join(',') + ',' : ''}`
+        return {
+          heading: QUALIFIERS[key].desc,
+          items: QUALIFIERS[key]
+            .values()
+            .filter(([v, label]) => (v + ' ' + slug(label)).includes(partial))
+            .map(([v, label, n]) => ({
+              insert: prefix + v + ' ',
+              html: `<span class="k">${esc(key)}:<b>${esc(v)}</b></span>`,
+              desc: `${label ? esc(label) + ' · ' : ''}${n}`,
+            })),
+        }
+      }
+
+      function openMenu() {
+        const { heading, items } = suggestions()
+        options = items
+        active = 0
+        if (!items.length || document.activeElement !== input)
+          return closeMenu()
+        menu.innerHTML =
+          (heading ? `<li class="heading">${esc(heading)}</li>` : '') +
+          items
+            .map(
+              (o, i) =>
+                `<li class="opt" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}">${o.html}<span class="d">${o.desc}</span></li>`
+            )
+            .join('')
+        menu.hidden = false
+        input.setAttribute('aria-expanded', 'true')
+        input.setAttribute('aria-activedescendant', 'opt-0')
+      }
+      function closeMenu() {
+        menu.hidden = true
+        options = []
+        input.setAttribute('aria-expanded', 'false')
+        input.removeAttribute('aria-activedescendant')
+      }
+      function moveActive(d) {
+        active = (active + d + options.length) % options.length
+        menu.querySelectorAll('.opt').forEach((el) => {
+          const on = Number(el.dataset.i) === active
+          el.setAttribute('aria-selected', String(on))
+          if (on) el.scrollIntoView({ block: 'nearest' })
+        })
+        input.setAttribute('aria-activedescendant', 'opt-' + active)
+      }
+      function apply(o) {
+        const { start, end } = tokenAtCaret()
+        const v = input.value
+        const after = v.slice(end).replace(/^\s+/, '')
+        input.value = v.slice(0, start) + o.insert + after
+        const caret = start + o.insert.length
+        input.setSelectionRange(caret, caret)
+        setQuery(input.value, true)
+        if (o.keepOpen) openMenu()
+        else closeMenu()
+      }
+
+      function setQuery(q, keepInput) {
+        state.q = q
+        if (!keepInput) input.value = q
+        paint()
+        renderList()
+      }
+
+      // Cambia (o quita) un calificador sin tocar el resto de la búsqueda.
+      function setQualifier(key, value) {
+        const rest = state.q
+          .split(/\s+/)
+          .filter(Boolean)
+          .filter((tok) => tok.match(QRE)?.[2].toLowerCase() !== key)
+        setQuery((value ? [`${key}:${value}`, ...rest] : rest).join(' ') + ' ')
+      }
+      function addQualifier(tok) {
+        const toks = state.q.split(/\s+/).filter(Boolean)
+        if (!toks.includes(tok)) toks.push(tok)
+        setQuery(toks.join(' ') + ' ')
+      }
+
+      input.addEventListener('input', () => {
+        setQuery(input.value, true)
+        openMenu()
+      })
+      input.addEventListener('focus', openMenu)
+      input.addEventListener('click', openMenu)
+      input.addEventListener('blur', () => setTimeout(closeMenu, 120))
+      input.addEventListener('scroll', () => {
+        mirror.scrollLeft = input.scrollLeft
+      })
+      input.addEventListener('keyup', (e) => {
+        mirror.scrollLeft = input.scrollLeft
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') openMenu()
+      })
+      input.addEventListener('keydown', (e) => {
+        if (!menu.hidden && options.length) {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault()
+            return moveActive(e.key === 'ArrowDown' ? 1 : -1)
+          }
+          if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault()
+            return apply(options[active])
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault()
+            return closeMenu()
+          }
+        }
+        if (e.key === 'Enter' || (e.key === 'ArrowDown' && current.length)) {
+          e.preventDefault()
+          closeMenu()
+          if (current.length) select(current[0].code, true)
+        }
+        if (e.key === 'Escape') input.blur()
+      })
+      menu.addEventListener('mousedown', (e) => {
+        const el = e.target.closest('.opt')
+        if (!el) return
+        e.preventDefault()
+        apply(options[Number(el.dataset.i)])
+      })
+      $('clear').addEventListener('click', () => {
+        setQuery('')
+        input.focus()
+      })
+      $('submit').addEventListener('click', () => {
+        closeMenu()
+        if (current.length) select(current[0].code, true)
+      })
+      $('help').addEventListener('click', () => {
+        if (input.value && !/\s$/.test(input.value)) input.value += ' '
+        input.focus()
+        input.setSelectionRange(input.value.length, input.value.length)
+        openMenu()
+      })
+      document
+        .querySelectorAll('.tab')
+        .forEach((b) =>
+          b.addEventListener('click', () => setQualifier('is', b.dataset.is))
+        )
+
+      $('rows').addEventListener('click', (e) => {
+        const add = e.target.closest('[data-add]')
+        if (add) {
+          e.stopPropagation()
+          return addQualifier(add.dataset.add)
+        }
+        const row = e.target.closest('.card')
+        if (row) select(row.dataset.code)
+      })
+      $('rows').addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+        e.preventDefault()
+        const i = current.findIndex((f) => f.code === state.selected)
+        const next =
+          current[
+            Math.max(
+              0,
+              Math.min(current.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1))
+            )
+          ]
+        if (next) select(next.code, true)
+      })
+      $('detail').addEventListener('click', (e) => {
+        const el = e.target.closest('[data-q]')
+        if (el) setQuery(el.dataset.q)
+      })
+      document.addEventListener('keydown', (e) => {
+        const typing = document.activeElement === input
+        if (e.key === '/' && !typing) {
+          e.preventDefault()
+          input.focus()
+          input.setSelectionRange(input.value.length, input.value.length)
+        }
+        if (e.key === 'Escape' && !typing && state.selected) select(null)
+      })
+
+      // Un enlace a #CÓDIGO abre ese hallazgo, al cargar o con la página abierta.
+      function openFromHash() {
+        const code = decodeURIComponent(location.hash.slice(1))
+        const f = FINDINGS.find((x) => x.code === code)
+        if (!f) return false
+        if (!current.includes(f)) setQuery(isOpen(f) ? 'is:pendiente ' : '')
+        if (f.code !== state.selected) select(f.code, true)
+        return true
+      }
+      window.addEventListener('hashchange', openFromHash)
+      setQuery(state.q)
+      if (!openFromHash()) renderDetail()
+    </script>
+  </body>
+</html>
