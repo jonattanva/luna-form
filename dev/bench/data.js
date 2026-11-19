@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795111878212,
+  "lastUpdate": 1795111902864,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "76afb726a82f76bf24ffacbfeefc6ec220ad4a72",
-          "message": "Merge pull request #83 from jonattanva/fix/list-remove-nonlast-typed\n\nfix(list): tell the host every name a removed row shifts",
-          "timestamp": "2026-09-14T22:29:12-05:00",
-          "tree_id": "6aeb2c483d5af93883189be992798c7cab438d5e",
-          "url": "https://github.com/jonattanva/luna-form/commit/76afb726a82f76bf24ffacbfeefc6ec220ad4a72"
-        },
-        "date": 1789443040124,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 292,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 222,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "8102e3994317da2013f43d5db719f11921fa7372",
           "message": "Merge pull request #84 from jonattanva/fix/list-assign-stale-rows\n\nfix(list): report every position an assignment rewrites",
           "timestamp": "2026-09-15T07:38:50-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 15.4,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43dc86aa90f7dd2c31639953da55ef4923872131",
+          "message": "Merge pull request #176 from jonattanva/claude/luna-form-command-restructure-8c9f7f\n\nAdd /audit and /test-audit commands with an in-repo findings registry, and their first runs",
+          "timestamp": "2026-11-19T13:10:40-05:00",
+          "tree_id": "995a959b0b75822828fa22b52c1923eda27f33f2",
+          "url": "https://github.com/jonattanva/luna-form/commit/43dc86aa90f7dd2c31639953da55ef4923872131"
+        },
+        "date": 1795111902818,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 41.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.5,
             "unit": "ms"
           }
         ]
