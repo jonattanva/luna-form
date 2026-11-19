@@ -272,18 +272,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
-        shard: [1, 2]
-        shards: [2]
-        # Experiment: Firefox and WebKit against production, Chromium on
-        # `next dev` so StrictMode still runs in e2e.
+        # Experiment: Firefox and WebKit against production in 3 shards,
+        # Chromium on `next dev` in 2 so StrictMode still runs in e2e.
         include:
-          - browser: chromium
-            server: serve
-          - browser: firefox
-            server: start
-          - browser: webkit
-            server: start
+          - { browser: chromium, server: serve, shard: 1, shards: 2 }
+          - { browser: chromium, server: serve, shard: 2, shards: 2 }
+          - { browser: firefox, server: start, shard: 1, shards: 3 }
+          - { browser: firefox, server: start, shard: 2, shards: 3 }
+          - { browser: firefox, server: start, shard: 3, shards: 3 }
+          - { browser: webkit, server: start, shard: 1, shards: 3 }
+          - { browser: webkit, server: start, shard: 2, shards: 3 }
+          - { browser: webkit, server: start, shard: 3, shards: 3 }
     steps:
       - name: Check out code
         uses: actions/checkout@v6
