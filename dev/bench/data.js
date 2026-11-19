@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795112461399,
+  "lastUpdate": 1795112488456,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "8102e3994317da2013f43d5db719f11921fa7372",
-          "message": "Merge pull request #84 from jonattanva/fix/list-assign-stale-rows\n\nfix(list): report every position an assignment rewrites",
-          "timestamp": "2026-09-15T07:38:50-05:00",
-          "tree_id": "a5efa7f58a08dfa319035e4886c6898132ffd0a6",
-          "url": "https://github.com/jonattanva/luna-form/commit/8102e3994317da2013f43d5db719f11921fa7372"
-        },
-        "date": 1789476038945,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 194,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 139,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "a4128172fcd6e426f199f47f2087cb7990321047",
           "message": "Merge pull request #85 from jonattanva/fix/collapsed-submit\n\nfix(collapsible): hide what is collapsed without taking it out of the form",
           "timestamp": "2026-09-15T15:53:09-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 15.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3496fc93adfbff5ddb9b0cb13fc592ce26a4bb01",
+          "message": "Merge pull request #177 from jonattanva/claude/s-02-unused-exports\n\nStop exporting what nothing imports",
+          "timestamp": "2026-11-19T13:20:20-05:00",
+          "tree_id": "33aecb37d124cc83e38e434ec9bdd9b2a976f118",
+          "url": "https://github.com/jonattanva/luna-form/commit/3496fc93adfbff5ddb9b0cb13fc592ce26a4bb01"
+        },
+        "date": 1795112488408,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 57.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16,
             "unit": "ms"
           }
         ]
