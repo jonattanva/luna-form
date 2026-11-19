@@ -488,8 +488,8 @@ window.AUDIT = {
         'resolveTarget mete el nombre de la lista en una regex sin escaparlo: tags[]/label apunta a otro campo y a[ lanza',
       sev: 'mejora',
       cat: 'errores',
-      st: 'probado',
-      stLabel: 'En el PR #178',
+      st: 'corregido',
+      stLabel: 'Corregido en #178',
       sevNote: 'nombres con caracteres de regex',
       audit: 'audit-2026-11-19',
       sections: [
@@ -512,7 +512,7 @@ window.AUDIT = {
         {
           label: 'Corrección',
           audit: 'audit-2026-11-19',
-          html: '<p>Commit <code>fdb6758</code> en la rama <code>claude/bug-02-resolve-target</code>, desde <code>main</code>, en el <a href="https://github.com/jonattanva/luna-form/pull/178">PR #178</a>. <code>resolveTarget</code> compara segmentos como texto y conserva qué fila elige: la primera si el nombre empieza con la lista, la última en el camino si no. <b>Antes:</b> <code>label</code> para <code>tags[]/label</code>, <code>orderXlines.2.qty</code> para <code>order.lines/qty</code> y <code>SyntaxError</code> para <code>a[</code>. <b>Después:</b> <code>tags[].0.label</code>, <code>qty</code> y <code>a[.0.b</code>. <code>tests/unit/path.spec.ts</code> fija también el comportamiento que no cambia. Pasan build, lint, tipos, 1278 unitarias y las e2e de eventos relativos a una fila en los tres navegadores (87 corridas), según la sesión que lo hizo.</p>',
+          html: '<p>Commit <code>fdb6758</code> en la rama <code>claude/bug-02-resolve-target</code>, desde <code>main</code>, integrado en el <a href="https://github.com/jonattanva/luna-form/pull/178">PR #178</a> (<code>c4db2d4</code>). <code>resolveTarget</code> compara segmentos como texto y conserva qué fila elige: la primera si el nombre empieza con la lista, la última en el camino si no. <b>Antes:</b> <code>label</code> para <code>tags[]/label</code>, <code>orderXlines.2.qty</code> para <code>order.lines/qty</code> y <code>SyntaxError</code> para <code>a[</code>. <b>Después:</b> <code>tags[].0.label</code>, <code>qty</code> y <code>a[.0.b</code>. <code>tests/unit/path.spec.ts</code> fija también el comportamiento que no cambia. Pasan build, lint, tipos, 1278 unitarias y las e2e de eventos relativos a una fila en los tres navegadores (87 corridas), según la sesión que lo hizo.</p>',
         },
       ],
     },
@@ -549,8 +549,8 @@ window.AUDIT = {
       title: 'Después de un envío fallido el foco se queda en Submit',
       sev: 'optim',
       cat: 'a11y',
-      st: 'probado',
-      stLabel: 'En el PR #180',
+      st: 'corregido',
+      stLabel: 'Corregido en #180',
       audit: 'audit-2026-11-19',
       sections: [
         {
@@ -572,7 +572,7 @@ window.AUDIT = {
         {
           label: 'Corrección',
           audit: 'audit-2026-11-19',
-          html: '<p>Commit <code>2e0fc61</code> en la rama <code>claude/brave-boyd-aee2b6</code>, desde <code>main</code>, en el <a href="https://github.com/jonattanva/luna-form/pull/180">PR #180</a>. Cuando la validación frena un envío, el foco pasa al campo del primer error en el orden de la página, como hace el navegador con su propia validación. El campo se encuentra por el <code>id</code> que nombra su label y, si no, por el <code>aria-errormessage</code>; un control que no toma el foco (un grupo de botones) se lo da al primero de adentro; un campo en una sección o fila colapsada recibe el foco cuando se abre lo que lo contiene. Si el foco estaba fuera del formulario, no se mueve, y un error que devuelve la acción no mueve nada. <b>Antes:</b> el foco en Submit. <b>Después:</b> el foco en el primer campo con error. Documentado en <code>docs/forms/submit.md</code>, con la prueba <code>tests/e2e/failed-submit-focus.spec.ts</code>. Según la sesión que lo hizo, pasan todos los checks y las 135 e2e relacionadas en Chromium, Firefox y WebKit.</p>',
+          html: '<p>Commit <code>2e0fc61</code> en la rama <code>claude/brave-boyd-aee2b6</code>, desde <code>main</code>, integrado en el <a href="https://github.com/jonattanva/luna-form/pull/180">PR #180</a> (<code>8df8ac5</code>). Cuando la validación frena un envío, el foco pasa al campo del primer error en el orden de la página, como hace el navegador con su propia validación. El campo se encuentra por el <code>id</code> que nombra su label y, si no, por el <code>aria-errormessage</code>; un control que no toma el foco (un grupo de botones) se lo da al primero de adentro; un campo en una sección o fila colapsada recibe el foco cuando se abre lo que lo contiene. Si el foco estaba fuera del formulario, no se mueve, y un error que devuelve la acción no mueve nada. <b>Antes:</b> el foco en Submit. <b>Después:</b> el foco en el primer campo con error. Documentado en <code>docs/forms/submit.md</code>, con la prueba <code>tests/e2e/failed-submit-focus.spec.ts</code>. Según la sesión que lo hizo, pasan todos los checks y las 135 e2e relacionadas en Chromium, Firefox y WebKit.</p>',
         },
       ],
     },
