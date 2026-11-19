@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795119313960,
+  "lastUpdate": 1795119372506,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "4bf0ae0e4217174591932d8f4da700856bc7911c",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-09-18T08:45:04-05:00",
-          "tree_id": "59d2cd8f35556be5b5854ace36750826966ae890",
-          "url": "https://github.com/jonattanva/luna-form/commit/4bf0ae0e4217174591932d8f4da700856bc7911c"
-        },
-        "date": 1789739175747,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 284,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 154,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 16.2,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9cfa7b186d23feb7b72a91f7636062d59940ad91",
+          "message": "Merge pull request #187 from jonattanva/claude/trim-output-schemas\n\nrefactor(react): lighten the agent tools' output schemas",
+          "timestamp": "2026-11-19T15:14:09-05:00",
+          "tree_id": "189c4f5222daaedf4651170927e46ff22a65ff71",
+          "url": "https://github.com/jonattanva/luna-form/commit/9cfa7b186d23feb7b72a91f7636062d59940ad91"
+        },
+        "date": 1795119372472,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 37.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 17.3,
             "unit": "ms"
           }
         ]
