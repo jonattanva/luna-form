@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795109679083,
+  "lastUpdate": 1795109708197,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "d375271f777908cf4d3cd3c170f4d9a576a2b8b0",
-          "message": "Merge pull request #81 from jonattanva/test/render-budgets\n\ntest(render): count what a keystroke costs, in CI",
-          "timestamp": "2026-09-13T14:45:20-05:00",
-          "tree_id": "de582c0b91def5544523df38d8cdcbafc83bb18b",
-          "url": "https://github.com/jonattanva/luna-form/commit/d375271f777908cf4d3cd3c170f4d9a576a2b8b0"
-        },
-        "date": 1789328808516,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 316,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 632,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "403a24d7f29daf2862e8e7d9459363248dbc24ee",
           "message": "Merge pull request #82 from jonattanva/fix/failed-submit-host-value\n\nfix(submit): leave the form as it was after a failed submit",
           "timestamp": "2026-09-14T22:22:21-05:00",
@@ -8801,6 +8767,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: interaction time (10 fields)",
             "value": 14.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5d817faa5e000d33f2262b5b5dc0ba9406a4e1a0",
+          "message": "Merge pull request #173 from jonattanva/claude/agent-fixed-list\n\nfix(react): keep the rows of a fixed list from an agent, and ask only for what the person gave",
+          "timestamp": "2026-11-19T12:33:48-05:00",
+          "tree_id": "1c420343342fb941199d1faba77247956bb4662b",
+          "url": "https://github.com/jonattanva/luna-form/commit/5d817faa5e000d33f2262b5b5dc0ba9406a4e1a0"
+        },
+        "date": 1795109708144,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 67,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.3,
             "unit": "ms"
           }
         ]
