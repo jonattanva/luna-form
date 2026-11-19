@@ -158,6 +158,100 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
     })
   }
 
+  // A disabled select fetches nothing, so a remote source has no options to
+  // name what it holds: the object value stands in as its only option, and a
+  // saved selection stays readable.
+  test('should display the object value of a disabled select with a remote source', async ({
+    page,
+  }) => {
+    // Audit BUG-03: the client hands `resolveSource` the field's own value, which
+    // `buildOptions` reads by the field's name, so the select renders blank.
+    // Drop .fail once fixed.
+    test.fail()
+
+    let requests = 0
+    await page.route('**/api/locked-fruits', (route) => {
+      requests += 1
+      return route.fulfill({
+        body: JSON.stringify([{ value: 'apple', label: 'Apple' }]),
+        contentType: 'application/json',
+      })
+    })
+
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              {
+                label: 'Select Fruit',
+                name: 'fruit',
+                type: 'select',
+                disabled: true,
+                defaultValue: { value: 'banana', label: 'Banana' },
+                source: { url: '/api/locked-fruits' },
+              },
+            ],
+          },
+        ],
+      })
+    )
+
+    await page.goto('')
+
+    const select = page.getByRole('combobox')
+    await expect(select).toBeDisabled()
+    await expect(select).toContainText('Banana')
+    expect(requests).toBe(0)
+  })
+
+  // Requests are keyed by the source, not by the field: two fields declaring
+  // the same one share a single request and its cache entry.
+  test('should share one request between two selects with the same source', async ({
+    page,
+  }) => {
+    let requests = 0
+    await page.route('**/api/shared-fruits', (route) => {
+      requests += 1
+      return route.fulfill({
+        body: JSON.stringify([
+          { value: 'apple', label: 'Apple' },
+          { value: 'banana', label: 'Banana' },
+        ]),
+        contentType: 'application/json',
+      })
+    })
+
+    const source = { url: '/api/shared-fruits' }
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              { label: 'First', name: 'first', type: 'select', source },
+              { label: 'Second', name: 'second', type: 'select', source },
+            ],
+          },
+        ],
+      })
+    )
+
+    await page.goto('')
+
+    for (const name of ['First', 'Second']) {
+      const select = page.getByRole('combobox', { name })
+      await expect(select).toBeVisible()
+      await select.click()
+      await expect(page.getByRole('option', { name: 'Banana' })).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('listbox')).toBeHidden()
+    }
+
+    expect(requests).toBe(1)
+  })
+
   test('should work correctly with select day input type', async ({ page }) => {
     await inject(
       page,
