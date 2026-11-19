@@ -188,6 +188,7 @@ function createAgentTools(
     definition: form.definition,
     localization: form.localization,
     types: form.types,
+    validates: form.validates,
   })
 
   const agent: AgentOptions = {

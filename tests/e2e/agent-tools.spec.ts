@@ -1011,10 +1011,24 @@ test.describe(
                 required: true,
                 type: 'input/text',
               },
+              {
+                label: 'VAT',
+                name: 'vat',
+                type: 'input/text',
+                validation: {
+                  requiredWhen: { field: 'name', operator: 'eq', value: 'Co' },
+                },
+              },
             ],
           },
         ],
       })
+
+      // A rule only a submit checks is not mentioned.
+      const [fill] = await list(page)
+      expect(
+        (fill.inputSchema.properties as Record<string, object>).vat
+      ).toEqual({ title: 'VAT', type: 'string' })
 
       // Nothing stops it, and it ends: a second one is sent rather than
       // answered pending.

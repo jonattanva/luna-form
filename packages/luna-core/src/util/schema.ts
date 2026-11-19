@@ -1095,14 +1095,32 @@ function applyDeclarativeRules<T extends z.ZodType>(
   })
 }
 
+// The rules of `validation` the submit checks and the field does not: they
+// read the rest of the form's data. See `applyDeclarativeRules`.
+const DECLARATIVE = ['requiredWhen', 'pattern', 'rules'] as const
+
 function hasDeclarativeRules(field: Field): boolean {
   const validation = field.validation
   return (
     validation !== undefined &&
-    (validation.requiredWhen !== undefined ||
-      validation.pattern !== undefined ||
-      validation.rules !== undefined)
+    DECLARATIVE.some((key) => validation[key] !== undefined)
   )
+}
+
+/**
+ * The field as a submit that checks nothing leaves it: without the rules only
+ * a submit checks. What the field checks as it is written stays.
+ */
+export function withoutDeclarativeRules(field: Field): Field {
+  if (!hasDeclarativeRules(field)) {
+    return field
+  }
+
+  const validation = { ...field.validation }
+  for (const key of DECLARATIVE) {
+    delete validation[key]
+  }
+  return { ...field, validation }
 }
 
 function fieldIssues(

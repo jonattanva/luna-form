@@ -742,6 +742,46 @@ describe('buildToolSchema', () => {
         )?.description
       ).toBe('Required when kind eq "company".')
     })
+
+    test('should hold no rule only a submit checks when it checks none', () => {
+      const fields: Fields = [
+        {
+          name: 'vat',
+          type: 'input/text',
+          validation: {
+            pattern: { flags: 'i', regex: '^[a-z]{3}$' },
+            requiredWhen: { field: 'kind', operator: 'eq', value: 'company' },
+            rules: [{ assert: 'minItems', message: 'Too few.', value: 2 }],
+          },
+        },
+        {
+          name: 'sku',
+          type: 'input/text',
+          validation: { pattern: { regex: '^[A-Z]{3}$' } },
+        },
+        { name: 'code', required: true, type: 'checkbox' },
+        {
+          name: 'confirm',
+          type: 'input/text',
+          validation: { custom: { field: 'vat', operator: 'eq' } },
+        },
+      ]
+
+      const checked = build(fields).schema.properties
+      expect(checked?.vat?.description).toBe(
+        'It must match a pattern the submit checks. Required when kind eq "company". The submit checks more rules for it.'
+      )
+      expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
+
+      // What the field checks as it is written stays.
+      const unchecked = build(fields, { validates: false }).schema.properties
+      expect(unchecked?.vat).toEqual({ type: 'string' })
+      expect(unchecked?.sku).toEqual({ type: 'string' })
+      expect(unchecked?.code?.description).toBe('Required to be true.')
+      expect(unchecked?.confirm?.description).toBe(
+        'More rules are checked as it is written.'
+      )
+    })
   })
 
   describe('text the agent reads', () => {
