@@ -1026,6 +1026,47 @@ test.describe(
       }
     })
 
+    for (const { error, fail } of [
+      { error: { title: 'The host did not accept the form.' }, fail: 'answer' },
+      {
+        error: {
+          details: ['The host could not be reached.'],
+          title: 'An unexpected error occurred submitting the form.',
+        },
+        fail: 'throw',
+      },
+    ]) {
+      test(`should answer the failure of a submission that checks nothing (${fail})`, async ({
+        page,
+      }) => {
+        await openWith(page, {
+          host: { fail, validateOnSubmit: false },
+          sections: [
+            {
+              fields: [{ label: 'Name', name: 'name', type: 'input/text' }],
+            },
+          ],
+        })
+
+        expect(await call(page, 'preview_fill', { name: 'Ada' })).toMatchObject(
+          { ok: true }
+        )
+        // It ends as a failure, not pending, and a second one is sent too.
+        for (let round = 0; round < 2; round++) {
+          expect(await call(page, 'preview_submit')).toEqual({
+            error,
+            errors: {},
+            ok: false,
+          })
+          expect((await call(page, 'preview_read')).submit).toMatchObject({
+            error,
+            status: 'error',
+          })
+        }
+        await expect(page.locator('input[name="name"]')).toHaveValue('Ada')
+      })
+    }
+
     test('should answer calls one at a time, and busy past ten waiting', async ({
       page,
     }) => {

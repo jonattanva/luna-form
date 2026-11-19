@@ -209,3 +209,60 @@ test.describe('A failed submit', { tag: ['@e2e'] }, () => {
     await expect(payload).toContainText('"shade": "blue"')
   })
 })
+
+// The same holds when nothing is checked and the action itself fails, by
+// answering a failure or by throwing: the failure is shown, nothing is started
+// over, and the submit ends.
+test.describe(
+  'A submit that checks nothing and fails',
+  { tag: ['@e2e'] },
+  () => {
+    for (const { fail, shown } of [
+      { fail: 'answer', shown: 'The host did not accept the form.' },
+      {
+        fail: 'throw',
+        shown: 'An unexpected error occurred submitting the form.',
+      },
+    ]) {
+      test(`should keep what was written (${fail})`, async ({ page }) => {
+        await inject(
+          page,
+          JSON.stringify({
+            host: { fail, validateOnSubmit: false },
+            sections: [
+              {
+                fields: [
+                  { label: 'Name', name: 'name', type: 'input/text' },
+                  {
+                    fields: [{ label: 'SKU', name: 'sku', type: 'input/text' }],
+                    label: 'Items',
+                    name: 'items',
+                    type: 'list',
+                  },
+                ],
+              },
+            ],
+          })
+        )
+        await page.goto('/reactive')
+
+        await page.locator('input[name="name"]').fill('Ada')
+        await page.locator('input[name$=".sku"]').first().fill('A1')
+        await page.getByRole('button', { name: 'Add item' }).click()
+        await page.locator('input[name$=".sku"]').nth(1).fill('B2')
+        await page.getByRole('button', { name: 'Submit' }).click()
+
+        await expect(page.getByRole('alert').getByText(shown)).toBeVisible()
+        await expect(page.getByText('Form submitted successfully')).toHaveCount(
+          0
+        )
+        await expect(page.locator('input[name="name"]')).toHaveValue('Ada')
+        await expect(page.locator('input[name$=".sku"]')).toHaveCount(2)
+        await expect(page.locator('input[name$=".sku"]').nth(1)).toHaveValue(
+          'B2'
+        )
+        await expect(page.getByRole('button', { name: 'Submit' })).toBeEnabled()
+      })
+    }
+  }
+)
