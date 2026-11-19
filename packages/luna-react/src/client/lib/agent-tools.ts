@@ -109,12 +109,14 @@ export type FieldStatus = Readonly<{
   locked: boolean
 }>
 
+const SUBMIT_STATES = ['idle', 'pending', 'success', 'error'] as const
+
 /** The last submission: `pending` while it runs. */
 export type SubmitStatus = Readonly<{
   data?: ToolResult
   error?: ToolResult
   errors?: Readonly<Record<string, readonly string[]>>
-  status: 'idle' | 'pending' | 'success' | 'error'
+  status: (typeof SUBMIT_STATES)[number]
 }>
 
 /**
@@ -199,15 +201,18 @@ export type FormToolsHost = Readonly<{
   ) => Readonly<Record<string, readonly string[]>>
 }>
 
-type SkipCode =
-  | 'changed'
-  | 'hidden'
-  | 'invalid_format'
-  | 'invalid_option'
-  | 'invalid_type'
-  | 'locked'
-  | 'rows_fixed'
-  | 'unknown'
+const SKIP_CODES = [
+  'changed',
+  'hidden',
+  'invalid_format',
+  'invalid_option',
+  'invalid_type',
+  'locked',
+  'rows_fixed',
+  'unknown',
+] as const
+
+type SkipCode = (typeof SKIP_CODES)[number]
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
 
@@ -281,10 +286,12 @@ const CHANGED =
   'A person changed it since you last read the form: values has what it holds now. Send it again to replace that.'
 
 const ANSWERED: ToolSchema = { type: 'boolean' }
-const NAMES: ToolSchema = { items: { type: 'string' }, type: 'array' }
 const TEXT: ToolSchema = { type: 'string' }
+const NAMES: ToolSchema = { items: TEXT, type: 'array' }
+const MORE: ToolSchema = { minimum: 1, type: 'integer' }
+const OBJECT: ToolSchema = { type: 'object' }
 const ERRORS: ToolSchema = {
-  description: 'The validation errors by field, in the language of the form.',
+  description: 'By field, in the language of the form.',
   type: 'object',
 }
 const FAILURE = {
@@ -295,68 +302,47 @@ const FAILURE = {
   message: TEXT,
   ok: ANSWERED,
 } satisfies Record<string, ToolSchema>
+// What a submission ended with, as the submit and the read answer it.
+const OUTCOME = {
+  data: OBJECT,
+  error: OBJECT,
+  errors: ERRORS,
+} satisfies Record<string, ToolSchema>
 
 const SUBMIT_STATUS: ToolSchema = {
   properties: {
-    data: { type: 'object' },
-    error: { type: 'object' },
-    errors: ERRORS,
-    status: {
-      enum: ['idle', 'pending', 'success', 'error'],
-      type: 'string',
-    },
+    ...OUTCOME,
+    status: { enum: SUBMIT_STATES, type: 'string' },
   },
   required: ['status'],
   type: 'object',
 }
 
+// The fields a fill reports something of, each with a code from `codes`.
+function reports(codes: readonly string[]): ToolSchema {
+  return {
+    items: {
+      properties: {
+        code: { enum: codes, type: 'string' },
+        message: TEXT,
+        name: TEXT,
+      },
+      required: ['name', 'code', 'message'],
+      type: 'object',
+    },
+    type: 'array',
+  }
+}
+
 const FILL_OUTPUT: ToolSchema = {
   properties: {
     ...FAILURE,
-    adjusted: {
-      items: {
-        properties: {
-          code: { enum: ['rows_adjusted'], type: 'string' },
-          message: TEXT,
-          name: TEXT,
-        },
-        required: ['name', 'code', 'message'],
-        type: 'object',
-      },
-      type: 'array',
-    },
+    adjusted: reports(['rows_adjusted']),
     applied: NAMES,
     errors: ERRORS,
     revealed: NAMES,
-    skipped: {
-      items: {
-        properties: {
-          code: {
-            enum: [
-              'changed',
-              'hidden',
-              'invalid_format',
-              'invalid_option',
-              'invalid_type',
-              'locked',
-              'rows_fixed',
-              'unknown',
-            ],
-            type: 'string',
-          },
-          message: TEXT,
-          name: TEXT,
-        },
-        required: ['name', 'code', 'message'],
-        type: 'object',
-      },
-      type: 'array',
-    },
-    values: {
-      description:
-        'The final value of every field that changed, and what a field skipped as changed holds.',
-      type: 'object',
-    },
+    skipped: reports(SKIP_CODES),
+    values: OBJECT,
   },
   required: ['ok'],
   type: 'object',
@@ -366,9 +352,8 @@ const READ_INPUT: ToolSchema = {
   additionalProperties: false,
   properties: {
     fields: {
+      ...NAMES,
       description: 'The fields to read. Every field when left out.',
-      items: { type: 'string' },
-      type: 'array',
     },
   },
   type: 'object',
@@ -380,9 +365,9 @@ const READ_OUTPUT: ToolSchema = {
     errors: ERRORS,
     hidden: NAMES,
     locked: NAMES,
-    more: { minimum: 1, type: 'integer' },
+    more: MORE,
     submit: SUBMIT_STATUS,
-    values: { type: 'object' },
+    values: OBJECT,
   },
   type: 'object',
 }
@@ -398,7 +383,7 @@ const OPTIONS_OUTPUT: ToolSchema = {
       },
       type: 'array',
     },
-    more: { minimum: 1, type: 'integer' },
+    more: MORE,
   },
   type: 'object',
 }
@@ -412,9 +397,7 @@ const SUBMIT_INPUT: ToolSchema = {
 const SUBMIT_OUTPUT: ToolSchema = {
   properties: {
     ...FAILURE,
-    data: { type: 'object' },
-    error: { type: 'object' },
-    errors: ERRORS,
+    ...OUTCOME,
     pending: ANSWERED,
   },
   type: 'object',
