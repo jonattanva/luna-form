@@ -6,17 +6,19 @@ import { inject } from './support/inject'
  * Browser benchmarks, stored on gh-pages by `performance.yml` and alerted on
  * at 2x, so a number here has to repeat between runs on a shared runner.
  *
- * Both are timed inside the page with `performance.now()`, never across
- * Playwright round trips, and each is the median of several samples taken
- * after warm-up runs. The interaction is measured once the editor has booted
- * and the main thread is idle: Monaco loads from a CDN, and a sample that
- * overlaps its start-up times the network rather than the form.
+ * Each is timed inside the page with `performance.now()`, never across
+ * Playwright round trips, and is the median of several samples taken after
+ * warm-up runs. The interaction is measured once the editor has booted and the
+ * main thread is idle: Monaco loads from a CDN, and a sample that overlaps its
+ * start-up times the network rather than the form.
  */
 
 const FIELDS = 50
 const INTERACTION_FIELDS = 10
+const REMOUNT_FIELDS = 200
 const LOAD = { warmup: 1, samples: 7 }
 const INTERACTION = { warmup: 3, samples: 15 }
+const REMOUNT = { warmup: 1, samples: 7 }
 
 declare global {
   interface Window {
@@ -24,16 +26,30 @@ declare global {
       loaded?: number
       settle: () => Promise<void>
       interact: (fields: number, round: number) => Promise<number>
+      remount: (fields: number) => Promise<number>
     }
   }
 }
 
-function generateFields(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    label: `Field ${i + 1}`,
-    name: `field_${i + 1}`,
-    type: 'input/text',
-  }))
+// What the benchmarks write, in the order the workflow stores them.
+const results: Array<{ name: string; unit: 'ms'; value: number }> = []
+
+// A form of `count` text fields, `field_1` on, injected before the page loads.
+function injectFields(page: Page, count: number) {
+  return inject(
+    page,
+    JSON.stringify({
+      sections: [
+        {
+          fields: Array.from({ length: count }, (_, i) => ({
+            label: `Field ${i + 1}`,
+            name: `field_${i + 1}`,
+            type: 'input/text',
+          })),
+        },
+      ],
+    })
+  )
 }
 
 // Runs inside the page ahead of its own scripts, on every navigation. Nothing
@@ -47,6 +63,17 @@ function install() {
       channel.port1.onmessage = () => resolve(performance.now() - started)
       channel.port2.postMessage(0)
     })
+
+  // The moment the thread is first idle again.
+  const untilIdle = async () => {
+    for (let i = 0; i < 300; i++) {
+      const before = performance.now()
+      if ((await hop()) < 1.5) {
+        return before
+      }
+    }
+    return performance.now()
+  }
 
   // Until the thread comes back free three hops running.
   const settle = async () => {
@@ -86,13 +113,64 @@ function install() {
         await hop()
       }
 
-      for (let i = 0; i < 300; i++) {
-        const before = performance.now()
-        if ((await hop()) < 1.5) {
-          return before - started
-        }
+      return (await untilIdle()) - started
+    },
+
+    // Submits the form and returns the time from the action's answer
+    // arriving until the form has started over -- its last field a new one --
+    // and the page has drawn it and is idle. The answer is decoded in that
+    // time; the action's own wait is not.
+    remount: async (fields) => {
+      await settle()
+      // A full buffer records nothing more.
+      performance.clearResourceTimings()
+
+      const last = `input[name="field_${fields}"]`
+      const before = document.querySelector(last)
+      const submit = document.querySelector<HTMLButtonElement>(
+        'button[type="submit"]'
+      )
+      if (!before || !submit) {
+        throw new Error('no form to submit')
       }
-      return performance.now() - started
+
+      // The new last field, as soon as the form commits it.
+      const startedOver = new Promise<Element>((resolve, reject) => {
+        const observer = new MutationObserver(() => {
+          const now = document.querySelector(last)
+          if (now && now !== before) {
+            observer.disconnect()
+            clearTimeout(timer)
+            resolve(now)
+          }
+        })
+        const timer = setTimeout(() => {
+          observer.disconnect()
+          reject(new Error('the form did not start over'))
+        }, 10_000)
+        observer.observe(document.body, { childList: true, subtree: true })
+      })
+
+      const clicked = performance.now()
+      submit.click()
+      // The style and layout of the new fields, forced now rather than left to
+      // the next frame, whose wait would be counted too. Paint is not, as for
+      // the interaction.
+      ;(await startedOver).getBoundingClientRect()
+      const idle = await untilIdle()
+
+      const answer = performance
+        .getEntriesByType('resource')
+        .find(
+          (entry): entry is PerformanceResourceTiming =>
+            entry instanceof PerformanceResourceTiming &&
+            entry.initiatorType === 'fetch' &&
+            entry.startTime >= clicked
+        )
+      if (!answer) {
+        throw new Error('the action was never answered')
+      }
+      return idle - answer.responseStart
     },
   }
   window.__bench = bench
@@ -140,16 +218,26 @@ async function sample(
 }
 
 test.describe('E2E Benchmark', { tag: ['@benchmark', '@perf'] }, () => {
+  test.describe.configure({ mode: 'serial' })
+
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(install)
+  })
+
+  test.afterAll(() => {
+    console.log('Benchmark Results:', JSON.stringify(results, null, 2))
+
+    // Replaces the previous content: the workflow reads this file as is.
+    writeFileSync(
+      'benchmark-e2e-output.json',
+      JSON.stringify(results, null, 2) + '\n'
+    )
+  })
+
   test('benchmark: form performance (50 fields)', async ({ page }) => {
     test.setTimeout(120000)
 
-    await page.addInitScript(install)
-    await inject(
-      page,
-      JSON.stringify({
-        sections: [{ fields: generateFields(FIELDS) }],
-      })
-    )
+    await injectFields(page, FIELDS)
 
     const loadTime = await sample(LOAD, () => measureLoad(page))
 
@@ -168,7 +256,7 @@ test.describe('E2E Benchmark', { tag: ['@benchmark', '@perf'] }, () => {
       `value 1 round ${INTERACTION.warmup + INTERACTION.samples - 1}`
     )
 
-    const benchmarkResult = [
+    results.push(
       {
         name: 'browser: form load time (50 fields)',
         unit: 'ms',
@@ -178,15 +266,30 @@ test.describe('E2E Benchmark', { tag: ['@benchmark', '@perf'] }, () => {
         name: 'browser: interaction time (10 fields)',
         unit: 'ms',
         value: interactionTime,
-      },
-    ]
-
-    console.log('Benchmark Results:', JSON.stringify(benchmarkResult, null, 2))
-
-    // Replaces the previous content: the workflow reads this file as is.
-    writeFileSync(
-      'benchmark-e2e-output.json',
-      JSON.stringify(benchmarkResult, null, 2) + '\n'
+      }
     )
+  })
+
+  // A success starts the form over: every field is mounted anew. On
+  // /reactive, which shows the action's answer the same way every time, where
+  // the editor stacks a toast per success.
+  test('benchmark: start over after a submit (200 fields)', async ({
+    page,
+  }) => {
+    test.setTimeout(60000)
+
+    await injectFields(page, REMOUNT_FIELDS)
+    await page.goto('/reactive')
+    await expect(page.locator('input[type="text"]')).toHaveCount(REMOUNT_FIELDS)
+
+    const remountTime = await sample(REMOUNT, () =>
+      page.evaluate((fields) => window.__bench.remount(fields), REMOUNT_FIELDS)
+    )
+
+    results.push({
+      name: 'browser: start over after a submit (200 fields)',
+      unit: 'ms',
+      value: remountTime,
+    })
   })
 })
