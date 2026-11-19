@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795124623632,
+  "lastUpdate": 1795127377585,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb",
-          "message": "test(hidden-clear): type only once the select has finished closing\n\n\"keeps an input reverted to its static hidden that declares keepValue\"\ntimed out in Firefox in two of four full-suite runs, on the last step: the\nnote came back empty. It was never the hide. The trace shows the note's fill\nnever reached the form -- the input read \"\" straight after it, and the form\nlogged four value changes where five were due.\n\nThe editor's select plays an exit animation (`data-[state=closed]:animate-out`,\nwhich `reducedMotion` does not stop) and only then unmounts, and Radix's\nFocusScope hands focus back to the trigger a task after that. The field the\noption reveals is on screen first, so under load `toBeVisible` passed, `fill`\nfocused the note, lost focus to the closing popup, and typed into nothing. A\nprobe with the close stretched to one second lost keystrokes the same way in\nall three browsers.\n\n`choose` now waits for the listbox to go and for the trigger to hold focus,\nwhich is the last thing the close does. The helper also checks both fields hold\nwhat was typed before hiding them: a fill that never landed used to read as a\nvalue the hide lost, and let every case that expects an empty field pass on it.\n\nFirefox, 8 workers, the test repeated 40 times: 2 failures before, none after.\nFull Firefox suite at 3 workers: 591 passed.",
-          "timestamp": "2026-10-04T23:12:25-05:00",
-          "tree_id": "480aa8aecab644c935e6a8ff1a2a8fa3badeb7b8",
-          "url": "https://github.com/jonattanva/luna-form/commit/1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb"
-        },
-        "date": 1791173589493,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00016722662000000013,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0005958762400000001,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.000043906399999999624,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.00020035582000000034,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0002715510399999999,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.01396693616,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.01785049286,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74bd258b4b880c801c0bd855e0407a5637ca3c34",
+          "message": "Merge pull request #198 from jonattanva/claude/build-form-schema-lang\n\nfeat(core): validate on the server in the form's language",
+          "timestamp": "2026-11-19T17:28:57-05:00",
+          "tree_id": "8e0883f8348e57d35680d16e0b3c3b92eb0138a0",
+          "url": "https://github.com/jonattanva/luna-form/commit/74bd258b4b880c801c0bd855e0407a5637ca3c34"
+        },
+        "date": 1795127376830,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0002683005600000001,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0008533749599999999,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00011394659999999988,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00031974308000000005,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00045541264000000014,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.016249913740000003,
             "unit": "ms"
           }
         ]
