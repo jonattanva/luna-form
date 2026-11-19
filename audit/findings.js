@@ -345,8 +345,8 @@ window.AUDIT = {
         'Las e2e de CI corren sobre next dev; sobre next start la misma suite pasa entera y tarda entre un 21 y un 30 % menos',
       sev: 'mejora',
       cat: 'pruebas',
-      st: 'medido',
-      stLabel: 'Medido en CI: 822 a 584 s con OPT-01',
+      st: 'corregido',
+      stLabel: 'Corregido en #200',
       sevNote: 'falta medir en CI',
       audit: 'test-audit-2026-11-19',
       sections: [
@@ -460,8 +460,8 @@ window.AUDIT = {
         'El shard 2 de cada navegador tarda entre 80 y 110 s más que el shard 1',
       sev: 'optim',
       cat: 'pruebas',
-      st: 'medido',
-      stLabel: 'Medido en CI con OPT-03',
+      st: 'corregido',
+      stLabel: 'Corregido en #200',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Tiempo de la suite.</p>' },
