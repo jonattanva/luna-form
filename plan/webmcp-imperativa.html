@@ -3530,11 +3530,22 @@ const result = await callTool(call.name, call.input)</code></pre>
                       queda.
                     </li>
                     <li>
+                      Recortados el 2026-11-19: de 2124 a 1932 caracteres en un
+                      formulario con fill, read y submit, un 9 %. Se quitó la
+                      descripción de <code>values</code>, que repetía la de
+                      fill, y se acortó la de <code>errors</code>; se conservan
+                      los <code>required</code> y los <code>enum</code>, que el
+                      test de contrato exige.
+                    </li>
+                    <li>
                       Con <code>validation.submit: false</code>,
                       <code>&lt;name&gt;_fill</code> ya no nombra los campos que
                       el envío necesita y <code>&lt;name&gt;_submit</code> dice
-                      que los valores van sin revisar. Las notas de cada campo
-                      siguen describiendo las reglas del formulario.
+                      que los valores van sin revisar. Desde el 2026-11-19 el
+                      esquema tampoco lleva las reglas que solo revisa el envío
+                      (<code>requiredWhen</code>, <code>rules</code>,
+                      <code>pattern</code>): <code>buildToolSchema</code> recibe
+                      <code>validates</code>.
                     </li>
                   </ul>
                 </li>
@@ -3586,19 +3597,37 @@ const result = await callTool(call.name, call.input)</code></pre>
                     </li>
                   </ul>
                 </li>
-                <li>
+                <li class="done">
                   Opcional: en el editor, limitar los <code>source</code> con
                   <code>remotePatterns</code>. Con <code>set_definition</code>,
                   un agente inyectado podría apuntar un <code>source</code> con
                   <code>{value}</code> a cualquier host y llevarse lo que la
                   persona escribe en la vista previa.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-19. El editor solo deja pasar los hosts
+                      de sus ejemplos, y se cerró un bypass: una URL relativa o
+                      con espacios se resuelve contra un origen interno antes de
+                      compararla.
+                    </li>
+                  </ul>
                 </li>
-                <li>
+                <li class="done">
                   Opcional: recortar el largo de las etiquetas y descripciones
                   en el esquema (por ejemplo, a 200 caracteres). Las que llegan
                   por <code>#/context/</code> entran sin límite; la
                   especificación pide limitar el largo contra el envenenamiento
                   de metadatos. El aviso <code>UNTRUSTED</code> ya las cubre.
+                  <ul>
+                    <li>
+                      Hecho el 2026-11-19: 200 caracteres para una etiqueta y
+                      500 para una descripción, contados por punto de código.
+                      Una opción no se corta, porque el agente la nombra por su
+                      etiqueta: un campo cuyas opciones pasan de 1000 caracteres
+                      se busca con
+                      <code>&lt;name&gt;_options</code>.
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   Seguir los cambios de la API y del origin trial, versión por

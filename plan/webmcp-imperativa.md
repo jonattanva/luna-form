@@ -1248,9 +1248,15 @@ Resultados:
     era lo que el modelo necesita (cuándo `ok` es falso, el valor final, el
     timeout de un envío que sigue corriendo). Los esquemas de salida pesan más
     (2415 caracteres) y son el recorte que queda.
+  - Recortados el 2026-11-19: de 2124 a 1932 caracteres en un formulario con
+    fill, read y submit, un 9 %. Se quitó la descripción de `values`, que repetía
+    la de fill, y se acortó la de `errors`; se conservan los `required` y los
+    `enum`, que el test de contrato exige.
   - Con `validation.submit: false`, `<name>_fill` ya no nombra los campos que
     el envío necesita y `<name>_submit` dice que los valores van sin revisar.
-    Las notas de cada campo siguen describiendo las reglas del formulario.
+    Desde el 2026-11-19 el esquema tampoco lleva las reglas que solo revisa el
+    envío (`requiredWhen`, `rules`, `pattern`): `buildToolSchema` recibe
+    `validates`.
 
 ### Fase 3: endurecimiento
 
@@ -1274,14 +1280,21 @@ Resultados:
     (sobre-parametrización). Ahora pide lo que la persona dio para el
     formulario y nada más, y la documentación recomienda ofrecer solo los
     campos que el formulario necesita.
-- [ ] Opcional: en el editor, limitar los `source` con `remotePatterns`. Con
+- [x] Opcional: en el editor, limitar los `source` con `remotePatterns`. Con
       `set_definition`, un agente inyectado podría apuntar un `source` con
       `{value}` a cualquier host y llevarse lo que la persona escribe en la
       vista previa.
-- [ ] Opcional: recortar el largo de las etiquetas y descripciones en el
+  - Hecho el 2026-11-19. El editor solo deja pasar los hosts de sus ejemplos,
+    y se cerró un bypass: una URL relativa o con espacios se resuelve contra un
+    origen interno antes de compararla.
+- [x] Opcional: recortar el largo de las etiquetas y descripciones en el
       esquema (por ejemplo, a 200 caracteres). Las que llegan por `#/context/`
       entran sin límite; la especificación pide limitar el largo contra el
       envenenamiento de metadatos. El aviso `UNTRUSTED` ya las cubre.
+  - Hecho el 2026-11-19: 200 caracteres para una etiqueta y 500 para una
+    descripción, contados por punto de código. Una opción no se corta, porque
+    el agente la nombra por su etiqueta: un campo cuyas opciones pasan de 1000
+    caracteres se busca con `<name>_options`.
 - [ ] Seguir los cambios de la API y del origin trial, versión por versión de
       Chrome.
 - [ ] Opcional: deshacer lo que escribió el agente.
