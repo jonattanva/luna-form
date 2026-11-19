@@ -305,8 +305,8 @@ const { lookup, required, schema } = buildToolSchema(sections, {
 - **`required`** lists the fields a submit needs, to name in the tool's
   description.
 - **`lookup`** lists the fields whose options are not in the schema: more than
-  25, fetched from a source, or installed by a `source` event. An agent needs
-  another tool to search them.
+  25, more than 1000 characters to list, fetched from a source, or installed by
+  a `source` event. An agent needs another tool to search them.
 
 `definition` and `context` resolve [`$ref` entries](../structure/definition.md)
 and have to be the ones the form renders with. `localization.translations` is
@@ -333,8 +333,9 @@ are translated with it.
 | `column`                                       | nothing of its own: its fields join the level that holds it                              |
 | any other type                                 | the schema `types` gives for it, or `string`                                             |
 
-A field with more than 25 options, or with options that are fetched or that a
-`source` event installs, is a `string` in the schema and is listed in `lookup`.
+A field with more than 25 options, with options that take more than 1000
+characters to list, or with options that are fetched or that a `source` event
+installs, is a `string` in the schema and is listed in `lookup`.
 
 A month, a year and a Yes/No are numbers and a boolean here, while the form
 stores them as text: the tools convert them both ways.
@@ -377,6 +378,15 @@ These fields are not in the schema, and the tools refuse them:
 - A label or a description that interpolates a value, with a
   [`{placeholder}`](../interpolation/overview.md), is left out: the agent would
   read the placeholder, or a value someone typed.
+- A label is cut at 200 characters and a description at 500, ending in
+  `...`. They can come from the host, through `#/context/` or the dictionary,
+  and hold text people wrote; a long one would be room for instructions in
+  what every agent reads first. An option is never cut, since an agent names it
+  by its value or its label: a field whose options take more than 1000
+  characters to list is looked up instead, through `<name>_options`, whose
+  answer is marked as untrusted. What the form shows is not cut. A whole field
+  put in through `#/context/` brings its name and its rules too, which nothing
+  cuts: write those yourself.
 
 ## What every consumer reads
 

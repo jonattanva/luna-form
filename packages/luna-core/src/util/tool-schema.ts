@@ -98,6 +98,18 @@ export type ToolSchemaResult = Readonly<{
 // up instead.
 const INLINE_OPTIONS = 25
 
+// How much of a label and a description the schema keeps, and how long the
+// list of a field's options can be for the schema to hold it. They come from
+// the definition, and from the host through `#/context/` and the dictionary,
+// which can hold text people wrote: a long one would be room for instructions
+// in what every agent reads first. An option is never cut, since an agent
+// names it by its value or its label: a field whose options do not fit is
+// looked up instead, through a tool whose answer is marked as untrusted. What
+// the form shows is not cut either.
+const LABEL_LENGTH = 200
+const DESCRIPTION_LENGTH = 500
+const OPTIONS_LENGTH = 1000
+
 const LOOKUP =
   'Its options are not listed here: find them with the options tool of this form.'
 
@@ -549,7 +561,7 @@ function compiles(regex: string): boolean {
 }
 
 // A `select`, `radio` or `chips`: its options listed when the definition
-// writes them and they are few, and looked up otherwise.
+// writes them and they are few and short, and looked up otherwise.
 function describeChoice(
   field: Select,
   walk: Walk,
@@ -559,7 +571,11 @@ function describeChoice(
   const options = readOptions(field, walk, name)
 
   let choice: ToolSchema
-  if (options === undefined || options.length > INLINE_OPTIONS) {
+  if (
+    options === undefined ||
+    options.length > INLINE_OPTIONS ||
+    !fits(listOptions(options), OPTIONS_LENGTH)
+  ) {
     walk.lookup.add(name)
     notes.push(LOOKUP)
     choice = { type: 'string' }
@@ -698,12 +714,13 @@ function withText(
   notes: readonly string[],
   walk: Walk
 ): ToolSchema {
-  const title = readText(slot.label, walk.dictionary)
+  const title = readText(slot.label, walk.dictionary, LABEL_LENGTH)
   const own = readText(
     typeof slot.description === 'string'
       ? slot.description
       : slot.description?.message,
-    walk.dictionary
+    walk.dictionary,
+    DESCRIPTION_LENGTH
   )
   const text = [own, schema.description, ...notes]
     .filter((part) => part !== undefined && part !== '')
@@ -718,10 +735,30 @@ function withText(
 
 function readText(
   text: string | undefined,
-  dictionary?: Record<string, string>
+  dictionary: Record<string, string> | undefined,
+  length: number
 ): string | undefined {
   const translated = translateOptional(text, dictionary)
-  return translated && !isInterpolated(translated) ? translated : undefined
+  return translated && !isInterpolated(translated)
+    ? clip(translated, length)
+    : undefined
+}
+
+// At most `length` characters, with `...` where it was cut.
+function clip(text: string, length: number): string {
+  if (fits(text, length)) {
+    return text
+  }
+  const kept = Array.from(text)
+    .slice(0, length - 3)
+    .join('')
+  return `${kept.trimEnd()}...`
+}
+
+// Counted in code points, so a cut never splits one in two. A text is never
+// fewer UTF-16 units than code points, so a short one is not split to count.
+function fits(text: string, length: number): boolean {
+  return text.length <= length || Array.from(text).length <= length
 }
 
 // The `state` events that make a slot available, from every field of the
