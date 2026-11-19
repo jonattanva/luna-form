@@ -78,6 +78,86 @@ window.AUDIT = {
         '<p>Pruebas agregadas, todas como fallo esperado: <code>tests/e2e/description-value-link.spec.ts</code> (SEC-01), <code>tests/unit/source-event.spec.ts</code> (BUG-01), <code>tests/unit/path.spec.ts</code> (BUG-02) y <code>tests/e2e/select-aria-invalid.spec.ts</code> (U-01). Cada una se corrió sin la marca para ver que falla por la razón que dice, y las e2e con la marca en los tres navegadores, 3 veces.</p>' +
         '<p>Quedó fuera o a medias: la revisión de React 19 y Jotai más allá de los presupuestos, la entrada de servidor y la hidratación, las agent tools frente a <code>docs/agents/tools.md</code>, y la verificación de cada afirmación de <code>docs/</code>. La guarda de <code>extract.ts</code> sin prueba está en HUE-01, de la auditoría de pruebas.</p>',
     },
+    {
+      id: 'test-audit-2026-11-19-matriz',
+      title: 'Auditoría de pruebas: matriz y cobertura',
+      date: '2026-11-19',
+      summary:
+        '<p>Segunda corrida de la auditoría de pruebas, sobre <code>main</code> en <code>5b26630</code>, para cerrar INV-01: la matriz de funcionalidad por nivel, el mapa de cobertura de las unitarias y una muestra de afirmaciones de <code>docs/</code> cruzadas con las pruebas. Se agregó <code>@vitest/coverage-v8</code> 5.1.0 como devDependency, con aprobación.</p>' +
+        '<p><b>4 hallazgos nuevos: 3 críticos (huecos probados) y 1 para investigar.</b> Lo que ninguna prueba protege: las aserciones <code>min</code>, <code>max</code>, <code>minItems</code> y <code>maxItems</code> de <code>rules</code> y las formas arreglo y <code>any</code> de su <code>when</code> (HUE-02); lo que hace un campo cuando su origen remoto responde con un error (HUE-03); y el operador <code>contains</code> (HUE-04). Cada uno es una mutación que pasan las 1282 unitarias y las 762 e2e de Chromium. Dos afirmaciones de <code>docs/</code> sin prueba que no se pudieron mutar quedan en INV-02.</p>' +
+        '<h4>Mapa de cobertura (unitarias)</h4>' +
+        '<div class="table-wrap"><table><thead><tr><th>Zona</th><th>Líneas</th><th>Ramas</th><th>Nota</th></tr></thead><tbody>' +
+        '<tr><td>Todo <code>luna-core/src</code> y <code>luna-react/src</code></td><td>61,6 %</td><td>63,3 %</td><td>la parte React se prueba en e2e, no en unitarias</td></tr>' +
+        '<tr><td><code>luna-core/src</code> (33 archivos)</td><td>94,8 % (1861 de 1963)</td><td>89,3 % (1555 de 1741)</td><td></td></tr>' +
+        '<tr><td><code>luna-react/src/client/lib</code> (13)</td><td>67,1 % (635 de 946)</td><td>67,1 % (561 de 836)</td><td><code>agent-host.ts</code> (236 líneas) y <code>model-context.ts</code> en 0 %</td></tr>' +
+        '<tr><td><code>luna-react/src/client/hook</code> (20)</td><td>0 % (645 líneas)</td><td>0 %</td><td>solo e2e</td></tr>' +
+        '<tr><td>componentes de <code>luna-react</code> y <code>server/</code></td><td>2 a 3 %</td><td>0 a 1 %</td><td>solo e2e</td></tr>' +
+        '<tr><td><code>luna-react/src/config</code></td><td>100 %</td><td>100 %</td><td></td></tr>' +
+        '</tbody></table></div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Archivo con cobertura baja o rama de error sin recorrer</th><th>Líneas</th><th>Ramas</th><th>Qué falta y qué se hizo</th></tr></thead><tbody>' +
+        '<tr><td><code>luna-core/src/util/schema.ts</code></td><td>93,7 %</td><td>87,2 %</td><td><code>runAssert</code> <code>:1204-1210</code> (<code>minItems</code>, <code>maxItems</code>, <code>min</code>, <code>max</code>), <code>whenHolds</code> <code>:1185</code> y <code>:1194</code>, <code>sizeOf</code>: HUE-02</td></tr>' +
+        '<tr><td><code>luna-core/src/fetcher.ts</code></td><td>97,1 %</td><td>90,6 %</td><td>el <code>throw response</code> de una respuesta no 2xx (<code>:41</code>): HUE-03</td></tr>' +
+        '<tr><td><code>luna-core/src/util/operator.ts</code></td><td>80 %</td><td>80,6 %</td><td><code>contains</code> <code>:90-98</code> sin ejecutar: HUE-04; <code>truthy</code> con arreglo <code>:116</code></td></tr>' +
+        '<tr><td><code>luna-core/src/util/list.ts</code></td><td>88,6 %</td><td>60 %</td><td><code>isMultiFieldList</code> <code>:70-73</code> y <code>getLabel</code> <code>:85</code>; las e2e de listas recorren ambos</td></tr>' +
+        '<tr><td><code>luna-core/src/util/logger.ts</code></td><td>81,8 %</td><td>57,1 %</td><td>el filtro por nivel <code>:13-14</code>; no es crítico</td></tr>' +
+        '<tr><td><code>luna-core/src/helper/input.ts</code></td><td>83,3 %</td><td>78,1 %</td><td>ramas de presentación (<code>:520-543</code>, <code>:608-613</code>); las e2e de campos las recorren</td></tr>' +
+        '<tr><td><code>luna-core/src/util/attributes.ts</code>, <code>format.ts</code></td><td>81,3 y 93,1 %</td><td>84,6 y 83,5 %</td><td>ramas de formato y atributos opcionales; no son críticas</td></tr>' +
+        '<tr><td><code>client/lib/compose-list-value.ts</code></td><td>55,6 %</td><td>53,8 %</td><td><code>readLeaf</code> nunca recibe una lista anidada montada. Control M8: la unitaria no la atrapa, pero sí 4 e2e (<code>list-nested-outer-clobber</code> y <code>agent-tools</code>). Cubierto arriba, no es hueco</td></tr>' +
+        '<tr><td><code>client/lib/host-value-store.ts</code>, <code>source-store.ts</code></td><td>30 y 55,6 %</td><td>0 %</td><td>átomos que solo montan las e2e</td></tr>' +
+        '<tr><td><code>client/lib/agent-tools.ts</code></td><td>93,2 %</td><td>87 %</td><td>ramas de error de herramientas; la e2e <code>agent-tools</code> recorre el camino feliz</td></tr>' +
+        '</tbody></table></div>' +
+        '<h4>Matriz de funcionalidad por nivel</h4>' +
+        '<div class="table-wrap"><table><thead><tr><th>Funcionalidad</th><th>Unitarias (<code>tests/unit/</code>)</th><th>E2E (<code>tests/e2e/</code>)</th><th>Hueco</th></tr></thead><tbody>' +
+        '<tr><td>input</td><td>is-input, schema, schema-number, helper/input, attributes</td><td>input, input-group, empty-value, transform, default-value</td><td></td></tr>' +
+        '<tr><td>select</td><td>input-selectable, schema, translate-options</td><td>select, select-default-value-skip, select-double-selection-bug, select-aria-invalid, option-not-offered</td><td></td></tr>' +
+        '<tr><td>chips</td><td>input-selectable, schema, helper/preview-options</td><td>chips, chips-single, chips-days, chips-days-single, chips-mapped, chips-double-selection-bug</td><td></td></tr>' +
+        '<tr><td>radio</td><td>input-selectable, schema, declarative-validation</td><td>radio, options-written</td><td></td></tr>' +
+        '<tr><td>checkbox</td><td>schema, helper/input</td><td>checkbox, failed-submit</td><td></td></tr>' +
+        '<tr><td>date</td><td>display-date, to-native-date, get-date-format, get-month, get-year, get-week-days, operator-date-comparisons</td><td>date-picker, date-initial-value, date-submission-default, -dd-mm-yyyy, -mm-dd-yyyy</td><td></td></tr>' +
+        '<tr><td>time</td><td>to-native-time, from-native-time, get-time-format</td><td>time-rendering, time-submission, time-initial-value</td><td></td></tr>' +
+        '<tr><td>time zone</td><td>get-timezones, format</td><td>timezone, locale-selectors</td><td></td></tr>' +
+        '<tr><td>listas: agregar</td><td>list, list-guard, store-helper</td><td>list, list-add-button, list-multifield, list-column</td><td></td></tr>' +
+        '<tr><td>listas: quitar</td><td>store-helper, compose-list-value</td><td>list-remove-ghost-item, -nonlast-hydrated, -nonlast-typed, -required-clobber, list-collapsible-removal</td><td></td></tr>' +
+        '<tr><td>listas: colapsar</td><td><b>ninguna</b></td><td>list-collapsible, -clickable, -preview, list-collapsed-*, collapsed-submit</td><td>solo e2e; es presentación, no hueco</td></tr>' +
+        '<tr><td>listas: anidar</td><td>compose-list-value (sin lista anidada montada)</td><td>list-nested-change-propagation, -hydration, -keep-value, -outer-clobber, -state-event</td><td>cubierto en e2e (control M8)</td></tr>' +
+        '<tr><td>listas: conservar valores</td><td>compose-list-value, with-declared-fields</td><td>list-collapsed-value-preservation, list-nested-keep-value, hidden-clear</td><td></td></tr>' +
+        '<tr><td>visibilidad y <code>state</code></td><td>condition, state-event</td><td>visibility, recursive-visibility, state, state-chained-reveal, state-value-cleanup, list-visibility, hidden-clear</td><td></td></tr>' +
+        '<tr><td>eventos de valor</td><td>value-event, proxy-event</td><td>event, value-event-autofill, list-value-event, list-value-event-typed, initial-value-events</td><td></td></tr>' +
+        '<tr><td>operadores</td><td>operator-eq, -neq, -in, -nin, -gt, -gte, -lt, -lte, -empty, -date-comparisons, -map</td><td>a través de eventos y validación</td><td><b>HUE-04</b>: <code>contains</code> sin prueba</td></tr>' +
+        '<tr><td>validación declarativa</td><td>declarative-validation, schema</td><td>declarative-validation</td><td><b>HUE-02</b>: <code>rules</code> con <code>min</code>, <code>max</code>, <code>minItems</code>, <code>maxItems</code> y <code>when</code> arreglo o <code>any</code></td></tr>' +
+        '<tr><td>validación custom</td><td>schema, build-form-schema</td><td>custom-validation</td><td></td></tr>' +
+        '<tr><td>valores iniciales</td><td>resolve-value, schema, value-event</td><td>initial-value, initial-value-list, -events, -chips-*, -nested-state-event, default-value</td><td></td></tr>' +
+        '<tr><td>submit</td><td>build-form-schema, schema-absent-values</td><td>form-action, readonly-submit</td><td></td></tr>' +
+        '<tr><td>submit fallido</td><td><b>ninguna</b></td><td>failed-submit, failed-submit-focus, collapsed-submit</td><td>solo e2e; es el flujo de React</td></tr>' +
+        '<tr><td>origen remoto: camino feliz</td><td>fetcher, source, source-event, url</td><td>select (fetch source), event, options-written, translation-options</td><td></td></tr>' +
+        '<tr><td>origen remoto: error de red o no 2xx</td><td><b>ninguna</b></td><td><b>ninguna</b></td><td><b>HUE-03</b></td></tr>' +
+        '<tr><td>origen remoto: respuesta inválida</td><td>extract (<code>getArray</code> sin arreglo)</td><td><b>ninguna</b></td><td>parte de HUE-03</td></tr>' +
+        '<tr><td>traducción</td><td>translate, translate-options</td><td>translation, translation-options, label-locale</td><td></td></tr>' +
+        '<tr><td>entrada de servidor</td><td><b>ninguna</b></td><td>server-entry</td><td>solo e2e</td></tr>' +
+        '<tr><td>agent tools</td><td>agent-tools, tool-schema</td><td>agent-tools, authoring-tools</td><td><code>agent-host.ts</code> solo e2e</td></tr>' +
+        '</tbody></table></div>' +
+        '<h4>Muestra de afirmaciones de <code>docs/</code></h4>' +
+        '<div class="table-wrap"><table><thead><tr><th>Afirmación</th><th>Página</th><th>Prueba</th></tr></thead><tbody>' +
+        '<tr><td>Las aserciones <code>minItems</code>, <code>maxItems</code>, <code>min</code> y <code>max</code> de <code>rules</code></td><td><code>validation/overview.md</code></td><td><b>ninguna</b> (HUE-02)</td></tr>' +
+        '<tr><td>Un <code>when</code> arreglo es AND; <code>any</code> pide al menos una</td><td><code>validation/overview.md</code></td><td><b>ninguna</b> (HUE-02)</td></tr>' +
+        '<tr><td>El operador <code>contains</code></td><td><code>validation/overview.md</code></td><td><b>ninguna</b> (HUE-04)</td></tr>' +
+        '<tr><td>Una respuesta no 2xx se registra y el campo muestra una lista vacía</td><td><code>fields/data-source.md</code></td><td><b>ninguna</b> (HUE-03)</td></tr>' +
+        '<tr><td>Una URL bloqueada por <code>remotePatterns</code> se registra; las relativas siempre pasan</td><td><code>fields/data-source.md</code></td><td>url, event (<code>:420</code>)</td></tr>' +
+        '<tr><td>Una URL con <code>null</code> o <code>undefined</code> se rechaza antes del pedido</td><td><code>fields/data-source.md</code></td><td>fetcher</td></tr>' +
+        '<tr><td>Una fila colapsada conserva sus valores, valida, se envía y se abre si falla</td><td><code>fields/list.md</code></td><td>collapsed-submit</td></tr>' +
+        '<tr><td><code>keepValue</code> en una lista deja los valores de sus filas</td><td><code>fields/list.md</code></td><td>hidden-clear</td></tr>' +
+        '<tr><td>Dos campos con el mismo origen comparten un pedido</td><td><code>fields/data-source.md</code></td><td><b>ninguna</b> (INV-02)</td></tr>' +
+        '<tr><td>Un <code>select</code> deshabilitado con origen remoto muestra su valor objeto como única opción</td><td><code>fields/data-source.md</code></td><td><b>ninguna</b>; <code>select.spec.ts:127</code> solo cubre un origen arreglo (INV-02)</td></tr>' +
+        '</tbody></table></div>' +
+        '<h4>Mutaciones</h4>' +
+        '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Unitarias (1282)</th><th>E2E Chromium (762)</th><th>Hallazgo</th></tr></thead><tbody>' +
+        '<tr><td>M1 a M6 en <code>schema.ts</code> (<code>runAssert</code> y <code>whenHolds</code>)</td><td>pasan, una por una</td><td rowspan="2">pasan las 762 con M1 a M7 juntas (2,8 min)</td><td>HUE-02</td></tr>' +
+        '<tr><td>M7 <code>fetcher.ts:37</code> <code>if (request.ok)</code> → <code>if (true)</code></td><td>pasa</td><td>HUE-03</td></tr>' +
+        '<tr><td>M8 <code>compose-list-value.ts:75</code> <code>if (nested)</code> → <code>if (nested &amp;&amp; false)</code> (control)</td><td>pasa</td><td>fallan 4</td><td>no es hueco</td></tr>' +
+        '<tr><td>M9 <code>operator.ts:90</code> <code>contains</code> siempre <code>false</code></td><td>pasa</td><td>pasa (las 762, 3,1 min)</td><td>HUE-04</td></tr>' +
+        '</tbody></table></div>' +
+        '<p class="muted">Cobertura: <code>pnpm vitest run --coverage --coverage.include=packages/luna-core/src/** --coverage.include=packages/luna-react/src/**</code>, reportes <code>json-summary</code>, <code>json</code> y <code>text</code>, 1282 casos en 3,35 s. E2E: <code>next dev</code> propio en el puerto 3217, Chromium, 4 workers, <code>--retries=0</code>, carga 8 a 11 en 11 núcleos. Cada mutación de la librería se aplicó al código fuente, con <code>pnpm build</code>, verificación de que el bundle de <code>dist</code> la contenía y reinicio del servidor; se revirtió y se reconstruyó (<code>git status</code> limpio en <code>packages/</code>).</p>',
+    },
   ],
   findings: [
     {
@@ -370,7 +450,8 @@ window.AUDIT = {
         'Falta la matriz de funcionalidad por nivel y el mapa de cobertura de las unitarias',
       sev: 'optim',
       cat: 'pruebas',
-      st: 'investigar',
+      st: 'corregido',
+      stLabel: 'Resuelto en test-audit-2026-11-19-matriz',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -385,6 +466,168 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>En la próxima corrida: instalar el proveedor de cobertura si se aprueba, armar la matriz con la lista de flujos críticos del comando, y mutar los módulos que solo cubren las e2e.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: '<p>Se agregó <code>@vitest/coverage-v8</code> 5.1.0 como devDependency (aprobado) y se armaron la matriz de funcionalidad por nivel, el mapa de cobertura de las unitarias y una muestra de 10 afirmaciones de <code>docs/</code>; están en el resumen de <code>test-audit-2026-11-19-matriz</code>. De 9 mutaciones, 8 pasaron las 1282 unitarias; de esas, 7 pasaron también las 762 e2e de Chromium y quedaron como HUE-02, HUE-03 y HUE-04, y la de <code>compose-list-value.ts</code> la atrapan 4 e2e, así que lo anidado está cubierto arriba aunque no abajo. Dos afirmaciones de <code>docs/</code> sin prueba y sin mutación posible quedan en INV-02.</p>',
+        },
+      ],
+    },
+    {
+      code: 'HUE-02',
+      title:
+        'Las aserciones min, max, minItems y maxItems de rules y las formas arreglo y any de when no tienen ninguna prueba',
+      sev: 'crit',
+      cat: 'pruebas',
+      st: 'probado',
+      audit: 'test-audit-2026-11-19-matriz',
+      sections: [
+        { label: 'Área', html: '<p>Huecos.</p>' },
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/util/schema.ts:1199</code> (<code>runAssert</code>, casos <code>minItems</code>, <code>maxItems</code>, <code>min</code> y <code>max</code>, y <code>sizeOf</code> en <code>:1279</code>) y <code>:1180</code> (<code>whenHolds</code>, la forma arreglo en <code>:1185</code> y <code>any</code> en <code>:1194</code>). Las únicas reglas en las pruebas son <code>required</code>, <code>oneOf</code> y <code>pattern</code> (<code>tests/unit/declarative-validation.spec.ts</code>, <code>tests/e2e/declarative-validation.spec.ts</code>).</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p><code>docs/validation/overview.md</code> documenta siete aserciones de <code>rules</code> y tres formas de <code>when</code>. Cuatro de las aserciones y dos de las formas no las ejecuta ninguna prueba: la cobertura marca sin recorrer las líneas <code>:1204</code> a <code>:1210</code> y <code>:1280</code> a <code>:1288</code>. Se puede invertir una comparación, aceptar todo o cambiar AND por OR y la suite sigue verde, así que un formulario que confía en <code>max</code> para limitar un valor podría enviar cualquier cosa.</p>',
+        },
+        {
+          label: 'Evidencia',
+          html: '<p>Cada mutación se corrió sola contra las unitarias (1282 casos, 1281 pasan y 1 fallo esperado, igual que sin mutar). Las seis juntas con M7 de HUE-03, con <code>pnpm build</code> y el bundle verificado (<code>any.every</code> aparece en <code>dist/client/esm</code> y <code>dist/schema</code>), pasan las 762 e2e de Chromium sobre <code>next dev</code> propio, 4 workers, <code>--retries=0</code>. Revertidas y reconstruidas.</p>',
+        },
+        {
+          label: 'Mutaciones',
+          html:
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Unitarias (1282)</th><th>E2E Chromium (762)</th></tr></thead><tbody>' +
+            '<tr><td>M1 <code>:1208</code> <code>min</code>: <code>sizeOf(value) &gt;= Number</code> → <code>&lt;=</code></td><td>pasa</td><td rowspan="6">pasan las 762 con M1 a M7 juntas</td></tr>' +
+            '<tr><td>M2 <code>:1210</code> <code>max</code>: <code>&lt;=</code> → <code>&gt;=</code></td><td>pasa</td></tr>' +
+            '<tr><td>M3 <code>:1204</code> <code>minItems</code>: toda la condición → <code>return true</code></td><td>pasa</td></tr>' +
+            '<tr><td>M4 <code>:1206</code> <code>maxItems</code>: <code>&lt;=</code> → <code>&gt;=</code></td><td>pasa</td></tr>' +
+            '<tr><td>M5 <code>:1194</code> <code>when.any.some</code> → <code>when.any.every</code></td><td>pasa</td></tr>' +
+            '<tr><td>M6 <code>:1185</code> <code>when.every</code> (arreglo) → <code>when.some</code></td><td>pasa</td></tr>' +
+            '</tbody></table></div>',
+        },
+        {
+          label: 'Costo',
+          html: '<p>Ninguno en tiempo: lo que falta son unitarias de milisegundos sobre <code>buildSchema</code>.</p>',
+        },
+        {
+          label: 'Propuesta',
+          html: '<p>Crear casos en <code>tests/unit/declarative-validation.spec.ts</code>: para cada aserción, un valor en el borde que pasa y uno que no (un número, un texto y un arreglo para <code>min</code> y <code>max</code>); para <code>when</code>, un arreglo con una condición falsa que no debe correr la aserción y un <code>any</code> con una sola condición verdadera que sí. Una e2e no hace falta: el cableado de <code>rules</code> ya lo cubre <code>tests/e2e/declarative-validation.spec.ts</code>.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> HUE-02. <b>Crear primero:</b> los casos, y ver que cada uno de M1 a M6 hace fallar al menos uno. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M1 a M6. <b>Después:</b> cada mutación falla al menos un caso. <b>Protección esperada:</b> las siete aserciones y las tres formas de <code>when</code> que documenta <code>docs/</code> quedan fijadas.</p>',
+        },
+      ],
+    },
+    {
+      code: 'HUE-03',
+      title:
+        'Ninguna prueba cubre un origen remoto que responde con un error, falla en la red o no devuelve JSON',
+      sev: 'crit',
+      cat: 'pruebas',
+      st: 'probado',
+      audit: 'test-audit-2026-11-19-matriz',
+      sections: [
+        { label: 'Área', html: '<p>Huecos.</p>' },
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/fetcher.ts:36-41</code> (el <code>throw response</code> de una respuesta no 2xx) y <code>packages/luna-react/src/client/hook/use-fetch.ts</code> (el <code>error</code> de SWR y el <code>getArray</code> que da <code>null</code>). <code>tests/unit/fetcher.spec.ts</code> solo prueba respuestas 200; en <code>tests/e2e/</code> el único <code>status: 404</code> (<code>event.spec.ts:65</code>) es una guarda contra fixtures que faltan, no una prueba.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p><code>docs/fields/data-source.md</code>, sección Failures, promete que una respuesta no 2xx se registra y el campo muestra una lista vacía, y que una respuesta que no es JSON falla igual. Ninguna prueba lo comprueba: si <code>fetcher</code> deja de distinguir el estado, el cuerpo del error se usa como opciones (con un error que es un arreglo, o que tiene un arreglo en el <code>namespace</code>, el campo ofrece y acepta esas entradas) y la suite sigue verde. Tampoco hay prueba de un fallo de red ni de un JSON sin arreglo en el <code>namespace</code>.</p>',
+        },
+        {
+          label: 'Evidencia',
+          html: '<p>M7 contra las unitarias: 1281 pasan y 1 fallo esperado, igual que sin mutar. Con M1 a M6 de HUE-02, <code>pnpm build</code> y servidor reiniciado: pasan las 762 e2e de Chromium (4 workers, <code>--retries=0</code>, 2,8 min). La cobertura marca sin recorrer <code>fetcher.ts:41</code>. Revertida y reconstruida.</p>',
+        },
+        {
+          label: 'Mutaciones',
+          html:
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Unitarias (1282)</th><th>E2E Chromium (762)</th></tr></thead><tbody>' +
+            '<tr><td>M7 <code>fetcher.ts:37</code> <code>if (request.ok)</code> → <code>if (true)</code></td><td>pasa</td><td>pasa</td></tr>' +
+            '</tbody></table></div>',
+        },
+        {
+          label: 'Costo',
+          html: '<p>Una unitaria de milisegundos y una e2e de unos 2 s por navegador, unos 6 s por corrida de CI.</p>',
+        },
+        {
+          label: 'Propuesta',
+          html: '<p>En <code>tests/unit/fetcher.spec.ts</code>: una respuesta 500 con cuerpo JSON rechaza con ese cuerpo, y una que no es JSON rechaza. En <code>tests/e2e/</code>: un <code>select</code> con origen remoto cuyo <code>page.route</code> responde 500 con un arreglo como cuerpo, otro que aborta el pedido y otro con JSON sin arreglo en el <code>namespace</code>; en los tres el campo no ofrece opciones y el formulario sigue usable.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> HUE-03. <b>Crear primero:</b> la unitaria del 500 y la e2e con el 500, y ver que ambas fallan con M7. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M7. <b>Después:</b> M7 falla en las dos. <b>Protección esperada:</b> el contrato de la sección Failures de <code>data-source.md</code> queda fijado en los tres casos (error HTTP, red y respuesta inválida).</p>',
+        },
+      ],
+    },
+    {
+      code: 'HUE-04',
+      title: 'El operador contains no lo ejecuta ninguna prueba',
+      sev: 'crit',
+      cat: 'pruebas',
+      st: 'probado',
+      audit: 'test-audit-2026-11-19-matriz',
+      sections: [
+        { label: 'Área', html: '<p>Huecos.</p>' },
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/util/operator.ts:90-98</code> (<code>contains</code>). <code>tests/unit/operator-map.spec.ts</code> solo comprueba que la clave existe; hay un <code>operator-*.spec.ts</code> por cada operador de comparación salvo este, y ninguna definición de <code>tests/e2e/</code> lo usa.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p><code>contains</code> es uno de los operadores que <code>docs/validation/overview.md</code> declara compartidos por <code>custom</code>, <code>requiredWhen</code>, los <code>when</code> de <code>rules</code> y las condiciones de los eventos de cambio. Si deja de funcionar, una condición <code>contains</code> nunca se cumple: un campo que debía mostrarse o volverse requerido no lo hace, y la suite sigue verde.</p>',
+        },
+        {
+          label: 'Evidencia',
+          html: '<p>M9 contra las unitarias: 1281 pasan y 1 fallo esperado, igual que sin mutar. Con <code>pnpm build</code> (bundle verificado: <code>String(n).length&gt;=0?!1</code> en <code>dist/client/esm</code>) y servidor reiniciado, e2e de Chromium: pasan las 762 (4 workers, <code>--retries=0</code>, 3,1 min). Revertida y reconstruida.</p>',
+        },
+        {
+          label: 'Mutaciones',
+          html:
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Unitarias (1282)</th><th>E2E Chromium (762)</th></tr></thead><tbody>' +
+            '<tr><td>M9 <code>operator.ts:90</code> al entrar a <code>contains</code>: <code>if (String(value).length &gt;= 0) return false</code> (siempre <code>false</code>)</td><td>pasa</td><td>pasa (las 762, 3,1 min)</td></tr>' +
+            '</tbody></table></div>',
+        },
+        {
+          label: 'Costo',
+          html: '<p>Ninguno en tiempo: una unitaria de milisegundos.</p>',
+        },
+        {
+          label: 'Propuesta',
+          html: '<p>Crear <code>tests/unit/operator-contains.spec.ts</code>, como los demás operadores: texto que contiene y que no, arreglo que contiene el valor (también con números contra texto, por el <code>map(String)</code>) y que no, y cualquier otro tipo da <code>false</code>.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> HUE-04. <b>Crear primero:</b> el archivo, y ver que falla con M9. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M9. <b>Después:</b> M9 falla. <b>Protección esperada:</b> los doce operadores documentados quedan fijados.</p>',
+        },
+      ],
+    },
+    {
+      code: 'INV-02',
+      title:
+        'Dos afirmaciones de data-source.md no tienen prueba y no se pudieron probar con una mutación',
+      sev: 'optim',
+      cat: 'pruebas',
+      st: 'investigar',
+      audit: 'test-audit-2026-11-19-matriz',
+      sections: [
+        { label: 'Área', html: '<p>Huecos.</p>' },
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/docs/fields/data-source.md</code>: que dos campos con el mismo origen comparten un pedido y su caché, y que un <code>select</code> deshabilitado con origen remoto y valor objeto muestra ese objeto como única opción.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Ninguna prueba las nombra: <code>tests/e2e/select.spec.ts:127</code> cubre un <code>select</code> bloqueado con origen arreglo, no remoto, y nadie cuenta los pedidos de dos campos con el mismo origen. La primera depende de la clave de SWR, que no tiene un punto de mutación simple en el código propio; la segunda no se mutó en esta corrida.</p>',
+        },
+        {
+          label: 'Propuesta',
+          html: '<p>En la próxima corrida: localizar el código del <code>select</code> deshabilitado con valor objeto y mutarlo; para el pedido compartido, una e2e que cuente las peticiones con <code>page.route</code> y una mutación que cambie la clave de <code>useSWR</code> en <code>use-fetch.ts</code>.</p>',
         },
       ],
     },
