@@ -36,6 +36,19 @@ const AGENT: AgentOptions = {
   submit: true,
 }
 
+// The actions `host.fail` swaps in. See `ReactiveFormPreview`.
+async function refusing() {
+  return {
+    data: null,
+    error: { title: 'The host did not accept the form.' },
+    success: false,
+  }
+}
+
+async function throwing(): Promise<never> {
+  throw new Error('The host could not be reached.')
+}
+
 type Container = Record<string, unknown> | unknown[]
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -150,7 +163,9 @@ export function ReactiveFormPreview() {
   // keeps the declared shape (see `writeNested`), `host.declared` hands the
   // form that record through `withDeclaredFields`, as such a host is told to,
   // and `host.clearOnSuccess` empties it after a successful submit, as a host
-  // that wants the form to start blank does.
+  // that wants the form to start blank does. `host.fail` stands in for a host
+  // whose action does not accept what it is sent: `"answer"` answers a failure
+  // and `"throw"` throws.
   const { agent: offered, host, ...formProps } = form
 
   // How the preview is offered to an agent. A test changes its name,
@@ -176,6 +191,13 @@ export function ReactiveFormPreview() {
   const nested = host?.nested === true
   const declared = host?.declared === true
   const clearOnSuccess = host?.clearOnSuccess === true
+
+  const formAction =
+    host?.fail === 'throw'
+      ? throwing
+      : host?.fail === 'answer'
+        ? refusing
+        : action
 
   const formValue = useMemo(
     () =>
@@ -237,7 +259,7 @@ export function ReactiveFormPreview() {
         {...formProps}
         value={formValue}
         config={formConfig}
-        action={action}
+        action={formAction}
         agent={offered === false ? undefined : agent}
         onSuccess={handleSuccess}
         onValueChange={handleValueChange}
