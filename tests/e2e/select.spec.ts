@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { inject } from './support/inject'
 
 test.describe('Select form', { tag: ['@e2e'] }, () => {
@@ -591,5 +591,112 @@ test.describe('Select form', { tag: ['@e2e'] }, () => {
 
     const option = page.getByRole('option', { name: 'Leanne Graham' })
     await expect(option).toBeVisible()
+  })
+})
+
+// A remote source that fails gives its field no options: an HTTP error, a
+// request that never answers, and JSON with no array at the `namespace` all
+// leave the select empty, and the rest of the form keeps working.
+test.describe('Select with a failing remote source', { tag: ['@e2e'] }, () => {
+  const FRUITS = [
+    { value: 'apple', label: 'Apple' },
+    { value: 'banana', label: 'Banana' },
+  ]
+
+  const failing = (namespace?: string) =>
+    JSON.stringify({
+      sections: [
+        {
+          fields: [
+            { label: 'Name', name: 'name', type: 'input/text' },
+            {
+              label: 'Fruit',
+              name: 'fruit',
+              type: 'select',
+              source: { url: '/api/failing-fruits', namespace },
+            },
+          ],
+        },
+      ],
+    })
+
+  /** Opens the select, whose request has settled, and counts its options. */
+  async function expectNoOptions(page: Page) {
+    await page.getByRole('combobox', { name: 'Fruit (Optional)' }).click()
+    await expect(page.getByRole('option')).toHaveCount(0)
+    await expect(page.getByText('Apple', { exact: true })).toBeHidden()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('listbox')).toBeHidden()
+  }
+
+  /** Types in the field beside the select, submits, and reads what was sent. */
+  async function typeAndSubmit(page: Page) {
+    const name = page.getByRole('textbox', { name: 'Name (Optional)' })
+    await name.fill('Ada')
+    await expect(name).toHaveValue('Ada')
+
+    const request = page.waitForRequest((sent) => sent.method() === 'POST')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    const [sent] = JSON.parse((await request).postData() ?? '[]')
+    return sent
+  }
+
+  // The body of the error is an array of options: a field that took the body
+  // of any response would offer them.
+  test('offers nothing when the source answers 500', async ({ page }) => {
+    await page.route('**/api/failing-fruits', (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify(FRUITS),
+      })
+    )
+    await inject(page, failing())
+
+    const settled = page.waitForResponse(
+      (response) => response.status() === 500
+    )
+    await page.goto('')
+    await settled
+
+    await expectNoOptions(page)
+    expect(await typeAndSubmit(page)).toEqual({ name: 'Ada', fruit: '' })
+  })
+
+  test('offers nothing when the request fails on the network', async ({
+    page,
+  }) => {
+    await page.route('**/api/failing-fruits', (route) => route.abort())
+    await inject(page, failing())
+
+    const settled = page.waitForEvent('requestfailed', (request) =>
+      request.url().includes('/api/failing-fruits')
+    )
+    await page.goto('')
+    await settled
+
+    await expectNoOptions(page)
+    expect(await typeAndSubmit(page)).toEqual({ name: 'Ada', fruit: '' })
+  })
+
+  // The options sit beside the `namespace`, not at it.
+  test('offers nothing when the namespace holds no array', async ({ page }) => {
+    await page.route('**/api/failing-fruits', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { total: 2 }, items: FRUITS }),
+      })
+    )
+    await inject(page, failing('data'))
+
+    const settled = page.waitForResponse((response) =>
+      response.url().includes('/api/failing-fruits')
+    )
+    await page.goto('')
+    await settled
+
+    await expectNoOptions(page)
+    expect(await typeAndSubmit(page)).toEqual({ name: 'Ada', fruit: '' })
   })
 })

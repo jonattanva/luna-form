@@ -136,6 +136,31 @@ describe('Fetcher', () => {
     })
   })
 
+  // A non-2xx response is an error, whatever its body holds: an array in the
+  // body of a 500 must not reach the field as its options.
+  test('should reject a non-2xx response with its parsed body', async () => {
+    const body = [{ value: 'error', label: 'Internal Server Error' }]
+    globalThis.fetch = async () => jsonResponse(body, 500)
+
+    await expect(
+      fetcher({ url: 'http://example.com/api', method: 'GET' })
+    ).rejects.toEqual(body)
+  })
+
+  // The body is always parsed as JSON, so a response that is not JSON fails
+  // even when its status is 2xx.
+  test('should reject a response that is not JSON', async () => {
+    globalThis.fetch = async () =>
+      new Response('<html>Bad Gateway</html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      })
+
+    await expect(
+      fetcher({ url: 'http://example.com/api', method: 'GET' })
+    ).rejects.toThrow(SyntaxError)
+  })
+
   test('should handle circular references by not setting JSON headers', async () => {
     const circular: Record<string, unknown> = { key: 'value' }
     circular.self = circular
