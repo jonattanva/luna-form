@@ -46,7 +46,7 @@ What is audited is the library: `packages/luna-core` and `packages/luna-react`, 
   pnpm build
   ```
   For a PR, the branch is `claude/audit-pr<number>` with its current base merged in (`git merge origin/<base>`): that is the tree CI tests and the one that lands.
-- **Which server tests what.** In CI, the `e2e-test` job runs `pnpm test:e2e` against `pnpm serve` (`next dev`), and the `render-budget` job runs `pnpm test:render` against `pnpm start` (production, probes applied). Test each thing against the same server CI uses, and before trusting a run confirm which one is on the port (`next dev` or `next start` in its log). Behaviour that differs between the two is itself something to review.
+- **Which server tests what.** In CI, the `e2e-test` job runs `pnpm test:e2e` against `pnpm serve` (`next dev`) in Chromium and against `pnpm start` (production) in Firefox and WebKit, and the `render-budget` job runs `pnpm test:render` against `pnpm start` (production, probes applied). Test each thing against the same server CI uses, and before trusting a run confirm which one is on the port (`next dev` or `next start` in its log). Behaviour that differs between the two is itself something to review.
 - **Own port.** If `:3000` belongs to another checkout (`lsof -i :3000` and `lsof -a -p <pid> -d cwd`), leave it and use another:
   ```sh
   pnpm --filter react-luna-editor exec next dev -p <port>

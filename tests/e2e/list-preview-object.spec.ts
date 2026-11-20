@@ -84,7 +84,8 @@ test.describe('List Preview Object', { tag: ['@e2e'] }, () => {
     await expect(page.getByText('User 1')).toBeHidden()
 
     // Badge and Tags (previews) should be hidden when expanded
-    await expect(page.getByText('Active')).toBeHidden()
-    await expect(page.getByText('Admin')).toBeHidden()
+    // `exact`: the editor shows the same values as quoted JSON tokens.
+    await expect(page.getByText('Active', { exact: true })).toBeHidden()
+    await expect(page.getByText('Admin', { exact: true })).toBeHidden()
   })
 })

@@ -240,6 +240,11 @@ window.AUDIT = {
           html: '<p>Una espera compartida en <code>tests/e2e/support/</code>, del tipo <code>open(page, definition, route)</code>, que inyecta, navega y espera un elemento que solo tiene la definición inyectada, como ya hace <code>readonly-submit.spec.ts</code>. Otra opción es que el editor marque cuándo terminó de leer la definición (por ejemplo, un <code>data-ready</code> en el formulario) y que la espera lea esa marca. Con eso, los 8 casos dejan de depender del orden de llegada.</p>',
         },
         {
+          label: 'Evidencia en CI',
+          audit: 'test-audit-2026-11-19',
+          html: '<p>En la línea base (<code>next dev</code>, 8 corridas del 19/11) apareció en 6 corridas, siempre en WebKit: <code>option-not-offered</code>, <code>date-picker :: should hold back a host range that runs over a reserved day</code> y <code>form-action</code>. Con WebKit sobre <code>next start</code> (OPT-03), 0 en 12 corridas: producción hidrata más rápido y la ventana casi no se abre. Eso no corrige la carrera, que está en el banco de pruebas y en Chromium sigue sobre <code>next dev</code>.</p>',
+        },
+        {
           label: 'Plan de corrección',
           html: '<p><b>Fase 2.</b> FLK-01. <b>Crear primero:</b> la prueba de la carrera, que retrasa la lectura de la definición y hace clic en Submit, y debe fallar sin la espera. <b>Antes:</b> 1 de 184 en local y 4 reintentos en 3 corridas de CI. <b>Después:</b> 0 fallos con <code>--repeat-each=20 --retries=0</code> en los tres navegadores. <b>Ahorro esperado:</b> hasta 48 s por corrida de CI, y ningún job rojo por esta causa.</p>',
         },
@@ -276,6 +281,11 @@ window.AUDIT = {
           html: '<p>Que <code>e2e-report</code> cuente los casos <code>flaky</code> del reporte combinado y los publique en el resumen del job (<code>$GITHUB_STEP_SUMMARY</code>), o activar <code>failOnFlakyTests</code> de Playwright cuando FLK-01 esté corregido.</p>',
         },
         {
+          label: 'Evidencia en CI',
+          audit: 'test-audit-2026-11-19',
+          html: '<p>Medido el 19/11 sobre los reportes combinados (<code>merge-reports --reporter json</code>). Línea base, 8 corridas en verde: 20 casos <code>flaky</code> en 6 de ellas, todos de WebKit y todos de la familia de FLK-01; los intentos fallidos sumaron de 0 a 125 s por corrida. Con Firefox y WebKit sobre <code>next start</code> (OPT-03), 12 corridas: 0 casos <code>flaky</code>. La guarda sigue haciendo falta: ninguno de los 20 dejó rastro en el PR que corrió.</p>',
+        },
+        {
           label: 'Plan de corrección',
           html: '<p><b>Fase 6.</b> GUA-01, después de FLK-01. <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen del job. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
         },
@@ -288,6 +298,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'pruebas',
       st: 'medido',
+      stLabel: 'Sin aplicar: Playwright recomienda 1 worker en CI',
       sevNote: 'falta medir en CI',
       audit: 'test-audit-2026-11-19',
       sections: [
@@ -318,6 +329,11 @@ window.AUDIT = {
           html: '<p>Probar <code>workers: 2</code> en CI en un PR, al menos 3 corridas, comparando cada job con estas medianas y mirando los <code>flaky</code>. Conviene corregir FLK-01 antes, porque más paralelismo agranda la ventana de esa carrera.</p>',
         },
         {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html: '<p>No se aplica por ahora. La guía de CI de Playwright recomienda <code>workers: 1</code> en CI, para priorizar estabilidad y reproducibilidad, y paralelizar con shards. Con OPT-03 y OPT-01 el veredicto ya bajó de 822 a 584 s sin cambiar los workers. Además FLK-01 sigue abierto, y más paralelismo agranda esa carrera. Queda para medir si hace falta bajar más, empezando por Chromium, que hoy es el job más lento.</p>',
+        },
+        {
           label: 'Plan de corrección',
           html: '<p><b>Fase 3.</b> OPT-02, después de FLK-01. <b>Crear primero:</b> 3 corridas de CI con <code>workers: 2</code>. <b>Antes:</b> 838 s hasta el veredicto, WebKit 2/2 en 713 s. <b>Después:</b> los mismos jobs con 2 workers. <b>Ahorro esperado:</b> a medir; localmente, 49 % menos en Chromium.</p>',
         },
@@ -329,7 +345,8 @@ window.AUDIT = {
         'Las e2e de CI corren sobre next dev; sobre next start la misma suite pasa entera y tarda entre un 21 y un 30 % menos',
       sev: 'mejora',
       cat: 'pruebas',
-      st: 'medido',
+      st: 'corregido',
+      stLabel: 'Corregido en #200',
       sevNote: 'falta medir en CI',
       audit: 'test-audit-2026-11-19',
       sections: [
@@ -357,6 +374,20 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>Arrancar <code>pnpm start</code> en el job <code>e2e-test</code>. Lo que solo pasa en desarrollo (avisos de <code>logger</code>, StrictMode) ya no se probaría en e2e: cubrirlo con una prueba unitaria o con un proyecto aparte, si hace falta.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html:
+            '<p>Medido en GitHub (runner de 4 vCPU, contenedor de Playwright, 1 worker, 2 reintentos), del 19/11. Chromium se queda en <code>next dev</code> para que StrictMode siga corriendo en e2e; no estaba en el camino crítico. Firefox y WebKit pasan a <code>next start</code>, como recomienda la guía de Playwright de Next.js. El <code>.next</code> de producción ya viene de la caché de turbo, así que no se agrega un build.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Configuración en CI</th><th>Corridas</th><th>Veredicto, mediana</th><th>Job e2e más lento, mediana</th><th>Casos <code>flaky</code></th></tr></thead><tbody>' +
+            '<tr><td>Línea base: <code>next dev</code>, 2 shards por navegador</td><td>8</td><td>822 s (710 a 1123)</td><td>WebKit 2/2, 719 s</td><td>20 en 6 corridas, todos WebKit</td></tr>' +
+            '<tr><td>B: Firefox y WebKit sobre <code>next start</code>, 2 shards (<a href="https://github.com/jonattanva/luna-form/pull/196">#196</a>)</td><td>6</td><td>656 s (592 a 799)</td><td>WebKit 2/2, 556 s</td><td>0; 1 corrida en rojo por un localizador (ver abajo)</td></tr>' +
+            '<tr><td>E: B más 3 shards en Firefox y WebKit (<a href="https://github.com/jonattanva/luna-form/pull/197">#197</a>)</td><td>6</td><td>584 s (573 a 602)</td><td>Chromium 2/2 sobre <code>next dev</code>, 503 s</td><td>0, sin fallos</td></tr>' +
+            '</tbody></table></div>' +
+            '<p>Suma de las duraciones de los casos, mediana: Firefox de 1039 a 803 s (-23 %) y WebKit de 1252 a 979 s (-22 %), en las 12 corridas de B y E. Chromium, que no cambió de servidor, de 770 a 748 s.</p>' +
+            "<p><b>Fallo que apareció:</b> en la tercera corrida de B, <code>list-preview-object.spec.ts :: expanded item: keeps preview label but hides badge and tags</code> falló los 3 intentos en WebKit. <code>getByText('Admin')</code> encontraba el token <code>\"Admin\"</code> del editor Monaco, no el badge del formulario. Es un localizador flojo que <code>next start</code> deja ver más seguido. Se corrige con <code>{ exact: true }</code> en el commit <code>test(e2e): match the list preview badge and tags exactly, not the editor's JSON</code>: 120 de 120 en los tres navegadores con <code>--repeat-each=10 --retries=0</code> sobre producción, y con la mutación que deja el badge visible al expandir (<code>field-list-item.tsx:170</code>, sin <code>!isOpen</code>) la prueba falla. Las 6 corridas siguientes, 3 por variante, ya llevan la corrección.</p>" +
+            '<p><b>Protección (regla 6):</b> la única rama de la librería que depende del modo es <code>isProduction()</code> de <code>luna-core/src/util/logger.ts</code>, y ninguna e2e lee esos avisos. Lo que solo pasa en desarrollo, StrictMode con renders y efectos dobles, sigue cubierto por Chromium en <code>next dev</code>.</p>',
         },
         {
           label: 'Plan de corrección',
@@ -429,7 +460,8 @@ window.AUDIT = {
         'El shard 2 de cada navegador tarda entre 80 y 110 s más que el shard 1',
       sev: 'optim',
       cat: 'pruebas',
-      st: 'medido',
+      st: 'corregido',
+      stLabel: 'Corregido en #200',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Tiempo de la suite.</p>' },
@@ -452,6 +484,13 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>Si OPT-02 y OPT-03 no alcanzan, darle a WebKit un tercer shard o repartir por duración. Medirlo después de OPT-02, porque con más workers la diferencia cambia.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html:
+            '<p>Medido junto con OPT-03 (variante E, <a href="https://github.com/jonattanva/luna-form/pull/197">#197</a>, 6 corridas): Firefox y WebKit en 3 shards sobre <code>next start</code>. Medianas: WebKit 430, 321 y 437 s; Firefox 350, 260 y 378 s. El veredicto baja a 584 s (573 a 602), frente a 656 s con 2 shards (B) y 822 s en la línea base, y el rango se cierra de 413 a 29 s.</p>' +
+            '<p>El job más lento pasa a ser Chromium 2/2 sobre <code>next dev</code> (503 s de mediana, el último en 4 de 6 corridas). El shard 2/3 sigue tardando unos 110 s menos que los otros dos, porque Playwright reparte por cantidad de casos y no tiene opción para repartir por duración, así que equilibrarlo más no acorta el veredicto mientras Chromium sea el último. Son 8 jobs e2e en vez de 6, pero suman 3121 s de job frente a 3469 s en la línea base.</p>',
         },
         {
           label: 'Plan de corrección',

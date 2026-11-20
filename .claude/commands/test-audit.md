@@ -34,7 +34,7 @@ If nothing was given, audit both suites (unit and e2e, render budgets included) 
 
 Use the same rules as `.claude/commands/audit.md`, in its **"Working environment"** section: own worktree with its own install, own port, and the same server CI uses for each suite. Also:
 
-- **How CI runs** (`.github/workflows/build-and-test.yml`): `e2e-test` runs against `pnpm serve` in a matrix of three browsers by two shards, with `CI` set, so `playwright.config.ts` uses 1 worker and 2 retries. Chromium also runs the `chromium-webmcp` project. Each e2e job installs and builds on its own after the `build` job. `render-budget` runs Chromium only, against production with probes. `unit-test` runs `pnpm test:unit`.
+- **How CI runs** (`.github/workflows/build-and-test.yml`): `e2e-test` runs Chromium against `pnpm serve` in two shards and Firefox and WebKit against `pnpm start` in three shards each, with `CI` set, so `playwright.config.ts` uses 1 worker and 2 retries. Chromium also runs the `chromium-webmcp` project. Each e2e job installs and builds on its own after the `build` job. `render-budget` runs Chromium only, against production with probes. `unit-test` runs `pnpm test:unit`.
 - **Per-test durations:**
   ```sh
   pnpm vitest run --reporter=json --outputFile=<scratchpad>/unit.json
