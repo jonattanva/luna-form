@@ -168,6 +168,7 @@ window.AUDIT = {
       sevNote: 'guarda de seguridad',
       cat: 'pruebas',
       st: 'corregido',
+      stLabel: 'Corregido en #208',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
