@@ -1,4 +1,8 @@
-import { interpolate, type InterpolateOptions } from '../util/string'
+import {
+  interpolate,
+  interpolateUrl,
+  type InterpolateOptions,
+} from '../util/string'
 import { isDataSource } from '../util/is-type'
 import type { DataSource, Nullable, SourceEvent } from '../type'
 
@@ -19,7 +23,7 @@ export function handleSourceEvent<T>(
     }
 
     if (isDataSource(source)) {
-      const newUrl = interpolate(source.url, selected, options)
+      const newUrl = interpolateUrl(source.url, selected, options)
       const newBody = source.body
         ? interpolate(source.body, selected, options)
         : source.body
