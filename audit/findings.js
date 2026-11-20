@@ -624,7 +624,8 @@ window.AUDIT = {
       title: 'El operador contains no lo ejecuta ninguna prueba',
       sev: 'crit',
       cat: 'pruebas',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #201',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -658,6 +659,26 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 1.</b> HUE-04. <b>Crear primero:</b> el archivo, y ver que falla con M9. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M9. <b>Después:</b> M9 falla. <b>Protección esperada:</b> los doce operadores documentados quedan fijados.</p>',
+        },
+        {
+          label: 'Prueba',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: "<p>Nuevo <code>tests/unit/operator-contains.spec.ts</code>, con el estilo de los demás <code>operator-*.spec.ts</code>, 8 casos: texto que contiene el valor y que no (el valor se pasa a texto, <code>'order-123'</code> contiene <code>123</code>); arreglo que contiene el valor y que no, también números contra texto por el <code>map(String)</code>, y elementos que se comparan enteros, no por subcadena; número, <code>null</code>, <code>undefined</code>, objeto y booleano dan <code>false</code>. El comportamiento coincide con <code>docs/validation/overview.md</code> (<i>current (string/array) contains value</i>); no hubo diferencia entre código y documentación.</p>",
+        },
+        {
+          label: 'Mutaciones',
+          audit: 'test-audit-2026-11-19-matriz',
+          html:
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>M9 <code>operator.ts:90</code>: <code>if (String(value).length &gt;= 0) return false</code> (siempre <code>false</code>)</td><td>pasan las 1282 unitarias y las 762 e2e de Chromium</td><td>fallan 4 de los 8 casos nuevos, todos los que esperan <code>true</code></td></tr>' +
+            '<tr><td>Control: la misma línea con <code>return true</code> (siempre <code>true</code>)</td><td>no se midió</td><td>fallan 6 de los 8 casos nuevos</td></tr>' +
+            '</tbody></table></div>' +
+            '<p>Cada mutación se aplicó al código fuente, se corrió <code>pnpm vitest run tests/unit/operator-contains.spec.ts</code> y se revirtió (<code>git status</code> limpio en <code>packages/</code>); sin mutar pasan los 8. Suite unitaria completa: 1296 pasan y 1 fallo esperado.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19-matriz',
+          html: '<p>M9 ya no pasa inadvertida: la atrapa la unitaria nueva. Queda pendiente del plan que <code>exists</code> y <code>truthy</code> tengan su propio <code>operator-*.spec.ts</code>: hoy solo los toca <code>operator-empty.spec.ts</code> de forma indirecta, y <code>truthy</code> con arreglo (<code>:116</code>) sigue sin ejecutarse.</p>',
         },
       ],
     },
