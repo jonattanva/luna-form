@@ -868,6 +868,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'código muerto',
       st: 'corregido',
+      stLabel: 'Corregido en #206',
       audit: 'audit-2026-11-19',
       sections: [
         {
