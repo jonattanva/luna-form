@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795183104762,
+  "lastUpdate": 1795183184338,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "669c265a11700fb0f955d79750d0b09f98a5e2d7",
-          "message": "upgrade dependencies",
-          "timestamp": "2026-09-21T08:23:11-05:00",
-          "tree_id": "0e8f254d9490fa6aab1e6c85e7fbffea83834c91",
-          "url": "https://github.com/jonattanva/luna-form/commit/669c265a11700fb0f955d79750d0b09f98a5e2d7"
-        },
-        "date": 1789997063633,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 315,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 628,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "dab47866b31fd34f5843a83ba7b7d44326b8bd2c",
           "message": "docs(interpolation): env.locale reaches labels and descriptions, not event payloads\n\n\"Locale resolution\" in format-filters.md said `config.env.locale` applies\nwherever a filter is written, a `value` payload included. It does not:\n`handleValueEvent` and `handleSourceEvent` interpolate without a locale, so\nfilters in a `value` payload and in `source.url` / `source.body` format with\nthe runtime default even when `env.locale` is set.\n\nThe page now says so, with the example run in /reactive (es-ES env, en-US\nbrowser): 1234567 through `| number` reads 1.234.567 in a description and\n1,234,567 in a value target, a source url and a POST body.\n\nTwo unit tests pin the behaviour the page describes, compared against\n`Intl.NumberFormat()` so they hold under any host locale.",
           "timestamp": "2026-10-04T21:29:56-05:00",
@@ -8851,6 +8817,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 43.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "572eef11615899d32c86b039a5e6cbc299578357",
+          "message": "Merge pull request #202 from jonattanva/claude/fix-hue-02-rules-assertions\n\ntest(schema): cover min, max, minItems, maxItems and the array and any forms of when",
+          "timestamp": "2026-11-20T08:57:42-05:00",
+          "tree_id": "e1064d43ef956db4f77913c644d334f03a503b8d",
+          "url": "https://github.com/jonattanva/luna-form/commit/572eef11615899d32c86b039a5e6cbc299578357"
+        },
+        "date": 1795183184208,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 52.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 23.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 51,
             "unit": "ms"
           }
         ]
