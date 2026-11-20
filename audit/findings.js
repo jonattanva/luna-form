@@ -597,7 +597,8 @@ window.AUDIT = {
         'Ninguna prueba cubre un origen remoto que responde con un error, falla en la red o no devuelve JSON',
       sev: 'crit',
       cat: 'pruebas',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #204',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -631,6 +632,15 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 1.</b> HUE-03. <b>Crear primero:</b> la unitaria del 500 y la e2e con el 500, y ver que ambas fallan con M7. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M7. <b>Después:</b> M7 falla en las dos. <b>Protección esperada:</b> el contrato de la sección Failures de <code>data-source.md</code> queda fijado en los tres casos (error HTTP, red y respuesta inválida).</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19-matriz',
+          html:
+            '<p>Commit <code>d82aacf</code> en la rama <code>claude/fix-hue-03-remote-failures</code>, desde <code>main</code> (<code>572eef1</code>), en el <a href="https://github.com/jonattanva/luna-form/pull/204">PR #204</a>. Dos casos en <code>tests/unit/fetcher.spec.ts</code>: un 500 con un arreglo JSON como cuerpo rechaza con ese cuerpo, y un 200 con cuerpo HTML rechaza con <code>SyntaxError</code>. Un bloque nuevo en <code>tests/e2e/select.spec.ts</code> (no hizo falta un archivo nuevo), con un <code>select</code> remoto junto a un texto: el <code>page.route</code> responde 500 con un arreglo de opciones, aborta el pedido, o responde un JSON con las opciones fuera del <code>namespace</code>. En los tres, una vez resuelto el pedido, el <code>select</code> abre sin opciones, se cierra, el texto se escribe y el envío manda <code>{ name: "Ada", fruit: "" }</code>. El código y <code>docs/</code> coinciden: no hubo que cambiar nada fuera de las pruebas. Las 3 e2e pasan en Chromium, Firefox y WebKit (unos 2 s cada una); las 1319 unitarias, lint y tipos de los archivos tocados, en verde.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>M7 <code>fetcher.ts:37</code> <code>if (request.ok)</code> → <code>if (true)</code></td><td>pasan las 1282 unitarias y las 762 e2e de Chromium</td><td>falla la unitaria del 500 (resuelve con el cuerpo en vez de rechazar) y, con <code>pnpm build</code> y servidor reiniciado, la e2e del 500 en Chromium (el <code>select</code> ofrece 2 opciones en vez de 0). Revertida, reconstruida y en verde otra vez</td></tr>' +
+            '</tbody></table></div>',
         },
       ],
     },
