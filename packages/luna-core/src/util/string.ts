@@ -46,6 +46,10 @@ const REGEX_PLACEHOLDER_ALL = /{([^}]{1,200})}/g
 // path. That is the one difference from REGEX_PLACEHOLDER above.
 const REGEX_WHOLE_PLACEHOLDER = /^{([^}|]{1,200})}$/
 
+// The same "nothing but one placeholder" for a url, where a filter is allowed:
+// what decides is that the template writes no part of the url itself.
+const REGEX_WHOLE_URL_PLACEHOLDER = /^{[^}]{1,200}}$/
+
 export type InterpolateOptions = {
   locale?: string
   // The instant a relative date is measured from: `context.now`.
@@ -132,8 +136,8 @@ export function interpolate<T>(
  * from a definition.
  *
  * Kept apart from `interpolate` rather than folded into it because
- * `interpolate` promises to give back what it was given, and three of its four
- * callers depend on that -- a url, a request body, a preview label. Only a
+ * `interpolate` promises to give back what it was given, and its other callers
+ * depend on that -- a request body, a preview label. Only a
  * `value` event asks for data, and the consumer it hands the result to already
  * takes `unknown`.
  *
@@ -153,6 +157,34 @@ export function interpolateValue(
   }
 
   return interpolate(template, values, options)
+}
+
+/**
+ * Interpolates the url of a source, where a value is data and the template is
+ * the shape of the request.
+ *
+ * Each value is encoded as a URI component, so it stays the one query value or
+ * the one path segment its placeholder stands in: `R&D` is sent as `R%26D`, not
+ * as `R` and a stray `D` parameter, `../admin` does not climb the path, and
+ * `//host` at the start of a template does not change the host.
+ *
+ * A template that is nothing but one placeholder -- `{url}`, an endpoint taken
+ * whole from the selected option -- has no authored url around the value to
+ * protect, so the value is the url and is used as it is. It is checked against
+ * `remotePatterns` like any other url before it is fetched.
+ *
+ * A placeholder that does not resolve is left standing, unencoded, so the
+ * request is still held until it does.
+ */
+export function interpolateUrl(
+  template: string,
+  values: Record<string, unknown> = {},
+  options: InterpolateOptions = {}
+): string {
+  if (REGEX_WHOLE_URL_PLACEHOLDER.test(template.trim())) {
+    return replacePlaceholders(template, values, options)
+  }
+  return replacePlaceholders(template, values, options, encodeURIComponent)
 }
 
 export function interpolateIfNeeded<T>(
@@ -220,10 +252,13 @@ function resolveStructure(
   }
 }
 
+// `encode` is applied to each value that resolves, never to a placeholder left
+// standing, which has to stay readable as one.
 function replacePlaceholders(
   template: string,
   values: Record<string, unknown> = {},
-  options: InterpolateOptions = {}
+  options: InterpolateOptions = {},
+  encode: (text: string) => string = String
 ): string {
   return template.replace(REGEX_PLACEHOLDER_ALL, (match, expression) => {
     const segments = String(expression)
@@ -238,7 +273,7 @@ function replacePlaceholders(
     const initial = resolveExpression(values, keyExpr)
 
     if (filters.length === 0) {
-      return isValue(initial) ? String(initial) : match
+      return isValue(initial) ? encode(String(initial)) : match
     }
 
     if (initial === undefined || initial === null) {
@@ -257,7 +292,7 @@ function replacePlaceholders(
       current = result
     }
 
-    return String(current)
+    return encode(String(current))
   })
 }
 

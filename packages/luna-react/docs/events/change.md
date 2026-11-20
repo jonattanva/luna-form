@@ -384,6 +384,11 @@ The `source` action dispatches a request to a remote data source to fetch and po
 }
 ```
 
+A value placed in the `url` is encoded as a URI component, so `R&D` is sent as
+one `countryId` value. A `url` that is only a placeholder, such as `{url}`,
+takes the whole URL from the option instead. See
+[Data Sources](../fields/data-source.md#a-value-in-the-url-is-encoded).
+
 ---
 
 ## When a change event runs at mount
