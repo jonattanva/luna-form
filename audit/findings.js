@@ -663,7 +663,7 @@ window.AUDIT = {
         {
           label: 'Prueba',
           audit: 'test-audit-2026-11-19-matriz',
-          html: "<p>Nuevo <code>tests/unit/operator-contains.spec.ts</code>, con el estilo de los demás <code>operator-*.spec.ts</code>, 8 casos: texto que contiene el valor y que no (el valor se pasa a texto, <code>'order-123'</code> contiene <code>123</code>); arreglo que contiene el valor y que no, también números contra texto por el <code>map(String)</code>, y elementos que se comparan enteros, no por subcadena; número, <code>null</code>, <code>undefined</code>, objeto y booleano dan <code>false</code>. El comportamiento coincide con <code>docs/validation/overview.md</code> (<i>current (string/array) contains value</i>); no hubo diferencia entre código y documentación.</p>",
+          html: "<p>Nuevo <code>tests/unit/operator-contains.spec.ts</code>, con el estilo de los demás <code>operator-*.spec.ts</code>, 8 casos: texto que contiene el valor y que no (el valor se pasa a texto, <code>'order-123'</code> contiene <code>123</code>); arreglo que contiene el valor y que no, también números contra texto por el <code>map(String)</code>, y elementos que se comparan enteros, no por subcadena; número, <code>null</code>, <code>undefined</code>, objeto y booleano dan <code>false</code>. El comportamiento coincide con <code>docs/validation/overview.md</code> (<i>current (string/array) contains value</i>); no hubo diferencia entre código y documentación.</p><p>Para cerrar los doce operadores, dos specs más con 9 casos en total: <code>operator-exists.spec.ts</code> (presente, <code>0</code> y <code>false</code> cuentan como presentes, <code>null</code>, <code>undefined</code> y <code>''</code> como ausentes, un arreglo se lee por su largo, también un rango de dos días como dice <code>docs/fields/input.md</code>, y el valor se ignora) y <code>operator-truthy.spec.ts</code> (valores verdaderos y falsos, un arreglo se lee por su largo, también <code>[false]</code>, y el valor se ignora).</p>",
         },
         {
           label: 'Mutaciones',
@@ -672,13 +672,16 @@ window.AUDIT = {
             '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
             '<tr><td>M9 <code>operator.ts:90</code>: <code>if (String(value).length &gt;= 0) return false</code> (siempre <code>false</code>)</td><td>pasan las 1282 unitarias y las 762 e2e de Chromium</td><td>fallan 4 de los 8 casos nuevos, todos los que esperan <code>true</code></td></tr>' +
             '<tr><td>Control: la misma línea con <code>return true</code> (siempre <code>true</code>)</td><td>no se midió</td><td>fallan 6 de los 8 casos nuevos</td></tr>' +
+            '<tr><td>M10 <code>exists</code>, rama arreglo: <code>return true</code> (<code>[]</code> cuenta como presente)</td><td>la atrapa solo <code>operator-empty.spec.ts</code>, de forma indirecta</td><td>falla también el caso de arreglos de <code>operator-exists.spec.ts</code></td></tr>' +
+            '<tr><td>M11 <code>truthy</code>, rama arreglo (<code>:116</code>): <code>return Boolean(current)</code> (<code>[]</code> cuenta como verdadero)</td><td>pasan las 1296 unitarias</td><td>falla el caso de arreglos de <code>operator-truthy.spec.ts</code></td></tr>' +
+            '<tr><td>M12 <code>exists</code>, final: <code>return Boolean(current)</code> (<code>0</code> y <code>false</code> cuentan como ausentes)</td><td>la atrapa solo <code>operator-empty.spec.ts</code>, de forma indirecta</td><td>falla también el caso de escalares falsos de <code>operator-exists.spec.ts</code></td></tr>' +
             '</tbody></table></div>' +
-            '<p>Cada mutación se aplicó al código fuente, se corrió <code>pnpm vitest run tests/unit/operator-contains.spec.ts</code> y se revirtió (<code>git status</code> limpio en <code>packages/</code>); sin mutar pasan los 8. Suite unitaria completa: 1296 pasan y 1 fallo esperado.</p>',
+            '<p>Cada mutación se aplicó al código fuente, se corrió <code>pnpm vitest run tests/unit/operator-contains.spec.ts</code> y se revirtió (<code>git status</code> limpio en <code>packages/</code>); sin mutar pasan los 8. Para M10 a M12, el antes es la suite sin los dos specs nuevos y el después, esos dos specs. Suite unitaria completa con los tres specs: 1305 pasan y 1 fallo esperado.</p>',
         },
         {
           label: 'Corrección',
           audit: 'test-audit-2026-11-19-matriz',
-          html: '<p>M9 ya no pasa inadvertida: la atrapa la unitaria nueva. Queda pendiente del plan que <code>exists</code> y <code>truthy</code> tengan su propio <code>operator-*.spec.ts</code>: hoy solo los toca <code>operator-empty.spec.ts</code> de forma indirecta, y <code>truthy</code> con arreglo (<code>:116</code>) sigue sin ejecutarse.</p>',
+          html: '<p>M9 ya no pasa inadvertida: la atrapa la unitaria nueva. Los doce operadores documentados tienen su propio <code>operator-*.spec.ts</code>; <code>truthy</code> con arreglo (M11), que no atrapaba ninguna prueba, queda fijado.</p>',
         },
       ],
     },
