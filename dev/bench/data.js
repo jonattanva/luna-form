@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795184103641,
+  "lastUpdate": 1795184132640,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "dab47866b31fd34f5843a83ba7b7d44326b8bd2c",
-          "message": "docs(interpolation): env.locale reaches labels and descriptions, not event payloads\n\n\"Locale resolution\" in format-filters.md said `config.env.locale` applies\nwherever a filter is written, a `value` payload included. It does not:\n`handleValueEvent` and `handleSourceEvent` interpolate without a locale, so\nfilters in a `value` payload and in `source.url` / `source.body` format with\nthe runtime default even when `env.locale` is set.\n\nThe page now says so, with the example run in /reactive (es-ES env, en-US\nbrowser): 1234567 through `| number` reads 1.234.567 in a description and\n1,234,567 in a value target, a source url and a POST body.\n\nTwo unit tests pin the behaviour the page describes, compared against\n`Intl.NumberFormat()` so they hold under any host locale.",
-          "timestamp": "2026-10-04T21:29:56-05:00",
-          "tree_id": "f563886eac52831e39d4a81d56992411752a58b1",
-          "url": "https://github.com/jonattanva/luna-form/commit/dab47866b31fd34f5843a83ba7b7d44326b8bd2c"
-        },
-        "date": 1791167473299,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 352,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 620,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb",
           "message": "test(hidden-clear): type only once the select has finished closing\n\n\"keeps an input reverted to its static hidden that declares keepValue\"\ntimed out in Firefox in two of four full-suite runs, on the last step: the\nnote came back empty. It was never the hide. The trace shows the note's fill\nnever reached the form -- the input read \"\" straight after it, and the form\nlogged four value changes where five were due.\n\nThe editor's select plays an exit animation (`data-[state=closed]:animate-out`,\nwhich `reducedMotion` does not stop) and only then unmounts, and Radix's\nFocusScope hands focus back to the trigger a task after that. The field the\noption reveals is on screen first, so under load `toBeVisible` passed, `fill`\nfocused the note, lost focus to the closing popup, and typed into nothing. A\nprobe with the close stretched to one second lost keystrokes the same way in\nall three browsers.\n\n`choose` now waits for the listbox to go and for the trigger to hold focus,\nwhich is the last thing the close does. The helper also checks both fields hold\nwhat was typed before hiding them: a fill that never landed used to read as a\nvalue the hide lost, and let every case that expects an empty field pass on it.\n\nFirefox, 8 workers, the test repeated 40 times: 2 failures before, none after.\nFull Firefox suite at 3 workers: 591 passed.",
           "timestamp": "2026-10-04T23:12:25-05:00",
@@ -8856,6 +8822,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 51,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4acc12b2ead5f29bf5abf5aab69ea4553c2890b7",
+          "message": "Merge pull request #203 from jonattanva/claude/bug-01-encode-source-url\n\nfix(core): encode values interpolated into a source url",
+          "timestamp": "2026-11-20T09:14:22-05:00",
+          "tree_id": "d7e8a444a04b8c552b5e34b0d4c4f7596076056d",
+          "url": "https://github.com/jonattanva/luna-form/commit/4acc12b2ead5f29bf5abf5aab69ea4553c2890b7"
+        },
+        "date": 1795184132600,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 32.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 13,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 34.9,
             "unit": "ms"
           }
         ]
