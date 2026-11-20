@@ -534,7 +534,8 @@ window.AUDIT = {
         'Las aserciones min, max, minItems y maxItems de rules y las formas arreglo y any de when no tienen ninguna prueba',
       sev: 'crit',
       cat: 'pruebas',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #202',
       audit: 'test-audit-2026-11-19-matriz',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -573,6 +574,20 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 1.</b> HUE-02. <b>Crear primero:</b> los casos, y ver que cada uno de M1 a M6 hace fallar al menos uno. <b>Antes:</b> 0 de 1282 unitarias y 0 de 762 e2e atrapan M1 a M6. <b>Después:</b> cada mutación falla al menos un caso. <b>Protección esperada:</b> las siete aserciones y las tres formas de <code>when</code> que documenta <code>docs/</code> quedan fijadas.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19-matriz',
+          html:
+            '<p>Commit <code>f73027d</code> en la rama <code>claude/fix-hue-02-rules-assertions</code>, desde <code>main</code> (<code>276089c</code>), en el <a href="https://github.com/jonattanva/luna-form/pull/202">PR #202</a>. Doce casos en <code>tests/unit/declarative-validation.spec.ts</code>, por <code>buildFormSchema</code>: <code>min</code> y <code>max</code> con un valor en el borde que pasa y uno pasado que se frena con el mensaje de la regla, sobre un número, un texto y un arreglo; <code>minItems</code> y <code>maxItems</code> igual sobre un arreglo; un <code>when</code> arreglo con una condición falsa que no corre la aserción y con todas verdaderas que sí; un <code>any</code> con una sola verdadera que la corre y con ninguna que no. El código coincide con <code>docs/</code>: no cambia nada fuera de la prueba. Cada mutación se aplicó sola contra ese archivo y se revirtió. Pasan las unitarias (1300 y 1 fallo esperado), <code>lint</code> y <code>prettier</code>; <code>tsc</code> de la raíz y <code>knip</code> ya fallaban igual en <code>main</code> por archivos que este cambio no toca.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>M1 <code>min</code>: <code>&gt;=</code> → <code>&lt;=</code></td><td>pasa</td><td>fallan 5: <code>min</code> con número, texto y arreglo, y los dos casos de <code>when</code> que corren la aserción</td></tr>' +
+            '<tr><td>M2 <code>max</code>: <code>&lt;=</code> → <code>&gt;=</code></td><td>pasa</td><td>fallan 3: <code>max</code> con número, texto y arreglo</td></tr>' +
+            '<tr><td>M3 <code>minItems</code>: <code>return true</code></td><td>pasa</td><td>falla 1: <code>minItems</code> bajo el borde</td></tr>' +
+            '<tr><td>M4 <code>maxItems</code>: <code>&lt;=</code> → <code>&gt;=</code></td><td>pasa</td><td>falla 1: <code>maxItems</code> sobre el borde</td></tr>' +
+            '<tr><td>M5 <code>when.any.some</code> → <code>every</code></td><td>pasa</td><td>falla 1: <code>any</code> con una sola condición verdadera</td></tr>' +
+            '<tr><td>M6 <code>when.every</code> (arreglo) → <code>some</code></td><td>pasa</td><td>falla 1: arreglo con una condición falsa</td></tr>' +
+            '</tbody></table></div>',
         },
       ],
     },
