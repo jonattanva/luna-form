@@ -91,6 +91,50 @@ A [`source` change event](../events/change.md#3-source-action-sourceevent)
 installs a new `DataSource` on another field, with `{value}` and the rest of the
 selected option interpolated into its `url` and `body`.
 
+### A value in the URL is encoded
+
+Each value placed in the `url` is encoded as a URI component, so it stays the
+one query value or the one path segment its placeholder stands in. It cannot add
+a parameter, leave its segment or change the host:
+
+| `url`                           | Selected value       | Requested URL                           |
+| ------------------------------- | -------------------- | --------------------------------------- |
+| `/api/people?dept={value}`      | `R&D`                | `/api/people?dept=R%26D`                |
+| `/api/countries/{value}/cities` | `../../admin`        | `/api/countries/..%2F..%2Fadmin/cities` |
+| `{value}/cities`                | `//attacker.example` | `%2F%2Fattacker.example/cities`         |
+
+The server reads `dept` as `R&D`. Commas from a
+[format filter](../interpolation/format-filters.md) are encoded too, as `%2C`,
+and read back as commas. Write the parts of the URL that are not data, such as
+the host, the path and the parameter names, in the `url` itself, not in a
+value.
+
+Only the `url` is encoded. On a `GET`, the keys of `body` are added as query
+parameters and encoded on the way, so they need nothing.
+
+### A `url` that is only a placeholder
+
+A `url` that is nothing but one placeholder takes the whole URL from the
+selected option, for an endpoint picked from a list:
+
+```json
+{
+  "action": "source",
+  "target": "abilities",
+  "source": { "url": "{url}", "namespace": "abilities" }
+}
+```
+
+There is no written URL around the value to protect, so the value is used as
+it is, not encoded. It is a URL from the data, so it may point at any host:
+list the hosts it may reach in
+[`fetcher.remotePatterns`](../setup.md#fetcherremotepatterns), which checks it
+before the request like any other URL. Without `remotePatterns`, every host is
+allowed. Any text around the placeholder, even `{url}/`, makes the value
+encoded again.
+
+### Several events on one target
+
 Several events aimed at the same target **merge** rather than replace: query
 parameters from each URL are combined, `body` and `headers` are merged key by
 key, and for anything else the most recent event wins. Two fields can each

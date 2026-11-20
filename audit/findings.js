@@ -804,7 +804,7 @@ window.AUDIT = {
         'Un valor entra sin codificar en la URL de un origen remoto: R&D se envía como dept=R',
       sev: 'mejora',
       cat: 'errores',
-      st: 'probado',
+      st: 'corregido',
       sevNote: 'también de seguridad',
       audit: 'audit-2026-11-19',
       sections: [
@@ -823,6 +823,21 @@ window.AUDIT = {
         {
           label: 'Prueba',
           html: '<p><code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url &gt; should send a value with url syntax in it as one value</code>. Compara lo que lee el servidor (<code>searchParams</code>), no la codificación, porque las pruebas existentes esperan comas sin codificar (<code>amount=1,234,567</code>).</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html:
+            '<p>La URL de un evento <code>source</code> se arma con <code>interpolateUrl</code> (<code>luna-core/src/util/string.ts</code>), el único lugar donde un valor entra en la URL: cada valor se codifica como componente con <code>encodeURIComponent</code>. El <code>body</code> no cambia; en un <code>GET</code> ya se codificaba al pasar a <code>searchParams</code>.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Plantilla y valor</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td><code>/api/people?dept={value}</code>, <code>R&amp;D</code></td><td><code>dept=R</code> y un parámetro <code>D</code></td><td><code>dept=R%26D</code>; el servidor lee <code>R&amp;D</code></td></tr>' +
+            '<tr><td><code>/api/cities?country={value}</code>, <code>pe&amp;admin=1#top</code></td><td>agrega <code>admin</code> y un fragmento que no se envía</td><td>un solo parámetro, <code>country</code></td></tr>' +
+            '<tr><td><code>/api/countries/{value}/cities</code>, <code>../../admin</code></td><td><code>/admin/cities</code></td><td><code>/api/countries/..%2F..%2Fadmin/cities</code></td></tr>' +
+            '<tr><td><code>{value}/cities</code>, <code>//attacker.example</code></td><td>host <code>attacker.example</code></td><td><code>%2F%2Fattacker.example/cities</code>, relativa al mismo host</td></tr>' +
+            '<tr><td><code>/api/cities/{value}</code>, <code>San Juan</code></td><td>espacio crudo</td><td><code>San%20Juan</code></td></tr>' +
+            '</tbody></table></div>' +
+            '<p><b>Plantilla que es solo un marcador</b> (<code>{url}</code>, un endpoint tomado entero de la opción, como en <code>tests/e2e/event.spec.ts</code>): el valor es la URL y se usa tal cual. No hay URL escrita alrededor que proteger, y codificarla rompería ese uso documentado. Se revisa contra <code>remotePatterns</code> como cualquier URL; sin <code>remotePatterns</code> se permite cualquier host, y la documentación pide listar los hosts. Cualquier texto alrededor, incluso <code>{url}/</code>, vuelve a codificar. Documentado en <code>docs/fields/data-source.md</code> y enlazado desde <code>docs/events/change.md</code>.</p>' +
+            '<p>Las dos pruebas que esperaban comas sin codificar (<code>amount=1,234,567</code>, <code>n=1.234,5</code>) ahora comparan lo que lee el servidor (<code>searchParams</code>): la coma viaja como <code>%2C</code>. Pruebas: 6 casos en <code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url</code>, sin <code>.fails</code>; 5 fallaban antes de la corrección y el de <code>{url}</code> pasaba. 1311 unitarias, lint y typecheck en verde; 115 e2e con orígenes remotos en Chromium y <code>event</code> y <code>option-not-offered</code> en Firefox y WebKit, sobre <code>pnpm serve</code>. <code>knip</code> y <code>prettier:check</code> fallan igual que en <code>main</code> (S-01), sin hallazgos nuevos.</p>',
         },
         {
           label: 'Plan de corrección',
