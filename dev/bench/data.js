@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795127408116,
+  "lastUpdate": 1795145512934,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "713243cf47e2203cc9944b177a2353277e18931d",
-          "message": "build(editor): the build task hashes the files next build reads\n\nThe editor's turbo.json extended the root build task and overrode only its\noutputs, so it inherited `inputs: [\"src/**\", \"scripts/**\", \"tsconfig.json\",\n\"esbuild.mjs\"]`. The editor has no src/: its code lives in app/, components/\nand lib/, beside luna.config.ts, next.config.ts and postcss.config.mjs. An edit\nto any of them left the hash unchanged, `pnpm run build` reported FULL TURBO and\nreplayed the old .next, and e2e ran against a stale editor. A change in either\npackage still invalidated it through ^build, which is why it went unnoticed.\n\nThe task now takes `$TURBO_DEFAULT$` (every tracked or unignored file, which\nleaves out .next, node_modules and the generated next-env.d.ts) plus `.env*`,\nwhich next build reads but git ignores.\n\nWith app/layout.tsx edited, before: 3 cached, FULL TURBO. After: luna-core and\nluna-react cached, the editor a cache miss; reverting the edit is a hit again.\nlint was never blind here (its transit dependency hashes every file in the\npackage), and the editor has no typescript script: next build type-checks it.",
-          "timestamp": "2026-10-04T23:31:53-05:00",
-          "tree_id": "b95f6a7f2849d20e08add171741815265125d58c",
-          "url": "https://github.com/jonattanva/luna-form/commit/713243cf47e2203cc9944b177a2353277e18931d"
-        },
-        "date": 1791174757431,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0002276241799999997,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0007988428200000004,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00007725296000000015,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0002824477400000001,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.00039011085999999975,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.020837062960000003,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.016249913740000003,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2a436e85b08a7b1809cdad4b52ac7774f4b7ce90",
+          "message": "Merge pull request #199 from jonattanva/claude/ci-skip-docs-only\n\nci: skip checks on changes that only touch documentation",
+          "timestamp": "2026-11-19T22:31:13-05:00",
+          "tree_id": "9844399e9359269f5b8d911d2eff5d726ce3344c",
+          "url": "https://github.com/jonattanva/luna-form/commit/2a436e85b08a7b1809cdad4b52ac7774f4b7ce90"
+        },
+        "date": 1795145512076,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00020418289999999957,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0007628863799999999,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.0001015791200000001,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00030241966000000046,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0004510457200000002,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.01614745506,
             "unit": "ms"
           }
         ]
