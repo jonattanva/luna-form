@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795145628120,
+  "lastUpdate": 1795145661815,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "98b03c564d5a7a805f1d906a0e807b6c2a1d75de",
-          "message": "Merge pull request #107 from jonattanva/docs/stale-comments\n\ndocs(src): a comment points at something a reader can open",
-          "timestamp": "2026-09-21T08:07:21-05:00",
-          "tree_id": "d2c7b689e0972c1724904b680ec34e0cca8e42fe",
-          "url": "https://github.com/jonattanva/luna-form/commit/98b03c564d5a7a805f1d906a0e807b6c2a1d75de"
-        },
-        "date": 1789996117777,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 235,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 169,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "0c28fb5a66f203bee47d762c7b5558f01d7c66df",
           "message": "Merge pull request #108 from jonattanva/docs/peer-and-entry-drift\n\ndocs: the library the pages describe is the one that ships",
           "timestamp": "2026-09-21T08:18:43-05:00",
@@ -8841,6 +8807,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 50.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "276089cf9735d5f30bd629dc892720234cfbfd47",
+          "message": "Merge pull request #200 from jonattanva/claude/brave-poitras-d1ad5b\n\nci: run Firefox and WebKit e2e on next start in three shards",
+          "timestamp": "2026-11-19T22:33:19-05:00",
+          "tree_id": "1ad2ba5d8284cb0d6ca686965940907cf3191c84",
+          "url": "https://github.com/jonattanva/luna-form/commit/276089cf9735d5f30bd629dc892720234cfbfd47"
+        },
+        "date": 1795145661702,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 41.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 15.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 45.9,
             "unit": "ms"
           }
         ]
