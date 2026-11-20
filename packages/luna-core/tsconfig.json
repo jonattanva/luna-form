@@ -2,6 +2,13 @@
   "compilerOptions": {
     "declaration": true,
     "declarationDir": "./dist/types",
+    // Only declarations are emitted, so this changes no output. It tells knip
+    // where the build lands: knip maps a file under `outDir` back to its
+    // source under `rootDir`, and `luna-react` resolves `@luna-form/core` to
+    // `dist/types/index.d.ts`. Without it, once core is built knip stops at
+    // the declarations, loses sight of which sources `luna-react` uses and
+    // reports them unused.
+    "outDir": "./dist/types",
     "emitDeclarationOnly": true,
     "rootDir": "./src",
     "esModuleInterop": true,

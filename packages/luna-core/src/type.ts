@@ -39,6 +39,14 @@ export type DataSource = {
   url: string
 }
 
+/**
+ * The `source` prop of `Form`, re-exported by the client and server entries
+ * of the published package. Nothing in this repository imports it from
+ * there, and knip does not count a re-export from another workspace's entry
+ * as a use, so without the tag it reports this public type as unused.
+ *
+ * @public
+ */
 export type Source = {
   [key: string]: DataSource | Array<unknown>
 }
@@ -173,6 +181,14 @@ export type Column = {
   type: 'column' | (string & {})
 } & Base
 
+/**
+ * Re-exported by the schema entry of the published package, for code that
+ * writes `when` clauses. Nothing in this repository imports it from there, and knip
+ * does not count a re-export from another workspace's entry as a use, so
+ * without the tag it reports this public type as unused.
+ *
+ * @public
+ */
 export type Operator =
   | 'eq'
   | 'neq'
