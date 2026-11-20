@@ -54,7 +54,7 @@ one. See
 }
 ```
 
-Three details decide most of what you will hit:
+Four details decide most of what you will hit:
 
 - **`{value}` is a description's, not a label's.** A description is rendered
   with the field's current value in scope, so `{value}` there tracks what the
@@ -70,6 +70,16 @@ Three details decide most of what you will hit:
   whole sentence with the placeholder inside it (`"welcome_user": "Hola
 {context.user.firstName}"` keyed on the source text) rather than expecting the
   key to survive.
+- **Only the template makes links.** A description renders `[text](url)`
+  markdown links, and they are read from what you wrote, before any placeholder
+  is resolved. What a placeholder resolves to is always shown as text: with
+  `"description": "You entered: {value}"`, a user who types
+  `[Verify](https://example.com)` sees those characters, not a link. The same
+  holds for a `value` the host passes in or a change event writes. A link you
+  write may carry a placeholder in its text or its url —
+  `[{context.name}]({context.profileUrl})` renders one link, filled in with the
+  values. When the resolved text is found in the `translations` dictionary, the
+  translation is your text too, and its links render.
 - **A section heading is not interpolated at all.** `title` and `description` on
   a [section](../structure/sections.md#title-and-description-are-translated-not-interpolated)
   are translated and take markdown links, but a placeholder in one is printed

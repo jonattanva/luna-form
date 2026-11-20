@@ -1,6 +1,7 @@
 import { applyFormatFilter, readNow } from './format'
 import { extract } from './extract'
 import { isObject, isString, isValue } from './is-type'
+import { translate } from './translate'
 
 /**
  * Every quantifier in this file is bounded, and none of the bounds is a
@@ -296,15 +297,71 @@ function replacePlaceholders(
   })
 }
 
+type LinkCallback<K> = (index: number, url: string, text?: string) => K
+
+type Formatted<K> = (string | K)[] | string | null
+
 export function formatMarkdown<K>(
   text?: string,
-  callback?: (index: number, url: string, text?: string) => K
-): (string | K)[] | string | null {
-  if (!isString(text)) {
-    return null
+  callback?: LinkCallback<K>
+): Formatted<K> {
+  return readLinks(text, callback)
+}
+
+/** What a template is resolved with before it is rendered as text. */
+export type TemplateScope = {
+  // The dictionary the resolved text is looked up in.
+  dictionary?: Record<string, string>
+  options?: InterpolateOptions
+  // What its placeholders read: `context`, `env` and, in a description, `value`.
+  values?: Record<string, unknown>
+}
+
+/**
+ * Renders an authored template -- placeholders, translation, markdown links --
+ * so that only the author's text can make a link.
+ *
+ * The links are read from the template *before* any placeholder in it is
+ * resolved, and each placeholder is then resolved inside the piece it sits in:
+ * plain text, a link's text or a link's url. What a placeholder resolves to is
+ * a value, from a person typing, the host or a change event, and is never read
+ * as markdown: `[a](b)` typed into a field stays those characters on screen.
+ *
+ * A link the author wrote may still carry a placeholder in its text or its url
+ * -- `[{context.name}]({context.profileUrl})` -- since writing the link is the
+ * author's decision; the value fills it in and cannot open a second one.
+ *
+ * Translation still runs on the resolved text, as it always has. A dictionary
+ * that answers for it returns an authored string, and that string's links are
+ * read as written.
+ */
+export function formatTemplate<K>(
+  template: string | undefined,
+  scope: TemplateScope,
+  callback?: LinkCallback<K>
+): Formatted<K> {
+  const resolve = (text: string): string => {
+    return interpolateIfNeeded(text, scope.values, scope.options)
   }
 
-  if (!text || text.trim().length === 0) {
+  const resolved = resolve(template ?? '')
+  const translated = translate(resolved, scope.dictionary)
+  if (translated !== resolved) {
+    return readLinks(translated, callback)
+  }
+
+  return readLinks(template, callback, resolve)
+}
+
+// Splits `text` at its `[text](url)` links. `resolve` turns each piece the
+// links leave -- the text between them, and a link's own text and url -- into
+// what is shown, after the split: nothing it returns can become a link.
+function readLinks<K>(
+  text: string | undefined,
+  callback?: LinkCallback<K>,
+  resolve: (text: string) => string = (piece) => piece
+): Formatted<K> {
+  if (!isString(text)) {
     return null
   }
 
@@ -320,21 +377,24 @@ export function formatMarkdown<K>(
     hasMatch = true
 
     if (index > lastIndex) {
-      parts.push(text.substring(lastIndex, index))
+      parts.push(resolve(text.substring(lastIndex, index)))
     }
 
-    const value = callback ? callback(index, url, linkText) : fullMatch
+    const value = callback
+      ? callback(index, resolve(url), resolve(linkText))
+      : resolve(fullMatch)
     parts.push(value)
 
     lastIndex = index + fullMatch.length
   }
 
   if (!hasMatch) {
-    return text
+    const resolved = resolve(text)
+    return resolved.trim().length === 0 ? null : resolved
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex))
+    parts.push(resolve(text.substring(lastIndex)))
   }
 
   return parts

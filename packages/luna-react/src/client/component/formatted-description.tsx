@@ -1,5 +1,5 @@
 import { Description } from '../../component/description'
-import { formatMarkdown } from '../../lib/string'
+import { formatTemplate } from '../../lib/string'
 import {
   interpolateIfNeeded,
   isObject,
@@ -8,6 +8,7 @@ import {
   translate,
   type Description as DescriptionType,
   type Localization,
+  type TemplateScope,
 } from '@luna-form/core'
 import { ChevronIcon } from '../../component/chevron-icon'
 import { useDisclosure } from '../hook/use-disclosure'
@@ -22,14 +23,15 @@ export function FormattedDescription(
     value?: unknown
   }>
 ) {
-  const interpolateOpts = {
-    context: props.context,
-    env: props.config?.env,
-    value: props.value,
+  const scope: TemplateScope = {
+    dictionary: props.localization?.translations,
+    options: renderOptions(props.localization?.lang, props.context),
+    values: {
+      context: props.context,
+      env: props.config?.env,
+      value: props.value,
+    },
   }
-
-  const translations = props.localization?.translations
-  const formatOptions = renderOptions(props.localization?.lang, props.context)
 
   const [isExpanded, toggle] = useDisclosure(() => {
     if (isObject(props.text) && 'collapsed' in props.text) {
@@ -40,28 +42,18 @@ export function FormattedDescription(
 
   const title =
     isObject(props.text) && isString(props.text.title)
-      ? formatMarkdown(
-          translate(
-            interpolateIfNeeded(
-              props.text.title,
-              interpolateOpts,
-              formatOptions
-            ),
-            translations
-          )
-        )
+      ? formatTemplate(props.text.title, scope)
       : undefined
 
+  const template = isString(props.text) ? props.text : props.text?.message
+
+  // The tooltip is an attribute, plain text whatever it holds.
   const rawMessage = translate(
-    interpolateIfNeeded(
-      isString(props.text) ? props.text : props.text?.message,
-      interpolateOpts,
-      formatOptions
-    ),
-    translations
+    interpolateIfNeeded(template, scope.values, scope.options),
+    scope.dictionary
   )
 
-  const message = formatMarkdown(rawMessage)
+  const message = formatTemplate(template, scope)
 
   if (message) {
     return (
