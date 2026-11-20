@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795182712128,
+  "lastUpdate": 1795183104762,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "43b68a0816135ba0f7c26dc163111bfdb29bf9f6",
-          "message": "Merge pull request #111 from jonattanva/claude/date-limits\n\nfeat(date): a date can be held between a first and a last day",
-          "timestamp": "2026-10-05T08:58:22-05:00",
-          "tree_id": "1a39c11ba8a030fadfdd44142a8e49f948193ad5",
-          "url": "https://github.com/jonattanva/luna-form/commit/43b68a0816135ba0f7c26dc163111bfdb29bf9f6"
-        },
-        "date": 1791208755291,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.0004874992400000002,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0010759595199999995,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00014372029999999995,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0004370263399999999,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0005903775600000006,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.02014581632,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.0163716563,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "572eef11615899d32c86b039a5e6cbc299578357",
+          "message": "Merge pull request #202 from jonattanva/claude/fix-hue-02-rules-assertions\n\ntest(schema): cover min, max, minItems, maxItems and the array and any forms of when",
+          "timestamp": "2026-11-20T08:57:42-05:00",
+          "tree_id": "e1064d43ef956db4f77913c644d334f03a503b8d",
+          "url": "https://github.com/jonattanva/luna-form/commit/572eef11615899d32c86b039a5e6cbc299578357"
+        },
+        "date": 1795183103777,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00028434514000000034,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0009528042400000004,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00017113653999999997,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.0003732624599999997,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0005598975199999995,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.02209588412,
             "unit": "ms"
           }
         ]
