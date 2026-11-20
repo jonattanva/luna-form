@@ -867,7 +867,7 @@ window.AUDIT = {
         'knip y prettier:check fallan en main y CI no corre ninguno de los dos; knip además informa casi todo mal',
       sev: 'mejora',
       cat: 'código muerto',
-      st: 'medido',
+      st: 'corregido',
       audit: 'audit-2026-11-19',
       sections: [
         {
@@ -885,6 +885,23 @@ window.AUDIT = {
         {
           label: 'Prueba',
           html: '<p>Medición: <code>pnpm knip</code> con y sin <code>packages/luna-core/dist</code>, la tabla de exports quitados de a uno (build, <code>tsc</code> de los tres paquetes y unitarias), y <code>pnpm prettier:check</code>.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html:
+            '<p><b>Causa exacta:</b> <code>knip</code> resuelve con oxc, que lee el <code>paths</code> del tsconfig de <code>luna-react</code> antes que el <code>paths</code> de <code>knip.ts</code>; este solo se usa si el primero no resuelve. Por eso <code>paths</code> propios en <code>knip.ts</code> no alcanzan: con el build hecho, <code>@luna-form/core</code> sigue llegando a <code>dist/types/index.d.ts</code>. Lo que <code>knip</code> sí hace es mapear un archivo bajo <code>outDir</code> a su fuente bajo <code>rootDir</code>, y <code>luna-core</code> solo declaraba <code>declarationDir</code>.</p>' +
+            '<ul><li><code>packages/luna-core/tsconfig.json</code>: <code>outDir: ./dist/types</code>, igual que <code>declarationDir</code>. Como solo se emiten declaraciones, no cambia ninguna salida: el <code>dist</code> de los dos paquetes, reconstruido con <code>--force</code>, es idéntico byte a byte. La resolución del build publicado no se toca.</li>' +
+            '<li><code>Source</code> y <code>Operator</code> llevan <code>@public</code>, con el motivo en el comentario: son API pública que <code>luna-react</code> reexporta desde sus entradas, y <code>knip</code> no cuenta como uso una reexportación desde la entrada de otro workspace (<code>--trace-export</code> la marca con ✗).</li>' +
+            '<li><code>tests/e2e/date-submission-default.spec.ts</code> formateado.</li>' +
+            '<li>Job <code>lint</code>: <code>pnpm prettier:check</code> y <code>pnpm knip</code> antes de <code>lint</code> y <code>typescript</code>. Ninguno necesita build, y como <code>knip</code> da lo mismo en los dos estados, el orden no cambia su resultado. Localmente, 3,5 a 4 s y 1,1 s.</li>' +
+            '<li>Un cambio solo de <code>audit/**</code> no corre CI (<code>paths-ignore</code>, #199), así que un <code>findings.js</code> sin formato recién se vería en el siguiente PR con código. <code>lint-staged</code> ahora formatea <code>audit/**/*.js</code>; los <code>.md</code> ya los formateaba.</li></ul>' +
+            '<div class="table-wrap"><table><thead><tr><th>Check</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td><code>pnpm knip</code> sin <code>luna-core/dist</code></td><td>2 avisos (<code>Source</code>, <code>Operator</code>)</td><td>0</td></tr>' +
+            '<tr><td><code>pnpm knip</code> después de <code>pnpm build</code></td><td>27 avisos (17 exports, 10 tipos)</td><td>0</td></tr>' +
+            '<tr><td><code>pnpm prettier:check</code></td><td>1 archivo</td><td>limpio</td></tr>' +
+            '</tbody></table></div>' +
+            '<p class="muted">El registro anotaba 5 y 30; S-02 (#177) ya había quitado los exports muertos reales. 1323 unitarias, lint y typecheck en verde.</p>',
         },
         {
           label: 'Plan de corrección',

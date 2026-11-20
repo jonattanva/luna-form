@@ -245,6 +245,14 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
+      # Formatting and unused code first: they need no build and take a few
+      # seconds each. knip gives the same answer with or without
+      # `luna-core/dist` (its tsconfig names `outDir`, which knip maps back to
+      # the sources), so the order of these steps does not change its result.
+      - name: Check formatting
+        run: pnpm prettier:check
+      - name: Check unused code
+        run: pnpm knip
       - name: Lint project
         run: pnpm run lint
       - name: Run TypeScript checks
