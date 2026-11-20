@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795184132640,
+  "lastUpdate": 1795184772298,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "22b0fdc09c05716f2d685dcda8519c73524be18e",
-          "message": "Merge pull request #113 from jonattanva/ci/e2e-parallel\n\nci: e2e in six parallel jobs with one report, on ubuntu-26.04",
-          "timestamp": "2026-10-05T10:10:18-05:00",
-          "tree_id": "6f22cd7d07f9e36bf64673af4295144c7dfe83ac",
-          "url": "https://github.com/jonattanva/luna-form/commit/22b0fdc09c05716f2d685dcda8519c73524be18e"
-        },
-        "date": 1791213067023,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00024844857999999987,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0009916841400000004,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00014581787999999962,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.0003437242600000002,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0004624318600000004,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.015880997439999996,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.013619472700000001,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "524082d5ac40bd2eb1d5e4a897d7258dc4fd04d6",
+          "message": "Merge pull request #204 from jonattanva/claude/fix-hue-03-remote-failures\n\ntest(source): cover a remote source that answers an error, fails on the network or holds no array",
+          "timestamp": "2026-11-20T09:25:31-05:00",
+          "tree_id": "c2e88b407122880f362086a929ed02474d62e9d1",
+          "url": "https://github.com/jonattanva/luna-form/commit/524082d5ac40bd2eb1d5e4a897d7258dc4fd04d6"
+        },
+        "date": 1795184771527,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.0005784075999999998,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.00107179324,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.0001655873399999996,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00041035062000000037,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.0005914543400000002,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.02408109328,
             "unit": "ms"
           }
         ]
