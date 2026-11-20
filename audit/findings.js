@@ -788,7 +788,7 @@ window.AUDIT = {
         'Un valor interpolado en una descripción se lee como enlace markdown y aparece como enlace dentro del formulario',
       sev: 'mejora',
       cat: 'seguridad',
-      st: 'probado',
+      st: 'corregido',
       audit: 'audit-2026-11-19',
       sections: [
         {
@@ -806,6 +806,19 @@ window.AUDIT = {
         {
           label: 'Prueba',
           html: '<p><code>tests/e2e/description-value-link.spec.ts :: is shown as text, not as a link</code>, en Chromium, Firefox y WebKit.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-19',
+          html:
+            '<p>Las descripciones con marcadores se pintan con <code>formatTemplate</code> (<code>luna-core/src/util/string.ts</code>), el único lugar que junta interpolación, traducción y enlaces: lee los enlaces <code>[texto](url)</code> de la plantilla que escribió el autor y después resuelve cada marcador dentro del trozo donde está. Lo que da un marcador es siempre texto. La usan la descripción de campo y de columna (<code>description.tsx</code>) y el título y el mensaje de la ayuda plegable (<code>formatted-description.tsx</code>). Los títulos y descripciones de sección no se interpolan y no cambian.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Plantilla y valor</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td><code>You entered: {value}</code>, <code>[Verify your account](https://attacker.example/login)</code></td><td>un <code>&lt;a href="https://attacker.example/login"&gt;</code></td><td>el texto tal cual, sin enlace</td></tr>' +
+            '<tr><td><code>See [the guide](https://docs.example.com) for {value}</code>, el mismo valor</td><td>dos enlaces</td><td>solo <i>the guide</i> es enlace; el valor es texto</td></tr>' +
+            '<tr><td><code>[{context.name}]({context.profileUrl})</code></td><td>un enlace con los valores</td><td>igual: un enlace del autor puede llevar marcadores en su texto o su URL</td></tr>' +
+            '</tbody></table></div>' +
+            '<p><b>Traducción.</b> Sigue después de la interpolación, como documenta <code>docs/interpolation/overview.md</code>. Si el diccionario tiene una entrada para el texto resuelto, esa entrada la escribió el host y sus enlaces se leen. Documentado en <code>docs/interpolation/overview.md</code> (<i>Only the template makes links</i>).</p>' +
+            '<p>Pruebas: se quitó el <code>.fail</code> de <code>tests/e2e/description-value-link.spec.ts :: is shown as text, not as a link</code> y se agregó <i>leaves the links the author wrote working</i>; 6 de 6 en Chromium, Firefox y WebKit. 5 casos de <code>formatTemplate</code> en <code>tests/unit/format-markdown.spec.ts</code> (valor como texto, enlace del autor, marcadores en texto y URL del enlace, traducción, texto vacío). 339 de 339 e2e de descripciones, interpolación, traducción, secciones y servidor en los tres navegadores; unitarias, lint, typecheck y knip en verde.</p>',
         },
         {
           label: 'Plan de corrección',
