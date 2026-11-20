@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795184772298,
+  "lastUpdate": 1795184807110,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "jonattanva"
           },
           "distinct": true,
-          "id": "1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb",
-          "message": "test(hidden-clear): type only once the select has finished closing\n\n\"keeps an input reverted to its static hidden that declares keepValue\"\ntimed out in Firefox in two of four full-suite runs, on the last step: the\nnote came back empty. It was never the hide. The trace shows the note's fill\nnever reached the form -- the input read \"\" straight after it, and the form\nlogged four value changes where five were due.\n\nThe editor's select plays an exit animation (`data-[state=closed]:animate-out`,\nwhich `reducedMotion` does not stop) and only then unmounts, and Radix's\nFocusScope hands focus back to the trigger a task after that. The field the\noption reveals is on screen first, so under load `toBeVisible` passed, `fill`\nfocused the note, lost focus to the closing popup, and typed into nothing. A\nprobe with the close stretched to one second lost keystrokes the same way in\nall three browsers.\n\n`choose` now waits for the listbox to go and for the trigger to hold focus,\nwhich is the last thing the close does. The helper also checks both fields hold\nwhat was typed before hiding them: a fill that never landed used to read as a\nvalue the hide lost, and let every case that expects an empty field pass on it.\n\nFirefox, 8 workers, the test repeated 40 times: 2 failures before, none after.\nFull Firefox suite at 3 workers: 591 passed.",
-          "timestamp": "2026-10-04T23:12:25-05:00",
-          "tree_id": "480aa8aecab644c935e6a8ff1a2a8fa3badeb7b8",
-          "url": "https://github.com/jonattanva/luna-form/commit/1745cdda9f49e16c8340b6f1d9ea527b01d2bdbb"
-        },
-        "date": 1791173615078,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 201,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 148,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
           "id": "713243cf47e2203cc9944b177a2353277e18931d",
           "message": "build(editor): the build task hashes the files next build reads\n\nThe editor's turbo.json extended the root build task and overrode only its\noutputs, so it inherited `inputs: [\"src/**\", \"scripts/**\", \"tsconfig.json\",\n\"esbuild.mjs\"]`. The editor has no src/: its code lives in app/, components/\nand lib/, beside luna.config.ts, next.config.ts and postcss.config.mjs. An edit\nto any of them left the hash unchanged, `pnpm run build` reported FULL TURBO and\nreplayed the old .next, and e2e ran against a stale editor. A change in either\npackage still invalidated it through ^build, which is why it went unnoticed.\n\nThe task now takes `$TURBO_DEFAULT$` (every tracked or unignored file, which\nleaves out .next, node_modules and the generated next-env.d.ts) plus `.env*`,\nwhich next build reads but git ignores.\n\nWith app/layout.tsx edited, before: 3 cached, FULL TURBO. After: luna-core and\nluna-react cached, the editor a cache miss; reverting the edit is a hit again.\nlint was never blind here (its transit dependency hashes every file in the\npackage), and the editor has no typescript script: next build type-checks it.",
           "timestamp": "2026-10-04T23:31:53-05:00",
@@ -8861,6 +8827,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 34.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "524082d5ac40bd2eb1d5e4a897d7258dc4fd04d6",
+          "message": "Merge pull request #204 from jonattanva/claude/fix-hue-03-remote-failures\n\ntest(source): cover a remote source that answers an error, fails on the network or holds no array",
+          "timestamp": "2026-11-20T09:25:31-05:00",
+          "tree_id": "c2e88b407122880f362086a929ed02474d62e9d1",
+          "url": "https://github.com/jonattanva/luna-form/commit/524082d5ac40bd2eb1d5e4a897d7258dc4fd04d6"
+        },
+        "date": 1795184807021,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 67.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 18.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 57.7,
             "unit": "ms"
           }
         ]
