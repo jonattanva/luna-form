@@ -15,7 +15,14 @@ import {
   vi,
   type MockInstance,
 } from 'vitest'
-import type { Field, Sections, Validation } from '@/packages/luna-core/src/type'
+import type {
+  AssertRule,
+  Field,
+  Sections,
+  Validation,
+  WhenClause,
+  WhenRule,
+} from '@/packages/luna-core/src/type'
 
 describe('declarative validation vocabulary', () => {
   test('requiredWhen makes a field required only when the condition holds', () => {
@@ -630,6 +637,129 @@ describe('declarative validation vocabulary', () => {
         expect.stringContaining('^(abc'),
         expect.anything()
       )
+    })
+  })
+
+  // Every assertion of `rules` and every form of its `when`, as the validation
+  // page lists them: a value on the bound passes, one past it is held back with
+  // the rule's message, and a gate that does not hold leaves the value alone.
+  describe('rules assertions on their bounds', () => {
+    type Value = number | string | string[]
+
+    const issuesFor = (type: Field['type'], rule: AssertRule, value: Value) => {
+      const result = buildFormSchema([
+        {
+          fields: [
+            { name: 'kind', type: 'select' },
+            { name: 'tier', type: 'select' },
+            { name: 'value', type, validation: { rules: [rule] } },
+          ],
+        },
+      ]).safeParse({ kind: 'custom', tier: 'basic', value })
+
+      return result.success ? [] : collectIssues(result.error)
+    }
+
+    type Bound = [string, Field['type'], Value, Value]
+
+    const failed = [{ path: 'value', message: 'Out of bounds' }]
+
+    test.each([
+      ['a number', 'input/number', 3, 2],
+      ['a string', 'input/text', 'abc', 'ab'],
+      ['an array', 'chips', ['a', 'b', 'c'], ['a', 'b']],
+    ] satisfies Bound[])(
+      'min should pass %s on its bound and hold back one below it',
+      (_, type, bound, below) => {
+        const rule: AssertRule = {
+          assert: 'min',
+          value: 3,
+          message: 'Out of bounds',
+        }
+
+        expect(issuesFor(type, rule, bound)).toEqual([])
+        expect(issuesFor(type, rule, below)).toEqual(failed)
+      }
+    )
+
+    test.each([
+      ['a number', 'input/number', 3, 4],
+      ['a string', 'input/text', 'abc', 'abcd'],
+      ['an array', 'chips', ['a', 'b', 'c'], ['a', 'b', 'c', 'd']],
+    ] satisfies Bound[])(
+      'max should pass %s on its bound and hold back one above it',
+      (_, type, bound, above) => {
+        const rule: AssertRule = {
+          assert: 'max',
+          value: 3,
+          message: 'Out of bounds',
+        }
+
+        expect(issuesFor(type, rule, bound)).toEqual([])
+        expect(issuesFor(type, rule, above)).toEqual(failed)
+      }
+    )
+
+    test('minItems should pass an array on its bound and hold back one below it', () => {
+      const rule: AssertRule = {
+        assert: 'minItems',
+        value: 2,
+        message: 'Out of bounds',
+      }
+
+      expect(issuesFor('chips', rule, ['a', 'b'])).toEqual([])
+      expect(issuesFor('chips', rule, ['a'])).toEqual(failed)
+    })
+
+    test('maxItems should pass an array on its bound and hold back one above it', () => {
+      const rule: AssertRule = {
+        assert: 'maxItems',
+        value: 2,
+        message: 'Out of bounds',
+      }
+
+      expect(issuesFor('chips', rule, ['a', 'b'])).toEqual([])
+      expect(issuesFor('chips', rule, ['a', 'b', 'c'])).toEqual(failed)
+    })
+
+    // The data the gates read is `kind: 'custom'` and `tier: 'basic'`.
+    const custom: WhenRule = { field: 'kind', operator: 'eq', value: 'custom' }
+    const premium: WhenRule = {
+      field: 'tier',
+      operator: 'eq',
+      value: 'premium',
+    }
+    const basic: WhenRule = { field: 'tier', operator: 'eq', value: 'basic' }
+
+    const gated = (when: WhenClause): AssertRule => ({
+      when,
+      assert: 'min',
+      value: 3,
+      message: 'Out of bounds',
+    })
+
+    test('a when array should not run the assertion when one condition is false', () => {
+      expect(issuesFor('input/number', gated([custom, premium]), 2)).toEqual([])
+    })
+
+    test('a when array should run the assertion when every condition holds', () => {
+      expect(issuesFor('input/number', gated([custom, basic]), 2)).toEqual(
+        failed
+      )
+    })
+
+    test('a when any should run the assertion when exactly one condition holds', () => {
+      expect(
+        issuesFor('input/number', gated({ any: [premium, custom] }), 2)
+      ).toEqual(failed)
+    })
+
+    test('a when any should not run the assertion when no condition holds', () => {
+      const other: WhenRule = { field: 'kind', operator: 'eq', value: 'other' }
+
+      expect(
+        issuesFor('input/number', gated({ any: [premium, other] }), 2)
+      ).toEqual([])
     })
   })
 })
