@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795182289730,
+  "lastUpdate": 1795182712128,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "0c28fb5a66f203bee47d762c7b5558f01d7c66df",
-          "message": "Merge pull request #108 from jonattanva/docs/peer-and-entry-drift\n\ndocs: the library the pages describe is the one that ships",
-          "timestamp": "2026-09-21T08:18:43-05:00",
-          "tree_id": "9b3d0026cd9bbbd3a9fc430527101ec41cdbc508",
-          "url": "https://github.com/jonattanva/luna-form/commit/0c28fb5a66f203bee47d762c7b5558f01d7c66df"
-        },
-        "date": 1789996797763,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 203,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 124,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan Velasquez",
             "username": "jonattanva"
           },
@@ -8846,6 +8812,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 45.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b79406ad0b926d407ce18866b470a5ce9611ba8",
+          "message": "Merge pull request #201 from jonattanva/claude/hue-04-contains-operator\n\ntest(core): cover the contains operator (HUE-04)",
+          "timestamp": "2026-11-20T08:44:16-05:00",
+          "tree_id": "df88cebf250b26df10bab7684f1bdff05da7db3b",
+          "url": "https://github.com/jonattanva/luna-form/commit/3b79406ad0b926d407ce18866b470a5ce9611ba8"
+        },
+        "date": 1795182712009,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 53,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 43.1,
             "unit": "ms"
           }
         ]
