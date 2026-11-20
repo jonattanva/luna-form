@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795185724675,
+  "lastUpdate": 1795185761033,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5409,40 +5409,6 @@ window.BENCHMARK_DATA = {
         "commit": {
           "author": {
             "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan Velasquez",
-            "username": "jonattanva"
-          },
-          "distinct": true,
-          "id": "713243cf47e2203cc9944b177a2353277e18931d",
-          "message": "build(editor): the build task hashes the files next build reads\n\nThe editor's turbo.json extended the root build task and overrode only its\noutputs, so it inherited `inputs: [\"src/**\", \"scripts/**\", \"tsconfig.json\",\n\"esbuild.mjs\"]`. The editor has no src/: its code lives in app/, components/\nand lib/, beside luna.config.ts, next.config.ts and postcss.config.mjs. An edit\nto any of them left the hash unchanged, `pnpm run build` reported FULL TURBO and\nreplayed the old .next, and e2e ran against a stale editor. A change in either\npackage still invalidated it through ^build, which is why it went unnoticed.\n\nThe task now takes `$TURBO_DEFAULT$` (every tracked or unignored file, which\nleaves out .next, node_modules and the generated next-env.d.ts) plus `.env*`,\nwhich next build reads but git ignores.\n\nWith app/layout.tsx edited, before: 3 cached, FULL TURBO. After: luna-core and\nluna-react cached, the editor a cache miss; reverting the edit is a hit again.\nlint was never blind here (its transit dependency hashes every file in the\npackage), and the editor has no typescript script: next build type-checks it.",
-          "timestamp": "2026-10-04T23:31:53-05:00",
-          "tree_id": "b95f6a7f2849d20e08add171741815265125d58c",
-          "url": "https://github.com/jonattanva/luna-form/commit/713243cf47e2203cc9944b177a2353277e18931d"
-        },
-        "date": 1791174785481,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 243,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 163,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
             "name": "Jonattan",
             "username": "jonattanva"
           },
@@ -8866,6 +8832,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 57.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e82a764b962fe073b2d610b567fa50f17046fff9",
+          "message": "Merge pull request #206 from jonattanva/claude/s-01-knip-prettier-ci\n\nci: run knip and prettier in the lint job, with knip independent of the build",
+          "timestamp": "2026-11-20T09:41:12-05:00",
+          "tree_id": "12a40d5455618a2c2b2b4466d3baba01e6ec5dae",
+          "url": "https://github.com/jonattanva/luna-form/commit/e82a764b962fe073b2d610b567fa50f17046fff9"
+        },
+        "date": 1795185760945,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 75.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 20.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 56.1,
             "unit": "ms"
           }
         ]
