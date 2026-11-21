@@ -12,9 +12,8 @@ import {
   type ValueChange,
 } from 'react-luna-form'
 import { action } from '@/app/action'
-import { codeAtom } from '@/lib/store'
+import { useDefinition } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
-import { useAtomValue } from 'jotai'
 import { useEffect, useMemo, useState } from 'react'
 
 declare global {
@@ -109,7 +108,7 @@ function writeNested(
 }
 
 export function ReactiveFormPreview() {
-  const code = useAtomValue(codeAtom)
+  const { code, read } = useDefinition()
 
   const [result, setResult] = useState<{
     message: string
@@ -255,26 +254,28 @@ export function ReactiveFormPreview() {
           <Code response={result.form} />
         </div>
       )}
-      <Form
-        {...formProps}
-        value={formValue}
-        config={formConfig}
-        action={formAction}
-        agent={offered === false ? undefined : agent}
-        onSuccess={handleSuccess}
-        onValueChange={handleValueChange}
-      >
-        {({ isPending }) => (
-          <div className="flex w-full justify-end gap-2">
-            <Button type="button" variant="outline" onClick={handleReset}>
-              Reset values
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              Submit
-            </Button>
-          </div>
-        )}
-      </Form>
+      {read && (
+        <Form
+          {...formProps}
+          value={formValue}
+          config={formConfig}
+          action={formAction}
+          agent={offered === false ? undefined : agent}
+          onSuccess={handleSuccess}
+          onValueChange={handleValueChange}
+        >
+          {({ isPending }) => (
+            <div className="flex w-full justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleReset}>
+                Reset values
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                Submit
+              </Button>
+            </div>
+          )}
+        </Form>
+      )}
     </div>
   )
 }
