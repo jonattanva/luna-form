@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795222722037,
+  "lastUpdate": 1795222751494,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "c1da5569b39f934039863a65db191b0c517ecd93",
-          "message": "Merge pull request #109 from jonattanva/claude/input-date-range-reserved-c9c25c\n\nfeat(date): a day travels as yyyy-MM-dd, and its format only shows it",
-          "timestamp": "2026-10-05T00:07:32-05:00",
-          "tree_id": "a53ca21c00542d073d5193c763db926c114ea307",
-          "url": "https://github.com/jonattanva/luna-form/commit/c1da5569b39f934039863a65db191b0c517ecd93"
-        },
-        "date": 1791176921677,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 251,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 455,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "9b772eb80d722e9f86b98cda0cbaa48605798ed2",
           "message": "Merge pull request #110 from jonattanva/fix/field-own-disabled\n\nfix(field): a field's own disabled locks its control on both render paths",
           "timestamp": "2026-10-05T08:57:43-05:00",
@@ -8871,6 +8837,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 56.1,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b9084b76f47aa1673c62cc7afda5b49f323e506d",
+          "message": "Merge pull request #208 from jonattanva/claude/fix-hue-01-inherited-member-guard\n\ntest(core): cover an inherited member in the middle of a dotted path",
+          "timestamp": "2026-11-20T19:58:02-05:00",
+          "tree_id": "9b8538ee4c531092ae797e2cb86fbddb4c15309a",
+          "url": "https://github.com/jonattanva/luna-form/commit/b9084b76f47aa1673c62cc7afda5b49f323e506d"
+        },
+        "date": 1795222751452,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 43.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 12.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 42.9,
             "unit": "ms"
           }
         ]
