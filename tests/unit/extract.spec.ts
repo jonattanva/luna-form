@@ -7,6 +7,7 @@ import {
   getFormData,
   getType,
   getValue,
+  resolveEntry,
   toOptions,
   unflatten,
 } from '@/packages/luna-core/src/util/extract'
@@ -52,6 +53,41 @@ describe('Extract', () => {
   test('should not read an inherited member as a value', () => {
     expect(extract({ a: 1 }, '__proto__')).toBeNull()
     expect(extract({ a: 1 }, 'constructor')).toBeNull()
+  })
+
+  // An inherited member in the middle of a path, rather than as the whole
+  // name. `isUnsafePath` lets `toString` and `valueOf` through, so the only
+  // thing keeping the walk on the result is the own-key check per step: with
+  // `in`, the walk steps into `Object.prototype.toString`, a function every
+  // object on the page shares, and writes the leaf onto it.
+  test('should nest under a segment named like an inherited member', () => {
+    const { toString, valueOf } = Object.prototype
+
+    try {
+      expect(unflatten({ 'toString.label': 'a', 'valueOf.x': 1 })).toEqual({
+        toString: { label: 'a' },
+        valueOf: { x: 1 },
+      })
+      expect(Reflect.get(toString, 'label')).toBeUndefined()
+      expect(Reflect.get(valueOf, 'x')).toBeUndefined()
+    } finally {
+      // A failing run writes onto the shared functions: leave them as found.
+      Reflect.deleteProperty(toString, 'label')
+      Reflect.deleteProperty(valueOf, 'x')
+    }
+  })
+
+  test('should not walk into an inherited member in the middle of a path', () => {
+    const data = { address: { city: 'Lima' }, items: [{ name: 'a' }] }
+
+    expect(resolveEntry('address.toString', data)).toEqual({
+      found: false,
+      value: undefined,
+    })
+    expect(resolveEntry('items.0.constructor', data)).toEqual({
+      found: false,
+      value: undefined,
+    })
   })
 
   test('should extract values correctly', () => {

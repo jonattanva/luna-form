@@ -167,7 +167,8 @@ window.AUDIT = {
       sev: 'crit',
       sevNote: 'guarda de seguridad',
       cat: 'pruebas',
-      st: 'probado',
+      st: 'corregido',
+      stLabel: 'Corregido en #208',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Huecos.</p>' },
@@ -199,6 +200,17 @@ window.AUDIT = {
         {
           label: 'Propuesta',
           html: '<p>Dos casos en <code>tests/unit/extract.spec.ts</code>: <code>unflatten</code> de <code>toString.label</code> y <code>valueOf.x</code> devuelve los objetos anidados y no toca <code>Object.prototype.toString</code>; <code>resolveEntry</code> de <code>address.toString</code> y <code>items.0.constructor</code> responde <code>found: false</code>.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html:
+            '<p>Dos casos nuevos en <code>tests/unit/extract.spec.ts</code>, sin tocar el código de la librería. <code>unflatten({ "toString.label": "a", "valueOf.x": 1 })</code> devuelve <code>{ toString: { label: "a" }, valueOf: { x: 1 } }</code> y deja <code>label</code> y <code>x</code> en <code>undefined</code> sobre <code>Object.prototype.toString</code> y <code>Object.prototype.valueOf</code>; un bloque <code>finally</code> los borra, para que una mutación que falla no contamine las pruebas siguientes. <code>resolveEntry</code> de <code>address.toString</code> y de <code>items.0.constructor</code> responde <code>{ found: false, value: undefined }</code>.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Mutación</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>M2 <code>resolveEntry</code>, <code>!hasOwn(result, key)</code> → <code>!(key in result)</code></td><td>pasa (0 de 1257)</td><td>falla 1: <i>should not walk into an inherited member in the middle of a path</i></td></tr>' +
+            '<tr><td>M3 <code>unflatten</code>, <code>!hasOwn(current, part)</code> → <code>!(part in current)</code></td><td>pasa (0 de 1257)</td><td>falla 1: <i>should nest under a segment named like an inherited member</i>, que recibe <code>{}</code></td></tr>' +
+            '</tbody></table></div>' +
+            '<p class="muted">Cada mutación aplicada sola sobre el código fuente, corrida con <code>vitest</code> sobre la spec y revertida. Sin mutaciones pasan las 1332 unitarias, lint, typecheck de los paquetes, <code>knip</code> y <code>prettier --check</code>.</p>',
         },
         {
           label: 'Plan de corrección',
