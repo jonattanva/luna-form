@@ -1,62 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795185761033,
+  "lastUpdate": 1795222708916,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "68aa2cac8251e6b1cfb08c2c14ddd4b9846ca095",
-          "message": "Merge pull request #116 from jonattanva/claude/date-docs\n\ndocs(date): how a calendar plugs into a date field",
-          "timestamp": "2026-10-05T11:10:44-05:00",
-          "tree_id": "0be0fa7ba22c1db537e453f237d0697b469b625c",
-          "url": "https://github.com/jonattanva/luna-form/commit/68aa2cac8251e6b1cfb08c2c14ddd4b9846ca095"
-        },
-        "date": 1791216695873,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "prepare: simple form (10 fields)",
-            "value": 0.00020108180000000004,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields)",
-            "value": 0.0007262146800000005,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: large form (50 fields) with definition",
-            "value": 0.00008853773999999987,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (3 sections x 10 fields)",
-            "value": 0.00022476380000000006,
-            "unit": "ms"
-          },
-          {
-            "name": "prepare: sections (5 sections x 20 fields)",
-            "value": 0.0003543562800000001,
-            "unit": "ms"
-          },
-          {
-            "name": "resolveRefs: array with $ref (20 items)",
-            "value": 0.013016586579999998,
-            "unit": "ms"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -5399,6 +5345,60 @@ window.BENCHMARK_DATA = {
           {
             "name": "resolveRefs: array with $ref (20 items)",
             "value": 0.023238614579999997,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72d50a8db9153f2b93071cdd07304c39e8d1ac42",
+          "message": "Merge pull request #207 from jonattanva/claude/turbo-cache-skip-next-dev\n\nbuild(editor): keep the dev server's .next/dev out of the turbo cache",
+          "timestamp": "2026-11-20T19:57:45-05:00",
+          "tree_id": "4f898058485e9f88b0256f4b572ea5c85e3d40e5",
+          "url": "https://github.com/jonattanva/luna-form/commit/72d50a8db9153f2b93071cdd07304c39e8d1ac42"
+        },
+        "date": 1795222707734,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "prepare: simple form (10 fields)",
+            "value": 0.00025336986000000023,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields)",
+            "value": 0.0008463856799999996,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: large form (50 fields) with definition",
+            "value": 0.00010508362000000034,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (3 sections x 10 fields)",
+            "value": 0.00032837437999999966,
+            "unit": "ms"
+          },
+          {
+            "name": "prepare: sections (5 sections x 20 fields)",
+            "value": 0.00051232214,
+            "unit": "ms"
+          },
+          {
+            "name": "resolveRefs: array with $ref (20 items)",
+            "value": 0.01649473844,
             "unit": "ms"
           }
         ]
