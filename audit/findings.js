@@ -224,7 +224,7 @@ window.AUDIT = {
         'Un clic en Submit justo después de cargar puede enviar el formulario vacío, antes de que el editor lea la definición',
       sev: 'mejora',
       cat: 'pruebas',
-      st: 'probado',
+      st: 'corregido',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Inestables.</p>' },
@@ -255,6 +255,19 @@ window.AUDIT = {
           label: 'Evidencia en CI',
           audit: 'test-audit-2026-11-19',
           html: '<p>En la línea base (<code>next dev</code>, 8 corridas del 19/11) apareció en 6 corridas, siempre en WebKit: <code>option-not-offered</code>, <code>date-picker :: should hold back a host range that runs over a reserved day</code> y <code>form-action</code>. Con WebKit sobre <code>next start</code> (OPT-03), 0 en 12 corridas: producción hidrata más rápido y la ventana casi no se abre. Eso no corrige la carrera, que está en el banco de pruebas y en Chromium sigue sobre <code>next dev</code>.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'test-audit-2026-11-19',
+          html:
+            '<p>En el banco, no en las pruebas. <code>lib/store.ts</code> lee la definición con <code>getOnInit</code>, al crear el átomo y no en un efecto, y <code>useDefinition()</code> dice si ya pasó la hidratación. Las dos vistas, <code>/</code> y <code>/reactive</code>, montan el formulario y su Submit solo entonces, así que no existe un Submit sin la definición que envía y el clic de Playwright espera solo. Ninguna prueba tuvo que cambiar, y una prueba nueva no puede volver a abrir la carrera. Se descartó la espera compartida en <code>tests/e2e/support/</code>: protege solo a los casos que la usan, y la prueba de la carrera, que hace clic desde la página, sigue fallando con ella.</p>' +
+            '<p>La prueba de la carrera es <code>tests/e2e/definition-ready.spec.ts</code>: un hook de devtools hace clic en Submit en un microtask después del primer commit que lo muestra hidratado, antes de que corran los efectos de ese commit.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Medición</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>Prueba de la carrera, <code>next dev</code>, <code>--repeat-each=10</code></td><td>falla 47 de 60: Chromium 19 de 20, Firefox 19 de 20, WebKit 9 de 20; recibe «Form submitted successfully» con <code>{}</code></td><td>pasa 60 de 60</td></tr>' +
+            '<tr><td>Prueba de la carrera, <code>next start</code></td><td>pasa 30 de 30: en producción los efectos corren antes del microtask</td><td>pasa</td></tr>' +
+            '<tr><td><code>option-not-offered</code>, <code>date-picker</code>, <code>form-action</code> y la prueba de la carrera, <code>--repeat-each=20 --retries=0</code></td><td>1 de 184 en WebKit con 8 repeticiones</td><td>Chromium sobre <code>next dev</code>: 900 de 900; los tres navegadores sobre <code>next start</code>: 2700 de 2700</td></tr>' +
+            '</tbody></table></div>' +
+            '<p class="muted">Local, 4 workers, servidor reiniciado después de cada build. Pasan la suite e2e completa (Chromium sobre <code>next dev</code> 775 de 775, Firefox y WebKit sobre <code>next start</code> 1548 de 1548), los 13 presupuestos de renders con las sondas, las 1332 unitarias, lint, typecheck, <code>knip</code> y <code>prettier --check</code>. Sin errores ni avisos de hidratación en consola en <code>/</code> y <code>/reactive</code>.</p>',
         },
         {
           label: 'Plan de corrección',

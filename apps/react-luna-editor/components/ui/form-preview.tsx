@@ -5,10 +5,9 @@ import { Button } from './button'
 import { Code } from './code'
 import { Form, type AgentOptions, type ValueChange } from 'react-luna-form'
 import { action } from '@/app/action'
-import { codeAtom } from '@/lib/store'
+import { useDefinition } from '@/lib/store'
 import { convertCodeToForm } from '@/lib/convert-code'
 import { lazyComponent } from './wrapper/lazy'
-import { useAtomValue } from 'jotai'
 import { useMemo, useState } from 'react'
 
 // The toasts, which this page alone raises, and only once a submit succeeds.
@@ -30,7 +29,7 @@ const AGENT: AgentOptions = {
 }
 
 export function FormPreview() {
-  const code = useAtomValue(codeAtom)
+  const { code, read } = useDefinition()
   // Parsed once per text: the form's tools compare what it is handed by
   // identity, and a render that changes nothing else would build them again.
   const form = useMemo(() => convertCodeToForm(code), [code])
@@ -59,22 +58,24 @@ export function FormPreview() {
       <div className="flex w-full justify-center">
         <div className="w-full max-w-md p-6">
           <div className="flex w-full flex-col gap-6">
-            <Form
-              {...form}
-              config={config}
-              action={action}
-              agent={AGENT}
-              onSuccess={handleSuccess}
-              onValueChange={handleValueChange}
-            >
-              {({ isPending }) => (
-                <div className="flex w-full justify-end">
-                  <Button type="submit" disabled={isPending}>
-                    Submit
-                  </Button>
-                </div>
-              )}
-            </Form>
+            {read && (
+              <Form
+                {...form}
+                config={config}
+                action={action}
+                agent={AGENT}
+                onSuccess={handleSuccess}
+                onValueChange={handleValueChange}
+              >
+                {({ isPending }) => (
+                  <div className="flex w-full justify-end">
+                    <Button type="submit" disabled={isPending}>
+                      Submit
+                    </Button>
+                  </div>
+                )}
+              </Form>
+            )}
           </div>
         </div>
       </div>
