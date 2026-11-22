@@ -237,6 +237,24 @@ describe('handleSourceEvent values in a url', () => {
     expect(segments[4]).toBe('cities')
   })
 
+  // Audit BUG-04: encodeURIComponent leaves `.` and `..` as they are, and a URL
+  // reads them as dot segments, so `..` takes the request to `/api/cities`.
+  // Drop .fails once fixed.
+  test.fails('should keep a dot segment value inside its path segment', () => {
+    for (const value of ['..', '.']) {
+      const url = new URL(
+        urlFor('/api/countries/{value}/cities', value),
+        'http://localhost'
+      )
+
+      const segments = url.pathname.split('/')
+      expect(segments).toHaveLength(5)
+      expect(segments[2]).toBe('countries')
+      expect(decodeURIComponent(segments[3])).toBe(value)
+      expect(segments[4]).toBe('cities')
+    }
+  })
+
   test('should send a value with a space in a path segment', () => {
     expect(urlFor('/api/cities/{value}', 'San Juan')).toBe(
       '/api/cities/San%20Juan'
