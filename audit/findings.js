@@ -314,7 +314,7 @@ window.AUDIT = {
         },
         {
           label: 'Plan de corrección',
-          html: '<p><b>Fase 6.</b> GUA-01, después de FLK-01 (corregido en #209). <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen del job. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
+          html: '<p><b>Fase 6, hecha en #211.</b> GUA-01, después de FLK-01 (corregido en #209). <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen; la del repro lo mostró en los tres navegadores. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen de <code>e2e-report</code> y como anotación en su línea, que el PR muestra; la corrida no falla. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
         },
         {
           label: 'Corrección',
@@ -373,7 +373,7 @@ window.AUDIT = {
         },
         {
           label: 'Plan de corrección',
-          html: '<p><b>Fase 3.</b> OPT-02, después de FLK-01 (corregido en #209). <b>Crear primero:</b> 3 corridas de CI con <code>workers: 2</code>. <b>Antes:</b> 838 s hasta el veredicto, WebKit 2/2 en 713 s. <b>Después:</b> los mismos jobs con 2 workers. <b>Ahorro esperado:</b> a medir; localmente, 49 % menos en Chromium.</p>',
+          html: '<p><b>Fase 3.</b> OPT-02, después de FLK-01 (corregido en #209). <b>Crear primero:</b> 3 corridas de CI con <code>workers: 2</code>. <b>Antes:</b> 838 s hasta el veredicto, WebKit 2/2 en 713 s. <b>Después:</b> los mismos jobs con 2 workers, y 0 casos <code>flaky</code> en el resumen de <code>e2e-report</code>, que desde #211 (GUA-01) los lista. <b>Ahorro esperado:</b> a medir; localmente, 49 % menos en Chromium.</p>',
         },
       ],
     },
