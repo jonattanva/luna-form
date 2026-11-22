@@ -346,7 +346,12 @@ jobs:
           exit 1
       - name: Run e2e tests
         # Chromium also runs the WebMCP project, the same browser with the flag on.
-        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob
+        # The JSON report goes next to the blob, in the same artifact: its name
+        # says which shard ran it, which the merged report no longer knows, and
+        # `e2e-report` reads the flaky cases from it.
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: blob-report/results-${{ matrix.browser }}-${{ matrix.shard }}of${{ matrix.shards }}.json
+        run: pnpm test:e2e --project=${{ matrix.browser }} ${{ matrix.browser == 'chromium' && '--project=chromium-webmcp' || '' }} --shard=${{ matrix.shard }}/${{ matrix.shards }} --reporter=blob,json
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
@@ -392,6 +397,56 @@ jobs:
           name: playwright-report-e2e
           path: playwright-report/
           retention-days: 1
+      # A case that fails and then passes on retry leaves the run green, so it
+      # is listed here, on the run's summary, and as a warning annotation on
+      # its line, which the pull request shows. It does not fail the run: the
+      # retries are there so that one hiccup of a runner does not block an
+      # unrelated change. It runs when shards failed, and reads only the
+      # shards that reported; a shard that never ran tests is red on its own.
+      - name: Report flaky cases
+        if: ${{ !cancelled() }}
+        run: |
+          shopt -s nullglob
+          files=(all-blob-reports/results-*.json)
+          summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          summary "## E2E flaky cases"
+          summary ""
+          if [ "${#files[@]}" -eq 0 ]; then
+            summary "No shard reported e2e results."
+            exit 0
+          fi
+
+          # Every spec under a file, with the titles of the describe blocks
+          # it sits in, and the shard from the report's name.
+          cases='
+            def specs($path):
+              (.specs[]? | . as $spec | .tests[] | {
+                title: ($path + [$spec.title] | join(" > ")),
+                file: ("tests/e2e/" + $spec.file),
+                line: $spec.line,
+                project: .projectName,
+                status,
+                attempts: (.results | length)
+              }),
+              (.suites[]? as $suite | $suite | specs($path + [$suite.title]));
+            (input_filename | capture("results-[a-z]+-(?<shard>[0-9]+of[0-9]+)\\.json$").shard | sub("of"; "/")) as $shard
+            | .suites[] | specs([]) | select(.status == "flaky") | . + { shard: $shard }'
+          flaky=$(jq -c "$cases" "${files[@]}")
+          count=$(printf '%s' "$flaky" | grep -c . || true)
+          jq -s -r 'map(.stats) | "\(map(.expected) | add) passed, \(map(.flaky) | add) flaky, \(map(.unexpected) | add) failed, \(map(.skipped) | add) skipped, in \(length) shard reports."' "${files[@]}" >> "$GITHUB_STEP_SUMMARY"
+          summary ""
+          if [ "$count" -eq 0 ]; then
+            summary "No case passed only on retry."
+            exit 0
+          fi
+
+          summary "Cases that failed and then passed on retry: $count"
+          summary ""
+          summary "| Project | Shard | Case | Attempts |"
+          summary "|---|---|---|---|"
+          printf '%s\n' "$flaky" | jq -r '"| \(.project) | \(.shard) | `\(.file):\(.line)` \(.title | gsub("\\|"; "\\|")) | \(.attempts) |"' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' "$flaky" | jq -r 'def esc: gsub("%"; "%25") | gsub("\r"; "%0D") | gsub("\n"; "%0A");
+            "::warning file=\(.file),line=\(.line),title=Flaky e2e case::\("\(.project), shard \(.shard): \(.title) passed after \(.attempts) attempts" | esc)"'
   render-budget:
     name: render-budget
     timeout-minutes: 20
