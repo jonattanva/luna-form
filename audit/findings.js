@@ -282,7 +282,7 @@ window.AUDIT = {
         'CI termina en verde con casos que pasaron al reintentar, y nadie se entera',
       sev: 'mejora',
       cat: 'pruebas',
-      st: 'medido',
+      st: 'corregido',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Guardas.</p>' },
@@ -314,6 +314,17 @@ window.AUDIT = {
         {
           label: 'Plan de corrección',
           html: '<p><b>Fase 6.</b> GUA-01, después de FLK-01. <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen del job. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
+        },
+        {
+          label: 'Corrección',
+          html:
+            '<p>Aviso, no fallo. Cada shard e2e corre también con el reporter JSON y lo deja junto al blob, en el mismo artefacto, con el navegador y el shard en el nombre (<code>results-webkit-2of3.json</code>): el reporte combinado ya no sabe de qué shard vino cada caso. El paso <i>Report flaky cases</i> de <code>e2e-report</code> los lee con <code>jq</code> y escribe en el resumen de la corrida los totales y una tabla con proyecto, shard, <code>archivo:línea</code>, título e intentos de cada caso <code>flaky</code>, y una anotación <code>::warning</code> en la línea del caso, que el PR muestra. Corre aunque fallen shards (<code>!cancelled()</code>), lee solo los shards que reportaron, dice <i>No case passed only on retry.</i> cuando no hay ninguno, y el reporte HTML combinado sigue igual.</p>' +
+            '<p>Se descartó <code>failOnFlakyTests</code>: dejaría los reintentos sin efecto en el veredicto, y un tropiezo de un runner bloquearía un PR que no tiene nada que ver. Con FLK-01 corregido, un caso <code>flaky</code> es la excepción, y verlo basta: la corrida de <code>main</code> después de #209 tuvo 2334 casos y 0 <code>flaky</code>.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Medición</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td>Caso que falla en el primer intento y pasa al reintentar (<code>testInfo.retry</code>), temporal</td><td>CI en verde, sin rastro en el PR; solo en el HTML, que se borra en un día</td><td>CI en verde, el caso en el resumen de <code>e2e-report</code> con proyecto y shard, y una anotación en la línea por navegador; 3 casos en Chromium 1/2, Firefox 1/3 y WebKit 1/3 (<a href="https://github.com/jonattanva/luna-form/actions/runs/44986064669">corrida 44986064669</a>)</td></tr>' +
+            '<tr><td>Corrida sin casos <code>flaky</code></td><td>nada</td><td>los totales y <i>No case passed only on retry.</i></td></tr>' +
+            '</tbody></table></div>' +
+            '<p>El paso tarda menos de 1 s y <code>e2e-report</code> 34 s en la corrida del repro. El caso temporal se quitó antes de mergear.</p>',
         },
       ],
     },
