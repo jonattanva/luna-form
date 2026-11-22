@@ -187,7 +187,7 @@ window.AUDIT = {
         'Un valor «..» en un segmento de la URL de un origen remoto sale de ese segmento: /api/countries/{value}/cities pide /api/cities',
       sev: 'mejora',
       cat: 'errores',
-      st: 'probado',
+      st: 'corregido',
       sevNote: 'también de seguridad',
       audit: 'audit-2026-11-22',
       sections: [
@@ -206,6 +206,21 @@ window.AUDIT = {
         {
           label: 'Prueba',
           html: '<p><code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url &gt; should keep a dot segment value inside its path segment</code>, marcada como <code>test.fails</code>. Sin la marca falla por la razón que dice el comentario: la ruta queda en <code>["", "api", "cities"]</code> en vez de 5 segmentos.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-22',
+          html:
+            '<p>La regla vive en <code>interpolateUrl</code> (<code>luna-core/src/util/string.ts</code>), donde se arma la URL: al escribirla, recorre los segmentos de la ruta y, si uno que escribe un valor (entero o junto a texto de la plantilla) queda en <code>.</code> o <code>..</code>, devuelve la plantilla con todos sus marcadores sin resolver. Así el pedido se cancela por el mismo camino que un marcador que no se resuelve: <code>use-fetch</code> no pide nada y no se registra nada. La comprobación lee el segmento como lo lee el estándar URL: <code>%2E</code> en mayúscula o minúscula cuenta como punto, un tab o salto de línea no lo oculta, y los espacios de los extremos de la plantilla no cuentan. La consulta y el fragmento no se revisan. <code>replacePlaceholders</code> y <code>interpolateUrl</code> resuelven cada marcador con la misma función, <code>resolvePlaceholder</code>.</p>' +
+            '<div class="table-wrap"><table><thead><tr><th>Plantilla y valor</th><th>Antes</th><th>Después</th></tr></thead><tbody>' +
+            '<tr><td><code>/api/countries/{value}/cities</code>, <code>..</code></td><td>pide <code>/api/cities</code></td><td>no pide nada</td></tr>' +
+            '<tr><td><code>/api/countries/{value}/cities</code>, <code>.</code></td><td>pide <code>/api/countries/cities</code></td><td>no pide nada</td></tr>' +
+            '<tr><td><code>/api/{value}./cities</code>, <code>.</code></td><td>pide <code>/cities</code></td><td>no pide nada</td></tr>' +
+            '<tr><td><code>/api/cities?country={value}</code>, <code>..</code></td><td><code>country=..</code></td><td>igual</td></tr>' +
+            '<tr><td><code>/api/countries/{value}/cities</code>, <code>a..b</code> o <code>../../admin</code></td><td>queda en su segmento</td><td>igual</td></tr>' +
+            '</tbody></table></div>' +
+            '<p>Una plantilla que es solo <code>{url}</code> no cambia: el valor es la URL y lo revisa <code>remotePatterns</code>. Documentado en <code>docs/fields/data-source.md</code>, «A value in the URL is encoded», con enlace a <code>docs/interpolation/overview.md#an-unresolved-placeholder-cancels-a-request</code>.</p>' +
+            '<p>Pruebas: la de arriba se reescribió sin <code>.fails</code> y se sumaron casos, en <code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url</code>: <code>..</code> y <code>.</code> en la ruta, un valor que completa un segmento de puntos (<code>{value}.</code>, <code>%2e{value}</code>, al inicio y al final de la plantilla), un tab y espacios en los extremos, <code>..</code> en la consulta, y <code>a..b</code>, <code>...</code> y <code>.hidden</code> en la ruta. Las tres que esperan el pedido cancelado fallan con el código anterior. Comprobado en el navegador: con <code>..</code> y <code>.</code> no sale ningún pedido a la ruta y la consola no muestra avisos; con <code>pe</code> se pide <code>/api/countries/pe/cities</code>. 1337 unitarias, lint, typecheck, <code>knip</code> y <code>prettier:check</code> en verde; 290 e2e con orígenes remotos y eventos <code>source</code> en Chromium, sobre <code>pnpm serve</code>.</p>',
         },
         {
           label: 'Plan de corrección',
