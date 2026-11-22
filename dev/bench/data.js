@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795321908758,
+  "lastUpdate": 1795321944704,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "9b772eb80d722e9f86b98cda0cbaa48605798ed2",
-          "message": "Merge pull request #110 from jonattanva/fix/field-own-disabled\n\nfix(field): a field's own disabled locks its control on both render paths",
-          "timestamp": "2026-10-05T08:57:43-05:00",
-          "tree_id": "3fb7d5c3912e5b64fc68958067161800b6057d55",
-          "url": "https://github.com/jonattanva/luna-form/commit/9b772eb80d722e9f86b98cda0cbaa48605798ed2"
-        },
-        "date": 1791208751446,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 312,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 612,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "43b68a0816135ba0f7c26dc163111bfdb29bf9f6",
           "message": "Merge pull request #111 from jonattanva/claude/date-limits\n\nfeat(date): a date can be held between a first and a last day",
           "timestamp": "2026-10-05T08:58:22-05:00",
@@ -8876,6 +8842,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 42.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00a31829df9d39f574d3c17c08e33b337729502d",
+          "message": "Merge pull request #209 from jonattanva/claude/fix-flk-01-definition-ready\n\nfix(editor): render the preview's form only once the definition is read",
+          "timestamp": "2026-11-21T23:30:59-05:00",
+          "tree_id": "943041d98ddd577cc60ddd0cbb21c9985e9e0c81",
+          "url": "https://github.com/jonattanva/luna-form/commit/00a31829df9d39f574d3c17c08e33b337729502d"
+        },
+        "date": 1795321944614,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 68.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 21.1,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 62.9,
             "unit": "ms"
           }
         ]
