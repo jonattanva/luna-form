@@ -313,7 +313,7 @@ window.AUDIT = {
         },
         {
           label: 'Plan de corrección',
-          html: '<p><b>Fase 6.</b> GUA-01, después de FLK-01. <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen del job. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
+          html: '<p><b>Fase 6.</b> GUA-01, después de FLK-01 (corregido en #209). <b>Crear primero:</b> una corrida con un caso inestable a propósito, que tiene que aparecer en el resumen. <b>Antes:</b> 5 casos <code>flaky</code> en 3 corridas sin aviso. <b>Después:</b> cada uno aparece en el resumen del job. <b>Protección esperada:</b> una inestabilidad nueva se ve en el PR que la trae.</p>',
         },
       ],
     },
@@ -357,11 +357,11 @@ window.AUDIT = {
         {
           label: 'Corrección',
           audit: 'test-audit-2026-11-19',
-          html: '<p>No se aplica por ahora. La guía de CI de Playwright recomienda <code>workers: 1</code> en CI, para priorizar estabilidad y reproducibilidad, y paralelizar con shards. Con OPT-03 y OPT-01 el veredicto ya bajó de 822 a 584 s sin cambiar los workers. Además FLK-01 sigue abierto, y más paralelismo agranda esa carrera. Queda para medir si hace falta bajar más, empezando por Chromium, que hoy es el job más lento.</p>',
+          html: '<p>No se aplica por ahora. La guía de CI de Playwright recomienda <code>workers: 1</code> en CI, para priorizar estabilidad y reproducibilidad, y paralelizar con shards. Con OPT-03 y OPT-01 el veredicto ya bajó de 822 a 584 s sin cambiar los workers. FLK-01, que más paralelismo habría agrandado, ya está corregido en #209, así que esa razón para esperar ya no aplica. Queda para medir si hace falta bajar más, empezando por Chromium, que hoy es el job más lento.</p>',
         },
         {
           label: 'Plan de corrección',
-          html: '<p><b>Fase 3.</b> OPT-02, después de FLK-01. <b>Crear primero:</b> 3 corridas de CI con <code>workers: 2</code>. <b>Antes:</b> 838 s hasta el veredicto, WebKit 2/2 en 713 s. <b>Después:</b> los mismos jobs con 2 workers. <b>Ahorro esperado:</b> a medir; localmente, 49 % menos en Chromium.</p>',
+          html: '<p><b>Fase 3.</b> OPT-02, después de FLK-01 (corregido en #209). <b>Crear primero:</b> 3 corridas de CI con <code>workers: 2</code>. <b>Antes:</b> 838 s hasta el veredicto, WebKit 2/2 en 713 s. <b>Después:</b> los mismos jobs con 2 workers. <b>Ahorro esperado:</b> a medir; localmente, 49 % menos en Chromium.</p>',
         },
       ],
     },
