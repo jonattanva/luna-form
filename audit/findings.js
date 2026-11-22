@@ -283,6 +283,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'pruebas',
       st: 'corregido',
+      stLabel: 'Corregido en #211',
       audit: 'test-audit-2026-11-19',
       sections: [
         { label: 'Área', html: '<p>Guardas.</p>' },
