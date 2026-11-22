@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795325549570,
+  "lastUpdate": 1795325583059,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "43b68a0816135ba0f7c26dc163111bfdb29bf9f6",
-          "message": "Merge pull request #111 from jonattanva/claude/date-limits\n\nfeat(date): a date can be held between a first and a last day",
-          "timestamp": "2026-10-05T08:58:22-05:00",
-          "tree_id": "1a39c11ba8a030fadfdd44142a8e49f948193ad5",
-          "url": "https://github.com/jonattanva/luna-form/commit/43b68a0816135ba0f7c26dc163111bfdb29bf9f6"
-        },
-        "date": 1791208782802,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 308,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 587,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "7630798e8122974a1ff2c46ffe6c9ef5696e9b0f",
           "message": "Merge pull request #112 from jonattanva/claude/date-reserved\n\nfeat(date): days nobody can pick",
           "timestamp": "2026-10-05T09:52:06-05:00",
@@ -8881,6 +8847,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 62.9,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f499fd37a898716ac95a96f1c24ec562ce9fbc39",
+          "message": "Merge pull request #211 from jonattanva/claude/fix-gua-01-flaky-summary\n\nci(e2e): list flaky cases in the e2e-report summary (GUA-01)",
+          "timestamp": "2026-11-22T00:31:59-05:00",
+          "tree_id": "13b8e59d07ec3a1b74279757be99d9e1c20688df",
+          "url": "https://github.com/jonattanva/luna-form/commit/f499fd37a898716ac95a96f1c24ec562ce9fbc39"
+        },
+        "date": 1795325583015,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 59.8,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 55.7,
             "unit": "ms"
           }
         ]
