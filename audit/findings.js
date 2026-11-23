@@ -158,8 +158,61 @@ window.AUDIT = {
         '</tbody></table></div>' +
         '<p class="muted">Cobertura: <code>pnpm vitest run --coverage --coverage.include=packages/luna-core/src/** --coverage.include=packages/luna-react/src/**</code>, reportes <code>json-summary</code>, <code>json</code> y <code>text</code>, 1282 casos en 3,35 s. E2E: <code>next dev</code> propio en el puerto 3217, Chromium, 4 workers, <code>--retries=0</code>, carga 8 a 11 en 11 núcleos. Cada mutación de la librería se aplicó al código fuente, con <code>pnpm build</code>, verificación de que el bundle de <code>dist</code> la contenía y reinicio del servidor; se revirtió y se reconstruyó (<code>git status</code> limpio en <code>packages/</code>).</p>',
     },
+    {
+      id: 'audit-2026-11-22',
+      title: 'Segunda auditoría de la librería',
+      date: '2026-11-22',
+      summary:
+        '<p>Segunda auditoría de la librería, sobre <code>main</code> en <code>f499fd3</code>, 38 PR después de la primera (<code>3e06819</code>). Los 20 hallazgos de las dos auditorías anteriores están corregidos y no queda ninguna prueba marcada como fallo esperado. Todo lo que se corrió pasa: no hay regresiones.</p>' +
+        '<p><b>1 hallazgo nuevo, una mejora:</b> un valor que es exactamente <code>..</code> o <code>.</code> sale de su segmento en la URL de un origen remoto, porque <code>encodeURIComponent</code> no los codifica (BUG-04). Es lo que quedó abierto de la corrección de BUG-01, y contradice lo que promete <code>docs/fields/data-source.md</code>. Tiene su prueba marcada como fallo esperado.</p>' +
+        '<div class="table-wrap"><table><thead><tr><th>Medición</th><th>Resultado</th><th>Condiciones</th></tr></thead><tbody>' +
+        '<tr><td>Unitarias</td><td>1332 en 72 archivos, todas pasan</td><td>Vitest, local</td></tr>' +
+        '<tr><td>E2E Chromium sobre <code>next dev</code></td><td>775 de 775, 158 s</td><td rowspan="2"><code>CI=1</code>, 4 workers, <code>--retries=0</code>, servidores propios en 3100 y 3300; carga 2,8 al empezar y 9,8 al terminar, en 11 núcleos</td></tr>' +
+        '<tr><td>E2E Firefox y WebKit sobre <code>next start</code></td><td>1548 de 1548, 314 s, 0 <code>flaky</code></td></tr>' +
+        '<tr><td>Presupuestos de renders (<code>@render</code>)</td><td>13 de 13 pasan</td><td>producción con sondas (<code>benchmark:probes --strict</code>, 12 aplicadas), Chromium</td></tr>' +
+        '<tr><td>Bundle: total de todos los archivos</td><td>404,0 de 420 kB (antes 390,5)</td><td rowspan="3">el cálculo del job <code>bundle-size</code>, después de <code>pnpm build --force</code></td></tr>' +
+        '<tr><td>Bundle: camino principal, esm, gzip</td><td>31,9 de 33 kB (antes 31,1)</td></tr>' +
+        '<tr><td>Bundle: chunk de agent tools, gzip</td><td>12,6 de 14 kB (antes 12,3)</td></tr>' +
+        '<tr><td><code>pnpm benchmark</code></td><td>6 casos; el más lento, <code>resolveRefs</code> con 20 <code>$ref</code>: 0,0086 ms (antes 0,0095)</td><td>mitata, local, carga 6,6</td></tr>' +
+        '<tr><td><code>pnpm knip</code> y <code>pnpm prettier:check</code></td><td>sin avisos</td><td>después de <code>pnpm build</code></td></tr>' +
+        '</tbody></table></div>' +
+        '<p>Además de repetir todo lo anterior, se revisó el código que entró desde la primera auditoría: <code>interpolateUrl</code> y <code>formatTemplate</code> (las correcciones de BUG-01 y SEC-01), <code>checkDefinition</code>, <code>use-form-action.ts</code> y, con <code>buildToolSchema</code>, lo que <code>docs/agents/tools.md</code> dice de los textos que lee un agente: el título se corta en 200 caracteres, la descripción del autor en 500, y <code>input/password</code> queda fuera del esquema. Ningún componente vuelve a leer markdown después de interpolar: la descripción de una columna se interpola y pasa por <code>formatTemplate</code>, y los títulos de sección y de lista no se interpolan.</p>' +
+        '<p>Quedó fuera: las agent tools por WebMCP en un navegador, la entrada de servidor y la hidratación, y el resto de las afirmaciones de <code>docs/</code>. Los <code>new RegExp</code> que arma la librería compilan el <code>pattern</code> del autor, que la documentación presenta como código del autor.</p>',
+    },
   ],
   findings: [
+    {
+      code: 'BUG-04',
+      title:
+        'Un valor «..» en un segmento de la URL de un origen remoto sale de ese segmento: /api/countries/{value}/cities pide /api/cities',
+      sev: 'mejora',
+      cat: 'errores',
+      st: 'probado',
+      sevNote: 'también de seguridad',
+      audit: 'audit-2026-11-22',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-core/src/util/string.ts</code>: <code>interpolateUrl</code> codifica cada valor con <code>encodeURIComponent</code>, que deja <code>.</code> y <code>..</code> tal cual.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p><code>docs/fields/data-source.md</code>, en «A value in the URL is encoded», promete que un valor no puede «salir de su segmento». Con la plantilla <code>/api/countries/{value}/cities</code>, el valor <code>..</code> da <code>/api/countries/../cities</code>, y al resolverla la URL pide <code>/api/cities</code>. El valor <code>.</code> da <code>/api/countries/cities</code>. <code>../../admin</code> sí queda en su segmento (<code>..%2F..%2Fadmin</code>), porque las barras se codifican. En la consulta no pasa nada: <code>?country=..</code> llega como el valor <code>..</code>.</p>',
+        },
+        {
+          label: 'Riesgo',
+          html: '<p>Bajo. El valor tiene que ser exactamente <code>.</code> o <code>..</code> y solo sube un nivel por segmento, sin cambiar el host. Lo puede poner quien controla las opciones, por ejemplo una respuesta remota comprometida, y así llevar el pedido a un endpoint hermano del mismo host.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/unit/source-event.spec.ts :: handleSourceEvent values in a url &gt; should keep a dot segment value inside its path segment</code>, marcada como <code>test.fails</code>. Sin la marca falla por la razón que dice el comentario: la ruta queda en <code>["", "api", "cities"]</code> en vez de 5 segmentos.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> BUG-04. <b>Crear primero:</b> la prueba de arriba. <b>Antes:</b> <code>..</code> pide <code>/api/cities</code> y <code>.</code> pide <code>/api/countries/cities</code>. <b>Después:</b> un valor que ocupa entero un segmento de la ruta y es <code>.</code> o <code>..</code> cancela el pedido, como ya lo cancela un marcador que no se resuelve (<code>docs/interpolation/overview.md#an-unresolved-placeholder-cancels-a-request</code>). Codificarlo no sirve: el estándar URL lee <code>%2E</code> y <code>%2E%2E</code> también como segmentos de puntos (comprobado con <code>new URL</code>: <code>/api/countries/%2E%2E/cities</code> da <code>/api/cities</code>). Los demás valores no cambian, y en la consulta <code>..</code> sigue siendo un valor. Documentar el caso en <code>docs/fields/data-source.md</code>. <b>Mejora esperada:</b> lo que promete la documentación vale para cualquier valor.</p>',
+        },
+      ],
+    },
     {
       code: 'HUE-01',
       title:
