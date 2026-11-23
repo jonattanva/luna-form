@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795437626451,
+  "lastUpdate": 1795437659128,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "22b0fdc09c05716f2d685dcda8519c73524be18e",
-          "message": "Merge pull request #113 from jonattanva/ci/e2e-parallel\n\nci: e2e in six parallel jobs with one report, on ubuntu-26.04",
-          "timestamp": "2026-10-05T10:10:18-05:00",
-          "tree_id": "6f22cd7d07f9e36bf64673af4295144c7dfe83ac",
-          "url": "https://github.com/jonattanva/luna-form/commit/22b0fdc09c05716f2d685dcda8519c73524be18e"
-        },
-        "date": 1791213103317,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 251,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 499,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "5fc57d69f19186454fa3859063abe790e943cc6a",
           "message": "Merge pull request #114 from jonattanva/claude/date-range\n\nfeat(date): a range of days in one field",
           "timestamp": "2026-10-05T10:48:32-05:00",
@@ -8891,6 +8857,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 62,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "722a7f8df5ce0f1877d0a0927d96952f13c25be2",
+          "message": "Merge pull request #214 from jonattanva/claude/bug-04-dot-segment-f17ab0\n\nfix(core): hold a source request when a value makes a dot segment",
+          "timestamp": "2026-11-23T07:39:39-05:00",
+          "tree_id": "34e6a9802524ed1abcd64f53df9081f221873c39",
+          "url": "https://github.com/jonattanva/luna-form/commit/722a7f8df5ce0f1877d0a0927d96952f13c25be2"
+        },
+        "date": 1795437659078,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 49,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 16.2,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 50.5,
             "unit": "ms"
           }
         ]
