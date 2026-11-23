@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795436612027,
+  "lastUpdate": 1795436649587,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "7630798e8122974a1ff2c46ffe6c9ef5696e9b0f",
-          "message": "Merge pull request #112 from jonattanva/claude/date-reserved\n\nfeat(date): days nobody can pick",
-          "timestamp": "2026-10-05T09:52:06-05:00",
-          "tree_id": "a4fdec00032a21a493ff208a3b7643c31eccb525",
-          "url": "https://github.com/jonattanva/luna-form/commit/7630798e8122974a1ff2c46ffe6c9ef5696e9b0f"
-        },
-        "date": 1791212007583,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 335,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 620,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "22b0fdc09c05716f2d685dcda8519c73524be18e",
           "message": "Merge pull request #113 from jonattanva/ci/e2e-parallel\n\nci: e2e in six parallel jobs with one report, on ubuntu-26.04",
           "timestamp": "2026-10-05T10:10:18-05:00",
@@ -8886,6 +8852,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 55.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "19b8f71c03e3689240c9ed5fe20a555a112797a6",
+          "message": "Merge pull request #213 from jonattanva/claude/audit-2026-11-22\n\ndocs(audit): record the second library audit and BUG-04",
+          "timestamp": "2026-11-23T07:22:52-05:00",
+          "tree_id": "ef0b08680ba59f36a88fe9ac4a033fea0325d142",
+          "url": "https://github.com/jonattanva/luna-form/commit/19b8f71c03e3689240c9ed5fe20a555a112797a6"
+        },
+        "date": 1795436649497,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 61.6,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 20.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 62,
             "unit": "ms"
           }
         ]
