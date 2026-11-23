@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795456772088,
+  "lastUpdate": 1795456805584,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "68aa2cac8251e6b1cfb08c2c14ddd4b9846ca095",
-          "message": "Merge pull request #116 from jonattanva/claude/date-docs\n\ndocs(date): how a calendar plugs into a date field",
-          "timestamp": "2026-10-05T11:10:44-05:00",
-          "tree_id": "0be0fa7ba22c1db537e453f237d0697b469b625c",
-          "url": "https://github.com/jonattanva/luna-form/commit/68aa2cac8251e6b1cfb08c2c14ddd4b9846ca095"
-        },
-        "date": 1791216720700,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 236,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 198,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "2ddc073e0f29eb555717bc51d23ab4118e8584f5",
           "message": "Merge pull request #117 from jonattanva/claude/date-clock\n\nfeat(date): the host says what time it is",
           "timestamp": "2026-10-05T11:40:45-05:00",
@@ -8901,6 +8867,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 36.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6c56f3536885eabd87b29ddfb2ee2aa4260b09c",
+          "message": "Merge pull request #216 from jonattanva/claude/declared-hidden-rules\n\nfix(react): tell a host's echo from a host change by the store, not the render",
+          "timestamp": "2026-11-23T12:58:44-05:00",
+          "tree_id": "1e5b79ef005c56c61d34cc3ce038979908758a12",
+          "url": "https://github.com/jonattanva/luna-form/commit/c6c56f3536885eabd87b29ddfb2ee2aa4260b09c"
+        },
+        "date": 1795456805541,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 66.5,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 22.4,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 48,
             "unit": "ms"
           }
         ]
