@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795438817097,
+  "lastUpdate": 1795438848046,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "5fc57d69f19186454fa3859063abe790e943cc6a",
-          "message": "Merge pull request #114 from jonattanva/claude/date-range\n\nfeat(date): a range of days in one field",
-          "timestamp": "2026-10-05T10:48:32-05:00",
-          "tree_id": "bfa1a35b25ee842c15cc5eda20e6300c23811b47",
-          "url": "https://github.com/jonattanva/luna-form/commit/5fc57d69f19186454fa3859063abe790e943cc6a"
-        },
-        "date": 1791215415384,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 322,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 607,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "68aa2cac8251e6b1cfb08c2c14ddd4b9846ca095",
           "message": "Merge pull request #116 from jonattanva/claude/date-docs\n\ndocs(date): how a calendar plugs into a date field",
           "timestamp": "2026-10-05T11:10:44-05:00",
@@ -8896,6 +8862,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 50.5,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan Velasquez",
+            "username": "jonattanva"
+          },
+          "distinct": true,
+          "id": "1c4f52bbd9e0ed83871572ea2c90bc44a1b35846",
+          "message": "upgrade dependencies",
+          "timestamp": "2026-11-23T07:59:40-05:00",
+          "tree_id": "8210e0460c24bd6651f1a3e921d85c4afb8ed667",
+          "url": "https://github.com/jonattanva/luna-form/commit/1c4f52bbd9e0ed83871572ea2c90bc44a1b35846"
+        },
+        "date": 1795438847945,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 36.3,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 12.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 36.7,
             "unit": "ms"
           }
         ]
