@@ -7,7 +7,7 @@ import {
 } from '@luna-form/core'
 import { useEntryAtom } from './use-entry-atom'
 import { valueAtom } from '../lib/value-store'
-import { useAtom } from 'jotai'
+import { useAtom, useStore } from 'jotai'
 import { useCallback, useEffect, useRef, useEffectEvent } from 'react'
 import { useHostEntry } from './use-host-entry'
 
@@ -19,7 +19,9 @@ export function useValue(field: Field) {
   // What the host last put in this field that the field did not already hold,
   // waiting for `takeHostChange`. Boxed, so a change to nothing is still one.
   const hostChangeRef = useRef<Nullable<{ value: unknown }>>(null)
-  const [value, setValue] = useAtom(useEntryAtom(valueAtom, name))
+  const entryAtom = useEntryAtom(valueAtom, name)
+  const [value, setValue] = useAtom(entryAtom)
+  const store = useStore()
 
   // This field's entry, and nothing else.
   //
@@ -40,7 +42,13 @@ export function useValue(field: Field) {
     // is added or removed, would save it rewritten with nobody touching it.
     const held = holdValue(field, rawValue)
 
-    if (!deepEqual(value, held)) {
+    // Compared with what the store holds now, not with what this field last
+    // rendered: a field emptied by another field's `state` rule is cleared in
+    // the store at once but renders the emptied value later, and a host that
+    // answers in between hands back that very clear. Read off the render, the
+    // echo looked like the host changing its mind, and the field withdrew the
+    // rules it had standing -- hiding what another rule had just shown.
+    if (!deepEqual(store.get(entryAtom), held)) {
       if (!silent) {
         skipNextOnChangeRef.current = true
       }
