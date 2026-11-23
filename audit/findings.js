@@ -188,6 +188,7 @@ window.AUDIT = {
       sev: 'mejora',
       cat: 'errores',
       st: 'corregido',
+      stLabel: 'Corregido en #214',
       sevNote: 'también de seguridad',
       audit: 'audit-2026-11-22',
       sections: [
