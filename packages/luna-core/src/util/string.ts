@@ -57,7 +57,6 @@ const REGEX_WHOLE_URL_PLACEHOLDER = /^{[^}]{1,200}}$/
 // ends of the url. `\\` ends a segment like `/` in an http url.
 const REGEX_DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i
 const REGEX_URL_TAB_OR_NEWLINE = /[\t\n\r]/g
-const REGEX_URL_EDGE = /^[\u0000-\u0020]+|[\u0000-\u0020]+$/g
 const URL_PATH_END = ['/', '\\', '?', '#']
 
 export type InterpolateOptions = {
@@ -205,7 +204,7 @@ export function interpolateUrl(
   // The URL parser drops what is at or below a space from both ends of a url,
   // so a template's edges are not part of any segment. A value cannot be
   // there: those characters are encoded.
-  const trimmed = template.replace(REGEX_URL_EDGE, '')
+  const trimmed = trimUrlEdges(template)
 
   let url = ''
   // The path segment being written, and whether a value wrote any of it. The
@@ -262,6 +261,21 @@ export function interpolateUrl(
   closeSegment()
 
   return leavesSegment ? template : url
+}
+
+// `template` without what is at or below a space at either end. Walked by
+// index rather than with a regex: a trailing `[...]+$` retries from every
+// position, which is quadratic on a long run of such characters.
+function trimUrlEdges(template: string): string {
+  let start = 0
+  let end = template.length
+  while (start < end && template.charCodeAt(start) <= 0x20) {
+    start++
+  }
+  while (end > start && template.charCodeAt(end - 1) <= 0x20) {
+    end--
+  }
+  return template.slice(start, end)
 }
 
 // A segment the url reads as `.` or `..`.
