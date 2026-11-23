@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { handleSourceEvent } from '@/packages/luna-core/src/handle/source-event'
 import type { DataSource, SourceEvent } from '@/packages/luna-core/src/type'
+import { isInterpolated } from '@/packages/luna-core/src/util/string'
 
 describe('handle source event', () => {
   test('should do nothing if events is empty', () => {
@@ -237,21 +238,52 @@ describe('handleSourceEvent values in a url', () => {
     expect(segments[4]).toBe('cities')
   })
 
-  // Audit BUG-04: encodeURIComponent leaves `.` and `..` as they are, and a URL
-  // reads them as dot segments, so `..` takes the request to `/api/cities`.
-  // Drop .fails once fixed.
-  test.fails('should keep a dot segment value inside its path segment', () => {
+  // `.` and `..` cannot be encoded into staying put: the URL reads `%2E` and
+  // `%2E%2E` as dot segments too. So a path segment a value writes that comes
+  // out as one holds the request, the way an unresolved placeholder does.
+  test('should hold the request when a value is a dot segment of the path', () => {
+    const template = '/api/countries/{value}/cities'
     for (const value of ['..', '.']) {
+      const url = urlFor(template, value)
+      expect(url).toBe(template)
+      expect(isInterpolated(url)).toBe(true)
+    }
+  })
+
+  test('should hold the request when a value completes a dot segment', () => {
+    expect(urlFor('/api/{value}./cities', '.')).toBe('/api/{value}./cities')
+    expect(urlFor('/api/%2e{value}/cities', '.')).toBe('/api/%2e{value}/cities')
+    expect(urlFor('{value}/cities', '..')).toBe('{value}/cities')
+    expect(urlFor('/api/cities/{value}', '..')).toBe('/api/cities/{value}')
+  })
+
+  // The URL parser drops a tab or a newline anywhere, and a space at either
+  // end of the url, so neither keeps a dot segment from being read as one.
+  test('should hold the request when what the parser drops hides a dot segment', () => {
+    expect(urlFor('/api/{value}\t/cities', '..')).toBe('/api/{value}\t/cities')
+    expect(urlFor(' {value}/cities', '..')).toBe(' {value}/cities')
+    expect(urlFor('/api/cities/{value} ', '.')).toBe('/api/cities/{value} ')
+  })
+
+  test('should send a dot segment value in the query as the value', () => {
+    const url = new URL(
+      urlFor('/api/cities?country={value}', '..'),
+      'http://localhost'
+    )
+
+    expect(url.pathname).toBe('/api/cities')
+    expect(url.searchParams.get('country')).toBe('..')
+  })
+
+  test('should keep a value with dots that is not a dot segment', () => {
+    for (const value of ['a..b', '...', '.hidden']) {
       const url = new URL(
         urlFor('/api/countries/{value}/cities', value),
         'http://localhost'
       )
 
       const segments = url.pathname.split('/')
-      expect(segments).toHaveLength(5)
-      expect(segments[2]).toBe('countries')
-      expect(decodeURIComponent(segments[3])).toBe(value)
-      expect(segments[4]).toBe('cities')
+      expect(segments).toEqual(['', 'api', 'countries', value, 'cities'])
     }
   })
 

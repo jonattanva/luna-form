@@ -51,6 +51,14 @@ const REGEX_WHOLE_PLACEHOLDER = /^{([^}|]{1,200})}$/
 // what decides is that the template writes no part of the url itself.
 const REGEX_WHOLE_URL_PLACEHOLDER = /^{[^}]{1,200}}$/
 
+// How the URL standard reads a path segment: `.` and `..`, with `%2E` for a
+// dot in either case, step within or above the path; a tab or a newline is
+// removed wherever it is, and what is at or below a space is removed from both
+// ends of the url. `\\` ends a segment like `/` in an http url.
+const REGEX_DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i
+const REGEX_URL_TAB_OR_NEWLINE = /[\t\n\r]/g
+const URL_PATH_END = ['/', '\\', '?', '#']
+
 export type InterpolateOptions = {
   locale?: string
   // The instant a relative date is measured from: `context.now`.
@@ -176,6 +184,13 @@ export function interpolateValue(
  *
  * A placeholder that does not resolve is left standing, unencoded, so the
  * request is still held until it does.
+ *
+ * Encoding cannot keep a value of `.` or `..` in its segment: the URL reads
+ * those, and `%2E` and `%2E%2E` just the same, as a step within or above the
+ * path, so `/api/countries/{value}/cities` with `..` would ask for
+ * `/api/cities`. A segment of the path that a value helps write and that comes
+ * out as one gives back the template, every placeholder standing, which holds
+ * the request the way an unresolved one does.
  */
 export function interpolateUrl(
   template: string,
@@ -185,7 +200,87 @@ export function interpolateUrl(
   if (REGEX_WHOLE_URL_PLACEHOLDER.test(template.trim())) {
     return replacePlaceholders(template, values, options)
   }
-  return replacePlaceholders(template, values, options, encodeURIComponent)
+
+  // The URL parser drops what is at or below a space from both ends of a url,
+  // so a template's edges are not part of any segment. A value cannot be
+  // there: those characters are encoded.
+  const trimmed = trimUrlEdges(template)
+
+  let url = ''
+  // The path segment being written, and whether a value wrote any of it. The
+  // query and the fragment are not walked: a dot there is only a character.
+  let segment = ''
+  let fromValue = false
+  let inPath = true
+  let leavesSegment = false
+
+  const closeSegment = () => {
+    if (fromValue && isDotSegment(segment)) {
+      leavesSegment = true
+    }
+    segment = ''
+    fromValue = false
+  }
+
+  // Only the template can end a segment: an encoded value holds no `/`, `\`,
+  // `?` or `#`.
+  const writeTemplate = (text: string) => {
+    url += text
+    for (const char of text) {
+      if (!inPath) {
+        return
+      }
+      if (URL_PATH_END.includes(char)) {
+        closeSegment()
+        inPath = char === '/' || char === '\\'
+      } else {
+        segment += char
+      }
+    }
+  }
+
+  let lastIndex = 0
+  for (const match of trimmed.matchAll(REGEX_PLACEHOLDER_ALL)) {
+    writeTemplate(trimmed.slice(lastIndex, match.index))
+    lastIndex = match.index + match[0].length
+
+    const resolved = resolvePlaceholder(match[1], values, options)
+    if (resolved === undefined) {
+      writeTemplate(match[0])
+      continue
+    }
+
+    const encoded = encodeURIComponent(resolved)
+    url += encoded
+    if (inPath) {
+      segment += encoded
+      fromValue = true
+    }
+  }
+  writeTemplate(trimmed.slice(lastIndex))
+  closeSegment()
+
+  return leavesSegment ? template : url
+}
+
+// `template` without what is at or below a space at either end. Walked by
+// index rather than with a regex: a trailing `[...]+$` retries from every
+// position, which is quadratic on a long run of such characters.
+function trimUrlEdges(template: string): string {
+  let start = 0
+  let end = template.length
+  while (start < end && template.charCodeAt(start) <= 0x20) {
+    start++
+  }
+  while (end > start && template.charCodeAt(end - 1) <= 0x20) {
+    end--
+  }
+  return template.slice(start, end)
+}
+
+// A segment the url reads as `.` or `..`.
+function isDotSegment(segment: string): boolean {
+  return REGEX_DOT_SEGMENT.test(segment.replace(REGEX_URL_TAB_OR_NEWLINE, ''))
 }
 
 export function interpolateIfNeeded<T>(
@@ -253,48 +348,51 @@ function resolveStructure(
   }
 }
 
-// `encode` is applied to each value that resolves, never to a placeholder left
-// standing, which has to stay readable as one.
 function replacePlaceholders(
   template: string,
   values: Record<string, unknown> = {},
-  options: InterpolateOptions = {},
-  encode: (text: string) => string = String
+  options: InterpolateOptions = {}
 ): string {
   return template.replace(REGEX_PLACEHOLDER_ALL, (match, expression) => {
-    const segments = String(expression)
-      .split('|')
-      .map((s) => s.trim())
-
-    const [keyExpr, ...filters] = segments
-    if (!keyExpr) {
-      return match
-    }
-
-    const initial = resolveExpression(values, keyExpr)
-
-    if (filters.length === 0) {
-      return isValue(initial) ? encode(String(initial)) : match
-    }
-
-    if (initial === undefined || initial === null) {
-      return match
-    }
-
-    let current: unknown = initial
-    for (const filter of filters) {
-      const result = applyFormatFilter(current, filter, {
-        locale: options.locale,
-        now: options.now,
-      })
-      if (result === undefined) {
-        return match
-      }
-      current = result
-    }
-
-    return encode(String(current))
+    return resolvePlaceholder(expression, values, options) ?? match
   })
+}
+
+// The text one placeholder resolves to -- its value, through its filters --
+// or undefined when it does not resolve and has to be left standing.
+function resolvePlaceholder(
+  expression: string,
+  values: Record<string, unknown>,
+  options: InterpolateOptions
+): string | undefined {
+  const [keyExpr, ...filters] = expression.split('|').map((s) => s.trim())
+  if (!keyExpr) {
+    return
+  }
+
+  const initial = resolveExpression(values, keyExpr)
+
+  if (filters.length === 0) {
+    return isValue(initial) ? String(initial) : undefined
+  }
+
+  if (initial === undefined || initial === null) {
+    return
+  }
+
+  let current: unknown = initial
+  for (const filter of filters) {
+    const result = applyFormatFilter(current, filter, {
+      locale: options.locale,
+      now: options.now,
+    })
+    if (result === undefined) {
+      return
+    }
+    current = result
+  }
+
+  return String(current)
 }
 
 type LinkCallback<K> = (index: number, url: string, text?: string) => K

@@ -103,7 +103,17 @@ a parameter, leave its segment or change the host:
 | `/api/countries/{value}/cities` | `../../admin`        | `/api/countries/..%2F..%2Fadmin/cities` |
 | `{value}/cities`                | `//attacker.example` | `%2F%2Fattacker.example/cities`         |
 
-The server reads `dept` as `R&D`. Commas from a
+The server reads `dept` as `R&D`.
+
+A value that makes a path segment `.` or `..` is the one encoding cannot keep in
+place: the URL reads those, and `%2E` and `%2E%2E` just the same, as a step
+within or above the path. So with `/api/countries/{value}/cities`, a value of
+`..` or `.` is not requested at all, the same as a
+[placeholder that does not resolve](../interpolation/overview.md#an-unresolved-placeholder-cancels-a-request).
+In the query, `..` is sent as the value `..`, and a value such as `a..b` or
+`../../admin` fills its segment as usual.
+
+Commas from a
 [format filter](../interpolation/format-filters.md) are encoded too, as `%2C`,
 and read back as commas. Write the parts of the URL that are not data, such as
 the host, the path and the parameter names, in the `url` itself, not in a
