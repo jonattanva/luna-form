@@ -310,6 +310,30 @@ describe('buildToolSchema', () => {
       expect(result.lookup).toEqual(['many'])
     })
 
+    // The schema of a field looked up holds no `enum`: nothing else tells an
+    // agent that the label it found is enough, and not only the value.
+    test('should say that an option looked up is taken by its value or its label', () => {
+      const lookedUp =
+        'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.'
+      const many = Array.from({ length: 26 }, (_, index) => ({
+        label: `Option ${index}`,
+        value: `${index}`,
+      }))
+      const { properties } = build([
+        { name: 'many', source: many, type: 'select' },
+        {
+          name: 'city',
+          source: { url: 'https://example.com/cities' },
+          type: 'select',
+        },
+        { name: 'tags', source: many, type: 'chips' },
+      ]).schema
+
+      expect(properties?.many?.description).toBe(lookedUp)
+      expect(properties?.city?.description).toBe(lookedUp)
+      expect(properties?.tags?.description).toBe(`${lookedUp} No option twice.`)
+    })
+
     test('should look up options that are fetched or that an event installs', () => {
       const result = build([
         {

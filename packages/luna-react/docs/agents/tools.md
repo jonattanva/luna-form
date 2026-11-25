@@ -166,7 +166,12 @@ fields a call; `more` says how many are left to ask for.
 Offered when a field's options are not in the schema. Takes
 `{ field, text? }` and answers up to 50 `items` whose label or value contains
 `text`, and `more`. A list's leaf is named through its first row,
-`items.0.product`.
+`items.0.product`. Either the `value` or the `label` of an item it answers
+is a value `<name>_fill` takes for the field: `"caribe"` picks the option
+`{ "label": "Caribe", "value": "r-02" }`. A text that is exactly an option's
+value picks that option, even when it is another option's label too; a text
+that reads as the label or value of more than one once case and accents are
+set aside is skipped as `invalid_option`, with the options it could mean.
 
 A field whose options are fetched answers with them once they arrive: the tool
 waits up to five seconds for the field's own request, and asks for nothing
@@ -472,6 +477,11 @@ and a field in the rows of a list with `"agent": false` stay out.
   a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
   The field's own description, and a custom input's, is closed with a period
   before what follows when it does not end a sentence, as `description` above.
+- A field listed in `lookup` has no `enum`, so its description points to
+  `<name>_options` and says that an option is passed by its value or its
+  label. A field whose options are listed does not say it: its `enum` holds
+  the values only, and a client that checks the input against the schema
+  would refuse a label, although `<name>_fill` takes one.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a

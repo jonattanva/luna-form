@@ -829,6 +829,61 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should take an option fetched by its label, as its description says', async ({
+    page,
+  }) => {
+    await page.route('**/api/regions', (route) =>
+      route.fulfill({
+        body: JSON.stringify([
+          { label: 'Andes', value: 'r-01' },
+          { label: 'Caribe', value: 'r-02' },
+        ]),
+        contentType: 'application/json',
+      })
+    )
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              label: 'Region',
+              name: 'region',
+              source: { url: '/api/regions' },
+              type: 'select',
+            },
+          ],
+        },
+      ],
+    })
+
+    const fill = (await list(page)).find((tool) => tool.name === 'preview_fill')
+    expect(fill?.inputSchema).toMatchObject({
+      properties: {
+        region: {
+          description:
+            'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.',
+        },
+      },
+    })
+
+    expect(await call(page, 'preview_options', { field: 'region' })).toEqual({
+      items: [
+        { label: 'Andes', value: 'r-01' },
+        { label: 'Caribe', value: 'r-02' },
+      ],
+    })
+    expect(
+      await call(page, 'preview_fill', { region: 'caribe' })
+    ).toMatchObject({
+      applied: ['region'],
+      ok: true,
+      values: { region: 'r-02' },
+    })
+    await expect(page.getByRole('combobox', { name: 'Region' })).toHaveText(
+      'Caribe'
+    )
+  })
+
   test('should find time zones by name', async ({ page }) => {
     await open(page)
     const result = await call(page, 'preview_options', {

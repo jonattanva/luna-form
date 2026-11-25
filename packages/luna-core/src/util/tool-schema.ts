@@ -123,8 +123,11 @@ const LABEL_LENGTH = 200
 const DESCRIPTION_LENGTH = 500
 const OPTIONS_LENGTH = 1000
 
+// A field looked up is a `string` with no `enum`, so a label passes the schema
+// as a value does, and the fill takes either. A field whose options are listed
+// keeps to its `enum`, which holds the values only.
 const LOOKUP =
-  'Its options are not listed here: find them with the options tool of this form.'
+  'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.'
 
 // What closes a sentence: `.`, `!`, `?`, `:`, an ellipsis, or their ideographic
 // and full-width forms, before any quote or bracket that closes with it.
