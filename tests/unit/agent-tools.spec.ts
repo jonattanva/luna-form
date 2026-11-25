@@ -469,6 +469,23 @@ describe('createFormTools', () => {
       }
     })
 
+    // A dictionary key cannot always end in a period, so the author's text
+    // may stop without one: the tool's own sentences start one of their own.
+    test("should close the author's description before the tool's own sentences", () => {
+      for (const description of [
+        'Signs a person up',
+        'Signs a person up.',
+        'Signs a person up \n',
+      ]) {
+        for (const tool of toolsOf({}, { ...AGENT, description }).tools) {
+          expect(tool.description).toMatch(/^Signs a person up\. [A-Z]/)
+        }
+      }
+      for (const tool of toolsOf({}, { ...AGENT, description: '' }).tools) {
+        expect(tool.description).toMatch(/^[A-Z]/)
+      }
+    })
+
     test('should name in the fill description what a submission needs', () => {
       const fields: Fields = [
         { name: 'email', required: true, type: 'input/email' },

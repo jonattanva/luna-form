@@ -10,6 +10,7 @@ import {
   isTargetOf,
   getTimeFormat,
   isTime,
+  joinSentences,
   listOptions,
   logger,
   toNativeTime,
@@ -1159,7 +1160,7 @@ export function createFormTools(
   const tools: Tool[] = [
     {
       annotations: { untrustedContentHint: true },
-      description: [
+      description: joinSentences([
         agent.description,
         'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
         "Pass in one call the values the person gave for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
@@ -1175,7 +1176,7 @@ export function createFormTools(
             ]
           : []),
         UNTRUSTED,
-      ].join(' '),
+      ]),
       execute: queued('fill', fill),
       inputSchema: built.schema,
       name: names.fill,
@@ -1184,13 +1185,13 @@ export function createFormTools(
     },
     {
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: [
+      description: joinSentences([
         agent.description,
         'Reads what this form holds now: values, hidden or locked fields, errors and the last submission.',
         `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
         `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
         UNTRUSTED,
-      ].join(' '),
+      ]),
       execute: queued('read', read),
       inputSchema: READ_INPUT,
       name: names.read,
@@ -1202,13 +1203,13 @@ export function createFormTools(
   if (lookup.size > 0) {
     tools.push({
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: [
+      description: joinSentences([
         agent.description,
         `Finds the options of a field the schema of ${names.fill} does not list.`,
         `Pass the field and, to narrow them, text to match in their labels and values; it returns up to ${FOUND_OPTIONS} options and how many more there are.`,
         `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
         UNTRUSTED,
-      ].join(' '),
+      ]),
       execute: queued('options', options),
       inputSchema: {
         additionalProperties: false,
@@ -1228,7 +1229,7 @@ export function createFormTools(
   if (agent.submit) {
     tools.push({
       annotations: { consequentialHint: true, untrustedContentHint: true },
-      description: [
+      description: joinSentences([
         agent.description,
         validates
           ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
@@ -1236,7 +1237,7 @@ export function createFormTools(
         `Call it once, when ${names.fill} reports ok and skips no field you need.`,
         `It returns what the action answered or the errors that stopped it. An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
         UNTRUSTED,
-      ].join(' '),
+      ]),
       execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
       name: names.submit,

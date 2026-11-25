@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   buildToolSchema,
+  joinSentences,
   type ToolSchema,
   type ToolSchemaOptions,
 } from '@/packages/luna-core/src/util/tool-schema'
@@ -842,6 +843,48 @@ describe('buildToolSchema', () => {
       })
     })
 
+    // A dictionary key cannot always end in a period, so the author's text
+    // may stop without one: the notes start a sentence of their own.
+    test("should close the author's description before the notes", () => {
+      const describe = (description: string) =>
+        propertyOf(
+          [
+            {
+              description,
+              name: 'code',
+              type: 'input/text',
+              validation: { pattern: { flags: 'i', regex: '^[a-z]{3}$' } },
+            },
+          ],
+          'code'
+        )?.description
+
+      const note = 'It must match a pattern the submit checks.'
+      expect(describe('Already approved in your account')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Already approved in your account.')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Already approved in your account  ')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Which one?')).toBe(`Which one? ${note}`)
+      expect(describe('   ')).toBe(note)
+
+      const rating: ToolSchema = {
+        description: 'From one to five',
+        type: 'integer',
+      }
+      expect(
+        propertyOf(
+          [{ description: 'How you rate it', name: 'stars', type: 'rating' }],
+          'stars',
+          { types: { rating } }
+        )?.description
+      ).toBe('How you rate it. From one to five')
+    })
+
     // What the host puts in through `#/context/` can hold text people wrote,
     // and a long text is room for instructions in what an agent reads first.
     test('should cut a long label or description', () => {
@@ -1059,5 +1102,46 @@ describe('buildToolSchema', () => {
       const again = JSON.stringify(build(structuredClone(fields)).schema)
       expect(again).toBe(once)
     })
+  })
+})
+
+describe('joinSentences', () => {
+  test('should close a piece that does not end a sentence before the next', () => {
+    expect(joinSentences(['Signs a person up', 'Fills this form.'])).toBe(
+      'Signs a person up. Fills this form.'
+    )
+    expect(joinSentences(['Own', 'From the schema', 'A note.'])).toBe(
+      'Own. From the schema. A note.'
+    )
+  })
+
+  test('should leave a piece that already ends a sentence as it is', () => {
+    for (const piece of [
+      'Signs up.',
+      'Signs up!',
+      'Signs up?',
+      'Pick one:',
+      'Signs up...',
+      'Signs up\u2026',
+      'Say "signs up."',
+      '(Signs up.)',
+      '\u767b\u9332\u3057\u307e\u3059\u3002',
+    ]) {
+      expect(joinSentences([piece, 'Next.'])).toBe(`${piece} Next.`)
+    }
+  })
+
+  test('should trim each piece and leave out a blank or missing one', () => {
+    expect(joinSentences([' Signs up \n', undefined, '', '  ', 'Next.'])).toBe(
+      'Signs up. Next.'
+    )
+    expect(joinSentences([undefined, 'Next.'])).toBe('Next.')
+    expect(joinSentences([])).toBe('')
+  })
+
+  test('should keep the last piece as it was written', () => {
+    expect(joinSentences(['Next.', 'Signs a person up'])).toBe(
+      'Next. Signs a person up'
+    )
   })
 })

@@ -28,7 +28,9 @@ field's transforms, change events and validation all run.
   the console.
 - **`description`** is what the form is for, in your words: it opens the
   description of every tool, and it is what weighs most in how a model uses
-  them. Write it as trusted text; nothing a person typed goes in it.
+  them. Write it as trusted text; nothing a person typed goes in it. It need
+  not end in a period: one that does not end in `.`, `!`, `?`, `:` or an
+  ellipsis is closed with a period before the tool's own sentences.
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
   `action`: sending has effects outside the page.
 - **`allow(call, { signal })`** is asked before a fill and before a submit,
@@ -406,6 +408,8 @@ These fields are not in the schema, and the tools refuse them:
   field's own description followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
   a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
+  The field's own description, and a custom input's, is closed with a period
+  before what follows when it does not end a sentence, as `description` above.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a

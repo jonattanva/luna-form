@@ -121,6 +121,31 @@ const OPTIONS_LENGTH = 1000
 const LOOKUP =
   'Its options are not listed here: find them with the options tool of this form.'
 
+// What closes a sentence: `.`, `!`, `?`, `:`, an ellipsis, or their ideographic
+// and full-width forms, before any quote or bracket that closes with it.
+const SENTENCE_END =
+  /[.!?:\u2026\u3002\uff01\uff1f\uff1a]["'\u2019\u201d\u00bb)\]]*$/u
+
+/**
+ * Text for an agent, from the host's and the form's: each piece in turn, one
+ * that does not end a sentence closed with a period before the next, so a
+ * host's text, which a dictionary key may leave open, never runs into the
+ * sentence after it. A blank or missing piece is left out, and the last one is
+ * kept as it was written.
+ */
+export function joinSentences(pieces: readonly (string | undefined)[]): string {
+  const kept = pieces
+    .map((piece) => piece?.trim() ?? '')
+    .filter((piece) => piece !== '')
+  return kept
+    .map((piece, index) =>
+      index === kept.length - 1 || SENTENCE_END.test(piece)
+        ? piece
+        : `${piece}.`
+    )
+    .join(' ')
+}
+
 // What a schema cannot declare: a key for one leaf of one row. `name` is the
 // list's whole name, through the first row of a list it is in.
 function describeRoutes(name: string): string {
@@ -751,9 +776,7 @@ function withText(
     walk.dictionary,
     DESCRIPTION_LENGTH
   )
-  const text = [own, schema.description, ...notes]
-    .filter((part) => part !== undefined && part !== '')
-    .join(' ')
+  const text = joinSentences([own, schema.description, ...notes])
 
   return {
     ...schema,
