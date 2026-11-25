@@ -155,8 +155,10 @@ function describeRoutes(name: string): string {
 
 // A bound the form cannot read refuses whatever is written, and lets an
 // optional field through only empty.
+// Said of the form, not of a submit: an agent offered no submit tool reads
+// it too.
 const UNREADABLE =
-  'The form cannot read its bounds, so the submit refuses any value for it.'
+  'The form cannot read its bounds, so it accepts no value for it.'
 
 // A `state` event that makes a slot available: shows it, unlocks it, or both.
 // Kept under the slot it reaches, by the name the form resolves the event's
@@ -589,7 +591,7 @@ function readPattern(field: Field, notes: string[]): string | undefined {
   }
 
   if (pattern.flags || pattern.allowInterpolation || !compiles(pattern.regex)) {
-    notes.push('It must match a pattern the submit checks.')
+    notes.push('It must match a pattern the form checks.')
     return undefined
   }
   return pattern.regex
@@ -745,7 +747,7 @@ function ruleNotes(field: Field, walk: Walk, inRow: boolean): string[] {
   if (validation?.rules?.length || validation?.custom) {
     notes.push(
       walk.validates
-        ? 'The submit checks more rules for it.'
+        ? 'The form checks more rules for it.'
         : 'More rules are checked as it is written.'
     )
   }

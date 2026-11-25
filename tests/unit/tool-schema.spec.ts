@@ -796,7 +796,7 @@ describe('buildToolSchema', () => {
 
       const checked = build(fields).schema.properties
       expect(checked?.vat?.description).toBe(
-        'It must match a pattern the submit checks. Required when kind eq "company". The submit checks more rules for it.'
+        'It must match a pattern the form checks. Required when kind eq "company". The form checks more rules for it.'
       )
       expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
 
@@ -859,7 +859,7 @@ describe('buildToolSchema', () => {
           'code'
         )?.description
 
-      const note = 'It must match a pattern the submit checks.'
+      const note = 'It must match a pattern the form checks.'
       expect(describe('Already approved in your account')).toBe(
         `Already approved in your account. ${note}`
       )
@@ -1026,7 +1026,7 @@ describe('buildToolSchema', () => {
       ]`)
       const { properties } = build(fields).schema
       const unreadable =
-        'The form cannot read its bounds, so the submit refuses any value for it.'
+        'The form cannot read its bounds, so it accepts no value for it.'
 
       expect(properties?.code).toEqual({
         description: unreadable,

@@ -32,7 +32,10 @@ field's transforms, change events and validation all run.
   not end in a period: one that does not end in `.`, `!`, `?`, `:` or an
   ellipsis is closed with a period before the tool's own sentences.
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
-  `action`: sending has effects outside the page.
+  `action`: sending has effects outside the page. Without it, no tool speaks
+  of a submission, so an agent does not look for a way to send the form:
+  `<name>_fill` names the fields required (`Required fields: email.`) instead
+  of what a submission needs, and `<name>_read` answers no `submit`.
 - **`allow(call, { signal, deadline })`** is asked before a fill and before a
   submit, never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
   Answer `true` to go on, or `false` or the reason to refuse, which the agent
@@ -141,8 +144,8 @@ corrected by sending them all, in order, or one leaf by its route.
 ### `<name>_read`
 
 Takes `{ fields? }` and answers what the form holds now: `values`, the fields
-`hidden` and `locked`, the `errors` on screen, and `submit`, the last
-submission (`idle`, `awaiting_approval` with its `deadline`, `refused` with
+`hidden` and `locked`, the `errors` on screen, and, when the form offers
+`<name>_submit`, `submit`, the last submission (`idle`, `awaiting_approval` with its `deadline`, `refused` with
 its `message`, `pending`, `success` with its `data`, or `error`). Up to 100
 fields a call; `more` says how many are left to ask for.
 
@@ -177,7 +180,7 @@ or when the person and the action take more than 15 seconds between them;
 With [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off)
 the values are sent unchecked, and the descriptions say so: `<name>_submit`
 leaves the checking to the action, `<name>_fill` names no field a submission
-needs, and the schema holds no rule only a submit checks (see
+needs or that is required, and the schema holds no rule only a submit checks (see
 [Text the agent reads](#text-the-agent-reads)).
 
 ### Codes
@@ -455,7 +458,7 @@ These fields are not in the schema, and the tools refuse them:
   The rest stays, since the field checks it as it is written: its bounds, a
   whole number, a required `checkbox`, and a `custom`, whose note says so.
 - A field whose `advanced.length` the form cannot read, such as `"min": "x"`,
-  has no bounds in the schema, and its description says the submit refuses any
+  has no bounds in the schema, and its description says the form accepts no
   value for it.
 - A label or a description that interpolates a value, with a
   [`{placeholder}`](../interpolation/overview.md), is left out: the agent would

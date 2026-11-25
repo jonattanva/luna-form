@@ -528,6 +528,100 @@ describe('createFormTools', () => {
         'the values are sent unchecked'
       )
     })
+
+    // An agent told of a submission looks for a way to send it.
+    describe('a form the tools cannot submit', () => {
+      const NO_SUBMIT: AgentOptions = {
+        allow: () => true,
+        description: 'Signs a person up.',
+        name: 'signup',
+      }
+
+      test('should not speak of a submission in any description', () => {
+        for (const tool of toolsOf({}, NO_SUBMIT).tools) {
+          expect(tool.description).not.toMatch(/submi/i)
+        }
+      })
+
+      // The notes of a field's rules are the form's, read with or without a
+      // submit tool.
+      test('should not speak of a submit in the notes of the fields', () => {
+        const fields: Fields = JSON.parse(`[
+          {
+            "name": "vat",
+            "type": "input/text",
+            "validation": {
+              "pattern": { "flags": "i", "regex": "^[a-z]{3}$" },
+              "rules": [{ "assert": "minItems", "message": "Too few.", "value": 2 }]
+            }
+          },
+          { "advanced": { "length": { "min": "x" } }, "name": "code", "type": "input/text" }
+        ]`)
+        const [fill] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host
+        )
+        expect(JSON.stringify(fill.inputSchema)).not.toMatch(/submi/i)
+      })
+
+      test('should name in the fill description the fields required', () => {
+        const fields: Fields = [
+          { name: 'email', required: true, type: 'input/email' },
+          { name: 'name', required: true, type: 'input/text' },
+        ]
+        const [fill] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host
+        )
+        expect(fill.description).toContain('Required fields: email, name.')
+
+        const [none] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields: [{ name: 'name', type: 'input/text' }] }]),
+          createForm().host
+        )
+        expect(none.description).toContain('No field is required.')
+
+        const [unchecked] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host,
+          { validates: false }
+        )
+        expect(unchecked.description).not.toMatch(/required/i)
+      })
+
+      test('should read no submission, nor declare one', async () => {
+        const { tools } = toolsOf({}, NO_SUBMIT)
+        const read = toolNamed(tools, 'read')
+
+        expect(await call(tools, 'read', { fields: ['email'] })).toEqual({
+          errors: {},
+          hidden: [],
+          locked: [],
+          values: { email: null },
+        })
+        expect(read.outputSchema.properties).not.toHaveProperty('submit')
+      })
+
+      test('should still speak of the submission, and read it, when the tools submit', async () => {
+        const { tools } = toolsOf()
+        const read = toolNamed(tools, 'read')
+
+        expect(read.description).toContain(
+          'values, hidden or locked fields, errors and the last submission.'
+        )
+        expect(read.description).toContain(
+          'and after signup_submit answered pending;'
+        )
+        expect(read.outputSchema.properties).toHaveProperty('submit')
+        expect(await call(tools, 'read', { fields: ['email'] })).toMatchObject({
+          submit: { status: 'idle' },
+        })
+      })
+    })
   })
 
   describe('fill', () => {

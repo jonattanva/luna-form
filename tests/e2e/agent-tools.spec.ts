@@ -10,7 +10,16 @@ type Answer = Record<string, unknown>
 
 type Tools = Readonly<{
   call: (name: string, input: object) => Promise<Answer>
-  list: () => Promise<Array<Readonly<{ name: string; inputSchema: Answer }>>>
+  list: () => Promise<
+    Array<
+      Readonly<{
+        description: string
+        inputSchema: Answer
+        name: string
+        outputSchema: Answer
+      }>
+    >
+  >
 }>
 
 const COUNTRIES = `[
@@ -1086,6 +1095,39 @@ test.describe(
         'preview_fill',
         'preview_read',
       ])
+    })
+
+    // An agent told of a submission looks for a way to send it.
+    test('should speak of no submission, nor read one, when the form is offered without submit', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        agent: { description: 'Signs a person up.', submit: false },
+        sections: [
+          {
+            fields: [
+              {
+                label: 'Name',
+                name: 'name',
+                required: true,
+                type: 'input/text',
+              },
+            ],
+          },
+        ],
+      })
+      const tools = await list(page)
+      for (const tool of tools) {
+        expect(tool.description).not.toMatch(/submi/i)
+      }
+      expect(tools[0].description).toContain('Required fields: name.')
+      expect(tools[1].outputSchema.properties).not.toHaveProperty('submit')
+      expect(await call(page, 'preview_read')).toEqual({
+        errors: {},
+        hidden: [],
+        locked: [],
+        values: { name: null },
+      })
     })
 
     test('should answer pending while a submission a person started is running', async ({

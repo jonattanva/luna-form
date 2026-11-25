@@ -390,17 +390,22 @@ const READ_INPUT: ToolSchema = {
   type: 'object',
 }
 
-const READ_OUTPUT: ToolSchema = {
+const READ_OUTPUT = {
   properties: {
     ...FAILURE,
     errors: ERRORS,
     hidden: NAMES,
     locked: NAMES,
     more: MORE,
-    submit: SUBMIT_STATUS,
     values: OBJECT,
   },
   type: 'object',
+} satisfies ToolSchema
+
+// A read of a form the tools submit, which reads its last submission too.
+const READ_SUBMITTED_OUTPUT: ToolSchema = {
+  ...READ_OUTPUT,
+  properties: { ...READ_OUTPUT.properties, submit: SUBMIT_STATUS },
 }
 
 const OPTIONS_OUTPUT: ToolSchema = {
@@ -483,8 +488,10 @@ export function createFormTools(
     fill: `${agent.name}_fill`,
     options: `${agent.name}_options`,
     read: `${agent.name}_read`,
-    submit: `${agent.name}_submit`,
+    // Only when the tools submit the form: the one place that decides it.
+    ...(agent.submit && { submit: `${agent.name}_submit` }),
   }
+  const submission = submissionOf(names, validates ? built.required : undefined)
 
   const properties = built.schema.properties ?? {}
   const fields = Object.keys(properties)
@@ -1079,7 +1086,7 @@ export function createFormTools(
       hidden,
       locked,
       ...(known.length > page.length && { more: known.length - page.length }),
-      submit: host.getSubmit(),
+      ...submission.read(host),
       values,
     }
   }
@@ -1270,13 +1277,7 @@ export function createFormTools(
         `It returns the final value of each field that changed, what was skipped and why, and the errors: no need to call ${names.read} after.`,
         'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
         'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
-        ...(validates
-          ? [
-              built.required.length > 0
-                ? `A submission needs: ${built.required.join(', ')}.`
-                : 'No field is needed to submit.',
-            ]
-          : []),
+        ...submission.needs,
         UNTRUSTED,
       ]),
       execute: queued('fill', fill),
@@ -1289,15 +1290,14 @@ export function createFormTools(
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       description: joinSentences([
         agent.description,
-        'Reads what this form holds now: values, hidden or locked fields, errors and the last submission.',
-        `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
+        ...submission.reads,
         `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
         UNTRUSTED,
       ]),
       execute: queued('read', read),
       inputSchema: READ_INPUT,
       name: names.read,
-      outputSchema: READ_OUTPUT,
+      outputSchema: submission.readOutput,
       title: 'Read the form',
     },
   ]
@@ -1328,7 +1328,7 @@ export function createFormTools(
     })
   }
 
-  if (agent.submit) {
+  if (names.submit) {
     tools.push({
       annotations: { consequentialHint: true, untrustedContentHint: true },
       description: joinSentences([
@@ -1378,6 +1378,50 @@ const BUSY: ToolResult = {
 
 function invalidInput(message: string): ToolResult {
   return { code: 'invalid_type', message, ok: false }
+}
+
+type Submission = Readonly<{
+  // What the fill says of the fields a submission needs: nothing when a
+  // submit checks none.
+  needs: readonly string[]
+  // What the read reads, and when to call it.
+  reads: readonly string[]
+  readOutput: ToolSchema
+  read: (host: FormToolsHost) => ToolResult
+}>
+
+// What the tools say of a submission and read of it, from the submit tool
+// when there is one: a form the tools cannot submit is described and read
+// without one, since an agent told of a submission looks for a way to send
+// it. `required` is what a submit needs, `undefined` when it checks nothing.
+function submissionOf(
+  names: Readonly<{ fill: string; submit?: string }>,
+  required: readonly string[] | undefined
+): Submission {
+  const needs = (some: string, none: string) =>
+    required === undefined
+      ? []
+      : [required.length > 0 ? `${some}: ${required.join(', ')}.` : none]
+  if (names.submit === undefined) {
+    return {
+      needs: needs('Required fields', 'No field is required.'),
+      read: () => ({}),
+      readOutput: READ_OUTPUT,
+      reads: [
+        'Reads what this form holds now: values, hidden or locked fields and errors.',
+        `Call it before filling when a person may have written something, and between turns; ${names.fill} already returns what it changed.`,
+      ],
+    }
+  }
+  return {
+    needs: needs('A submission needs', 'No field is needed to submit.'),
+    read: (host) => ({ submit: host.getSubmit() }),
+    readOutput: READ_SUBMITTED_OUTPUT,
+    reads: [
+      'Reads what this form holds now: values, hidden or locked fields, errors and the last submission.',
+      `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
+    ],
+  }
 }
 
 // A submission a person still decides on, or one still running.
