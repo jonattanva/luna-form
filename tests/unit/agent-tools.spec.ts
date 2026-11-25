@@ -173,6 +173,8 @@ function createForm(setup: Setup = {}) {
   const errors: Record<string, string[]> = {}
   const effects: Array<() => void> = []
   let submitted: SubmitStatus = { status: 'idle' }
+  // What was submitted before a person was asked about the next one.
+  let before = submitted
 
   const calls = {
     apply: [] as Array<[string, ToolValue, object | undefined]>,
@@ -264,6 +266,16 @@ function createForm(setup: Setup = {}) {
             hidden: false,
             locked: locked.has(name),
           },
+    approval: (approval) => {
+      if (approval?.status === 'awaiting_approval') {
+        before = submitted
+      }
+      if (approval) {
+        submitted = approval
+      } else if (submitted.status === 'awaiting_approval') {
+        submitted = before
+      }
+    },
     getSubmit: () => submitted,
     isChanged: (name) => changed.has(name),
     isDrawing: (name) => drawing.has(name),
@@ -1821,6 +1833,154 @@ describe('createFormTools', () => {
 
       expect(await call(tools, 'submit')).toEqual(pending)
       expect(submit).toHaveBeenCalledTimes(1)
+    })
+
+    describe('while a person approves it', () => {
+      test('should say in its description that a person may approve it first', () => {
+        const without = toolNamed(toolsOf().tools, 'submit').description
+        const approved = toolNamed(
+          toolsOf({}, { ...AGENT, allow: () => true }).tools,
+          'submit'
+        ).description
+
+        expect(without).not.toContain('approve')
+        expect(approved).toContain('A person may need to approve it first.')
+      })
+
+      test('should keep its promise of an answer within 15 seconds', async () => {
+        vi.useFakeTimers()
+        const submit = vi.fn(async (): Promise<SubmitStatus> => ({
+          status: 'success',
+        }))
+        const { tools } = toolsOf(
+          { submit },
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+
+        let answered = false
+        void call(tools, 'submit').then(() => {
+          answered = true
+        })
+        await vi.advanceTimersByTimeAsync(15_000)
+
+        expect(answered).toBe(true)
+        expect(submit).not.toHaveBeenCalled()
+      })
+
+      test('should answer pending past 15 seconds, and send once the person approves', async () => {
+        vi.useFakeTimers()
+        let approve = (_answer: boolean | string) => {}
+        const allow = vi.fn((call: { tool: string }) =>
+          call.tool === 'fill'
+            ? true
+            : new Promise<boolean | string>((resolve) => {
+                approve = resolve
+              })
+        )
+        const { calls, host, tools } = toolsOf(
+          { submit: async () => ({ data: { id: 7 }, status: 'success' }) },
+          { ...AGENT, allow }
+        )
+
+        const first = call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(15_000)
+        const waiting = {
+          message:
+            'The submission waits for a person to approve it: call signup_read for its outcome.',
+          pending: true,
+        }
+        expect(await first).toEqual(waiting)
+        // Not asked again, and nothing written over what the person sees.
+        expect(await call(tools, 'submit')).toEqual(waiting)
+        const filled = call(tools, 'fill', { email: 'ada@example.com' })
+        await vi.advanceTimersByTimeAsync(0)
+        expect(calls.apply).toEqual([])
+        expect(allow).toHaveBeenCalledTimes(1)
+
+        approve(true)
+        vi.useRealTimers()
+        expect((await filled).ok).toBe(true)
+        expect(host.getSubmit()).toEqual({ data: { id: 7 }, status: 'success' })
+      })
+
+      test('should record why a person refused once the agent was answered pending', async () => {
+        vi.useFakeTimers()
+        let refuse = (_answer: string) => {}
+        const submit = vi.fn(async (): Promise<SubmitStatus> => ({
+          status: 'success',
+        }))
+        const { tools } = toolsOf(
+          { submit },
+          {
+            ...AGENT,
+            allow: () =>
+              new Promise<string>((resolve) => {
+                refuse = resolve
+              }),
+          }
+        )
+
+        void call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(15_000)
+        refuse('Not this plan.')
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(
+          (await call(tools, 'read', { fields: ['email'] })).submit
+        ).toEqual({ message: 'Not this plan.', status: 'refused' })
+        expect(submit).not.toHaveBeenCalled()
+      })
+
+      test('should record a person who never answered as a refusal', async () => {
+        vi.useFakeTimers()
+        const { tools } = toolsOf(
+          {},
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+
+        void call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(5 * 60_000)
+
+        expect(
+          (await call(tools, 'read', { fields: ['email'] })).submit
+        ).toEqual({
+          message: 'The call got no answer from the page.',
+          status: 'refused',
+        })
+      })
+
+      test('should take the wait back when the agent cancels', async () => {
+        const { host, tools } = toolsOf(
+          {},
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+        const controller = new AbortController()
+
+        const cancelled = call(tools, 'submit', {}, controller.signal)
+        await vi.waitFor(() =>
+          expect(host.getSubmit().status).toBe('awaiting_approval')
+        )
+        controller.abort()
+
+        expect((await cancelled).code).toBe('cancelled')
+        expect(host.getSubmit()).toEqual({ status: 'idle' })
+      })
+
+      test('should let a read say the submission waits for a person', async () => {
+        const { host, tools } = toolsOf(
+          {},
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+
+        void call(tools, 'submit')
+        await vi.waitFor(() => expect(host.getSubmit().status).not.toBe('idle'))
+        const read = await Promise.race([
+          call(tools, 'read', { fields: ['email'] }),
+          new Promise<undefined>((resolve) => setTimeout(resolve, 100)),
+        ])
+
+        expect(read?.submit).toEqual({ status: 'awaiting_approval' })
+      })
     })
 
     test('should not submit a call the agent cancelled', async () => {

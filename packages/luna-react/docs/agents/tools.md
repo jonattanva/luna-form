@@ -39,6 +39,8 @@ field's transforms, change events and validation all run.
   is given; a promise is waited for, as while a person confirms. `signal` is
   aborted when the agent cancels, when the form unmounts, or after five
   minutes, and the call is refused then. An `allow` that throws refuses it.
+  A form with `allow` tells the agent that a person may need to approve a
+  submission first; see [Waiting for a person](#waiting-for-a-person).
 - **`onCall(call)`** is told of every call once it was answered, to audit
   what an agent asked and what it got, a call that wrote nothing included:
   `{ tool, input, output, duration }`, with `tool` one of `fill`, `read`,
@@ -136,8 +138,9 @@ corrected by sending them all, in order, or one leaf by its route.
 
 Takes `{ fields? }` and answers what the form holds now: `values`, the fields
 `hidden` and `locked`, the `errors` on screen, and `submit`, the last
-submission (`idle`, `pending`, `success` with its `data`, or `error`). Up to
-100 fields a call; `more` says how many are left to ask for.
+submission (`idle`, `awaiting_approval`, `refused` with its `message`,
+`pending`, `success` with its `data`, or `error`). Up to 100 fields a call;
+`more` says how many are left to ask for.
 
 ### `<name>_options`
 
@@ -163,8 +166,9 @@ pending state and start over (see [Submit](../forms/submit.md)). A success is
 answered once the form has started over, so a `<name>_read` right after it
 reads what the form holds then. Answers `{ ok: true, data }` with what the
 action returned, `{ ok: false, error, errors }` when it failed, or
-`{ pending: true }` when a submission is still running or the action takes
-more than 15 seconds; `<name>_read` gives the outcome later.
+`{ pending: true }` when a submission is still running or waits for a person,
+or when the person and the action take more than 15 seconds between them;
+`<name>_read` gives the outcome later.
 
 With [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off)
 the values are sent unchecked, and the descriptions say so: `<name>_submit`
@@ -189,9 +193,29 @@ needs, and the schema holds no rule only a submit checks (see
 | `busy`           | answer     | Ten calls are waiting already                   |
 | `cancelled`      | answer     | The agent cancelled the call                    |
 
-A form answers its calls one at a time, in the order they come. Every tool
+A form answers its calls one at a time, in the order they come, except while
+a submission waits for a person (below). Every tool
 declares an `outputSchema`, and what an agent can correct comes back in the
 answer with a `code`, never as an error thrown.
+
+## Waiting for a person
+
+With `allow`, the description of `<name>_submit` says that a person may need
+to approve it first, so the agent can tell its user why it waits. While
+`allow` has not answered a submit:
+
+- `<name>_read` answers at once, with `submit: { status: 'awaiting_approval' }`.
+  So does a second `<name>_submit`, with `{ pending: true }` and a message
+  that says it waits for a person; it is not asked about again.
+- A `<name>_fill` waits in line until the person answers, so nothing is
+  written over the values they decide on.
+- Past 15 seconds, `<name>_submit` answers `{ pending: true }` and the wait
+  goes on: once the person approves, the form is submitted, and
+  `<name>_read` reads `pending`, then the outcome.
+- When the person refuses, or does not answer within the five minutes,
+  `<name>_read` reads `{ status: 'refused', message }`, with the reason they
+  gave or what an unanswered call is told. A submit the agent cancels while
+  it waits leaves the last submission as it was.
 
 ## A person and an agent at once
 

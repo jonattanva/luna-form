@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, type RefObject } from 'react'
 import { useLatest } from './use-latest'
 import type { AgentForm, AgentRuntime, Submitted } from '../lib/agent-host'
 import type {
+  Approval,
   Tool,
   ToolDefinition,
   ToolJson,
@@ -161,6 +162,21 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
 
   const getStatus = useCallback(() => status.current, [])
 
+  // Where an agent's submission stands while a person decides on it, as the
+  // last submission. A wait taken back puts back what was there before it,
+  // unless a submission has taken its place.
+  const before = useRef<Submitted>({ status: 'idle' })
+  const approval = useCallback((approval?: Approval) => {
+    if (approval?.status === 'awaiting_approval') {
+      before.current = status.current
+    }
+    if (approval) {
+      status.current = approval
+    } else if (status.current.status === 'awaiting_approval') {
+      status.current = before.current
+    }
+  }, [])
+
   // The form started over: the state its action begins with is a new one,
   // and no submission either. The last outcome stays, for an agent to read.
   // Called as the form mounts anew, after its fields have, so a success held
@@ -175,8 +191,8 @@ export function useSubmission(formRef: RefObject<HTMLFormElement | null>) {
   useEffect(() => release, [release])
 
   return useMemo(
-    () => ({ formRef, getStatus, observe, onSuccess, restart, wait }),
-    [formRef, getStatus, observe, onSuccess, restart, wait]
+    () => ({ approval, formRef, getStatus, observe, onSuccess, restart, wait }),
+    [approval, formRef, getStatus, observe, onSuccess, restart, wait]
   )
 }
 
@@ -293,8 +309,9 @@ export function useAgentTools(form: AgentForm) {
   //
   // The agent by what describes its tools, not by identity: a host writes the
   // object inline, new on every render. `allow` and `readOnly` are read when
-  // they are needed.
+  // they are needed: of `allow`, only whether there is one is described.
   const { context, definition, localization, sections } = form
+  const approves = form.agent?.allow !== undefined
   const description = form.agent?.description
   const submit = form.agent?.submit
   const validates = form.validates
@@ -319,6 +336,7 @@ export function useAgentTools(form: AgentForm) {
     )
     return () => clearTimeout(timer)
   }, [
+    approves,
     context,
     definition,
     description,

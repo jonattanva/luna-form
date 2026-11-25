@@ -36,6 +36,7 @@ import type { RefObject } from 'react'
 import type { useStore } from 'jotai'
 import type {
   AgentOptions,
+  Approval,
   FormToolsHost,
   SubmitStatus,
   Tool,
@@ -58,15 +59,18 @@ type Signs = Pick<FormToolsHost, 'filled' | 'using'>
 export type Submitted = Readonly<{
   data?: Record<string, unknown>
   error?: FormStateError
+  message?: string
   status: SubmitStatus['status']
 }>
 
 /**
  * What a form records of its submissions, for the tools to submit it and hear
  * how it went. `wait` answers with the outcome of the submission about to
- * start. See `useSubmission`.
+ * start; `approval` records where an agent's stands while a person decides on
+ * it. See `useSubmission`.
  */
 type Submission = Readonly<{
+  approval: (approval?: Approval) => void
   formRef: RefObject<HTMLFormElement | null>
   getStatus: () => Submitted
   wait: () => Promise<Submitted>
@@ -196,11 +200,14 @@ function createAgentTools(
     name: form.agent?.name ?? '',
     // Sending needs a form that does something with it.
     submit: form.agent?.submit === true && form.submission !== undefined,
-    // The host's latest, whichever it was when the tools were built.
-    allow: (call, allowOptions) => {
-      const allow = read().agent?.allow
-      return allow ? allow(call, allowOptions) : true
-    },
+    // The host's latest, whichever it was when the tools were built. Only
+    // when it has one: the tools say a person may approve a submission.
+    ...(form.agent?.allow && {
+      allow: (call, allowOptions) => {
+        const allow = read().agent?.allow
+        return allow ? allow(call, allowOptions) : true
+      },
+    }),
     onCall: (call) => read().agent?.onCall?.(call),
   }
 
@@ -216,6 +223,7 @@ function createAgentTools(
       agent.name,
       agent.description,
       agent.submit,
+      agent.allow !== undefined,
       form.validates !== false,
       built,
     ]),
@@ -316,6 +324,8 @@ function createFormHost(
     },
 
     getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store()),
+
+    approval: (approval) => read().submission?.approval(approval),
 
     // What the form holds, against what the page drew: rows a list has not
     // taken yet, a field a `state` event shows with no handle yet, or one it
@@ -702,6 +712,7 @@ function toSubmitStatus(
   if (submitted.status !== 'error') {
     return {
       ...(submitted.data && { data: toToolResult(submitted.data) }),
+      ...(submitted.message !== undefined && { message: submitted.message }),
       status: submitted.status,
     }
   }

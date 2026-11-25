@@ -941,6 +941,46 @@ test.describe(
       await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
     })
 
+    test('should say a submission waits for a person, and answer within 15 seconds while it does', async ({
+      page,
+    }) => {
+      await open(page)
+      expect((await list(page)).at(-1)?.description).toContain(
+        'A person may need to approve it first.'
+      )
+
+      // A person who has not answered yet. The page's clock is the test's from
+      // here: no real wait of 15 seconds.
+      await page.clock.install()
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: () => Promise<boolean>
+          __lunaSubmitted?: Answer
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = () => new Promise<boolean>(() => {})
+        void page.__lunaTools!.call('preview_submit', {}).then((answer) => {
+          page.__lunaSubmitted = answer
+        })
+      })
+
+      expect((await call(page, 'preview_read')).submit).toEqual({
+        status: 'awaiting_approval',
+      })
+      await page.clock.runFor(15_000)
+      expect(
+        await page.evaluate(
+          () =>
+            (window as Window & { __lunaSubmitted?: Answer }).__lunaSubmitted
+        )
+      ).toEqual({
+        message:
+          'The submission waits for a person to approve it: call preview_read for its outcome.',
+        pending: true,
+      })
+      await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
+    })
+
     test('should offer the options tool only when a field needs it, and return 50 at most', async ({
       page,
     }) => {

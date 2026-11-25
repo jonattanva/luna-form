@@ -110,15 +110,32 @@ export type FieldStatus = Readonly<{
   locked: boolean
 }>
 
-const SUBMIT_STATES = ['idle', 'pending', 'success', 'error'] as const
+const SUBMIT_STATES = [
+  'idle',
+  'awaiting_approval',
+  'refused',
+  'pending',
+  'success',
+  'error',
+] as const
 
-/** The last submission: `pending` while it runs. */
+/**
+ * The last submission: `awaiting_approval` while a person decides on it, and
+ * `refused` with `message` when they did not approve it; then `pending` while
+ * it runs.
+ */
 export type SubmitStatus = Readonly<{
   data?: ToolResult
   error?: ToolResult
   errors?: Readonly<Record<string, readonly string[]>>
+  message?: string
   status: (typeof SUBMIT_STATES)[number]
 }>
+
+/** Where an agent's submission stands while `allow` is asked about it. */
+export type Approval =
+  | Readonly<{ status: 'awaiting_approval' }>
+  | Readonly<{ message: string; status: 'refused' }>
 
 /**
  * What the tools read and write a form through, by the names the tool schema
@@ -154,6 +171,12 @@ export type FormToolsHost = Readonly<{
    */
   isDrawing: (name: string, path: string) => boolean
   getSubmit: () => SubmitStatus
+  /**
+   * Records where an agent's submission stands while a person is asked about
+   * it, as the last submission `getSubmit` answers. `undefined` takes back an
+   * `awaiting_approval` still recorded, for a call the agent cancelled.
+   */
+  approval: (approval?: Approval) => void
   /**
    * The name a row's leaf has in the form, from its route by position:
    * `items.3.sku` to the name of the fourth row's `sku`. `undefined` when the
@@ -463,13 +486,20 @@ export function createFormTools(
   const queue = form.queue ?? createQueue()
 
   // Every call goes through the queue, and finds out there whether the agent
-  // gave up while it waited.
+  // gave up while it waited. `answer` answers a call before its work is done:
+  // the calls after it wait for that work all the same. While a submission
+  // waits for a person, who decides on what the form holds then, only a fill
+  // waits behind it: the other calls write nothing, and are answered at once.
   //
   // What each call was answered is told to `onCall`, once it was.
   const queued =
     (
       tool: AgentCallRecord['tool'],
-      run: (input: ToolJson, signal: AbortSignal) => Promise<ToolResult>
+      run: (
+        input: ToolJson,
+        signal: AbortSignal,
+        answer: (output: ToolResult) => void
+      ) => Promise<ToolResult>
     ): Tool['execute'] =>
     async (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
@@ -494,17 +524,24 @@ export function createFormTools(
       }
 
       try {
-        const output = await (queue(async () => {
-          if (callSignal.aborted) {
-            return CANCELLED
+        const output = await new Promise<ToolResult>((answer, fail) => {
+          const work = async () => {
+            if (callSignal.aborted) {
+              return CANCELLED
+            }
+            host.using(true)
+            try {
+              return await run(input, callSignal, answer)
+            } finally {
+              host.using(false)
+            }
           }
-          host.using(true)
-          try {
-            return await run(input, callSignal)
-          } finally {
-            host.using(false)
-          }
-        }) ?? BUSY)
+          const done =
+            tool !== 'fill' && host.getSubmit().status === 'awaiting_approval'
+              ? work()
+              : queue(work)
+          ;(done ?? Promise.resolve(BUSY)).then(answer, fail)
+        })
         tell({ output })
         return output
       } catch (error) {
@@ -1121,39 +1158,66 @@ export function createFormTools(
     }
   }
 
+  // The person's answer and the action share one wait: past it the agent is
+  // answered pending, and both go on. The calls after it wait for the person,
+  // so nothing is written over what they approve, but not for the action.
   const submit = async (
     _input: ToolJson,
-    callSignal: AbortSignal
+    callSignal: AbortSignal,
+    answer: (output: ToolResult) => void
   ): Promise<ToolResult> => {
-    // A submission running -- this tool's or a person's -- is not sent again.
-    if (host.getSubmit().status === 'pending') {
-      return pendingAnswer(names.read)
-    }
-
-    const refused = await ask('submit', readShown(), callSignal)
-    if (refused) {
-      return refused
-    }
-    if (callSignal.aborted) {
-      return CANCELLED
+    // A submission waiting or running -- this tool's or a person's -- is not
+    // sent again.
+    if (isSubmitting(host.getSubmit())) {
+      return pendingAnswer(host.getSubmit(), names.read)
     }
 
     const timeout = linkSignals([], SUBMIT_TIMEOUT)
-    const outcome = await Promise.race([
-      host.submit(callSignal),
-      whenAborted(timeout.signal),
-    ]).finally(timeout.dispose)
+    try {
+      void whenAborted(timeout.signal).then(() =>
+        answer(pendingAnswer(host.getSubmit(), names.read))
+      )
 
-    if (outcome === ABORTED || outcome.status === 'pending') {
-      return pendingAnswer(names.read)
-    }
-    if (outcome.status === 'success') {
-      return { data: outcome.data ?? {}, ok: true }
-    }
-    return {
-      ...(outcome.error && { error: outcome.error }),
-      errors: outcome.errors ?? {},
-      ok: false,
+      if (agent.allow) {
+        host.approval({ status: 'awaiting_approval' })
+        const refused = await ask('submit', readShown(), callSignal)
+        if (refused) {
+          // A call the agent cancelled was not refused: it takes back the
+          // wait it recorded.
+          host.approval(
+            refused.code === 'refused' && isString(refused.message)
+              ? { message: refused.message, status: 'refused' }
+              : undefined
+          )
+          return refused
+        }
+        // A person submitted it while they decided.
+        if (host.getSubmit().status === 'pending') {
+          return pendingAnswer(host.getSubmit(), names.read)
+        }
+      }
+      if (callSignal.aborted) {
+        host.approval()
+        return CANCELLED
+      }
+
+      const outcome = await Promise.race([
+        host.submit(callSignal),
+        whenAborted(timeout.signal),
+      ])
+      if (outcome === ABORTED || outcome.status === 'pending') {
+        return pendingAnswer(host.getSubmit(), names.read)
+      }
+      if (outcome.status === 'success') {
+        return { data: outcome.data ?? {}, ok: true }
+      }
+      return {
+        ...(outcome.error && { error: outcome.error }),
+        errors: outcome.errors ?? {},
+        ok: false,
+      }
+    } finally {
+      timeout.dispose()
     }
   }
 
@@ -1235,7 +1299,11 @@ export function createFormTools(
           ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
           : "Submits this form as its submit button does: the values are sent unchecked, and checking them is left to the form's action.",
         `Call it once, when ${names.fill} reports ok and skips no field you need.`,
-        `It returns what the action answered or the errors that stopped it. An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
+        ...(agent.allow ? ['A person may need to approve it first.'] : []),
+        'It returns what the action answered or the errors that stopped it.',
+        agent.allow
+          ? `A person who has not answered, or an action still running, after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later, which says which one it waits for.`
+          : `An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
         UNTRUSTED,
       ]),
       execute: queued('submit', submit),
@@ -1265,9 +1333,19 @@ function invalidInput(message: string): ToolResult {
   return { code: 'invalid_type', message, ok: false }
 }
 
-function pendingAnswer(readTool: string): ToolResult {
+// A submission a person still decides on, or one still running.
+function isSubmitting(submitted: SubmitStatus): boolean {
+  return (
+    submitted.status === 'awaiting_approval' || submitted.status === 'pending'
+  )
+}
+
+function pendingAnswer(submitted: SubmitStatus, readTool: string): ToolResult {
   return {
-    message: `The submission is still running: call ${readTool} for its outcome.`,
+    message:
+      submitted.status === 'awaiting_approval'
+        ? `The submission waits for a person to approve it: call ${readTool} for its outcome.`
+        : `The submission is still running: call ${readTool} for its outcome.`,
     pending: true,
   }
 }
