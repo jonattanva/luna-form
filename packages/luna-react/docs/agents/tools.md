@@ -40,7 +40,7 @@ field's transforms, change events and validation all run.
 
   Write it as trusted text; nothing a person typed goes in it. It need not end
   in a period: one that does not end in `.`, `!`, `?`, `:` or an ellipsis is
-  closed with a period before the tool's own sentences. A blank one adds
+  closed with a period before the sentences that follow it. A blank one adds
   nothing.
 
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
