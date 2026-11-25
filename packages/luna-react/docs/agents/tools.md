@@ -26,11 +26,23 @@ field's transforms, change events and validation all run.
   `signup_options`, `signup_submit`. Letters, digits, `_` and `-`, up to 56 of
   them, unique on the page. Any other name registers nothing and says so in
   the console.
-- **`description`** is what the form is for, in your words: it opens the
-  description of every tool, and it is what weighs most in how a model uses
-  them. Write it as trusted text; nothing a person typed goes in it. It need
-  not end in a period: one that does not end in `.`, `!`, `?`, `:` or an
-  ellipsis is closed with a period before the tool's own sentences.
+- **`description`** is what the form is for, in your words, and it is what
+  weighs most in how a model uses the tools. Every tool's description opens
+  with what that tool does, and yours follows as the form's context, so a
+  description that says what sending does is never read as what
+  `<name>_read` does:
+
+  ```text
+  Reads what this form holds now: values, hidden or locked fields, errors and
+  the last submission. About this form: Creates an account with an email and
+  a password. Call it before filling ...
+  ```
+
+  Write it as trusted text; nothing a person typed goes in it. It need not end
+  in a period: one that does not end in `.`, `!`, `?`, `:` or an ellipsis is
+  closed with a period before the tool's own sentences. A blank one adds
+  nothing.
+
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
   `action`: sending has effects outside the page. Without it, no tool speaks
   of a submission, so an agent does not look for a way to send the form:

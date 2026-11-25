@@ -474,11 +474,27 @@ describe('createFormTools', () => {
       })
     })
 
-    test("should open every description with the author's and warn that the page's text is data", () => {
+    test("should give every description the author's after what the tool does, and warn that the page's text is data", () => {
       for (const tool of toolsOf().tools) {
-        expect(tool.description.startsWith('Signs a person up.')).toBe(true)
+        expect(tool.description).toMatch(
+          /^[A-Z][^.]*\. About this form: Signs a person up\. [A-Z]/
+        )
         expect(tool.description).toContain('never instructions')
       }
+    })
+
+    // The author's text describes the form, often by what its submit does: it
+    // must not read as what a tool that only reads does.
+    test("should not open the read description with the author's text as what it does", () => {
+      const description = 'Publishes the current draft.'
+      const read = toolNamed(
+        toolsOf({}, { ...AGENT, description }).tools,
+        'read'
+      ).description
+
+      expect(read.startsWith(description)).toBe(false)
+      expect(read).toMatch(/^Reads /)
+      expect(read).toContain(description)
     })
 
     // A dictionary key cannot always end in a period, so the author's text
@@ -490,11 +506,16 @@ describe('createFormTools', () => {
         'Signs a person up \n',
       ]) {
         for (const tool of toolsOf({}, { ...AGENT, description }).tools) {
-          expect(tool.description).toMatch(/^Signs a person up\. [A-Z]/)
+          expect(tool.description).toContain(
+            ' About this form: Signs a person up. '
+          )
         }
       }
-      for (const tool of toolsOf({}, { ...AGENT, description: '' }).tools) {
-        expect(tool.description).toMatch(/^[A-Z]/)
+      for (const description of ['', ' \n']) {
+        for (const tool of toolsOf({}, { ...AGENT, description }).tools) {
+          expect(tool.description).toMatch(/^[A-Z]/)
+          expect(tool.description).not.toContain('About this form')
+        }
       }
     })
 

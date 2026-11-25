@@ -1269,8 +1269,7 @@ export function createFormTools(
   const tools: Tool[] = [
     {
       annotations: { untrustedContentHint: true },
-      description: joinSentences([
-        agent.description,
+      description: describeTool(agent.description, [
         'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
         "Pass in one call the values the person gave for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
         'Leave out what they did not give, such as personal data you know about them: fields left out keep their value.',
@@ -1278,7 +1277,6 @@ export function createFormTools(
         'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
         'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
         ...submission.needs,
-        UNTRUSTED,
       ]),
       execute: queued('fill', fill),
       inputSchema: built.schema,
@@ -1288,11 +1286,9 @@ export function createFormTools(
     },
     {
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: joinSentences([
-        agent.description,
+      description: describeTool(agent.description, [
         ...submission.reads,
         `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
-        UNTRUSTED,
       ]),
       execute: queued('read', read),
       inputSchema: READ_INPUT,
@@ -1305,12 +1301,10 @@ export function createFormTools(
   if (lookup.size > 0) {
     tools.push({
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: joinSentences([
-        agent.description,
+      description: describeTool(agent.description, [
         `Finds the options of a field the schema of ${names.fill} does not list.`,
         `Pass the field and, to narrow them, text to match in their labels and values; it returns up to ${FOUND_OPTIONS} options and how many more there are.`,
         `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
-        UNTRUSTED,
       ]),
       execute: queued('options', options),
       inputSchema: {
@@ -1331,8 +1325,7 @@ export function createFormTools(
   if (names.submit) {
     tools.push({
       annotations: { consequentialHint: true, untrustedContentHint: true },
-      description: joinSentences([
-        agent.description,
+      description: describeTool(agent.description, [
         validates
           ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
           : "Submits this form as its submit button does: the values are sent unchecked, and checking them is left to the form's action.",
@@ -1342,7 +1335,6 @@ export function createFormTools(
         agent.allow
           ? `A person who has not answered, or an action still running, after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later, which says which one it waits for.`
           : `An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
-        UNTRUSTED,
       ]),
       execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
@@ -1353,6 +1345,22 @@ export function createFormTools(
   }
 
   return tools
+}
+
+// A tool's own sentences, the one that says what it does first.
+type Sentences = readonly [string, ...string[]]
+
+// A tool's description: what the tool does first, so the host's text, which
+// may say what sending the form does, never reads as what a tool that only
+// reads does; then the host's text, as what the form is for; then the rest of
+// the tool's own sentences, and the warning that the page's text is data.
+function describeTool(form: string, [does, ...rest]: Sentences): string {
+  return joinSentences([
+    does,
+    form.trim() === '' ? undefined : `About this form: ${form}`,
+    ...rest,
+    UNTRUSTED,
+  ])
 }
 
 const CANCELLED: ToolResult = {
@@ -1385,7 +1393,7 @@ type Submission = Readonly<{
   // submit checks none.
   needs: readonly string[]
   // What the read reads, and when to call it.
-  reads: readonly string[]
+  reads: Sentences
   readOutput: ToolSchema
   read: (host: FormToolsHost) => ToolResult
 }>
