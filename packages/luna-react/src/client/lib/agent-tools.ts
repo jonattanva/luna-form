@@ -63,14 +63,15 @@ export type AgentCallRecord = Readonly<{
  * How a form is offered to an agent. `allow` answers `true` to go on, or
  * `false` or the reason to refuse, which the agent is given; its `signal` is
  * aborted when the agent cancels the call, when the tools are taken down, or
- * after five minutes. `onCall` is told of every call once it was answered,
- * a refused, cancelled or busy one included; what it throws is logged and
- * changes nothing.
+ * at `deadline`: five minutes after it was asked, in milliseconds since the
+ * epoch, as `Date.now()` counts them. `onCall` is told of every call once it
+ * was answered, a refused, cancelled or busy one included; what it throws is
+ * logged and changes nothing.
  */
 export type AgentOptions = Readonly<{
   allow?: (
     call: AgentCall,
-    options: Readonly<{ signal: AbortSignal }>
+    options: Readonly<{ deadline: number; signal: AbortSignal }>
   ) => boolean | string | Promise<boolean | string>
   description: string
   name: string
@@ -120,12 +121,13 @@ const SUBMIT_STATES = [
 ] as const
 
 /**
- * The last submission: `awaiting_approval` while a person decides on it, and
- * `refused` with `message` when they did not approve it; then `pending` while
- * it runs.
+ * The last submission: `awaiting_approval` while a person decides on it, until
+ * `deadline`, and `refused` with `message` when they did not approve it; then
+ * `pending` while it runs.
  */
 export type SubmitStatus = Readonly<{
   data?: ToolResult
+  deadline?: string
   error?: ToolResult
   errors?: Readonly<Record<string, readonly string[]>>
   message?: string
@@ -134,7 +136,7 @@ export type SubmitStatus = Readonly<{
 
 /** Where an agent's submission stands while `allow` is asked about it. */
 export type Approval =
-  | Readonly<{ status: 'awaiting_approval' }>
+  | Readonly<{ deadline: string; status: 'awaiting_approval' }>
   | Readonly<{ message: string; status: 'refused' }>
 
 /**
@@ -336,6 +338,11 @@ const OUTCOME = {
 const SUBMIT_STATUS: ToolSchema = {
   properties: {
     ...OUTCOME,
+    deadline: {
+      description:
+        'While it awaits approval: when the wait for the person ends, in ISO 8601.',
+      type: 'string',
+    },
     status: { enum: SUBMIT_STATES, type: 'string' },
   },
   required: ['status'],
@@ -550,6 +557,10 @@ export function createFormTools(
       }
     }
 
+  // Asks `allow` about a call until `ALLOW_TIMEOUT` has passed: the one place
+  // its deadline is set. A submit is recorded as the last submission while it
+  // is asked, until that deadline, and as refused when it is; one the agent
+  // cancelled takes back the wait it recorded.
   const ask = async (
     tool: AgentCall['tool'],
     values: ToolResult,
@@ -559,50 +570,74 @@ export function createFormTools(
       return undefined
     }
 
+    const deadline = Date.now() + ALLOW_TIMEOUT
     const limit = linkSignals([callSignal, signal], ALLOW_TIMEOUT)
+    if (tool === 'submit') {
+      host.approval({
+        deadline: new Date(deadline).toISOString(),
+        status: 'awaiting_approval',
+      })
+    }
     try {
-      // A page whose `allow` fails has not said yes. One that says yes at
-      // once is not waited for.
-      let asked: ReturnType<NonNullable<AgentOptions['allow']>> | typeof FAILED
-      try {
-        asked = agent.allow({ tool, values }, { signal: limit.signal })
-      } catch (error) {
-        logger.error('The agent call was refused: allow failed.', error)
-        asked = FAILED
-      }
-      if (asked === true) {
-        return undefined
-      }
-
-      const answer = await Promise.race([
-        Promise.resolve(asked).catch((error: Error) => {
-          logger.error('The agent call was refused: allow failed.', error)
-          return FAILED
-        }),
-        whenAborted(limit.signal),
-      ])
-
-      if (answer === true) {
+      const refused = await refusalOf(
+        agent.allow,
+        { tool, values },
+        { deadline, signal: limit.signal }
+      )
+      if (refused === undefined) {
         return undefined
       }
       if (callSignal.aborted) {
+        if (tool === 'submit') {
+          host.approval()
+        }
         return CANCELLED
       }
-      return {
-        code: 'refused',
-        message:
-          typeof answer === 'string' && answer !== ''
-            ? answer
-            : answer === ABORTED
-              ? 'The call got no answer from the page.'
-              : answer === FAILED
-                ? 'The page could not answer the call.'
-                : 'The page refused the call.',
-        ok: false,
+      if (tool === 'submit') {
+        host.approval({ message: refused, status: 'refused' })
       }
+      return { code: 'refused', message: refused, ok: false }
     } finally {
       limit.dispose()
     }
+  }
+
+  // Waits for what `allow` answers, until its signal is aborted: `undefined`
+  // for a yes, and why it was refused otherwise. A page whose `allow` fails
+  // has not said yes. One that says yes at once is not waited for.
+  const refusalOf = async (
+    allow: NonNullable<AgentOptions['allow']>,
+    call: AgentCall,
+    options: Parameters<NonNullable<AgentOptions['allow']>>[1]
+  ): Promise<string | undefined> => {
+    let asked: ReturnType<typeof allow> | typeof FAILED
+    try {
+      asked = allow(call, options)
+    } catch (error) {
+      logger.error('The agent call was refused: allow failed.', error)
+      asked = FAILED
+    }
+    if (asked === true) {
+      return undefined
+    }
+
+    const answer = await Promise.race([
+      Promise.resolve(asked).catch((error: Error) => {
+        logger.error('The agent call was refused: allow failed.', error)
+        return FAILED
+      }),
+      whenAborted(options.signal),
+    ])
+    if (answer === true) {
+      return undefined
+    }
+    return typeof answer === 'string' && answer !== ''
+      ? answer
+      : answer === ABORTED
+        ? 'The call got no answer from the page.'
+        : answer === FAILED
+          ? 'The page could not answer the call.'
+          : 'The page refused the call.'
   }
 
   // `name` is the field in the form the value goes to, whose options are the
@@ -1179,16 +1214,8 @@ export function createFormTools(
       )
 
       if (agent.allow) {
-        host.approval({ status: 'awaiting_approval' })
         const refused = await ask('submit', readShown(), callSignal)
         if (refused) {
-          // A call the agent cancelled was not refused: it takes back the
-          // wait it recorded.
-          host.approval(
-            refused.code === 'refused' && isString(refused.message)
-              ? { message: refused.message, status: 'refused' }
-              : undefined
-          )
           return refused
         }
         // A person submitted it while they decided.

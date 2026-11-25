@@ -58,6 +58,7 @@ type Signs = Pick<FormToolsHost, 'filled' | 'using'>
 /** The last submission as the form keeps it, before it is told to an agent. */
 export type Submitted = Readonly<{
   data?: Record<string, unknown>
+  deadline?: string
   error?: FormStateError
   message?: string
   status: SubmitStatus['status']
@@ -712,6 +713,9 @@ function toSubmitStatus(
   if (submitted.status !== 'error') {
     return {
       ...(submitted.data && { data: toToolResult(submitted.data) }),
+      ...(submitted.deadline !== undefined && {
+        deadline: submitted.deadline,
+      }),
       ...(submitted.message !== undefined && { message: submitted.message }),
       status: submitted.status,
     }

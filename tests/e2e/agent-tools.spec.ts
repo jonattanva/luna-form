@@ -941,7 +941,7 @@ test.describe(
       await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
     })
 
-    test('should say a submission waits for a person, and answer within 15 seconds while it does', async ({
+    test('should say a submission waits for a person until when, and answer within 15 seconds while it does', async ({
       page,
     }) => {
       await open(page)
@@ -954,17 +954,43 @@ test.describe(
       await page.clock.install()
       await page.evaluate(() => {
         const page = window as Window & {
-          __lunaAllow?: () => Promise<boolean>
+          __lunaAllow?: (
+            call: object,
+            options: { deadline: number }
+          ) => Promise<boolean>
+          __lunaAsked?: number
+          __lunaDeadline?: number
           __lunaSubmitted?: Answer
           __lunaTools?: Tools
         }
-        page.__lunaAllow = () => new Promise<boolean>(() => {})
+        page.__lunaAllow = (_call, { deadline }) => {
+          page.__lunaDeadline = deadline
+          return new Promise<boolean>(() => {})
+        }
+        page.__lunaAsked = Date.now()
         void page.__lunaTools!.call('preview_submit', {}).then((answer) => {
           page.__lunaSubmitted = answer
         })
       })
 
-      expect((await call(page, 'preview_read')).submit).toEqual({
+      // The host is told when the wait ends, five minutes after it asked, and
+      // the agent reads the same time.
+      const { submit } = await call(page, 'preview_read')
+      const { asked, deadline, read } = await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAsked?: number
+          __lunaDeadline?: number
+        }
+        return {
+          asked: page.__lunaAsked ?? 0,
+          deadline: page.__lunaDeadline ?? 0,
+          read: Date.now(),
+        }
+      })
+      expect(deadline).toBeGreaterThanOrEqual(asked + 5 * 60_000)
+      expect(deadline).toBeLessThanOrEqual(read + 5 * 60_000)
+      expect(submit).toEqual({
+        deadline: new Date(deadline).toISOString(),
         status: 'awaiting_approval',
       })
       await page.clock.runFor(15_000)

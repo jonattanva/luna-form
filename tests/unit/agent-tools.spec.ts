@@ -1311,7 +1311,7 @@ describe('createFormTools', () => {
 
       expect(allow).toHaveBeenCalledWith(
         { tool: 'fill', values: { email: 'ada@example.com' } },
-        { signal: expect.any(AbortSignal) }
+        { deadline: expect.any(Number), signal: expect.any(AbortSignal) }
       )
       expect(calls.apply).toHaveLength(1)
     })
@@ -1393,6 +1393,25 @@ describe('createFormTools', () => {
       await vi.advanceTimersByTimeAsync(0)
       lifetime.abort()
       expect((await second).code).toBe('refused')
+    })
+
+    test('should hand allow the time its wait ends', async () => {
+      vi.useFakeTimers({ now: 1_000_000 })
+      let handed: number | undefined
+      const { tools } = toolsOf(
+        {},
+        {
+          ...AGENT,
+          allow: (_call, { deadline }) => {
+            handed = deadline
+            return true
+          },
+        }
+      )
+
+      await call(tools, 'fill', { email: 'a@b.co' })
+
+      expect(handed).toBe(1_000_000 + 5 * 60_000)
     })
 
     test('should refuse the call when allow fails', async () => {
@@ -1797,7 +1816,7 @@ describe('createFormTools', () => {
           tool: 'submit',
           values: expect.objectContaining({ email: 'ada@example.com' }),
         },
-        { signal: expect.any(AbortSignal) }
+        { deadline: expect.any(Number), signal: expect.any(AbortSignal) }
       )
     })
 
@@ -1966,20 +1985,32 @@ describe('createFormTools', () => {
         expect(host.getSubmit()).toEqual({ status: 'idle' })
       })
 
-      test('should let a read say the submission waits for a person', async () => {
-        const { host, tools } = toolsOf(
+      test('should let a read say the submission waits for a person, and until when', async () => {
+        vi.useFakeTimers({ now: 1_000_000 })
+        let handed: number | undefined
+        const { tools } = toolsOf(
           {},
-          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+          {
+            ...AGENT,
+            allow: (_call, { deadline }) => {
+              handed = deadline
+              return new Promise<boolean>(() => {})
+            },
+          }
         )
 
         void call(tools, 'submit')
-        await vi.waitFor(() => expect(host.getSubmit().status).not.toBe('idle'))
+        await vi.advanceTimersByTimeAsync(1_000)
         const read = await Promise.race([
           call(tools, 'read', { fields: ['email'] }),
-          new Promise<undefined>((resolve) => setTimeout(resolve, 100)),
+          vi.advanceTimersByTimeAsync(100).then(() => undefined),
         ])
 
-        expect(read?.submit).toEqual({ status: 'awaiting_approval' })
+        expect(handed).toBe(1_000_000 + 5 * 60_000)
+        expect(read?.submit).toEqual({
+          deadline: new Date(1_000_000 + 5 * 60_000).toISOString(),
+          status: 'awaiting_approval',
+        })
       })
     })
 

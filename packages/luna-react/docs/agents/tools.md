@@ -33,12 +33,15 @@ field's transforms, change events and validation all run.
   ellipsis is closed with a period before the tool's own sentences.
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
   `action`: sending has effects outside the page.
-- **`allow(call, { signal })`** is asked before a fill and before a submit,
-  never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
+- **`allow(call, { signal, deadline })`** is asked before a fill and before a
+  submit, never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
   Answer `true` to go on, or `false` or the reason to refuse, which the agent
-  is given; a promise is waited for, as while a person confirms. `signal` is
-  aborted when the agent cancels, when the form unmounts, or after five
-  minutes, and the call is refused then. An `allow` that throws refuses it.
+  is given; a promise is waited for, as while a person confirms. `deadline`
+  is when the wait ends: five minutes after `allow` is asked, in milliseconds
+  since the epoch, as `Date.now()` counts them, so a countdown shown to the
+  person is the one that decides. `signal` is aborted when the agent cancels,
+  when the form unmounts, or at `deadline`, and the call is refused then. An
+  `allow` that throws refuses it.
   A form with `allow` tells the agent that a person may need to approve a
   submission first; see [Waiting for a person](#waiting-for-a-person).
 - **`onCall(call)`** is told of every call once it was answered, to audit
@@ -138,9 +141,9 @@ corrected by sending them all, in order, or one leaf by its route.
 
 Takes `{ fields? }` and answers what the form holds now: `values`, the fields
 `hidden` and `locked`, the `errors` on screen, and `submit`, the last
-submission (`idle`, `awaiting_approval`, `refused` with its `message`,
-`pending`, `success` with its `data`, or `error`). Up to 100 fields a call;
-`more` says how many are left to ask for.
+submission (`idle`, `awaiting_approval` with its `deadline`, `refused` with
+its `message`, `pending`, `success` with its `data`, or `error`). Up to 100
+fields a call; `more` says how many are left to ask for.
 
 ### `<name>_options`
 
@@ -204,7 +207,9 @@ With `allow`, the description of `<name>_submit` says that a person may need
 to approve it first, so the agent can tell its user why it waits. While
 `allow` has not answered a submit:
 
-- `<name>_read` answers at once, with `submit: { status: 'awaiting_approval' }`.
+- `<name>_read` answers at once, with
+  `submit: { status: 'awaiting_approval', deadline }`: the `deadline` `allow`
+  was given, as an ISO 8601 time such as `'2026-11-25T12:39:42.000Z'`.
   So does a second `<name>_submit`, with `{ pending: true }` and a message
   that says it waits for a person; it is not asked about again.
 - A `<name>_fill` waits in line until the person answers, so nothing is
@@ -212,7 +217,7 @@ to approve it first, so the agent can tell its user why it waits. While
 - Past 15 seconds, `<name>_submit` answers `{ pending: true }` and the wait
   goes on: once the person approves, the form is submitted, and
   `<name>_read` reads `pending`, then the outcome.
-- When the person refuses, or does not answer within the five minutes,
+- When the person refuses, or does not answer by the deadline,
   `<name>_read` reads `{ status: 'refused', message }`, with the reason they
   gave or what an unanswered call is told. A submit the agent cancels while
   it waits leaves the last submission as it was.
