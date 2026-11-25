@@ -625,6 +625,54 @@ describe('buildToolSchema', () => {
       ).toEqual(['label'])
     })
 
+    // `true` is what a form imported from JSON can say alongside `false`, and
+    // it is the same as saying nothing: it opens nothing kept from agents.
+    test('should read advanced.agent true as if it were left out', () => {
+      const fields = (agent?: true): Fields => [
+        { advanced: { agent }, name: 'password', type: 'input/password' },
+        { advanced: { agent }, name: 'token', type: 'secret' },
+        {
+          advanced: { agent },
+          fields: [
+            { advanced: { agent }, name: 'key', type: 'secret' },
+            { advanced: { agent }, name: 'pin', type: 'input/password' },
+            { advanced: { agent }, name: 'label', type: 'input/text' },
+          ],
+          name: 'keys',
+          type: 'list',
+        },
+        { advanced: { agent }, name: 'kept', type: 'input/text' },
+      ]
+      const options = { types: { secret: false } } as const
+
+      const result = build(fields(true), options)
+      expect(result).toEqual(build(fields(), options))
+      expect(Object.keys(result.schema.properties ?? {})).toEqual([
+        'keys',
+        'kept',
+      ])
+      expect(
+        Object.keys(result.schema.properties?.keys?.items?.properties ?? {})
+      ).toEqual(['label'])
+    })
+
+    test('should still leave out what says advanced.agent false beside true', () => {
+      expect(
+        namesOf([
+          { advanced: { agent: true }, name: 'kept', type: 'input/text' },
+          { advanced: { agent: false }, name: 'document', type: 'input/text' },
+          {
+            advanced: { agent: false },
+            fields: [
+              { advanced: { agent: true }, name: 'leaf', type: 'input/text' },
+            ],
+            name: 'rows',
+            type: 'list',
+          },
+        ])
+      ).toEqual(['kept'])
+    })
+
     test('should leave out a field that only a field of a type kept from agents shows', () => {
       const schema = build(
         [

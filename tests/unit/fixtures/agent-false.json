@@ -1,0 +1,24 @@
+[
+  {
+    "title": "Account",
+    "fields": [
+      {
+        "name": "email",
+        "type": "input/email",
+        "label": "Email"
+      },
+      {
+        "name": "token",
+        "type": "input/text",
+        "label": "Token",
+        "advanced": { "agent": false }
+      },
+      {
+        "name": "contacts",
+        "type": "list",
+        "advanced": { "agent": false },
+        "fields": [{ "name": "phone", "type": "input/tel" }]
+      }
+    ]
+  }
+]

@@ -460,6 +460,10 @@ These fields are not in the schema, and the tools refuse them:
 }
 ```
 
+`"agent": true` is the same as leaving the key out. It keeps nothing back and
+opens nothing: a password, a field of a type registered with `agent: false`,
+and a field in the rows of a list with `"agent": false` stay out.
+
 ## Text the agent reads
 
 - A field's `title` is its translated label, and its `description` is the
@@ -549,7 +553,8 @@ Every field of it is left out of the tools of every form, as a password is, in
 the rows of a list too: it is not in the schema, `<name>_read` returns nothing
 of it, and `<name>_fill` answers `unknown` when an agent names it. A field that
 only a field of it shows or unlocks is left out with it. Nothing in the
-definition opens it again: `advanced.agent` takes only `false`. A built-in type
+definition opens it again: `"advanced": { "agent": true }` is the same as
+leaving the key out. A built-in type
 registered this way is closed too, and the last registration of a type decides
 it, as it does a schema.
 

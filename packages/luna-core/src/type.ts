@@ -90,8 +90,9 @@ export type PreviewItem =
 export type List = {
   advanced?: {
     // See `Field`'s: `false` leaves the list, and every row it holds, out of
-    // the tools an agent fills the form with.
-    agent?: false
+    // the tools an agent fills the form with, and `true` is the same as
+    // leaving it out.
+    agent?: boolean
     title?: string
     action?: string
     collapsed?: boolean
@@ -321,8 +322,13 @@ export type Field = CommonProps & {
      * (`buildToolSchema`): not in their schema, never read back, and reported
      * as unknown if an agent names it, so nothing says it exists. For data an
      * agent should not be the one to ask for. A password is always left out.
+     *
+     * `true` is the same as leaving the key out: it opens nothing, so a
+     * password, or a field of a type registered with `agent: false`, stays out.
+     * A `boolean` rather than the literal `false`, because TypeScript infers a
+     * form imported from a JSON file with every literal widened.
      */
-    agent?: false
+    agent?: boolean
     aria?: AriaAttributes
     autocomplete?: string
     cols?: number
