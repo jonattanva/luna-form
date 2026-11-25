@@ -1992,6 +1992,113 @@ describe('createFormTools', () => {
       )
     })
 
+    describe('the shape of what the action answers', () => {
+      const ORDER: NonNullable<AgentOptions['output']> = {
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string' },
+          state: { enum: ['open', 'closed'], type: 'string' },
+          tags: { items: { type: 'string' }, type: 'array' },
+          version: { type: 'integer' },
+        },
+        required: ['id'],
+        type: 'object',
+      }
+      const ordered = (data: ToolResult) =>
+        toolsOf(
+          { submit: async () => ({ data, status: 'success' }) },
+          { ...AGENT, output: ORDER }
+        ).tools
+
+      test('should declare the data the author describes, in the submit and in the read', () => {
+        const { tools } = toolsOf({}, { ...AGENT, output: ORDER })
+
+        expect(
+          toolNamed(tools, 'submit').outputSchema.properties?.data
+        ).toEqual(ORDER)
+        expect(
+          toolNamed(tools, 'read').outputSchema.properties?.submit?.properties
+            ?.data
+        ).toEqual(ORDER)
+      })
+
+      test('should declare any object when the author describes none', () => {
+        const { tools } = toolsOf()
+
+        expect(
+          toolNamed(tools, 'submit').outputSchema.properties?.data
+        ).toEqual({ type: 'object' })
+      })
+
+      test('should answer data that matches it, and say nothing', async () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+        const data = { id: 'a1', state: 'open', tags: ['x'], version: 3 }
+
+        expect(await call(ordered(data), 'submit')).toEqual({ data, ok: true })
+        expect(error).not.toHaveBeenCalled()
+      })
+
+      // The action already ran: an answer that is not ok would have the agent
+      // send it again.
+      test('should answer data that does not match it all the same, and log where it breaks', async () => {
+        const cases: readonly (readonly [ToolResult, string])[] = [
+          [{}, 'data.id is missing'],
+          [{ id: 7 }, 'data.id is not a string'],
+          [{ id: 'a1', version: 1.5 }, 'data.version is not an integer'],
+          [
+            { id: 'a1', state: 'lost' },
+            'data.state is not one of open, closed',
+          ],
+          [{ id: 'a1', tags: ['x', 2] }, 'data.tags[1] is not a string'],
+          [{ id: 'a1', note: 'hi' }, 'data.note is not declared'],
+        ]
+        for (const [data, where] of cases) {
+          const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+          const tool = toolNamed(ordered(data), 'submit')
+
+          expect(await tool.execute({})).toEqual({ data, ok: true })
+          expect(error).toHaveBeenCalledWith(
+            '[Luna Form]',
+            `signup_submit answers what the action returned, which does not match agent.output: ${where}.`
+          )
+          error.mockRestore()
+        }
+      })
+    })
+
+    describe('the codes a call can be answered with', () => {
+      const allowed = { ...AGENT, allow: () => true }
+
+      test('should say in the fill and the submit what refused, cancelled and busy mean', () => {
+        const { tools } = toolsOf({}, allowed)
+
+        for (const suffix of ['fill', 'submit']) {
+          const { description } = toolNamed(tools, suffix)
+          expect(description).toMatch(/\brefused\b/)
+          expect(description).toMatch(/\bcancelled\b/)
+          expect(description).toMatch(/\bbusy\b/)
+        }
+        expect(toolNamed(tools, 'submit').description).toContain(
+          'If code is refused, the page did not let the call go on and it changed nothing; busy, 10 calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.'
+        )
+      })
+
+      // Only a call `allow` is asked about can be refused.
+      test('should say what busy and cancelled mean in every tool, and refused in none that cannot be', () => {
+        const { tools } = toolsOf()
+        const reads = toolsOf({}, allowed).tools.filter(
+          ({ name }) => !/_(fill|submit)$/.test(name)
+        )
+
+        for (const { description } of [...tools, ...reads]) {
+          expect(description).toContain(
+            'If code is busy, 10 calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.'
+          )
+          expect(description).not.toMatch(/\brefused\b/)
+        }
+      })
+    })
+
     test('should return the error and the field errors of a submission that failed', async () => {
       const { tools } = toolsOf({
         submit: async () => ({

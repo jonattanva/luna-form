@@ -48,6 +48,30 @@ field's transforms, change events and validation all run.
   of a submission, so an agent does not look for a way to send the form:
   `<name>_fill` names the fields required (`Required fields: email.`) instead
   of what a submission needs, and `<name>_read` answers no `submit`.
+- **`output`** is the shape of the `data` your action returns, so an agent
+  knows what a submission answers before it sends one. With `submit`, it is
+  the `data` that the `outputSchema` of `<name>_submit` declares, and the
+  `submit.data` of `<name>_read`'s; without it both declare any object. It is
+  a schema with `type: 'object'`, in the keywords of
+  [What every consumer reads](#what-every-consumer-reads):
+
+  ```ts
+  output: {
+    type: 'object',
+    properties: { id: { type: 'string' }, version: { type: 'integer' } },
+    required: ['id'],
+  }
+  ```
+
+  When `<name>_submit` answers data that breaks it, a development build names
+  where in the console: a value of another type, one outside its `enum`, a
+  `required` property missing, one not declared under
+  `additionalProperties: false`, or an array item that breaks `items`. Bounds,
+  such as `minimum` or `pattern`, are not checked. The answer goes out all the
+  same, `{ ok: true, data }`: the action already ran, and an answer that is not
+  `ok` would have the agent send the form again. `data` is always an object,
+  `{}` when the action returns none, so a `required` property is missing then.
+
 - **`allow(call, { signal, deadline })`** is asked before a fill and before a
   submit, never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
   Answer `true` to go on, or `false` or the reason to refuse, which the agent
@@ -189,7 +213,8 @@ Submits the form as its submit button does: the same validation, action,
 pending state and start over (see [Submit](../forms/submit.md)). A success is
 answered once the form has started over, so a `<name>_read` right after it
 reads what the form holds then. Answers `{ ok: true, data }` with what the
-action returned, `{ ok: false, error, errors }` when it failed, or
+action returned, in the shape [`output`](#tools-for-agents) declares,
+`{ ok: false, error, errors }` when it failed, or
 `{ pending: true }` when a submission is still running or waits for a person,
 or when the person and the action take more than 15 seconds between them;
 `<name>_read` gives the outcome later.
@@ -226,6 +251,24 @@ A `refused` call changed nothing, and its `message` says why:
 | `allow` threw                     | `The page could not answer the call.`                                                                 |
 | No answer by `deadline`           | `Nobody answered in time, so the call changed nothing. Ask your user before you try again.`           |
 | The form unmounted while it asked | `The form is no longer on the page, so the call changed nothing. Ask your user before you try again.` |
+
+Every description says what the codes of the answer mean, in one sentence
+before the warning that the page's text is data. `busy` and `cancelled` can
+answer any call, so every tool says:
+
+```text
+If code is busy, 10 calls were waiting: call again once one is answered;
+cancelled, the call was stopped. message says more.
+```
+
+Only a call `allow` is asked about can be refused, so in a form with `allow`,
+`<name>_fill` and `<name>_submit` open the same sentence with `refused`, in
+words that hold for every reason above:
+
+```text
+If code is refused, the page did not let the call go on and it changed
+nothing; busy, 10 calls were waiting: ...
+```
 
 A form answers its calls one at a time, in the order they come, except while
 a submission waits for a person (below). Every tool

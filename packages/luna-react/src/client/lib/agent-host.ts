@@ -210,6 +210,7 @@ function createAgentTools(
       },
     }),
     onCall: (call) => read().agent?.onCall?.(call),
+    ...(form.agent?.output && { output: form.agent.output }),
   }
 
   const host = createFormHost(
@@ -225,6 +226,7 @@ function createAgentTools(
       agent.description,
       agent.submit,
       agent.allow !== undefined,
+      agent.output,
       form.validates !== false,
       built,
     ]),
