@@ -122,6 +122,10 @@ const INLINE_OPTIONS = 25
 const LABEL_LENGTH = 200
 const DESCRIPTION_LENGTH = 500
 const OPTIONS_LENGTH = 1000
+// A pattern only the note can carry is quoted up to this length, and named
+// otherwise: it comes from the definition, and is never cut, since a part of
+// it would expect something else.
+const PATTERN_LENGTH = 100
 
 // A field looked up is a `string` with no `enum`, so a label passes the schema
 // as a value does, and the fill takes either. A field whose options are listed
@@ -486,7 +490,10 @@ function describeValue(
   }
 
   if (isEmail(field)) {
-    return { ...describeText(field, notes), format: 'email' }
+    return {
+      ...describeText(field, notes, walk.dictionary),
+      format: 'email',
+    }
   }
 
   if (isNumber(field)) {
@@ -535,7 +542,7 @@ function describeValue(
     return describeChoice(field, walk, name, notes)
   }
 
-  return describeText(field, notes)
+  return describeText(field, notes, walk.dictionary)
 }
 
 function describeDate(field: DateField, notes: string[]): ToolSchema {
@@ -594,12 +601,16 @@ function describeNumber(field: Field, notes: string[]): ToolSchema {
   }
 }
 
-function describeText(field: Field, notes: string[]): ToolSchema {
+function describeText(
+  field: Field,
+  notes: string[],
+  dictionary: Record<string, string> | undefined
+): ToolSchema {
   const { max, min, unreadable } = buildLengthLimits(field)
   if (unreadable) {
     notes.push(UNREADABLE)
   }
-  const pattern = readPattern(field, notes)
+  const pattern = readPattern(field, notes, dictionary)
   return {
     ...(!unreadable && min !== undefined && { minLength: min }),
     ...(!unreadable && max !== undefined && { maxLength: max }),
@@ -610,15 +621,35 @@ function describeText(field: Field, notes: string[]): ToolSchema {
 
 // A field's pattern, when JSON Schema can carry it: a regular expression with
 // no flags that compiles in Unicode mode, which is how JSON Schema reads one.
-// Any other pattern is checked on submit and only mentioned here.
-function readPattern(field: Field, notes: string[]): string | undefined {
+// Any other pattern is checked on submit and written in the note instead: a
+// flag such as `i` has no place in the keyword, a pattern that lets a
+// template through (`allowInterpolation`) takes values the keyword would
+// refuse, and one written for JavaScript without `u`, such as `\#`, breaks a
+// client that compiles the keyword. The note quotes it as a literal with its
+// flags when it is short, and the author's message for it, so the agent knows
+// what is expected. The literal is not filtered as text that interpolates a
+// value: a quantifier such as `{2,}` would read as a placeholder.
+function readPattern(
+  field: Field,
+  notes: string[],
+  dictionary: Record<string, string> | undefined
+): string | undefined {
   const pattern = field.validation?.pattern
   if (!pattern) {
     return undefined
   }
 
   if (pattern.flags || pattern.allowInterpolation || !compiles(pattern.regex)) {
-    notes.push('It must match a pattern the form checks.')
+    const literal = `/${pattern.regex}/${pattern.flags ?? ''}`
+    notes.push(
+      fits(literal, PATTERN_LENGTH)
+        ? `It must match ${literal}.`
+        : 'It must match a pattern the form checks.'
+    )
+    const message = readText(pattern.message, dictionary, LABEL_LENGTH)
+    if (message) {
+      notes.push(message)
+    }
     return undefined
   }
   return pattern.regex

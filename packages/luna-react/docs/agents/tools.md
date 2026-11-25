@@ -525,6 +525,15 @@ and a field in the rows of a list with `"agent": false` stay out.
   label. A field whose options are listed does not say it: its `enum` holds
   the values only, and a client that checks the input against the schema
   would refuse a label, although `<name>_fill` takes one.
+- A `pattern` the schema cannot carry, one with `flags`, with
+  `allowInterpolation`, or that does not compile in Unicode mode, is written in
+  the description as a literal with its flags, such as
+  `It must match /^[a-z]{3}$/i.`, when that takes 100 characters or fewer. A
+  longer one is never cut, since a part of it would expect something else: the
+  description says `It must match a pattern the form checks.` instead. The
+  pattern's translated `message` follows, cut at 200 characters, unless it
+  interpolates a value. A pattern carried in the `pattern` keyword is not
+  repeated in the description.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a
@@ -553,7 +562,7 @@ The schema uses only these keywords: `type`, `properties`, `required`,
 `description`. There is no `oneOf`, `const`, `$ref` or `multipleOf`: one of the
 model APIs reads a subset of OpenAPI that does not document them. A pattern goes
 in only when it has no flags and compiles in Unicode mode, the way JSON Schema
-reads it; any other pattern is checked on submit and only mentioned in the
+reads it; any other pattern is checked on submit and written in the
 description. A form whose submit checks nothing has neither (see
 [Text the agent reads](#text-the-agent-reads)).
 

@@ -5,7 +5,11 @@ import {
   type ToolSchema,
   type ToolSchemaOptions,
 } from '@/packages/luna-core/src/util/tool-schema'
-import type { Fields, Sections } from '@/packages/luna-core/src/type'
+import type {
+  Fields,
+  PatternRule,
+  Sections,
+} from '@/packages/luna-core/src/type'
 
 function build(fields: Fields, options?: ToolSchemaOptions) {
   return buildToolSchema([{ fields }], options)
@@ -111,7 +115,80 @@ describe('buildToolSchema', () => {
         'code'
       )
       expect(code?.pattern).toBeUndefined()
-      expect(code?.description).toContain('pattern')
+      expect(code?.description).toBe('It must match /^[a-z]{3}$/i.')
+    })
+
+    // A pattern left to the note still has to say what it expects: an
+    // address checked case-insensitively on an `input/text`, with no
+    // `format: email`, is only known by its rule.
+    describe('a pattern only mentioned', () => {
+      const email = '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'
+      const describeContact = (
+        pattern: PatternRule,
+        translations?: Record<string, string>
+      ) =>
+        propertyOf(
+          [{ name: 'contact', type: 'input/text', validation: { pattern } }],
+          'contact',
+          { localization: { translations } }
+        )?.description
+
+      test('should quote it with its flags and its message', () => {
+        expect(
+          describeContact({
+            flags: 'i',
+            message: 'Enter an email address, such as ana@example.com',
+            regex: email,
+          })
+        ).toBe(
+          `It must match /${email}/i. Enter an email address, such as ana@example.com`
+        )
+      })
+
+      test('should quote it alone when it has no message', () => {
+        expect(describeContact({ flags: 'i', regex: email })).toBe(
+          `It must match /${email}/i.`
+        )
+      })
+
+      // A part of a pattern would expect something else: one too long to
+      // quote is named, and its message still says what it wants.
+      test('should name one too long to quote, and keep its message', () => {
+        const regex = `^${'[a-z]'.repeat(20)}$`
+        expect(describeContact({ flags: 'i', regex })).toBe(
+          'It must match a pattern the form checks.'
+        )
+        expect(
+          describeContact({ flags: 'i', message: 'Twenty letters.', regex })
+        ).toBe('It must match a pattern the form checks. Twenty letters.')
+      })
+
+      test('should translate its message', () => {
+        expect(
+          describeContact(
+            { flags: 'i', message: 'invalid_code', regex: '^[a-z]{3}$' },
+            { invalid_code: 'Three letters.' }
+          )
+        ).toBe('It must match /^[a-z]{3}$/i. Three letters.')
+      })
+
+      // The agent would read the placeholder. The pattern is quoted all the
+      // same: its quantifier `{3}` is no placeholder.
+      test('should leave out a message that interpolates a value', () => {
+        expect(
+          describeContact({
+            flags: 'i',
+            message: 'Not like {contact}',
+            regex: '^[a-z]{3}$',
+          })
+        ).toBe('It must match /^[a-z]{3}$/i.')
+      })
+
+      test('should quote one that lets a template through', () => {
+        expect(
+          describeContact({ allowInterpolation: true, regex: '^https?://' })
+        ).toBe('It must match /^https?:///.')
+      })
     })
 
     // JSON Schema reads a pattern in Unicode mode, where an escape such as
@@ -912,7 +989,7 @@ describe('buildToolSchema', () => {
 
       const checked = build(fields).schema.properties
       expect(checked?.vat?.description).toBe(
-        'It must match a pattern the form checks. Required when kind eq "company". The form checks more rules for it.'
+        'It must match /^[a-z]{3}$/i. Required when kind eq "company". The form checks more rules for it.'
       )
       expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
 
@@ -975,7 +1052,7 @@ describe('buildToolSchema', () => {
           'code'
         )?.description
 
-      const note = 'It must match a pattern the form checks.'
+      const note = 'It must match /^[a-z]{3}$/i.'
       expect(describe('Already approved in your account')).toBe(
         `Already approved in your account. ${note}`
       )
