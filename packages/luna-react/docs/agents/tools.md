@@ -40,8 +40,9 @@ field's transforms, change events and validation all run.
   is when the wait ends: five minutes after `allow` is asked, in milliseconds
   since the epoch, as `Date.now()` counts them, so a countdown shown to the
   person is the one that decides. `signal` is aborted when the agent cancels,
-  when the form unmounts, or at `deadline`, and the call is refused then. An
-  `allow` that throws refuses it.
+  when the form unmounts, or at `deadline`: the first is answered `cancelled`,
+  and the other two are refused with a message that says which it was (see
+  [Codes](#codes)). An `allow` that throws refuses it.
   A form with `allow` tells the agent that a person may need to approve a
   submission first; see [Waiting for a person](#waiting-for-a-person).
 - **`onCall(call)`** is told of every call once it was answered, to audit
@@ -192,9 +193,19 @@ needs, and the schema holds no rule only a submit checks (see
 | `locked`         | `skipped`  | The field is disabled or read-only              |
 | `rows_fixed`     | `skipped`  | A fixed list sent with another number of rows   |
 | `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
-| `refused`        | answer     | `allow` refused the call                        |
+| `refused`        | answer     | `allow` refused the call, or did not answer it  |
 | `busy`           | answer     | Ten calls are waiting already                   |
 | `cancelled`      | answer     | The agent cancelled the call                    |
+
+A `refused` call changed nothing, and its `message` says why:
+
+| Why                               | `message`                                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `allow` answered a reason         | That reason, as it was given                                                                          |
+| `allow` answered `false`          | `The page refused the call.`                                                                          |
+| `allow` threw                     | `The page could not answer the call.`                                                                 |
+| No answer by `deadline`           | `Nobody answered in time, so the call changed nothing. Ask your user before you try again.`           |
+| The form unmounted while it asked | `The form is no longer on the page, so the call changed nothing. Ask your user before you try again.` |
 
 A form answers its calls one at a time, in the order they come, except while
 a submission waits for a person (below). Every tool
@@ -218,8 +229,8 @@ to approve it first, so the agent can tell its user why it waits. While
   goes on: once the person approves, the form is submitted, and
   `<name>_read` reads `pending`, then the outcome.
 - When the person refuses, or does not answer by the deadline,
-  `<name>_read` reads `{ status: 'refused', message }`, with the reason they
-  gave or what an unanswered call is told. A submit the agent cancels while
+  `<name>_read` reads `{ status: 'refused', message }`, with the `message`
+  the refused call is answered with (see [Codes](#codes)). A submit the agent cancels while
   it waits leaves the last submission as it was.
 
 ## A person and an agent at once

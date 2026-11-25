@@ -1375,24 +1375,77 @@ describe('createFormTools', () => {
       expect(calls.apply).toEqual([])
     })
 
-    test('should refuse a call allow never answers once the tools are taken down or after five minutes', async () => {
+    test('should refuse a call allow never answers after five minutes, and say nobody answered', async () => {
       vi.useFakeTimers()
       const allow = () => new Promise<boolean>(() => {})
-      const lifetime = new AbortController()
-      const { tools } = toolsOf({}, { ...AGENT, allow }, lifetime.signal)
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
 
-      const first = call(tools, 'fill', { email: 'a@b.co' })
+      const pending = call(tools, 'fill', { email: 'a@b.co' })
       await vi.advanceTimersByTimeAsync(5 * 60_000)
-      expect(await first).toEqual({
+      expect(await pending).toEqual({
         code: 'refused',
-        message: 'The call got no answer from the page.',
+        message:
+          'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
         ok: false,
       })
+      expect(calls.apply).toEqual([])
+    })
 
-      const second = call(tools, 'fill', { email: 'a@b.co' })
+    test('should refuse a call allow never answers once the tools are taken down, and say the form is gone', async () => {
+      const allow = () => new Promise<boolean>(() => {})
+      const lifetime = new AbortController()
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow }, lifetime.signal)
+
+      const pending = call(tools, 'fill', { email: 'a@b.co' })
+      await Promise.resolve()
+      await Promise.resolve()
+      lifetime.abort()
+      expect(await pending).toEqual({
+        code: 'refused',
+        message:
+          'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+        ok: false,
+      })
+      expect(calls.apply).toEqual([])
+    })
+
+    test('should tell apart a call nobody answered, one whose form is gone, one the agent cancelled and one refused', async () => {
+      vi.useFakeTimers()
+      const waiting = () => new Promise<boolean>(() => {})
+      const answers: string[] = []
+
+      const late = toolsOf({}, { ...AGENT, allow: waiting })
+      const expired = call(late.tools, 'fill', { email: 'a@b.co' })
+      await vi.advanceTimersByTimeAsync(5 * 60_000)
+      answers.push(String((await expired).message))
+
+      const lifetime = new AbortController()
+      const gone = toolsOf({}, { ...AGENT, allow: waiting }, lifetime.signal)
+      const closed = call(gone.tools, 'fill', { email: 'a@b.co' })
       await vi.advanceTimersByTimeAsync(0)
       lifetime.abort()
-      expect((await second).code).toBe('refused')
+      answers.push(String((await closed).message))
+
+      const controller = new AbortController()
+      const left = toolsOf({}, { ...AGENT, allow: waiting })
+      const cancelled = call(
+        left.tools,
+        'fill',
+        { email: 'a@b.co' },
+        controller.signal
+      )
+      await vi.advanceTimersByTimeAsync(0)
+      controller.abort()
+      answers.push(String((await cancelled).message))
+
+      const refusing = toolsOf({}, { ...AGENT, allow: () => false })
+      answers.push(
+        String(
+          (await call(refusing.tools, 'fill', { email: 'a@b.co' })).message
+        )
+      )
+
+      expect(new Set(answers).size).toBe(4)
     })
 
     test('should hand allow the time its wait ends', async () => {
@@ -1963,7 +2016,8 @@ describe('createFormTools', () => {
         expect(
           (await call(tools, 'read', { fields: ['email'] })).submit
         ).toEqual({
-          message: 'The call got no answer from the page.',
+          message:
+            'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
           status: 'refused',
         })
       })

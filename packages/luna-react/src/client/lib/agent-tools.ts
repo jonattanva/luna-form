@@ -571,7 +571,10 @@ export function createFormTools(
     }
 
     const deadline = Date.now() + ALLOW_TIMEOUT
-    const limit = linkSignals([callSignal, signal], ALLOW_TIMEOUT)
+    const limit = linkSignals(
+      { cancelled: callSignal, closed: signal },
+      ALLOW_TIMEOUT
+    )
     if (tool === 'submit') {
       host.approval({
         deadline: new Date(deadline).toISOString(),
@@ -587,29 +590,33 @@ export function createFormTools(
       if (refused === undefined) {
         return undefined
       }
-      if (callSignal.aborted) {
+      const ending = limit.ending()
+      if (ending === 'cancelled') {
         if (tool === 'submit') {
           host.approval()
         }
         return CANCELLED
       }
+      const message =
+        refused === ABORTED ? UNANSWERED[ending ?? 'expired'] : refused
       if (tool === 'submit') {
-        host.approval({ message: refused, status: 'refused' })
+        host.approval({ message, status: 'refused' })
       }
-      return { code: 'refused', message: refused, ok: false }
+      return { code: 'refused', message, ok: false }
     } finally {
       limit.dispose()
     }
   }
 
   // Waits for what `allow` answers, until its signal is aborted: `undefined`
-  // for a yes, and why it was refused otherwise. A page whose `allow` fails
-  // has not said yes. One that says yes at once is not waited for.
+  // for a yes, `ABORTED` for no answer, and why it was refused otherwise. A
+  // page whose `allow` fails has not said yes. One that says yes at once is
+  // not waited for.
   const refusalOf = async (
     allow: NonNullable<AgentOptions['allow']>,
     call: AgentCall,
     options: Parameters<NonNullable<AgentOptions['allow']>>[1]
-  ): Promise<string | undefined> => {
+  ): Promise<string | typeof ABORTED | undefined> => {
     let asked: ReturnType<typeof allow> | typeof FAILED
     try {
       asked = allow(call, options)
@@ -631,13 +638,14 @@ export function createFormTools(
     if (answer === true) {
       return undefined
     }
+    if (answer === ABORTED) {
+      return ABORTED
+    }
     return typeof answer === 'string' && answer !== ''
       ? answer
-      : answer === ABORTED
-        ? 'The call got no answer from the page.'
-        : answer === FAILED
-          ? 'The page could not answer the call.'
-          : 'The page refused the call.'
+      : answer === FAILED
+        ? 'The page could not answer the call.'
+        : 'The page refused the call.'
   }
 
   // `name` is the field in the form the value goes to, whose options are the
@@ -1085,7 +1093,10 @@ export function createFormTools(
     name: string,
     callSignal: AbortSignal
   ): Promise<readonly Option[] | string> => {
-    const limit = linkSignals([callSignal, signal], OPTIONS_WAIT)
+    const limit = linkSignals(
+      { cancelled: callSignal, closed: signal },
+      OPTIONS_WAIT
+    )
     const ended = whenAborted(limit.signal)
     let waited = false
     try {
@@ -1207,7 +1218,7 @@ export function createFormTools(
       return pendingAnswer(host.getSubmit(), names.read)
     }
 
-    const timeout = linkSignals([], SUBMIT_TIMEOUT)
+    const timeout = linkSignals({}, SUBMIT_TIMEOUT)
     try {
       void whenAborted(timeout.signal).then(() =>
         answer(pendingAnswer(host.getSubmit(), names.read))
@@ -1350,6 +1361,15 @@ const CANCELLED: ToolResult = {
   ok: false,
 }
 
+// What a call `allow` did not answer is told, by why its wait ended: the
+// agent cancelling it is answered `CANCELLED` instead.
+const UNANSWERED: Readonly<Record<Exclude<Ending, 'cancelled'>, string>> = {
+  closed:
+    'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+  expired:
+    'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
+}
+
 const BUSY: ToolResult = {
   code: 'busy',
   message: `The form has ${QUEUE_LIMIT} calls waiting: call again once one is answered.`,
@@ -1418,29 +1438,49 @@ function whenAborted(signal: AbortSignal) {
   })
 }
 
-// One signal aborted by any of the ones given, or after `timeout`.
+// Why a wait ended: the agent cancelled the call, the form's tools were taken
+// down, or its time ran out.
+const ENDINGS = ['cancelled', 'closed', 'expired'] as const
+type Ending = (typeof ENDINGS)[number]
+
+// One signal aborted by any of the ones given, or after `timeout`. `ending`
+// says which ended it first, by the name it was given under; `undefined`
+// while it runs.
 function linkSignals(
-  signals: ReadonlyArray<AbortSignal | undefined>,
+  signals: Readonly<Partial<Record<Ending, AbortSignal>>>,
   timeout: number
 ) {
   const controller = new AbortController()
-  const abort = () => controller.abort()
-  const timer = setTimeout(abort, timeout)
-
-  for (const signal of signals) {
-    if (signal?.aborted) {
-      abort()
+  let ending: Ending | undefined
+  const end = (why: Ending) => {
+    if (!controller.signal.aborted) {
+      ending = why
+      controller.abort()
     }
-    signal?.addEventListener('abort', abort, { once: true })
   }
+
+  const timer = setTimeout(() => end('expired'), timeout)
+  const listeners = ENDINGS.flatMap((why) => {
+    const signal = signals[why]
+    if (!signal) {
+      return []
+    }
+    const listener = () => end(why)
+    if (signal.aborted) {
+      listener()
+    }
+    signal.addEventListener('abort', listener, { once: true })
+    return [{ listener, signal }]
+  })
 
   return {
     dispose: () => {
       clearTimeout(timer)
-      for (const signal of signals) {
-        signal?.removeEventListener('abort', abort)
+      for (const { listener, signal } of listeners) {
+        signal.removeEventListener('abort', listener)
       }
     },
+    ending: () => ending,
     signal: controller.signal,
   }
 }

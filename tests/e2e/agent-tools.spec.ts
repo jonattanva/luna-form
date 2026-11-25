@@ -941,6 +941,49 @@ test.describe(
       await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
     })
 
+    test('should tell the agent the form is gone when it leaves the page while allow is asked', async ({
+      page,
+    }) => {
+      await open(page)
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: () => Promise<boolean>
+          __lunaFilled?: Answer
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = () => new Promise<boolean>(() => {})
+        void page
+          .__lunaTools!.call('preview_fill', { name: 'Ada' })
+          .then((answer) => {
+            page.__lunaFilled = answer
+          })
+      })
+
+      // Another page of the app, without a reload: the form unmounts and the
+      // call still waiting is answered.
+      await page.evaluate(() =>
+        (
+          window as Window & {
+            next: { router: { push: (href: string) => void } }
+          }
+        ).next.router.push('/')
+      )
+      await expect(page).not.toHaveURL(/\/reactive$/)
+
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => (window as Window & { __lunaFilled?: Answer }).__lunaFilled
+          )
+        )
+        .toEqual({
+          code: 'refused',
+          message:
+            'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+          ok: false,
+        })
+    })
+
     test('should say a submission waits for a person until when, and answer within 15 seconds while it does', async ({
       page,
     }) => {
