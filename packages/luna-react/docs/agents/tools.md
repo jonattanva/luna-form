@@ -363,8 +363,9 @@ Labels, values and options come from the page, and a person or a remote
 source may have written them: every tool is marked `untrustedContentHint` and
 says so in its description. Leave a field out of the tools with
 [`advanced.agent: false`](#what-an-agent-cannot-write) when an agent should not
-be the one to ask for it; a password is always left out, and a field left out
-answers `unknown`, as one that does not exist.
+be the one to ask for it, or every field of a custom type with
+[`agent: false`](#custom-types); a password is always left out, and a field
+left out answers `unknown`, as one that does not exist.
 
 Every field in the schema is one an agent may be tempted to fill with what it
 knows about the person. `<name>_fill` asks for the values the person gave for
@@ -441,6 +442,8 @@ These fields are not in the schema, and the tools refuse them:
 
 - `input/password`, always.
 - A field or a list with `"advanced": { "agent": false }`.
+- A field of a type registered with `agent: false`, always (see
+  [Custom types](#custom-types)).
 - A `transient` field, and a `readonly` one.
 - A `hidden` or `disabled` field, unless a `state` event that a field the agent
   may write fires shows it or unlocks it. Then it is in the schema, and its
@@ -535,11 +538,30 @@ component as one. Use the same keywords as the rest of the schema
   too, and it replaces the one the library would give.
 - The last registration of a type is the one that counts, schema included.
 
-Calling `buildToolSchema` yourself, pass the same schemas as `types`:
+A type no agent should write, such as a secret, a connection picker or a JSON
+editor, is closed with `agent: false`:
+
+```ts
+defineCustomInput('secret', SecretInput, { agent: false })
+```
+
+Every field of it is left out of the tools of every form, as a password is, in
+the rows of a list too: it is not in the schema, `<name>_read` returns nothing
+of it, and `<name>_fill` answers `unknown` when an agent names it. A field that
+only a field of it shows or unlocks is left out with it. Nothing in the
+definition opens it again: `advanced.agent` takes only `false`. A built-in type
+registered this way is closed too, and the last registration of a type decides
+it, as it does a schema.
+
+Calling `buildToolSchema` yourself, pass the same schemas as `types`, and
+`false` for a closed type:
 
 ```ts
 buildToolSchema(sections, {
-  types: { rating: { maximum: 5, minimum: 1, type: 'integer' } },
+  types: {
+    rating: { maximum: 5, minimum: 1, type: 'integer' },
+    secret: false,
+  },
 })
 ```
 

@@ -84,13 +84,15 @@ export function defineConfig<T extends React.ElementType>(
   }
 
   // The last registration of a type is the one it renders with, so it is the
-  // one that says what an agent writes into it, or that nothing does.
-  const agentTypes: Record<string, ToolSchema> = {}
+  // one that says what an agent writes into it, that no agent may, or neither.
+  const agentTypes: Record<string, ToolSchema | false> = {}
   options.inputs.forEach(({ agent, types, input }) => {
     const type = Array.isArray(types) ? types : [types]
     type.forEach((t) => {
       config.inputs[t] = input
-      if (agent && holdsValues(t, agent.schema)) {
+      if (agent === false) {
+        agentTypes[t] = false
+      } else if (agent && holdsValues(t, agent.schema)) {
         agentTypes[t] = agent.schema
       } else {
         delete agentTypes[t]
@@ -131,17 +133,21 @@ export const defineSelect = createDefineFunction(SELECTS)
 export const defineTextArea = createDefineFunction([TEXTAREA])
 
 /**
- * Registers a component under types of your own. `options.agent.schema` is
- * the value an agent writes into a field of those types, for a form offered
- * to agents; without it such a field takes text. See `docs/agents/tools.md`.
+ * Registers a component under types of your own. For a form offered to agents,
+ * `options.agent.schema` is the value an agent writes into a field of those
+ * types; without it such a field takes text. `options.agent: false` keeps
+ * every field of them out of the tools of every form, as a password is. See
+ * `docs/agents/tools.md`.
  */
 export function defineCustomInput<T extends React.ElementType>(
   types: string | string[],
   input: React.ComponentProps<T>,
-  options?: Readonly<{ agent?: InputAgentOptions }>
+  options?: Readonly<{ agent?: InputAgentOptions | false }>
 ): InputConfig<T> {
   const config = createDefineFunction<T>(types)(input)
-  return options?.agent ? { ...config, agent: options.agent } : config
+  return options?.agent === undefined
+    ? config
+    : { ...config, agent: options.agent }
 }
 
 function createDefineFunction<T extends React.ElementType>(

@@ -467,7 +467,8 @@ export function createFormTools(
   host: FormToolsHost,
   form: Readonly<{
     // The types whose schema the host declares: no rule of the form checks a
-    // value against it, so the tools do. See `defineCustomInput`.
+    // value against it, so the tools do. A type it keeps from agents is named
+    // too, and never written. See `defineCustomInput`.
     declared?: ReadonlySet<string>
     queue?: Queue
     signal?: AbortSignal

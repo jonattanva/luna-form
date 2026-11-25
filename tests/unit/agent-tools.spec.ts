@@ -17,6 +17,10 @@ import {
   type ToolSchema,
 } from '@/packages/luna-core/src/util/tool-schema'
 import { isField, isList } from '@/packages/luna-core/src/util/is-input'
+import {
+  defineConfig,
+  defineCustomInput,
+} from '@/packages/luna-react/src/config'
 import type { Field, Fields, Option } from '@/packages/luna-core/src/type'
 
 const COUNTRIES: Option[] = [
@@ -2196,5 +2200,76 @@ describe('createFormTools', () => {
       )
       expect(submit).not.toHaveBeenCalled()
     })
+  })
+})
+
+// A type its registration closes to agents is left out of the tools in every
+// form, as a password is: nothing tells the agent the field exists, and the
+// tools refuse it, at the top level and in the rows of a list.
+describe('a custom type closed to agents', () => {
+  const Secret = () => null
+  const config = defineConfig({
+    inputs: [defineCustomInput('secret', Secret, { agent: false })],
+  })
+  const fields: Fields = [
+    { name: 'token', type: 'secret' },
+    { name: 'note', type: 'input/text' },
+    {
+      fields: [
+        { name: 'label', type: 'input/text' },
+        { name: 'key', type: 'secret' },
+      ],
+      name: 'keys',
+      type: 'list',
+    },
+  ]
+
+  // As the form builds its tools from its config.
+  function closedTools() {
+    const built = buildToolSchema([{ fields }], { types: config.agentTypes })
+    const form = createForm({
+      absent: [],
+      values: { keys: [{ key: 'k', label: 'a' }], note: 'n', token: 't' },
+    })
+    return { built, ...form, tools: createFormTools(AGENT, built, form.host) }
+  }
+
+  test('should leave the field out of the schema, and never name it', () => {
+    const { built } = closedTools()
+    const properties = built.schema.properties ?? {}
+
+    expect(Object.keys(properties)).toEqual(['note', 'keys'])
+    expect(Object.keys(properties.keys?.items?.properties ?? {})).toEqual([
+      'label',
+    ])
+    expect(JSON.stringify(built.schema)).not.toMatch(/token|"key"|secret/)
+  })
+
+  test('should read nothing of it', async () => {
+    const { tools } = closedTools()
+    const named = await call(tools, 'read', { fields: ['token', 'note'] })
+    expect(Object.keys(named.values as object)).toEqual(['note'])
+
+    const all = await call(tools, 'read')
+    expect(Object.keys(all.values as object)).not.toContain('token')
+    expect(JSON.stringify(all.values)).not.toContain('"key"')
+  })
+
+  test('should refuse to fill it as a field that does not exist', async () => {
+    const { calls, tools } = closedTools()
+    const result = await call(tools, 'fill', {
+      'keys.0.key': 'x',
+      token: 'x',
+    })
+
+    expect(calls.apply).toEqual([])
+    expect(calls.filled).toEqual([])
+    expect(result.skipped).toEqual(
+      ['keys.0.key', 'token'].map((name) => ({
+        code: 'unknown',
+        message: 'No field so named.',
+        name,
+      }))
+    )
   })
 })

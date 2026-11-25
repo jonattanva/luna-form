@@ -76,14 +76,19 @@ export type ToolSchema = Readonly<{
 
 export type ToolSchemaOptions = FormSchemaOptions &
   Readonly<{
-    // The schema of each custom type, by type, for the fields no built-in type
-    // describes. Without one such a field takes text.
-    types?: Readonly<Record<string, ToolSchema>>
+    // What each type its registration speaks for says to agents, by type: the
+    // schema of what an agent writes into a field of it, for a type no
+    // built-in one describes, or `false` for a type kept from agents in every
+    // form. Without either such a field takes text.
+    types?: AgentTypes
     // Whether a submit checks the values against the form's rules:
     // `validation.submit`. When it does not, the schema holds no rule only a
     // submit checks.
     validates?: boolean
   }>
+
+/** What a registration says to agents of each type, by type. */
+export type AgentTypes = Readonly<Record<string, ToolSchema | false>>
 
 export type ToolSchemaResult = Readonly<{
   // The lists that keep the rows they have, by their whole name, through the
@@ -179,7 +184,7 @@ type Walk = Readonly<{
   // By the slot they reach.
   revealers: ReadonlyMap<string, readonly Revealer[]>
   sourceTargets: ReadonlySet<string>
-  types?: Readonly<Record<string, ToolSchema>>
+  types?: AgentTypes
   validates: boolean
   // The slots whose writability is being decided, so that two fields that
   // reveal each other answer no instead of asking forever.
@@ -325,14 +330,11 @@ function isWritable(slot: Field | List, walk: Walk, name: string): boolean {
 function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
   walk.visiting.add(name)
   try {
-    if (slot.advanced?.agent === false) {
+    if (isKeptFromAgents(slot, walk.types)) {
       return false
     }
 
-    if (
-      isField(slot) &&
-      (isPassword(slot) || slot.advanced?.transient || slot.readonly)
-    ) {
+    if (isField(slot) && (slot.advanced?.transient || slot.readonly)) {
       return false
     }
 
@@ -348,6 +350,28 @@ function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
   } finally {
     walk.visiting.delete(name)
   }
+}
+
+// Whether no agent is to know the slot exists, whatever the form does with
+// it: a password, a slot its definition keeps from agents, or one of a type
+// its registration does. Nothing in the definition opens one again.
+function isKeptFromAgents(slot: Field | List, types?: AgentTypes): boolean {
+  return (
+    slot.advanced?.agent === false ||
+    (isField(slot) && isPassword(slot)) ||
+    declaredFor(types, slot.type) === false
+  )
+}
+
+// What the registration of a type says to agents. Only a type it names
+// itself: `toString` is no schema.
+function declaredFor(
+  types: AgentTypes | undefined,
+  type: string
+): ToolSchema | false | undefined {
+  return types && Object.prototype.hasOwnProperty.call(types, type)
+    ? types[type]
+    : undefined
 }
 
 // A field the agent may write whose change shows, or unlocks, the slot.
@@ -428,11 +452,11 @@ function describeValue(
   notes: string[]
 ): ToolSchema {
   // A type the host declares a schema for is described by it, a built-in one
-  // too: the host knows what its own component takes. Only a type it names
-  // itself: `toString` is no schema.
-  const types = walk.types
-  if (types && Object.prototype.hasOwnProperty.call(types, field.type)) {
-    return types[field.type]
+  // too: the host knows what its own component takes. One it keeps from
+  // agents never reaches here.
+  const declared = declaredFor(walk.types, field.type)
+  if (declared) {
+    return declared
   }
 
   // A required checkbox is a box someone has to tick: the submit takes `true`

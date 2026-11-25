@@ -646,6 +646,56 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should leave out a custom type its registration keeps from agents', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            { label: 'Token', name: 'token', type: 'secret' },
+            { label: 'Note', name: 'note', type: 'input/text' },
+            {
+              fields: [{ label: 'Key', name: 'key', type: 'secret' }],
+              label: 'Keys',
+              name: 'keys',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+
+    const [fill] = await list(page)
+    expect(Object.keys(fill.inputSchema.properties as object)).toEqual([
+      'note',
+      'keys',
+    ])
+    expect(JSON.stringify(fill)).not.toMatch(/token|"key"|secret/i)
+
+    await page.locator('input[name="token"]').fill('t')
+    await page.locator('input[name="keys.0.key"]').fill('k')
+    expect(
+      (await call(page, 'preview_read', { fields: ['token', 'note'] })).values
+    ).toEqual({ note: null })
+    expect(JSON.stringify(await call(page, 'preview_read'))).not.toMatch(
+      /token|"key"|"t"|"k"/
+    )
+
+    expect(
+      await call(page, 'preview_fill', { 'keys.0.key': 'x', token: 'x' })
+    ).toMatchObject({
+      ok: false,
+      skipped: [
+        { code: 'unknown', name: 'keys.0.key' },
+        { code: 'unknown', name: 'token' },
+      ],
+    })
+    await expect(page.locator('input[name="token"]')).toHaveValue('t')
+    await expect(page.locator('input[name="keys.0.key"]')).toHaveValue('k')
+    await expect(page.locator('[data-agent-filled]')).toHaveCount(0)
+  })
+
   test('should validate what it wrote once, and show the errors on the page', async ({
     page,
   }) => {

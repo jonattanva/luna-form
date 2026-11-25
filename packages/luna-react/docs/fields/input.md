@@ -49,7 +49,7 @@ The `advanced` property dictates finer HTML details, interactive structures, and
 - **`data`** _(object)_: Map of specific HTML data attributes (e.g., `{ "data-test-id": "my-field" }`).
 - **`keepValue`** _(boolean)_: If `true`, hiding the field leaves its value behind instead of taking it — the field is put away rather than dropped. See [Keeping a value through a hide](../events/change.md#keeping-a-value-through-a-hide).
 - **`transient`** _(boolean)_: If `true`, the field fires its change events and keeps nothing of its own — it is neither stored nor reported to the consumer. For a control whose whole job is to write to _another_ field. See [Transient controls](../events/change.md#transient-controls).
-- **`agent`** _(`false`)_: Leaves the field out of the tools an AI agent fills the form with: it is not in their schema, and nothing tells the agent it exists. For data an agent should not be the one to ask for. A password is always left out. See [Tools for agents](../agents/tools.md).
+- **`agent`** _(`false`)_: Leaves the field out of the tools an AI agent fills the form with: it is not in their schema, and nothing tells the agent it exists. For data an agent should not be the one to ask for. A password is always left out, and so is a field of a custom type registered with `agent: false`. See [Tools for agents](../agents/tools.md).
 
 ### Text & Numeric Options (`input/text`, `input/email`, `input/tel`, `input/password`, `input/number`)
 

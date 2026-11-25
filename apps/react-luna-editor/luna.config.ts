@@ -49,5 +49,8 @@ export default defineConfig({
     defineCustomInput('rating', Input, {
       agent: { schema: { maximum: 5, minimum: 1, type: 'integer' } },
     }),
+
+    // A type of the editor's own that no agent writes, in any form.
+    defineCustomInput('secret', Input, { agent: false }),
   ],
 })

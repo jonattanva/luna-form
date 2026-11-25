@@ -597,6 +597,50 @@ describe('buildToolSchema', () => {
       ).toEqual(['kept'])
     })
 
+    // As a password: in every form, at the top level and in the rows of a
+    // list, and the definition has no way to open it again.
+    test('should leave out a field of a type its registration keeps from agents', () => {
+      const result = build(
+        [
+          { name: 'token', type: 'secret' },
+          {
+            fields: [
+              { name: 'key', type: 'secret' },
+              { name: 'label', type: 'input/text' },
+            ],
+            name: 'keys',
+            type: 'list',
+          },
+          { name: 'kept', type: 'input/text' },
+        ],
+        { types: { secret: false } }
+      )
+
+      expect(Object.keys(result.schema.properties ?? {})).toEqual([
+        'keys',
+        'kept',
+      ])
+      expect(
+        Object.keys(result.schema.properties?.keys?.items?.properties ?? {})
+      ).toEqual(['label'])
+    })
+
+    test('should leave out a field that only a field of a type kept from agents shows', () => {
+      const schema = build(
+        [
+          {
+            event: reveal('detail', { hidden: false }),
+            name: 'token',
+            type: 'secret',
+          },
+          { hidden: true, name: 'detail', type: 'input/text' },
+        ],
+        { types: { secret: false } }
+      ).schema
+      expect(schema.properties).toEqual({})
+      expect(JSON.stringify(schema)).not.toContain('token')
+    })
+
     test('should keep a hidden field that an event shows, and say so', () => {
       const result = build([
         {

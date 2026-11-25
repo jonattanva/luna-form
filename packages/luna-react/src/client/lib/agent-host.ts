@@ -22,6 +22,7 @@ import {
   isString,
   prepare,
   translateBuiltIn,
+  type AgentTypes,
   type Definition,
   type Field,
   type Fields,
@@ -29,7 +30,6 @@ import {
   type Localization,
   type Option,
   type Sections,
-  type ToolSchema,
 } from '@luna-form/core'
 import { registerTools } from './model-context'
 import type { RefObject } from 'react'
@@ -100,8 +100,8 @@ export type AgentForm = Readonly<{
   sections: Sections
   store: Store
   submission?: Submission
-  // The schema each custom type declares for agents. See `defineCustomInput`.
-  types?: Readonly<Record<string, ToolSchema>>
+  // What each custom type says to agents. See `defineCustomInput`.
+  types?: AgentTypes
   // Whether a submit checks the values: `validation.submit`.
   validates?: boolean
 }>

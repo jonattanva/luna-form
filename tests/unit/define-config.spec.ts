@@ -147,3 +147,40 @@ describe('defineCustomInput agent schema', () => {
     })
   })
 })
+
+// A type of its own that an agent must never write: kept from the tools of
+// every form, as a password is, with no field to mark one by one.
+describe('defineCustomInput closed to agents', () => {
+  const Secret = () => null
+
+  test('should take agent: false', () => {
+    expect(defineCustomInput('secret', Secret, { agent: false })).toEqual({
+      agent: false,
+      input: Secret,
+      types: 'secret',
+    })
+  })
+
+  test('should keep each type it registers from agents', () => {
+    const config = defineConfig({
+      inputs: [
+        defineCustomInput(['secret', 'secret/key'], Secret, { agent: false }),
+      ],
+    })
+    expect(config.agentTypes).toEqual({ secret: false, 'secret/key': false })
+  })
+
+  test('should say of a type what its last registration says', () => {
+    const schema = { type: 'integer' } as const
+    const config = defineConfig({
+      inputs: [
+        defineCustomInput(['a', 'b', 'c'], Secret, { agent: false }),
+        defineCustomInput('a', Secret, { agent: { schema } }),
+        defineCustomInput('b', Secret),
+        defineCustomInput('d', Secret, { agent: { schema } }),
+        defineCustomInput('d', Secret, { agent: false }),
+      ],
+    })
+    expect(config.agentTypes).toEqual({ a: schema, c: false, d: false })
+  })
+})
