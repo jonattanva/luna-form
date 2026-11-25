@@ -409,7 +409,10 @@ it brings no style of its own.
   person changes that field, or adds or removes a row of a list it is in. A
   value the field already held is not marked. A field drawn again, when a value
   hides and shows it, or a form started over after a success, comes back
-  without it.
+  without it. The field is the one whose `data-field-name` is the value's name
+  (see [Styling hooks](../structure/layout.md#styling-hooks)), so a
+  [custom input](../fields/custom-inputs.md) is marked whether or not it
+  renders a `name`.
 - A polite live region inside the form says how many fields a fill filled, in
   the form's language: `An agent filled 3 fields`.
 

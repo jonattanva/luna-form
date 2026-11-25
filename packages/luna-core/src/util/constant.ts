@@ -79,6 +79,9 @@ export const ARIA_ERROR_MESSAGE = 'aria-errormessage'
 export const ARIA_INVALID = 'aria-invalid'
 export const ARIA_LABEL = 'aria-label'
 export const ARIA_LABELLEDBY = 'aria-labelledby'
+// The name of the field a `[data-slot="field"]` holds, whatever its control
+// renders: a control drawn with no `name` in the page is found by it too.
+export const DATA_FIELD_NAME = 'data-field-name'
 export const DATA_INVALID = 'data-invalid'
 export const DATA_READONLY = 'data-readonly'
 

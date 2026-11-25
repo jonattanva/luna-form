@@ -187,3 +187,15 @@ parts around them.
 A field also carries `data-invalid` while it holds an error and `data-readonly`
 while it is disabled, both readable from the descendants with
 `group-data-[...]`.
+
+A field carries its name in `data-field-name`: `email`, or `lines.0.note` for
+the `note` of a list's first row. As its control's `name` does, it has every
+row at its position, and changes when rows before it are removed or the list
+is assigned new rows. A form rendered on the server carries it
+too. It is on the field itself, so a field is found by it whatever its
+control renders, a [custom input](../fields/custom-inputs.md) with no `name`
+in the page included:
+
+```ts
+form.querySelector('[data-slot="field"][data-field-name="email"]')
+```

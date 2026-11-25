@@ -14,6 +14,7 @@ export function FieldGroup(
     errors?: string[]
     field: Field
     horizontal?: boolean
+    name?: string
   }>
 ) {
   const clickable = isClickable(props.field)
@@ -28,6 +29,7 @@ export function FieldGroup(
         isCheckbox={checkbox}
         isReversed={reversed}
         isClickable={clickable}
+        name={props.name}
       >
         {props.children}
       </FieldVertical>
@@ -41,6 +43,7 @@ export function FieldGroup(
       isCheckbox={checkbox}
       isReversed={reversed}
       isClickable={clickable}
+      name={props.name}
     >
       {props.children}
     </FieldHorizontal>

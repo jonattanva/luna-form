@@ -510,6 +510,68 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(sku).not.toHaveAttribute('data-agent-filled')
   })
 
+  test('should mark the field of a custom type with no name in the page', async ({
+    page,
+  }) => {
+    // `input/expression` is an editable `div`: nothing in the page carries the
+    // field's name, so the form has to find its field by its own.
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            { label: 'Subject', name: 'subject', type: 'input/expression' },
+            { label: 'Message', name: 'message', type: 'textarea' },
+            {
+              fields: [
+                { label: 'Note', name: 'note', type: 'input/expression' },
+              ],
+              label: 'Lines',
+              name: 'lines',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+    const fieldOf = (label: string) =>
+      page
+        .getByRole('textbox', { name: label })
+        .first()
+        .locator('xpath=ancestor::*[@data-slot="field"][1]')
+
+    await call(page, 'preview_fill', { message: 'Body', subject: 'Hello' })
+    await expect(page.getByRole('textbox', { name: 'Subject' })).toHaveText(
+      'Hello'
+    )
+    // The field carries its name, for the host to find it by.
+    await expect(fieldOf('Subject')).toHaveAttribute(
+      'data-field-name',
+      'subject'
+    )
+    await expect(fieldOf('Subject')).toHaveAttribute('data-agent-filled')
+    await expect(fieldOf('Message')).toHaveAttribute('data-agent-filled')
+    await expect(page.locator('[aria-live="polite"]')).toHaveText(
+      'An agent filled 2 fields'
+    )
+
+    // The person's change takes the mark off that field alone.
+    await page.getByRole('textbox', { name: 'Subject' }).click()
+    await page.keyboard.type('!')
+    await expect(fieldOf('Subject')).not.toHaveAttribute('data-agent-filled')
+    await expect(fieldOf('Message')).toHaveAttribute('data-agent-filled')
+
+    // A list's rows are marked by the list's name.
+    await call(page, 'preview_fill', { lines: [{ note: 'First' }] })
+    await expect(fieldOf('Note')).toHaveAttribute(
+      'data-field-name',
+      'lines.0.note'
+    )
+    await expect(fieldOf('Note')).toHaveAttribute('data-agent-filled')
+    await page.getByRole('textbox', { name: 'Note' }).click()
+    await page.keyboard.type('!')
+    await expect(fieldOf('Note')).not.toHaveAttribute('data-agent-filled')
+  })
+
   test('should tell the host who made each change', async ({ page }) => {
     const changes = captureChanges(page)
     await open(page)
@@ -663,13 +725,18 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
       },
     })
 
-    // The name each control carries, in the order the page shows them.
+    // The name each control carries, in the order the page shows them, and
+    // that its field carries the same one.
     const names = () =>
-      page
-        .locator('input[name^="groups."]')
-        .evaluateAll((inputs) =>
-          inputs.map((input) => input.getAttribute('name'))
-        )
+      page.locator('input[name^="groups."]').evaluateAll((inputs) =>
+        inputs.map((input) => {
+          const name = input.getAttribute('name')
+          const field = input
+            .closest('[data-slot="field"]')
+            ?.getAttribute('data-field-name')
+          return field === name ? name : `${name} in field ${field}`
+        })
+      )
 
     await call(page, 'preview_read')
     await call(page, 'preview_fill', {

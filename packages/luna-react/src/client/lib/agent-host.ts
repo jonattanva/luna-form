@@ -18,6 +18,7 @@ import {
   getTimezones,
   isColumn,
   isList,
+  DATA_FIELD_NAME,
   isObject,
   isSelectTimezone,
   isString,
@@ -532,7 +533,9 @@ const ANNOUNCE_DELAY = 100
  * - `data-agent-active` on the `<form>` while a call runs;
  * - `data-agent-filled` on the field (`[data-slot="field"]`) of each value a
  *   fill changed, or that its change events did, until the person changes it
- *   or the rows of a list it is in;
+ *   or the rows of a list it is in. The field is found by the name it carries
+ *   itself (`data-field-name`), never by its control's: a custom type need not
+ *   render a `name`;
  * - a polite live region in the form that says how many fields a fill
  *   filled, in the form's language.
  *
@@ -550,7 +553,18 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
   let watched: Store | undefined
   let stop = () => {}
 
-  const fieldOf = (control: Element) => control.closest('[data-slot="field"]')
+  // The field of a name, and with `rows`, the fields of a list's rows too.
+  const fieldsOf = (name: string, rows = false) => {
+    const escaped = CSS.escape(name)
+    const own = `[data-slot="field"][${DATA_FIELD_NAME}="${escaped}"]`
+    return (
+      read().formRef.current?.querySelectorAll(
+        rows
+          ? `${own}, [data-slot="field"][${DATA_FIELD_NAME}^="${escaped}."]`
+          : own
+      ) ?? []
+    )
+  }
 
   const noted = (
     name: string,
@@ -561,9 +575,9 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
       .map(([key, at]) => `${key}:${at}`)
       .join(' ')
 
-  // A control is named with its rows at their positions, and a field is
-  // marked by the id the form keeps it under: the rows can move between the
-  // mark and the change that takes it off. See `translateRows`.
+  // A field carries its name with its rows at their positions, as its control
+  // does, and is marked by the id the form keeps it under: the rows can move
+  // between the mark and the change that takes it off. See `translateRows`.
   const lists = () => read().store.get(mountedListsAtom)
 
   const clear = (name: string) => {
@@ -572,10 +586,8 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
     if (shown === undefined) {
       return
     }
-    for (const control of read().formRef.current?.querySelectorAll(
-      `[name="${CSS.escape(shown)}"]`
-    ) ?? []) {
-      fieldOf(control)?.removeAttribute('data-agent-filled')
+    for (const field of fieldsOf(shown)) {
+      field.removeAttribute('data-agent-filled')
     }
   }
 
@@ -648,17 +660,13 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
         if (shown === undefined) {
           continue
         }
-        const escaped = CSS.escape(shown)
-        for (const control of form.querySelectorAll(
-          `[name="${escaped}"], [name^="${escaped}."]`
-        )) {
-          const field = fieldOf(control)
-          const controlName = control.getAttribute('name')
+        for (const field of fieldsOf(shown, true)) {
+          const fieldName = field.getAttribute(DATA_FIELD_NAME)
           const key =
-            controlName === null
+            fieldName === null
               ? undefined
-              : translateRows(controlName, mounted, 'id')
-          if (field && key !== undefined) {
+              : translateRows(fieldName, mounted, 'id')
+          if (key !== undefined) {
             field.setAttribute('data-agent-filled', '')
             marked.set(key, noted(key, touched))
             fields.add(field)

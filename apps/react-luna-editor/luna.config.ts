@@ -4,6 +4,7 @@ import { Chips } from './components/ui/wrapper/chips'
 import { ComboboxWithGroup } from './components/ui/wrapper/combobox'
 import { DatePickerInput } from './components/ui/wrapper/date-picker'
 import { DayOfWeekWrapper } from './components/ui/wrapper/day-of-week'
+import { Expression } from './components/ui/wrapper/expression'
 import { Input } from './components/ui/input'
 import { Radio } from './components/ui/wrapper/radio'
 import { Select } from './components/ui/wrapper/select'
@@ -42,6 +43,7 @@ export default defineConfig({
 
     defineCustomInput('checkbox/switch', Switch),
     defineCustomInput('chips/day', DayOfWeekWrapper),
+    defineCustomInput('input/expression', Expression),
     defineCustomInput('input/date', DatePickerInput),
     defineCustomInput('select/timezone', ComboboxWithGroup),
 
