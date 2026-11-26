@@ -1582,6 +1582,28 @@ test.describe(
         .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
     })
 
+    // A host that changes what its action returns on a form it keeps: the
+    // definition and the sections stay the same objects, and `_submit`
+    // declares the new shape all the same.
+    test('should declare the new output when the host changes only the output', async ({
+      page,
+    }) => {
+      const data = async () =>
+        (await list(page)).find((tool) => tool.name === 'preview_submit')
+          ?.outputSchema.properties
+      await openWith(page, NAME_ONLY)
+      expect(await data()).toHaveProperty('data', { type: 'object' })
+
+      await page.evaluate(
+        (output) =>
+          (
+            window as Window & { __lunaOutput?: (output: object) => void }
+          ).__lunaOutput?.(output),
+        OUTPUT
+      )
+      await expect.poll(data).toHaveProperty('data', OUTPUT)
+    })
+
     // An agent told of a submission looks for a way to send it.
     test('should speak of no submission, nor read one, when the form is offered without submit', async ({
       page,
@@ -1993,7 +2015,10 @@ function schemaOf(schema: string | Answer): Answer {
   return typeof schema === 'string' ? JSON.parse(schema) : schema
 }
 
-type WebMCPWindow = Window & { __toolChanges?: number }
+type WebMCPWindow = Window & {
+  __submitOutput?: Readonly<Record<string, object>>
+  __toolChanges?: number
+}
 
 // Counts what WebMCP tells the page about its tools changing.
 function countToolChanges() {
@@ -2004,6 +2029,32 @@ function countToolChanges() {
   modelContext?.addEventListener('toolchange', () => {
     counted.__toolChanges = (counted.__toolChanges ?? 0) + 1
   })
+}
+
+// Keeps the `properties` of the `outputSchema` the page last registered its
+// submit tool with.
+function recordSubmitOutput() {
+  type Registered = Readonly<{
+    name: string
+    outputSchema?: Readonly<{ properties?: Readonly<Record<string, object>> }>
+  }>
+  const modelContext = (
+    document as Document & {
+      modelContext?: {
+        registerTool: (tool: Registered, options?: object) => Promise<void>
+      }
+    }
+  ).modelContext
+  if (!modelContext) {
+    return
+  }
+  const registerTool = modelContext.registerTool.bind(modelContext)
+  modelContext.registerTool = (tool, options) => {
+    if (tool.name.endsWith('_submit')) {
+      ;(window as WebMCPWindow).__submitOutput = tool.outputSchema?.properties
+    }
+    return registerTool(tool, options)
+  }
 }
 
 function webmcpTools(page: Page) {
@@ -2036,6 +2087,13 @@ async function swap(page: Page, form: object) {
     },
     JSON.stringify(JSON.stringify(form, null, 2))
   )
+}
+
+// What a host says its action returns, for the tests that change it alone.
+const OUTPUT = {
+  properties: { id: { type: 'string' } },
+  required: ['id'],
+  type: 'object',
 }
 
 const NAME_ONLY = {
@@ -2226,6 +2284,27 @@ test.describe(
       await expect
         .poll(titles)
         .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
+    // The browser does not hand an `outputSchema` back through `getTools()`,
+    // so the test reads what the page registers.
+    test('should register the tools anew when the host changes only the output', async ({
+      page,
+    }) => {
+      await page.addInitScript(recordSubmitOutput)
+      const data = () =>
+        page.evaluate(() => (window as WebMCPWindow).__submitOutput?.data)
+      await openWith(page, NAME_ONLY)
+      await expect.poll(data).toEqual({ type: 'object' })
+
+      await page.evaluate(
+        (output) =>
+          (
+            window as Window & { __lunaOutput?: (output: object) => void }
+          ).__lunaOutput?.(output),
+        OUTPUT
+      )
+      await expect.poll(data).toEqual(OUTPUT)
     })
 
     test('should register nothing under a name some consumer would refuse', async ({

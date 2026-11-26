@@ -320,7 +320,9 @@ export function useAgentTools(form: AgentForm) {
   const title = form.agent?.title
   const validates = form.validates
   // By content: a host that defines its config in a component makes the
-  // record anew on every render.
+  // record anew on every render, and writes the shape of what its action
+  // returns inline.
+  const output = JSON.stringify(form.agent?.output ?? null)
   const types = JSON.stringify(form.types ?? null)
   useEffect(() => {
     if (!name) {
@@ -346,6 +348,7 @@ export function useAgentTools(form: AgentForm) {
     description,
     localization,
     name,
+    output,
     sections,
     submit,
     targets,

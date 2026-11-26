@@ -22,6 +22,10 @@ declare global {
     // what it is told of each call they answered.
     __lunaAllow?: AgentOptions['allow']
     __lunaOnCall?: AgentOptions['onCall']
+    // Sets the shape of what the preview's action returns and nothing else:
+    // the definition, and the sections the form is handed, keep their
+    // identity.
+    __lunaOutput?: (output: AgentOptions['output']) => void
     // Retitles the preview's tools and nothing else: the definition, and the
     // sections the form is handed, keep their identity.
     __lunaRetitle?: (title: string) => void
@@ -194,9 +198,21 @@ export function ReactiveFormPreview() {
     }
   }, [])
 
+  // The shape of what the action returns, set through `window.__lunaOutput`.
+  const [output, setOutput] = useState<AgentOptions['output']>()
+  useEffect(() => {
+    window.__lunaOutput = setOutput
+    return () => {
+      if (window.__lunaOutput === setOutput) {
+        delete window.__lunaOutput
+      }
+    }
+  }, [])
+
   // How the preview is offered to an agent. A test changes its name,
-  // description, submit, target or title in the injected JSON, or the
-  // title alone through `window.__lunaRetitle`, or offers none with
+  // description, submit, target or title in the injected JSON, the title
+  // alone through `window.__lunaRetitle`, or the shape of what its action
+  // returns through `window.__lunaOutput`, or offers none with
   // `"agent": false`, decides what `allow` answers through
   // `window.__lunaAllow`, and hears of each call through `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
@@ -215,11 +231,12 @@ export function ReactiveFormPreview() {
       }),
       ...(opened !== undefined && { target: opened }),
       ...(retitled !== undefined && { title: retitled }),
+      ...(output && { output }),
       allow: (call, options) =>
         window.__lunaAllow ? window.__lunaAllow(call, options) : true,
       onCall: (call) => window.__lunaOnCall?.(call),
     }),
-    [offered, opened, retitled]
+    [offered, opened, output, retitled]
   )
   const nested = host?.nested === true
   const declared = host?.declared === true
