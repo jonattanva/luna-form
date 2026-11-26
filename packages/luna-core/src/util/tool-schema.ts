@@ -161,8 +161,20 @@ export function joinSentences(pieces: readonly (string | undefined)[]): string {
 // What a schema cannot declare: a key for one leaf of one row. `name` is the
 // list's whole name, through the first row of a list it is in.
 function describeRoutes(name: string): string {
-  const route = name.replace(/\.0\./g, '.<row>.')
-  return `Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: ${route}.<row>.<field>.`
+  return `Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: ${anyRow(name)}.<row>.<field>.`
+}
+
+// A whole name the walk wrote through the first row of each list, with each
+// row as any row: what a note says holds in each of them.
+function anyRow(name: string): string {
+  return name.replace(/\.0\./g, '.<row>.')
+}
+
+// How a note on a slot of the row `row` (`items.0.`, or nothing at the top)
+// names a field of that row, by its path from it: as this row's, since what
+// the note says holds in each row, never through a row number.
+function fromRow(row: string, path: string): string {
+  return row === '' ? path : `this row's ${path}`
 }
 
 // A bound the form cannot read refuses whatever is written, and lets an
@@ -283,7 +295,7 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
 
       const described = properties.has(entry.name)
       if (isList(entry)) {
-        const list = buildList(entry, walk, name)
+        const list = buildList(entry, walk, prefix)
         if (!described) {
           properties.set(entry.name, list.schema)
         }
@@ -294,7 +306,7 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
       }
 
       if (!described) {
-        properties.set(entry.name, buildLeaf(entry, walk, name))
+        properties.set(entry.name, buildLeaf(entry, walk, prefix))
       }
       // A field nothing shows or unlocks yet is not required yet, as the submit
       // reads it. Its note says when it will be.
@@ -401,9 +413,10 @@ function findRevealer(
 function buildList(
   list: List,
   walk: Walk,
-  name: string
+  row: string
 ): Readonly<{ required: boolean; schema: ToolSchema }> {
-  const row = buildLevel(list.fields, walk, `${name}.0.`)
+  const name = row + list.name
+  const rows = buildLevel(list.fields, walk, `${name}.0.`)
   const { max, min } = getListBounds(list)
 
   const notes: string[] = []
@@ -412,14 +425,14 @@ function buildList(
     notes.push('It keeps the rows it has: send each of them, in order.')
   }
   notes.push(describeRoutes(name))
-  notes.push(...availabilityNotes(list, walk, name))
+  notes.push(...availabilityNotes(list, walk, row))
 
   const schema = withText(
     {
       items: {
         additionalProperties: false,
-        properties: Object.fromEntries(row.properties),
-        ...(row.required.size > 0 && { required: [...row.required] }),
+        properties: Object.fromEntries(rows.properties),
+        ...(rows.required.size > 0 && { required: [...rows.required] }),
         type: 'object',
       },
       ...(Number.isFinite(max) && { maxItems: max }),
@@ -432,20 +445,21 @@ function buildList(
   )
 
   return {
-    required: !list.hidden && min > 0 && row.required.size > 0,
+    required: !list.hidden && min > 0 && rows.required.size > 0,
     schema,
   }
 }
 
-function buildLeaf(field: Field, walk: Walk, name: string): ToolSchema {
+function buildLeaf(field: Field, walk: Walk, row: string): ToolSchema {
+  const name = row + field.name
   // A submit that checks nothing has none of the rules only a submit checks.
   const checked = walk.validates ? field : withoutDeclarativeRules(field)
   const notes: string[] = []
   const schema = describeValue(checked, walk, name, notes)
 
   notes.push(
-    ...availabilityNotes(field, walk, name),
-    ...ruleNotes(checked, walk, name !== field.name)
+    ...availabilityNotes(field, walk, row),
+    ...ruleNotes(checked, walk, row)
   )
   return withText(schema, field, notes, walk)
 }
@@ -768,8 +782,9 @@ export function listOptions(choices: readonly Choice[]): string {
 function availabilityNotes(
   slot: Field | List,
   walk: Walk,
-  name: string
+  row: string
 ): string[] {
+  const name = row + slot.name
   const locked = isField(slot) && slot.disabled === true
   const shows = slot.hidden ? findRevealer(walk, name, 'shows') : undefined
   const unlocks = locked ? findRevealer(walk, name, 'unlocks') : undefined
@@ -777,9 +792,16 @@ function availabilityNotes(
     return []
   }
 
-  const sources = [...new Set([shows?.source, unlocks?.source])].filter(
-    (source) => source !== undefined
-  )
+  // A change in a row reaches its own row or one around it, so the field that
+  // fires it is in the slot's row or under it, unless it is outside every
+  // list: a target written as a whole name reaches a row from outside.
+  const sources = [...new Set([shows?.source, unlocks?.source])]
+    .filter((source) => source !== undefined)
+    .map((source) =>
+      anyRow(
+        source.startsWith(row) ? fromRow(row, source.slice(row.length)) : source
+      )
+    )
   const state =
     shows && unlocks ? 'Hidden and locked' : shows ? 'Hidden' : 'Locked'
   const notes = [
@@ -794,7 +816,7 @@ function availabilityNotes(
 
 // The rules of a field no keyword says. A `custom` the field checks as it is
 // written, and the submit again when it checks.
-function ruleNotes(field: Field, walk: Walk, inRow: boolean): string[] {
+function ruleNotes(field: Field, walk: Walk, row: string): string[] {
   const notes: string[] = []
   const validation = field.validation
 
@@ -802,9 +824,8 @@ function ruleNotes(field: Field, walk: Walk, inRow: boolean): string[] {
   const requiredWhen = validation?.requiredWhen
   if (requiredWhen) {
     const rules = Array.isArray(requiredWhen) ? requiredWhen : [requiredWhen]
-    const scope = inRow ? "this row's " : ''
     notes.push(
-      `Required when ${rules.map((rule) => scope + describeWhen(rule)).join(' or ')}.`
+      `Required when ${rules.map((rule) => fromRow(row, describeWhen(rule))).join(' or ')}.`
     )
   }
 

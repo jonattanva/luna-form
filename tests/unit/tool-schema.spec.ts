@@ -877,6 +877,136 @@ describe('buildToolSchema', () => {
       ).toBeDefined()
     })
 
+    // The event fires in every row, and reaches the row it fired in: the note
+    // names no row by its number.
+    describe('a field a change in a row makes available', () => {
+      const rowOf = (fields: Fields) =>
+        propertyOf(fields, 'outer')?.items?.properties
+
+      test('should name a field of its own row as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  event: reveal('outer/note', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+                { hidden: true, name: 'note', type: 'input/text' },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.note?.description
+        ).toBe(
+          "Hidden until a change to this row's flag makes it available: send it in the same call."
+        )
+      })
+
+      test('should name a field of its own row in a nested list as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  fields: [
+                    {
+                      event: reveal('inner/note', { disabled: false }),
+                      name: 'flag',
+                      type: 'checkbox',
+                    },
+                    { disabled: true, name: 'note', type: 'input/text' },
+                  ],
+                  name: 'inner',
+                  type: 'list',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.inner?.items?.properties?.note?.description
+        ).toBe(
+          "Locked until a change to this row's flag makes it available: send it in the same call."
+        )
+      })
+
+      test('should name a field of its own row that shows a nested list as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  event: reveal('outer/inner', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+                {
+                  fields: [{ name: 'item', type: 'input/text' }],
+                  hidden: true,
+                  name: 'inner',
+                  type: 'list',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.inner?.description
+        ).toContain(
+          "Hidden until a change to this row's flag makes it available"
+        )
+      })
+
+      test('should name a field of a nested row by any of its rows', () => {
+        const note = rowOf([
+          {
+            fields: [
+              {
+                fields: [
+                  {
+                    event: reveal('outer/note', { hidden: false }),
+                    name: 'flag',
+                    type: 'checkbox',
+                  },
+                ],
+                name: 'inner',
+                type: 'list',
+              },
+              { hidden: true, name: 'note', type: 'input/text' },
+            ],
+            name: 'outer',
+            type: 'list',
+          },
+        ])?.note?.description
+        expect(note).toBe(
+          "Hidden until a change to this row's inner.<row>.flag makes it available: send it in the same call."
+        )
+      })
+
+      test('should name a field of a row by any of its rows from outside the list', () => {
+        const note = propertyOf(
+          [
+            {
+              fields: [
+                {
+                  event: reveal('summary', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+            { hidden: true, name: 'summary', type: 'input/text' },
+          ],
+          'summary'
+        )?.description
+        expect(note).toBe(
+          'Hidden until a change to outer.<row>.flag makes it available: send it in the same call.'
+        )
+      })
+    })
+
     // From outside the row, the form resolves `items/discount` to the
     // top-level `discount`: the row's leaf is never shown.
     test('should leave out a leaf of a row that only a change outside the row targets', () => {

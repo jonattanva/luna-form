@@ -520,6 +520,14 @@ and a field in the rows of a list with `"agent": false` stay out.
   a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
   The field's own description, and a custom input's, is closed with a period
   before what follows when it does not end a sentence, as `description` above.
+- A note in a list's row holds for each row, so it names no row by its number.
+  A field of the same row is this row's, as in
+  `Hidden until a change to this row's flag makes it available` or
+  `Required when this row's mode eq "strict".`, in a nested list too. A field
+  in the rows of a list under it, or a field of a row named from outside the
+  list, counts each row as `<row>`, the way the list's routes do:
+  `this row's inner.<row>.flag`, `outer.<row>.flag`. A field outside every list
+  is named as it is.
 - A field listed in `lookup` has no `enum`, so its description points to
   `<name>_options` and says that an option is passed by its value or its
   label. A field whose options are listed does not say it: its `enum` holds
