@@ -22,6 +22,9 @@ declare global {
     // what it is told of each call they answered.
     __lunaAllow?: AgentOptions['allow']
     __lunaOnCall?: AgentOptions['onCall']
+    // Retitles the preview's tools and nothing else: the definition, and the
+    // sections the form is handed, keep their identity.
+    __lunaRetitle?: (title: string) => void
     __lunaTools?: Readonly<{ call: typeof callTool; list: typeof listTools }>
   }
 }
@@ -180,9 +183,21 @@ export function ReactiveFormPreview() {
     setValues(isRecord(item) ? item : {})
   }
 
+  // A title set through `window.__lunaRetitle`, over the injected one.
+  const [retitled, setRetitled] = useState<string>()
+  useEffect(() => {
+    window.__lunaRetitle = setRetitled
+    return () => {
+      if (window.__lunaRetitle === setRetitled) {
+        delete window.__lunaRetitle
+      }
+    }
+  }, [])
+
   // How the preview is offered to an agent. A test changes its name,
-  // description, submit, target or title in the injected JSON, or offers none
-  // with `"agent": false`, decides what `allow` answers through
+  // description, submit, target or title in the injected JSON, or the
+  // title alone through `window.__lunaRetitle`, or offers none with
+  // `"agent": false`, decides what `allow` answers through
   // `window.__lunaAllow`, and hears of each call through `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
     () => ({
@@ -199,11 +214,12 @@ export function ReactiveFormPreview() {
         ...(typeof offered.title === 'string' && { title: offered.title }),
       }),
       ...(opened !== undefined && { target: opened }),
+      ...(retitled !== undefined && { title: retitled }),
       allow: (call, options) =>
         window.__lunaAllow ? window.__lunaAllow(call, options) : true,
       onCall: (call) => window.__lunaOnCall?.(call),
     }),
-    [offered, opened]
+    [offered, opened, retitled]
   )
   const nested = host?.nested === true
   const declared = host?.declared === true

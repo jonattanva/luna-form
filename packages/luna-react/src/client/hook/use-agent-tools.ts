@@ -317,6 +317,7 @@ export function useAgentTools(form: AgentForm) {
   // Only whether the host names the item the form edits: which one is read
   // on every call.
   const targets = form.agent?.target !== undefined
+  const title = form.agent?.title
   const validates = form.validates
   // By content: a host that defines its config in a component makes the
   // record anew on every render.
@@ -348,6 +349,7 @@ export function useAgentTools(form: AgentForm) {
     sections,
     submit,
     targets,
+    title,
     types,
     validates,
   ])

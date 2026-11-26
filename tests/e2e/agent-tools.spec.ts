@@ -1559,6 +1559,29 @@ test.describe(
       })
     }
 
+    // A host that retitles a form it keeps: the definition and the sections
+    // stay the same objects, and the tools are titled anew all the same.
+    test('should title the tools anew when the host changes only the title', async ({
+      page,
+    }) => {
+      const titles = async () => (await list(page)).map((tool) => tool.title)
+      await openWith(page, NAME_ONLY)
+      expect(await titles()).toEqual([
+        'Fill: preview',
+        'Read: preview',
+        'Submit: preview',
+      ])
+
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaRetitle?: (title: string) => void }
+        ).__lunaRetitle?.('Question 2')
+      )
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
     // An agent told of a submission looks for a way to send it.
     test('should speak of no submission, nor read one, when the form is offered without submit', async ({
       page,
@@ -2174,6 +2197,35 @@ test.describe(
       await expect
         .poll(async () => (await webmcpTools(page)).map((tool) => tool.name))
         .toEqual(['renamed_fill', 'renamed_read', 'renamed_submit'])
+    })
+
+    test('should register the tools anew when the host changes only the title', async ({
+      page,
+    }) => {
+      const titles = () =>
+        page.evaluate(async () => {
+          const modelContext = (
+            document as Document & {
+              modelContext: Readonly<{
+                getTools: () => Promise<Array<Readonly<{ title?: string }>>>
+              }>
+            }
+          ).modelContext
+          return (await modelContext.getTools()).map((tool) => tool.title)
+        })
+      await openWith(page, NAME_ONLY)
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: preview', 'Read: preview', 'Submit: preview'])
+
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaRetitle?: (title: string) => void }
+        ).__lunaRetitle?.('Question 2')
+      )
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
     })
 
     test('should register nothing under a name some consumer would refuse', async ({
