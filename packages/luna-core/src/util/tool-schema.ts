@@ -820,8 +820,10 @@ export function listOptions(choices: readonly Choice[]): string {
     .join(', ')
 }
 
-// What it takes for a slot that is hidden or locked to be written: what makes
-// it available, and that it is required once it is.
+// What it takes for a slot that is hidden or locked to be written: what shows
+// or unlocks it, and that it is required while it is available. Said as a
+// rule, not as a state: the schema is built from the definition, so the same
+// note is read while the slot is hidden and once it is shown.
 function availabilityNotes(
   slot: Field | List,
   walk: Walk,
@@ -835,23 +837,24 @@ function availabilityNotes(
     return []
   }
 
-  const until =
+  const rule =
     shows === unlocks
-      ? `Hidden and locked until ${shows}`
+      ? `Shown and unlocked ${shows}`
       : shows
-        ? `Hidden until ${shows}${unlocks && ` and locked until ${unlocks}`}`
-        : `Locked until ${unlocks}`
-  const notes = [`${until}: send it in the same call.`]
+        ? `Shown ${shows}${unlocks && ` and unlocked ${unlocks}`}`
+        : `Unlocked ${unlocks}`
+  const notes = [`${rule}: send it in the same call.`]
 
   if (isField(slot) && slot.required) {
-    notes.push('Required once it is available.')
+    notes.push('Required while it is available.')
   }
   return notes
 }
 
-// What shows, or unlocks, the slot: the values that do it, when every event
-// that does compares the value the agent writes with values of its own, or
-// else a change to each field whose events do it. See `readWhen`.
+// When the slot is shown, or unlocked: while the values that do it are
+// written, when every event that does compares the value the agent writes with
+// values of its own, or else for some values of each field whose events do it.
+// See `readWhen`.
 function describeReveal(
   walk: Walk,
   name: string,
@@ -875,8 +878,8 @@ function describeReveal(
   const unique = (texts: readonly (string | false | undefined)[]) =>
     [...new Set(texts)].join(' or ')
   return values.every(Boolean)
-    ? unique(values)
-    : `a change to ${unique(by)} makes it available`
+    ? `while ${unique(values)}`
+    : `for some values of ${unique(by)}`
 }
 
 // The rules of a field no keyword says, each with its message. A `custom` the

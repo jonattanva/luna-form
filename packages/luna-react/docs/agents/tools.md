@@ -545,7 +545,7 @@ and a field in the rows of a list with `"agent": false` stay out.
   before what follows when it does not end a sentence, as `description` above.
 - A note in a list's row holds for each row, so it names no row by its number.
   A field of the same row is this row's, as in
-  `Hidden until a change to this row's flag makes it available` or
+  `Shown for some values of this row's flag` or
   `Required when this row's mode equals "strict".`, in a nested list too. A field
   in the rows of a list under it, or a field of a row named from outside the
   list, counts each row as `<row>`, the way the list's routes do:
@@ -602,19 +602,23 @@ and a field in the rows of a list with `"agent": false` stay out.
   `The form checks more rules for it.` before its message: a bound that is not
   a number, `minItems` or `maxItems` on a field that holds no list, and a
   `oneOf` without a list.
-- A hidden or locked field says what makes it available. When every `state`
-  event that shows it (or unlocks it) compares the new value with values of its own, the
-  description cites them, in the phrases above: a string `when` as `eq`, an
-  array as `in`, a condition by its operator, such as
-  `Hidden until kind is one of ["list","group"]: send it in the same call.`
+- A hidden or locked field says what makes it available, as a rule that holds
+  whatever the form holds: the schema is built from the definition, so the
+  note reads the same while the field is hidden and once it is shown. Whether
+  it is hidden or locked right now is what `<name>_read` answers. When every
+  `state` event that shows it (or unlocks it) compares the new value with
+  values of its own, the description cites them, in the phrases above: a
+  string `when` as `eq`, an array as `in`, a condition by its operator, such as
+  `Shown while kind is one of ["list","group"]: send it in the same call.`
   Several events are joined by `or`. When one of them cannot be put that way,
-  it names the fields whose change does it instead:
-  `Hidden until a change to kind makes it available`. That is an event with no
-  `when`, a condition with `field` (it reads a key of the chosen option), one
-  on a `chips` field (it is matched by its selections), or one whose operator
-  the form cannot read. A field that is both hidden and locked says each, as
-  `Hidden until kind equals "list" and locked until kind equals "group"`, or
-  `Hidden and locked until ...` when the same thing does both.
+  it names the fields whose values do it instead:
+  `Shown for some values of kind`. That is an event with no `when`, a
+  condition with `field` (it reads a key of the chosen option), one on a
+  `chips` field (it is matched by its selections), or one whose operator the
+  form cannot read. A field that is both hidden and locked says each, as
+  `Shown while kind equals "list" and unlocked while kind equals "group"`, or
+  `Shown and unlocked while ...` when the same thing does both. A required one
+  adds `Required while it is available.`
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a

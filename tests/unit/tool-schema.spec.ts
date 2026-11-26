@@ -914,7 +914,7 @@ describe('buildToolSchema', () => {
       ])
 
       expect(result.schema.properties?.frequency?.description).toBe(
-        'Options: weekly (Weekly). Hidden until a change to newsletter makes it available: send it in the same call. Required once it is available.'
+        'Options: weekly (Weekly). Shown for some values of newsletter: send it in the same call. Required while it is available.'
       )
       expect(result.required).toEqual([])
     })
@@ -939,7 +939,7 @@ describe('buildToolSchema', () => {
       ])
 
       expect(result.schema.properties?.cardNumber?.description).toBe(
-        'Hidden and locked until a change to paymentMethod makes it available: send it in the same call. Required once it is available.'
+        'Shown and unlocked for some values of paymentMethod: send it in the same call. Required while it is available.'
       )
       expect(result.required).toEqual([])
     })
@@ -1055,7 +1055,7 @@ describe('buildToolSchema', () => {
             },
           ])?.note?.description
         ).toBe(
-          "Hidden until a change to this row's flag makes it available: send it in the same call."
+          "Shown for some values of this row's flag: send it in the same call."
         )
       })
 
@@ -1082,7 +1082,7 @@ describe('buildToolSchema', () => {
             },
           ])?.inner?.items?.properties?.note?.description
         ).toBe(
-          "Locked until a change to this row's flag makes it available: send it in the same call."
+          "Unlocked for some values of this row's flag: send it in the same call."
         )
       })
 
@@ -1107,9 +1107,7 @@ describe('buildToolSchema', () => {
               type: 'list',
             },
           ])?.inner?.description
-        ).toContain(
-          "Hidden until a change to this row's flag makes it available"
-        )
+        ).toContain("Shown for some values of this row's flag")
       })
 
       test('should name a field of a nested row by any of its rows', () => {
@@ -1134,7 +1132,7 @@ describe('buildToolSchema', () => {
           },
         ])?.note?.description
         expect(note).toBe(
-          "Hidden until a change to this row's inner.<row>.flag makes it available: send it in the same call."
+          "Shown for some values of this row's inner.<row>.flag: send it in the same call."
         )
       })
 
@@ -1157,7 +1155,7 @@ describe('buildToolSchema', () => {
           'summary'
         )?.description
         expect(note).toBe(
-          'Hidden until a change to outer.<row>.flag makes it available: send it in the same call.'
+          'Shown for some values of outer.<row>.flag: send it in the same call.'
         )
       })
     })
@@ -1193,22 +1191,22 @@ describe('buildToolSchema', () => {
 
       test('should cite the value a string matches', () => {
         expect(shownBy('list')).toBe(
-          'Hidden until kind equals "list": send it in the same call.'
+          'Shown while kind equals "list": send it in the same call.'
         )
       })
 
       test('should cite the values an array matches', () => {
         expect(shownBy(['list', 'group'])).toBe(
-          'Hidden until kind is one of ["list","group"]: send it in the same call.'
+          'Shown while kind is one of ["list","group"]: send it in the same call.'
         )
       })
 
       test('should cite a condition in words', () => {
         expect(shownBy({ operator: 'gt', value: 100 })).toBe(
-          'Hidden until kind is greater than 100: send it in the same call.'
+          'Shown while kind is greater than 100: send it in the same call.'
         )
         expect(shownBy({ value: 'list' })).toBe(
-          'Hidden until kind equals "list": send it in the same call.'
+          'Shown while kind equals "list": send it in the same call.'
         )
       })
 
@@ -1216,7 +1214,7 @@ describe('buildToolSchema', () => {
       // write; a chips field is matched by its selections, not by its value.
       test('should keep the change when the values cannot be cited', () => {
         const generic =
-          'Hidden until a change to kind makes it available: send it in the same call.'
+          'Shown for some values of kind: send it in the same call.'
         expect(shownBy({ field: 'dial', value: '+56' })).toBe(generic)
         expect(shownBy('list', 'chips')).toBe(generic)
         expect(
@@ -1254,7 +1252,7 @@ describe('buildToolSchema', () => {
             'field'
           )?.items?.properties?.data_type?.description
         ).toBe(
-          'Hidden until this row\'s type equals "list": send it in the same call.'
+          'Shown while this row\'s type equals "list": send it in the same call.'
         )
       })
 
@@ -1292,10 +1290,10 @@ describe('buildToolSchema', () => {
         ]
 
         expect(propertyOf(fields('full'), 'detail')?.description).toBe(
-          'Hidden until kind equals "list" or mode equals "full": send it in the same call.'
+          'Shown while kind equals "list" or mode equals "full": send it in the same call.'
         )
         expect(propertyOf(fields(undefined), 'detail')?.description).toBe(
-          'Hidden until a change to kind or mode makes it available: send it in the same call.'
+          'Shown for some values of kind or mode: send it in the same call.'
         )
       })
 
@@ -1333,7 +1331,7 @@ describe('buildToolSchema', () => {
             'detail'
           )?.description
         ).toBe(
-          'Hidden until kind equals "list" and locked until kind equals "group": send it in the same call.'
+          'Shown while kind equals "list" and unlocked while kind equals "group": send it in the same call.'
         )
         expect(
           propertyOf(
@@ -1362,7 +1360,7 @@ describe('buildToolSchema', () => {
             'detail'
           )?.description
         ).toBe(
-          'Hidden and locked until kind equals "list": send it in the same call.'
+          'Shown and unlocked while kind equals "list": send it in the same call.'
         )
       })
     })

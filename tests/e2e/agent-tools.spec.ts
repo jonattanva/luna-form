@@ -834,6 +834,42 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  // The schema is built from the definition, not from what the form holds:
+  // a note on a field an event shows says the rule, true while it is shown
+  // as much as while it is hidden.
+  test('should say what shows a field as a rule, true once it is shown', async ({
+    page,
+  }) => {
+    await open(page)
+    const describe = async () => {
+      const fill = (await list(page)).find(
+        ({ name }) => name === 'preview_fill'
+      )
+      const properties = fill?.inputSchema.properties as Record<
+        string,
+        Readonly<{ description?: string }>
+      >
+      return [properties.frequency.description, properties.card.description]
+    }
+    const before = await describe()
+
+    expect(await call(page, 'preview_fill', { plan: 'pro' })).toMatchObject({
+      ok: true,
+    })
+    await expect(
+      page.getByRole('combobox', { name: 'Frequency' })
+    ).toBeVisible()
+    expect(
+      await call(page, 'preview_read', { fields: ['frequency', 'card'] })
+    ).toMatchObject({ hidden: [], locked: [] })
+
+    expect(await describe()).toEqual(before)
+    expect(before).toEqual([
+      'Options: weekly (Weekly), monthly (Monthly). Shown while plan equals "pro": send it in the same call.',
+      'Unlocked while plan equals "pro": send it in the same call.',
+    ])
+  })
+
   test("should read a row's hidden fields as hidden, under their route", async ({
     page,
   }) => {
