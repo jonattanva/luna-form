@@ -728,6 +728,84 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test("should read a row's hidden fields as hidden, under their route", async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              fields: [
+                {
+                  event: {
+                    change: [
+                      {
+                        action: 'state',
+                        state: { hidden: false },
+                        target: 'body/mode',
+                        when: 'group',
+                      },
+                      {
+                        action: 'state',
+                        state: { hidden: true },
+                        target: 'body/value',
+                        when: 'group',
+                      },
+                    ],
+                  },
+                  label: 'Kind',
+                  name: 'kind',
+                  source: [
+                    { label: 'Text', value: 'text' },
+                    { label: 'Group', value: 'group' },
+                  ],
+                  type: 'select',
+                },
+                { label: 'Value', name: 'value', type: 'input/text' },
+                {
+                  hidden: true,
+                  label: 'Mode',
+                  name: 'mode',
+                  source: [
+                    { label: 'Any', value: 'any' },
+                    { label: 'All', value: 'all' },
+                  ],
+                  type: 'select',
+                },
+              ],
+              label: 'Body',
+              name: 'body',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+
+    await call(page, 'preview_fill', {
+      body: [
+        { kind: 'text', value: 'a' },
+        { kind: 'group', mode: 'all' },
+      ],
+    })
+
+    // As a field hidden at the top: named in hidden, left out of values, as
+    // the submit leaves it out.
+    const read = await call(page, 'preview_read')
+    expect(read).toMatchObject({
+      hidden: ['body.0.mode', 'body.1.value'],
+      values: {
+        body: [
+          { kind: 'text', value: 'a' },
+          { kind: 'group', mode: 'all' },
+        ],
+      },
+    })
+    const submitted = await call(page, 'preview_submit')
+    expect((submitted.data as Answer).form).toEqual(read.values)
+  })
+
   test('should tell the host of every call, with what it was answered', async ({
     page,
   }) => {

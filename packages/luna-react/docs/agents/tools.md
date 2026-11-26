@@ -164,7 +164,7 @@ corrected by sending them all, in order, or one leaf by its route.
   the schema. A list the call did not send whole, holding the same rows, is
   told by the leaves that changed, under their route. A field skipped as
   [`changed`](#a-person-and-an-agent-at-once) is there too, with what it
-  holds.
+  holds. A row holds only the fields it shows, as `<name>_read` reads it.
 - **`skipped`** holds what was not written, with a [code](#codes).
 - **`errors`** name a row's leaf by its route too: `items.2.quantity`.
 - A time is written and read back as the schema gives it, `HH:mm`, or
@@ -184,6 +184,23 @@ Takes `{ fields? }` and answers what the form holds now: `values`, the fields
 `<name>_submit`, `submit`, the last submission (`idle`, `awaiting_approval` with its `deadline`, `refused` with
 its `message`, `pending`, `success` with its `data`, or `error`). Up to 100
 fields a call; `more` says how many are left to ask for.
+
+A field that is not on the form is in `hidden` and not in `values`, as a
+submit leaves it out. A row's field that its row does not show is the same:
+it is in `hidden` by its route, and its row in `values` does not hold it. A
+row of a collapsed list still shows its fields.
+
+```json
+{
+  "hidden": ["body.0.mode", "body.1.value"],
+  "values": {
+    "body": [
+      { "kind": "text", "value": "a" },
+      { "kind": "group", "mode": "all" }
+    ]
+  }
+}
+```
 
 ### `<name>_options`
 

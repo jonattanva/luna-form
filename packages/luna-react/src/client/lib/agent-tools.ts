@@ -1085,6 +1085,7 @@ export function createFormTools(
         locked.push(name)
       }
       values[name] = readField(name)
+      hidden.push(...hiddenLeaves(name, properties[name], values[name]))
     }
 
     // Told what they hold: a field hidden is not.
@@ -1645,6 +1646,28 @@ function present(
   }
 
   return value
+}
+
+// The leaves of a list's rows that a row does not hold, under their route:
+// the form leaves out what a row does not show, a list in a row included.
+function hiddenLeaves(
+  name: string,
+  schema: ToolSchema | undefined,
+  value: ToolJson
+): string[] {
+  const leaves = schema?.items?.properties
+  if (!isRowsOf(schema) || !leaves || !isToolList(value)) {
+    return []
+  }
+  return value.flatMap((row, index) =>
+    isToolObject(row)
+      ? Object.entries(leaves).flatMap(([leaf, inner]) => {
+          const route = `${name}.${index}.${leaf}`
+          const held = ownProperty(row, leaf)
+          return held === undefined ? [route] : hiddenLeaves(route, inner, held)
+        })
+      : []
+  )
 }
 
 // The errors of the fields named, and of the leaves of the lists among them.

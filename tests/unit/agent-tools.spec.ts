@@ -1816,6 +1816,51 @@ describe('createFormTools', () => {
       })
     })
 
+    test("should name the leaves a row does not show as hidden, by their route, a list in a row's too", async () => {
+      const fields: Fields = [
+        {
+          fields: [
+            { name: 'title', type: 'input/text' },
+            {
+              fields: [
+                { name: 'code', type: 'input/text' },
+                { name: 'note', type: 'input/text' },
+              ],
+              name: 'parts',
+              type: 'list',
+            },
+          ],
+          name: 'groups',
+          type: 'list',
+        },
+      ]
+      const form = createForm({
+        absent: [],
+        values: {
+          // The host leaves out what a row does not show.
+          groups: [
+            { parts: [{ code: 'a' }, { code: 'b', note: 'n' }], title: 'A' },
+            { title: 'B' },
+          ],
+        },
+      })
+      const [, read] = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        form.host
+      )
+
+      expect(await read.execute({})).toMatchObject({
+        hidden: ['groups.0.parts.0.note', 'groups.1.parts'],
+        values: {
+          groups: [
+            { parts: [{ code: 'a' }, { code: 'b', note: 'n' }], title: 'A' },
+            { title: 'B' },
+          ],
+        },
+      })
+    })
+
     test('should read a time as the schema gives it, whatever format the field shows', async () => {
       const fields: Fields = [
         { advanced: { format: 'hh:mm a' }, name: 'alarm', type: 'input/time' },

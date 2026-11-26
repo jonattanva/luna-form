@@ -1,4 +1,4 @@
-import { composeListValue } from './compose-list-value'
+import { composeListValue, itemKey, type ListRows } from './compose-list-value'
 import { isUnder } from './store-helper'
 import { createFormTools, createQueue, type Queue } from './agent-tools'
 import { fieldStateAtom } from './state-store'
@@ -363,9 +363,33 @@ function createFormHost(
       const mounted = lists()
       const list = mounted[name]
       const values = store().get(valueAtom)
-      return list
-        ? composeListValue(name, list, { mounted, values }).map(toRow)
-        : toToolValue(values[name])
+      if (!list) {
+        return toToolValue(values[name])
+      }
+
+      // A leaf its row does not show has no handle, and is left out as a
+      // submit leaves it out: a list in a row too. A collapsed row still shows
+      // its leaves.
+      const handles = getHandles()
+      const shown = (key: string, rows: MountedList, held: ListRows) =>
+        held.map((row, index): ToolRow => {
+          const id = rows.items[index]
+          return Object.fromEntries(
+            Object.entries(row).flatMap(([leaf, value]) => {
+              const at = id === undefined ? '' : itemKey(key, id, leaf)
+              const inner = mounted[at]
+              if (inner && Array.isArray(value)) {
+                return [[leaf, shown(at, inner, value)]]
+              }
+              return handles.has(at) ? [[leaf, toToolValue(value)]] : []
+            })
+          )
+        })
+      return shown(
+        name,
+        list,
+        composeListValue(name, list, { mounted, values })
+      )
     },
 
     settle: () => settle(store, getHandles),
