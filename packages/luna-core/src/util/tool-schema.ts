@@ -465,14 +465,45 @@ function buildLeaf(field: Field, walk: Walk, row: string): ToolSchema {
   return withText(schema, field, notes, walk)
 }
 
-// The value a field holds, by type. The order matters where types overlap:
-// `select/month` is a `select` too, and `chips/day` a `chips`.
+// The values the form holds as text, or a number it reads as text: the ones a
+// pattern reads.
+const TEXTUAL: ReadonlySet<ToolSchema['type']> = new Set([
+  'integer',
+  'number',
+  'string',
+])
+
+// The value a field holds, by type, with its pattern: the one place that
+// says it. The submit checks a pattern against the text of any field, so a
+// field typed as text carries it in its schema, and any other the agent
+// writes text or a number into says it in its note. A box, a list, a range
+// or an object never holds text a pattern reads.
 function describeValue(
   field: Field,
   walk: Walk,
   name: string,
   notes: string[]
 ): ToolSchema {
+  const typed = describeTyped(field, walk, name, notes)
+  if (!typed) {
+    const text = describeText(field, notes, walk.dictionary)
+    return isEmail(field) ? { ...text, format: 'email' } : text
+  }
+  if (TEXTUAL.has(typed.type)) {
+    readPattern(field, notes, walk.dictionary, false)
+  }
+  return typed
+}
+
+// The value of a field not typed as text, by type: `undefined` for one that
+// is. The order matters where types overlap: `select/month` is a `select`
+// too, and `chips/day` a `chips`.
+function describeTyped(
+  field: Field,
+  walk: Walk,
+  name: string,
+  notes: string[]
+): ToolSchema | undefined {
   // A type the host declares a schema for is described by it, a built-in one
   // too: the host knows what its own component takes. One it keeps from
   // agents never reaches here.
@@ -501,13 +532,6 @@ function describeValue(
     return {
       pattern: seconds ? '^\\d{2}:\\d{2}:\\d{2}$' : '^\\d{2}:\\d{2}$',
       type: 'string',
-    }
-  }
-
-  if (isEmail(field)) {
-    return {
-      ...describeText(field, notes, walk.dictionary),
-      format: 'email',
     }
   }
 
@@ -557,7 +581,7 @@ function describeValue(
     return describeChoice(field, walk, name, notes)
   }
 
-  return describeText(field, notes, walk.dictionary)
+  return undefined
 }
 
 function describeDate(field: DateField, notes: string[]): ToolSchema {
@@ -625,7 +649,7 @@ function describeText(
   if (unreadable) {
     notes.push(UNREADABLE)
   }
-  const pattern = readPattern(field, notes, dictionary)
+  const pattern = readPattern(field, notes, dictionary, true)
   return {
     ...(!unreadable && min !== undefined && { minLength: min }),
     ...(!unreadable && max !== undefined && { maxLength: max }),
@@ -634,8 +658,10 @@ function describeText(
   }
 }
 
-// A field's pattern, when JSON Schema can carry it: a regular expression with
-// no flags that compiles in Unicode mode, which is how JSON Schema reads one.
+// A field's pattern, as the `pattern` keyword when `keyword` lets the schema
+// carry it and JSON Schema can: a regular expression with no flags that
+// compiles in Unicode mode, which is how JSON Schema reads one. Its message
+// goes in the note either way, as what the pattern is for.
 // Any other pattern is checked on submit and written in the note instead: a
 // flag such as `i` has no place in the keyword, a pattern that lets a
 // template through (`allowInterpolation`) takes values the keyword would
@@ -650,14 +676,20 @@ function describeText(
 function readPattern(
   field: Field,
   notes: string[],
-  dictionary: Record<string, string> | undefined
+  dictionary: Record<string, string> | undefined,
+  keyword: boolean
 ): string | undefined {
   const pattern = field.validation?.pattern
   if (!pattern) {
     return undefined
   }
 
-  if (pattern.flags || pattern.allowInterpolation || !compiles(pattern.regex)) {
+  const carried =
+    keyword &&
+    !pattern.flags &&
+    !pattern.allowInterpolation &&
+    compiles(pattern.regex)
+  if (!carried) {
     const source = pattern.regex.replace(/\\.|\//g, (match) =>
       match === '/' ? '\\/' : match
     )
@@ -667,13 +699,13 @@ function readPattern(
         ? `It must match ${literal}.`
         : 'It must match a pattern the form checks.'
     )
-    const message = readText(pattern.message, dictionary, LABEL_LENGTH)
-    if (message) {
-      notes.push(message)
-    }
-    return undefined
   }
-  return pattern.regex
+
+  const message = readText(pattern.message, dictionary, LABEL_LENGTH)
+  if (message) {
+    notes.push(message)
+  }
+  return carried ? pattern.regex : undefined
 }
 
 function compiles(regex: string): boolean {

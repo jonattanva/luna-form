@@ -550,17 +550,23 @@ and a field in the rows of a list with `"agent": false` stay out.
   label. A field whose options are listed does not say it: its `enum` holds
   the values only, and a client that checks the input against the schema
   would refuse a label, although `<name>_fill` takes one.
-- A `pattern` the schema cannot carry, one with `flags`, with
-  `allowInterpolation`, or that does not compile in Unicode mode, is written in
-  the description as a literal with its flags, such as
-  `It must match /^[a-z]{3}$/i.`, when that takes 100 characters or fewer,
-  escapes included. A bare `/` is escaped, so `^https?://` reads
-  `/^https?:\/\//`, and one already escaped is left as it is. A longer one is
-  never cut, since a part of it would expect something else: the description
-  says `It must match a pattern the form checks.` instead. The
-  pattern's translated `message` follows, cut at 200 characters, unless it
-  interpolates a value. A pattern carried in the `pattern` keyword is not
-  repeated in the description.
+- A `pattern` goes in the `pattern` keyword only on a field written as text:
+  `input`, `input/text`, `input/tel`, `input/email`, `textarea`, and a type
+  `types` gives no schema for. Even there, one with `flags`, with
+  `allowInterpolation`, or that does not compile in Unicode mode is not
+  carried. Every other pattern is written in the description as a literal with
+  its flags, such as `It must match /^[a-z]{3}$/i.`, when that takes 100
+  characters or fewer, escapes included. A bare `/` is escaped, so
+  `^https?://` reads `/^https?:\/\//`, and one already escaped is left as it
+  is. A longer one is never cut, since a part of it would expect something
+  else: the description says `It must match a pattern the form checks.`
+  instead. The submit checks a pattern against any field that holds text, so a
+  number, a day, a time, an option, a month, a year, a time zone and a type
+  `types` describes as a `string`, `number` or `integer` say theirs this way.
+  A field whose schema is a `boolean`, an `array` or an `object` says nothing
+  of one. The pattern's translated `message` follows, in the keyword's case
+  too, cut at 200 characters, unless it interpolates a value. A pattern carried
+  in the keyword is not repeated in the description.
 - A `requiredWhen` is written in words, one condition per rule joined by
   `or`, such as `Required when kind is not one of ["object","array"].` Each
   [operator](../validation/overview.md#operators) has its phrase: `eq`
@@ -597,10 +603,10 @@ The schema uses only these keywords: `type`, `properties`, `required`,
 `maxLength`, `minItems`, `maxItems`, `pattern`, `format`, `title` and
 `description`. There is no `oneOf`, `const`, `$ref` or `multipleOf`: one of the
 model APIs reads a subset of OpenAPI that does not document them. A pattern goes
-in only when it has no flags and compiles in Unicode mode, the way JSON Schema
-reads it; any other pattern is checked on submit and written in the
-description. A form whose submit checks nothing has neither (see
-[Text the agent reads](#text-the-agent-reads)).
+in only on a field written as text, when it has no flags and compiles in
+Unicode mode, the way JSON Schema reads it; any other pattern is checked on
+submit and written in the description. A form whose submit checks nothing has
+neither (see [Text the agent reads](#text-the-agent-reads)).
 
 The same definition in the same language gives the same schema, byte for byte:
 nothing in it depends on the time or on what a person typed. A tool registered

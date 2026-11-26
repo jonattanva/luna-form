@@ -562,9 +562,11 @@ describe('createFormTools', () => {
         name: 'signup',
       }
 
+      // Nor in what a tool declares it answers: an agent reads that too.
       test('should not speak of a submission in any description', () => {
         for (const tool of toolsOf({}, NO_SUBMIT).tools) {
           expect(tool.description).not.toMatch(/submi/i)
+          expect(JSON.stringify(tool.outputSchema)).not.toMatch(/submi/i)
         }
       })
 

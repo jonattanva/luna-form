@@ -211,6 +211,91 @@ describe('buildToolSchema', () => {
       })
     })
 
+    // The keyword holds the pattern, and its message what it is for.
+    test('should say the message of a pattern the keyword carries', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'code',
+              type: 'input/text',
+              validation: {
+                pattern: { message: 'Three capitals.', regex: '^[A-Z]{3}$' },
+              },
+            },
+          ],
+          'code'
+        )
+      ).toEqual({
+        description: 'Three capitals.',
+        pattern: '^[A-Z]{3}$',
+        type: 'string',
+      })
+    })
+
+    // The submit checks a pattern against the text of any field: a number
+    // as typed, a day as picked, the value of a type the host declares. Only
+    // a field typed as text takes it as a keyword.
+    test('should quote the pattern of a field not typed as text', () => {
+      const pattern: PatternRule = {
+        message: 'Four digits.',
+        regex: '^\\d{4}$',
+      }
+      const result = build(
+        [
+          { name: 'pin', type: 'input/number', validation: { pattern } },
+          { name: 'zone', type: 'select/timezone', validation: { pattern } },
+          { name: 'phone', type: 'phone', validation: { pattern } },
+        ],
+        { types: { phone: { type: 'string' } } }
+      )
+      const note = 'It must match /^\\d{4}$/. Four digits.'
+
+      expect(result.schema.properties?.pin).toEqual({
+        description: note,
+        type: 'integer',
+      })
+      expect(result.schema.properties?.zone?.description).toContain(note)
+      expect(result.schema.properties?.zone?.pattern).toBeUndefined()
+      expect(result.schema.properties?.phone).toEqual({
+        description: note,
+        type: 'string',
+      })
+    })
+
+    // A pattern checks text only: a box, a list of chips, the two days of a
+    // range or an object never break it.
+    test('should not speak of a pattern a value of its type never meets', () => {
+      const pattern: PatternRule = { regex: '^\\d{4}$' }
+      const point: ToolSchema = {
+        properties: { x: { type: 'number' } },
+        type: 'object',
+      }
+      const result = build(
+        [
+          { name: 'terms', type: 'input/checkbox', validation: { pattern } },
+          {
+            name: 'tags',
+            source: [{ label: 'A', value: 'a' }],
+            type: 'chips',
+            validation: { pattern },
+          },
+          {
+            advanced: { mode: 'range' },
+            name: 'stay',
+            type: 'input/date',
+            validation: { pattern },
+          },
+          { name: 'spot', type: 'point', validation: { pattern } },
+        ],
+        { types: { point } }
+      )
+
+      for (const property of Object.values(result.schema.properties ?? {})) {
+        expect(property.description ?? '').not.toContain('It must match')
+      }
+    })
+
     // JSON Schema reads a pattern in Unicode mode, where an escape such as
     // `\#` is no longer allowed: carried as it is, it would break the tool.
     test('should only mention a pattern that only compiles outside Unicode mode', () => {
@@ -1324,6 +1409,21 @@ describe('buildToolSchema', () => {
           { types: { rating } }
         )?.description
       ).toBe('How you rate it. From one to five')
+
+      // A list's description too, before the note on its rows.
+      expect(
+        propertyOf(
+          [
+            {
+              description: 'The data group',
+              fields: [{ name: 'sku', type: 'input/text' }],
+              name: 'items',
+              type: 'list',
+            },
+          ],
+          'items'
+        )?.description
+      ).toMatch(/^The data group\. Sending the list replaces its rows\./)
     })
 
     // What the host puts in through `#/context/` can hold text people wrote,
