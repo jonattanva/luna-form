@@ -1013,6 +1013,39 @@ describe('buildToolSchema', () => {
       ).toEqual(['kept'])
     })
 
+    // Written as an object, `agent` says the same with `exclude`: `true` as
+    // `false` does, and `false` or nothing as leaving the key out.
+    test('should read advanced.agent exclude as advanced.agent false', () => {
+      const fields = (
+        agent: boolean | { description?: string; exclude?: boolean }
+      ): Fields => [
+        { advanced: { agent }, name: 'document', type: 'input/text' },
+        {
+          advanced: { agent },
+          fields: [{ name: 'leaf', type: 'input/text' }],
+          name: 'rows',
+          type: 'list',
+        },
+        { name: 'kept', type: 'input/text' },
+      ]
+
+      expect(build(fields({ exclude: true }))).toEqual(build(fields(false)))
+      expect(namesOf(fields({ exclude: true }))).toEqual(['kept'])
+      expect(build(fields({ exclude: false }))).toEqual(build(fields(true)))
+      expect(build(fields({}))).toEqual(build(fields(true)))
+
+      // Nor does it open what is kept from agents.
+      expect(
+        namesOf([
+          {
+            advanced: { agent: { exclude: false } },
+            name: 'pin',
+            type: 'input/password',
+          },
+        ])
+      ).toEqual([])
+    })
+
     test('should leave out a field that only a field of a type kept from agents shows', () => {
       const schema = build(
         [
@@ -2147,6 +2180,92 @@ describe('buildToolSchema', () => {
           'nickname'
         )
       ).toEqual({ type: 'string' })
+    })
+
+    // A name such as `required` can read as a yes or no to an agent while it
+    // holds a message: the author tells the agent what it is, and the person
+    // reads only the label and the description drawn for them.
+    test('should give the agent the description of advanced.agent after the field own', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: {
+                agent: { description: 'The message shown when it is empty' },
+              },
+              label: 'If it is left empty',
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+          'required'
+        )
+      ).toEqual({
+        description: 'The message shown when it is empty',
+        title: 'If it is left empty',
+        type: 'string',
+      })
+
+      // After the field's own, closed with a period, and before the notes.
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: {
+                agent: { description: 'Pass the value, not the label' },
+              },
+              description: 'Shown under the field',
+              name: 'code',
+              source: [{ label: 'One', value: 'one' }],
+              type: 'select',
+            },
+          ],
+          'code'
+        )?.description
+      ).toBe(
+        'Shown under the field. Pass the value, not the label. Options: one (One).'
+      )
+
+      // On a list, before the note on its rows.
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: { agent: { description: 'The rows of the message' } },
+              fields: [{ name: 'line', type: 'input/text' }],
+              name: 'lines',
+              type: 'list',
+            },
+          ],
+          'lines'
+        )?.description
+      ).toMatch(/^The rows of the message\. Sending the list replaces/)
+    })
+
+    test('should translate, cut and leave out an interpolated description of advanced.agent', () => {
+      const describe = (description: string, options?: ToolSchemaOptions) =>
+        propertyOf(
+          [
+            {
+              advanced: { agent: { description } },
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+          'required',
+          options
+        )?.description
+
+      expect(
+        describe('required_agent', {
+          localization: {
+            lang: 'es',
+            translations: { required_agent: 'El mensaje si queda vacío.' },
+          },
+        })
+      ).toBe('El mensaje si queda vacío.')
+      expect(describe('a'.repeat(600))).toBe(`${'a'.repeat(497)}...`)
+      expect(describe('Shown to {value}')).toBeUndefined()
     })
 
     test('should take the schema a custom type declares', () => {

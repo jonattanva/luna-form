@@ -397,8 +397,10 @@ function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
 // it: a password, a slot its definition keeps from agents, or one of a type
 // its registration does. Nothing in the definition opens one again.
 function isKeptFromAgents(slot: Field | List, types?: AgentTypes): boolean {
+  const agent = slot.advanced?.agent
   return (
-    slot.advanced?.agent === false ||
+    agent === false ||
+    (typeof agent === 'object' && agent.exclude === true) ||
     (isField(slot) && isPassword(slot)) ||
     declaredFor(types, slot.type) === false
   )
@@ -1048,9 +1050,10 @@ function compare(
     : `${subject} ${words} ${object}`
 }
 
-// A field's title and description, translated, with the notes the walk wrote
-// for it after its own description. A slot drawn without a label, alone in its
-// section, takes the section's title, and its description when it has none.
+// A field's title and description, translated, with what its `advanced.agent`
+// tells only the agent after its own description, and the notes the walk wrote
+// for it after both. A slot drawn without a label, alone in its section, takes
+// the section's title, and its description when it has none.
 // Text that interpolates a value is left out: the agent would read the
 // placeholder, or a value someone typed.
 function withText(
@@ -1071,7 +1074,13 @@ function withText(
     walk.dictionary,
     DESCRIPTION_LENGTH
   )
-  const text = joinSentences([own, schema.description, ...notes])
+  const agent = slot.advanced?.agent
+  const told = readText(
+    typeof agent === 'object' ? agent.description : undefined,
+    walk.dictionary,
+    DESCRIPTION_LENGTH
+  )
+  const text = joinSentences([own, told, schema.description, ...notes])
 
   return {
     ...schema,

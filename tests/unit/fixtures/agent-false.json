@@ -18,6 +18,20 @@
         "type": "list",
         "advanced": { "agent": false },
         "fields": [{ "name": "phone", "type": "input/tel" }]
+      },
+      {
+        "name": "required",
+        "type": "input/text",
+        "label": "If it is left empty",
+        "advanced": {
+          "agent": { "description": "The message shown when it is empty" }
+        }
+      },
+      {
+        "name": "notes",
+        "type": "list",
+        "advanced": { "agent": { "exclude": true } },
+        "fields": [{ "name": "line", "type": "input/text" }]
       }
     ]
   }

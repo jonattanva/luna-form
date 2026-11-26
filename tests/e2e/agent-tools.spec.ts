@@ -855,6 +855,50 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  // A name such as `required` can read as a yes or no while the field holds a
+  // message: what `advanced.agent` describes reaches the agent, and the
+  // person reads the label and the description drawn for them only.
+  test('should tell the agent the description of advanced.agent, and draw it nowhere', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              advanced: {
+                agent: { description: 'The message shown when it is empty' },
+              },
+              description: 'Leave it blank for the default',
+              label: 'If it is left empty',
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+        },
+      ],
+    })
+    const fill = (await list(page)).find(({ name }) => name === 'preview_fill')
+    const properties = fill?.inputSchema.properties as Record<
+      string,
+      Readonly<{ description?: string; title?: string }>
+    >
+
+    expect(properties.required).toEqual({
+      description:
+        'Leave it blank for the default. The message shown when it is empty',
+      title: 'If it is left empty',
+      type: 'string',
+    })
+    const form = page.locator('form')
+    await expect(
+      form.getByRole('textbox', { name: 'If it is left empty' })
+    ).toBeVisible()
+    await expect(form.getByText('Leave it blank for the default')).toBeVisible()
+    await expect(form).not.toContainText('The message shown when it is empty')
+    await expect(form.locator('[agent]')).toHaveCount(0)
+  })
+
   // The schema is built from the definition, not from what the form holds:
   // a note on a field an event shows says the rule, true while it is shown
   // as much as while it is hidden.

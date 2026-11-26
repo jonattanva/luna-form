@@ -523,7 +523,8 @@ describes it once, by the first of them an agent may write, and lists it in
 These fields are not in the schema, and the tools refuse them:
 
 - `input/password`, always.
-- A field or a list with `"advanced": { "agent": false }`.
+- A field or a list with `"advanced": { "agent": false }`, or
+  `"advanced": { "agent": { "exclude": true } }`.
 - A field of a type registered with `agent: false`, always (see
   [Custom types](#custom-types)).
 - A `transient` field, and a `readonly` one.
@@ -547,15 +548,41 @@ These fields are not in the schema, and the tools refuse them:
 opens nothing: a password, a field of a type registered with `agent: false`,
 and a field in the rows of a list with `"agent": false` stay out.
 
+`agent` can also be an object, to tell the agent what a field is without
+drawing it for the person. `exclude: true` in it says what `false` does, and
+`false` or no `exclude` what `true` does: it opens nothing either.
+`description` is text only the agent reads, for a field whose name or label
+could mislead it, such as a field named `required` that holds the message
+shown when an answer is left empty:
+
+```json
+{
+  "label": "If it is left empty",
+  "name": "required",
+  "type": "input/text",
+  "advanced": {
+    "agent": {
+      "description": "The message shown when the answer is left empty"
+    }
+  }
+}
+```
+
+The form never draws it, nor puts it on an element of the page. In the
+schema it follows the field's own description, before the notes (see
+[Text the agent reads](#text-the-agent-reads)).
+
 ## Text the agent reads
 
 - A field's `title` is its translated label, and its `description` is the
-  field's own description followed by what JSON Schema cannot say: option
+  field's own description, then the `description` of its `advanced.agent`,
+  followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
   a hidden one, a `requiredWhen`, each rule of `rules` and `custom`, that a
   required `checkbox` has to be `true`.
-  The field's own description, and a custom input's, is closed with a period
-  before what follows when it does not end a sentence, as `description` above.
+  The field's own description, the one of its `advanced.agent`, and a custom
+  input's, is closed with a period before what follows when it does not end a
+  sentence, as `description` above.
 - A field or a list without a `label` that is the only one its
   [section](../structure/sections.md) holds, a column's fields counted among
   the section's, takes the section's translated `title`, and its

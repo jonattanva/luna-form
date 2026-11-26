@@ -43,7 +43,7 @@ function diagnosticsOf(fixture: string) {
 }
 
 describe('A form imported from JSON', () => {
-  test('types without a cast when a field and a list say "agent": false', () => {
+  test('types without a cast when a field and a list say "agent": false, or write it as an object', () => {
     expect(diagnosticsOf('agent-false.json')).toEqual([])
   })
 })

@@ -27,6 +27,22 @@ export type Description =
       title: string
     }
 
+/**
+ * What a field or a list says to the tools an agent fills the form with, in
+ * `advanced.agent`. `false` leaves it out of them; `true` is the same as
+ * leaving the key out. The object says the same with `exclude`, and adds a
+ * `description` only the agent reads: it follows the field's own in the
+ * schema, and the form never draws it. Both forms are a `boolean` or hold
+ * one rather than the literal, because TypeScript infers a form imported from
+ * a JSON file with every literal widened.
+ */
+type Agent =
+  | boolean
+  | {
+      description?: string
+      exclude?: boolean
+    }
+
 export type TimeFormat = 'HH:mm' | 'HH:mm:ss' | 'hh:mm a' | 'hh:mm:ss a'
 export type DateFormat = (typeof DATE_FORMATS)[number]
 
@@ -92,7 +108,7 @@ export type List = {
     // See `Field`'s: `false` leaves the list, and every row it holds, out of
     // the tools an agent fills the form with, and `true` is the same as
     // leaving it out.
-    agent?: boolean
+    agent?: Agent
     title?: string
     action?: string
     collapsed?: boolean
@@ -325,10 +341,11 @@ export type Field = CommonProps & {
      *
      * `true` is the same as leaving the key out: it opens nothing, so a
      * password, or a field of a type registered with `agent: false`, stays out.
-     * A `boolean` rather than the literal `false`, because TypeScript infers a
-     * form imported from a JSON file with every literal widened.
+     * Written as an object, `exclude: true` says what `false` does, and
+     * `description` tells the agent what the field is without drawing it: see
+     * `Agent`.
      */
-    agent?: boolean
+    agent?: Agent
     aria?: AriaAttributes
     autocomplete?: string
     cols?: number
