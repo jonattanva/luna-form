@@ -43,12 +43,12 @@ import type {
   AssertRule,
   Condition,
   Date as DateField,
-  Description,
   Field,
   Fields,
   List,
   Operator,
   PatternRule,
+  Section,
   Sections,
   Select,
   StateEvent,
@@ -211,6 +211,8 @@ type Walk = Readonly<{
   lookup: Set<string>
   // By the slot they reach.
   revealers: ReadonlyMap<string, readonly Revealer[]>
+  // The section that names a slot drawn without a label: the one slot of it.
+  sections: ReadonlyMap<Field | List, Section>
   sourceTargets: ReadonlySet<string>
   types?: AgentTypes
   validates: boolean
@@ -248,8 +250,18 @@ export function buildToolSchema(
   sections: Sections,
   options: ToolSchemaOptions = {}
 ): ToolSchemaResult {
+  const named = new Map<Field | List, Section>()
   const fields = prepare(sections, options.definition, options.context).flatMap(
-    (section) => prepare(section.fields)
+    (section) => {
+      const entries = prepare(section.fields)
+      const [only, ...rest] = entries.flatMap((entry) =>
+        isColumn(entry) ? prepare(entry.fields) : [entry]
+      )
+      if (only && !rest.length && !only.label) {
+        named.set(only, section)
+      }
+      return entries
+    }
   )
 
   const sources = collectSourceEvents(fields)
@@ -259,6 +271,7 @@ export function buildToolSchema(
     lang: options.localization?.lang,
     lookup: new Set(),
     revealers: collectRevealers(fields),
+    sections: named,
     sourceTargets: new Set(sources.keys()),
     types: options.types,
     validates: options.validates !== false,
@@ -1036,19 +1049,25 @@ function compare(
 }
 
 // A field's title and description, translated, with the notes the walk wrote
-// for it after its own description. Text that interpolates a value is left
-// out: the agent would read the placeholder, or a value someone typed.
+// for it after its own description. A slot drawn without a label, alone in its
+// section, takes the section's title, and its description when it has none.
+// Text that interpolates a value is left out: the agent would read the
+// placeholder, or a value someone typed.
 function withText(
   schema: ToolSchema,
-  slot: Readonly<{ description?: Description; label?: string }>,
+  slot: Field | List,
   notes: readonly string[],
   walk: Walk
 ): ToolSchema {
-  const title = readText(slot.label, walk.dictionary, LABEL_LENGTH)
+  const section = walk.sections.get(slot)
+  const description = slot.description ?? section?.description
+  const title = readText(
+    slot.label ?? section?.title,
+    walk.dictionary,
+    LABEL_LENGTH
+  )
   const own = readText(
-    typeof slot.description === 'string'
-      ? slot.description
-      : slot.description?.message,
+    typeof description === 'string' ? description : description?.message,
     walk.dictionary,
     DESCRIPTION_LENGTH
   )

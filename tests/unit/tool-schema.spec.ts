@@ -67,6 +67,138 @@ function reveal(target: string, state: { disabled?: false; hidden?: false }) {
 }
 
 describe('buildToolSchema', () => {
+  // A section's legend names a field the form draws without a label, when it
+  // is the one field the section holds. Of several, it names none.
+  describe('section text', () => {
+    const ending: Field = {
+      name: 'ending',
+      source: [
+        { label: 'A message', value: 'message' },
+        { label: 'A redirect', value: 'redirect' },
+      ],
+      type: 'radio',
+    }
+
+    const sectionOf = (fields: Fields) =>
+      buildToolSchema([
+        {
+          description: 'What the person sees after sending.',
+          fields,
+          title: 'When they finish',
+        },
+      ]).schema.properties
+
+    test("should name the one unlabelled field of a section by the section's text", () => {
+      expect(sectionOf([ending])?.ending).toEqual({
+        description:
+          'What the person sees after sending. Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        title: 'When they finish',
+        type: 'string',
+      })
+    })
+
+    test('should keep the description of its own and take the title only', () => {
+      expect(
+        sectionOf([{ ...ending, description: 'Pick one.' }])?.ending
+          ?.description
+      ).toBe('Pick one. Options: message (A message), redirect (A redirect).')
+      expect(
+        sectionOf([{ ...ending, description: 'Pick one.' }])?.ending?.title
+      ).toBe('When they finish')
+    })
+
+    test('should keep the label of its own', () => {
+      expect(sectionOf([{ ...ending, label: 'Ending' }])?.ending).toEqual({
+        description: 'Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        title: 'Ending',
+        type: 'string',
+      })
+    })
+
+    test('should name none of several unlabelled fields of a section', () => {
+      const properties = sectionOf([
+        ending,
+        { name: 'note', type: 'input/text' },
+      ])
+      expect(properties?.ending).toEqual({
+        description: 'Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        type: 'string',
+      })
+      expect(properties?.note).toEqual({ type: 'string' })
+    })
+
+    // The section names whatever it holds, a field the agent may not write
+    // too: a password beside it.
+    test('should count a field kept from agents among those of the section', () => {
+      expect(
+        sectionOf([
+          { name: 'note', type: 'input/text' },
+          { name: 'secret', type: 'input/password' },
+        ])?.note
+      ).toEqual({ type: 'string' })
+    })
+
+    test('should read the fields of a column as fields of the section', () => {
+      expect(
+        sectionOf([
+          { fields: [{ name: 'note', type: 'input/text' }], type: 'column' },
+        ])?.note?.title
+      ).toBe('When they finish')
+    })
+
+    test('should name a list alone in its section', () => {
+      expect(
+        sectionOf([
+          {
+            fields: [{ label: 'Item', name: 'item', type: 'input/text' }],
+            name: 'items',
+            type: 'list',
+          },
+        ])?.items?.title
+      ).toBe('When they finish')
+    })
+
+    test('should leave out a section title that interpolates a value', () => {
+      expect(
+        buildToolSchema([
+          {
+            fields: [{ name: 'note', type: 'input/text' }],
+            title: 'For {context.name}',
+          },
+        ]).schema.properties?.note
+      ).toEqual({ type: 'string' })
+    })
+
+    test("should translate the section's text", () => {
+      const properties = buildToolSchema(
+        [
+          {
+            description: 'finish_help',
+            fields: [{ name: 'note', type: 'input/text' }],
+            title: 'finish_title',
+          },
+        ],
+        {
+          localization: {
+            lang: 'es',
+            translations: {
+              finish_help: 'Lo que ve al enviar.',
+              finish_title: 'Al terminar',
+            },
+          },
+        }
+      ).schema.properties
+      expect(properties?.note).toEqual({
+        description: 'Lo que ve al enviar.',
+        title: 'Al terminar',
+        type: 'string',
+      })
+    })
+  })
+
   describe('text', () => {
     test('should describe a text field as a string with its label as title', () => {
       expect(

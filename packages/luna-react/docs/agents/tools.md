@@ -544,6 +544,11 @@ and a field in the rows of a list with `"agent": false` stay out.
   required `checkbox` has to be `true`.
   The field's own description, and a custom input's, is closed with a period
   before what follows when it does not end a sentence, as `description` above.
+- A field or a list without a `label` that is the only one its
+  [section](../structure/sections.md) holds, a column's fields counted among
+  the section's, takes the section's translated `title`, and its
+  `description` when it has none of its own. Of several in a section, none
+  takes them, and a field kept from agents counts among them.
 - A note in a list's row holds for each row, so it names no row by its number.
   A field of the same row is this row's, as in
   `Shown for some values of this row's flag` or
