@@ -264,6 +264,15 @@ type SkipCode = (typeof SKIP_CODES)[number]
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
 
+// What a tool is handed for one call: `answer` answers it before its work is
+// done, and `ask` asks a person about the values it writes or sends, and
+// answers why it must not, if it must not.
+type Call = Readonly<{
+  answer: (output: ToolResult) => void
+  ask: (values: ToolResult) => Promise<ToolResult | undefined>
+  signal: AbortSignal
+}>
+
 // Where a value the call wrote or kept is, and how to tell what it holds.
 type Told = Readonly<{ path: string; schema: ToolSchema; target: string }>
 
@@ -373,11 +382,12 @@ function targetedOf(output: ToolSchema, writes: boolean): ToolSchema {
 }
 
 // What a fill or a submit is refused with while the form edits another item
-// than the one the agent was last told of.
+// than the one it was meant for: the one the agent was last told of, or, once
+// a person approved it, the one it started on.
 function retargeted(readTool: string): ToolResult {
   return {
     code: 'target_changed',
-    message: `The form edits another item than the one you last read, so the call changed nothing. Call ${readTool}, and ask your user before you write to this one.`,
+    message: `The form edits another item than the one this call was meant for, so the call changed nothing. Call ${readTool}, and ask your user before you write to this one.`,
     ok: false,
   }
 }
@@ -573,11 +583,7 @@ export function createFormTools(
   const queued =
     (
       tool: AgentCallRecord['tool'],
-      run: (
-        input: ToolJson,
-        signal: AbortSignal,
-        answer: (output: ToolResult) => void
-      ) => Promise<ToolResult>
+      run: (input: ToolJson, call: Call) => Promise<ToolResult>
     ): Tool['execute'] =>
     async (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
@@ -585,6 +591,9 @@ export function createFormTools(
       // The item the call acted on, which its answer names: the one the form
       // edits when it ran, or now, for a call that never did.
       let acted: string | undefined
+      // A call that writes is held to an item: the one the agent read, when
+      // it starts, and the one it started on, once a person approved it.
+      const writes = tool === 'fill' || tool === 'submit' ? tool : undefined
 
       // After the answer, so a slow log keeps no agent waiting, and with
       // copies, so what it does to them changes no answer.
@@ -613,12 +622,31 @@ export function createFormTools(
             acted = host.getTarget()
             // The one place a call that writes is held to the item the agent
             // read: what it sends was meant for that one.
-            if ((tool === 'fill' || tool === 'submit') && host.isRetargeted()) {
+            if (writes && host.isRetargeted()) {
               return retargeted(names.read)
             }
             host.using(true)
             try {
-              return await run(input, callSignal, answer)
+              return await run(input, {
+                answer,
+                ask: async (values) => {
+                  if (!writes) {
+                    return undefined
+                  }
+                  const refused = await askAllow(writes, values, callSignal)
+                  // While a person decides, they may open another item: what
+                  // they approved was meant for the one the call started on.
+                  if (refused || host.getTarget() === acted) {
+                    return refused
+                  }
+                  acted = host.getTarget()
+                  if (writes === 'submit') {
+                    host.approval()
+                  }
+                  return retargeted(names.read)
+                },
+                signal: callSignal,
+              })
             } finally {
               host.using(false)
             }
@@ -643,7 +671,7 @@ export function createFormTools(
   // its deadline is set. A submit is recorded as the last submission while it
   // is asked, until that deadline, and as refused when it is; one the agent
   // cancelled takes back the wait it recorded.
-  const ask = async (
+  const askAllow = async (
     tool: AgentCall['tool'],
     values: ToolResult,
     callSignal: AbortSignal
@@ -801,13 +829,13 @@ export function createFormTools(
 
   const fill = async (
     input: ToolJson,
-    callSignal: AbortSignal
+    { ask, signal: callSignal }: Call
   ): Promise<ToolResult> => {
     if (!isToolObject(input)) {
       return invalidInput('Pass an object of values keyed by field name.')
     }
 
-    const refused = await ask('fill', input, callSignal)
+    const refused = await ask(input)
     if (refused) {
       return refused
     }
@@ -1232,7 +1260,7 @@ export function createFormTools(
 
   const options = async (
     input: ToolJson,
-    callSignal: AbortSignal
+    { signal: callSignal }: Call
   ): Promise<ToolResult> => {
     if (
       !isToolObject(input) ||
@@ -1297,8 +1325,7 @@ export function createFormTools(
   // so nothing is written over what they approve, but not for the action.
   const submit = async (
     _input: ToolJson,
-    callSignal: AbortSignal,
-    answer: (output: ToolResult) => void
+    { answer, ask, signal: callSignal }: Call
   ): Promise<ToolResult> => {
     // A submission waiting or running -- this tool's or a person's -- is not
     // sent again.
@@ -1313,7 +1340,7 @@ export function createFormTools(
       )
 
       if (agent.allow) {
-        const refused = await ask('submit', readShown(), callSignal)
+        const refused = await ask(readShown())
         if (refused) {
           return refused
         }
@@ -1458,7 +1485,7 @@ const TARGET_READ =
   'The form edits one item of several, which target names: the person can open another.'
 
 function targetSentence(done: string, readTool: string): string {
-  return `target names the item the form edits; if code is target_changed, the form edits another item than the one you last read and nothing was ${done}: call ${readTool}, and ask your user before you write to this one.`
+  return `target names the item the form edits; if code is target_changed, the form edits another item than the one the call was meant for and nothing was ${done}: call ${readTool}, and ask your user before you write to this one.`
 }
 
 // A tool's own sentences, the one that says what it does first.
@@ -1486,7 +1513,7 @@ function describeTool(
 
 // What the codes a call can be answered with mean: every call waits in the
 // form's line and can be cancelled, and one `allow` is asked about can be
-// refused, for any of the reasons `ask` gives.
+// refused, for any of the reasons `askAllow` gives.
 function codesOf(asked: boolean): string {
   const others = `busy, ${QUEUE_LIMIT} calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.`
   return asked

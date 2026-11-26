@@ -277,7 +277,7 @@ needs or that is required, and the schema holds no rule only a submit checks (se
 | `refused`        | answer     | `allow` refused the call, or did not answer it  |
 | `busy`           | answer     | Ten calls are waiting already                   |
 | `cancelled`      | answer     | The agent cancelled the call                    |
-| `target_changed` | answer     | The form edits another item than the one read   |
+| `target_changed` | answer     | The form edits another item than the one meant  |
 
 A `refused` call changed nothing, and its `message` says why:
 
@@ -332,6 +332,9 @@ to approve it first, so the agent can tell its user why it waits. While
   `<name>_read` reads `{ status: 'refused', message }`, with the `message`
   the refused call is answered with (see [Codes](#codes)). A submit the agent cancels while
   it waits leaves the last submission as it was.
+- With `target`, a call the person approves after another item was opened
+  writes or sends nothing: see
+  [A form that edits one item of several](#a-form-that-edits-one-item-of-several).
 
 ## A person and an agent at once
 
@@ -380,13 +383,19 @@ the item:
   ```json
   {
     "code": "target_changed",
-    "message": "The form edits another item than the one you last read, so the call changed nothing. Call step_read, and ask your user before you write to this one.",
+    "message": "The form edits another item than the one this call was meant for, so the call changed nothing. Call step_read, and ask your user before you write to this one.",
     "ok": false,
     "target": "B"
   }
   ```
 
 - After a `<name>_read`, the fill goes on, on the item open now.
+- A call that waits for a person is held to the item it started on: once
+  `allow` approves it, a `<name>_fill` or `<name>_submit` is refused the same
+  way if another item is open, since what the person approved was meant for
+  the first. A submit is refused even when the agent read the item open now
+  while it waited. A refused submit takes back its wait: `<name>_read` reads
+  the last submission as it was before.
 - An agent that has read no item yet is not refused: there is no item it
   meant.
 - What the agent was told is kept by `name` on the page, past the form: a

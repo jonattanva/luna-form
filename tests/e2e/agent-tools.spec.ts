@@ -1626,6 +1626,126 @@ test.describe(
       })
     }
 
+    // A person who opens another item while a fill waits for their approval
+    // has the form edit that one: what they approve was meant for the first.
+    test('should not fill the item opened while the fill waited for approval', async ({
+      page,
+    }) => {
+      const A = { name: 'Alpha' }
+      await openWith(page, {
+        agent: { target: 'A' },
+        host: { items: { A, B: { name: 'Beta' } } },
+        sections: [
+          { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+        ],
+        value: A,
+      })
+      const name = page.getByRole('textbox', { name: 'Name' })
+      expect(await call(page, 'preview_read')).toMatchObject({ target: 'A' })
+
+      // The person has the approval in front of them and has not answered.
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: () => Promise<boolean>
+          __lunaApprove?: (allowed: boolean) => void
+          __lunaFilled?: object
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = () =>
+          new Promise<boolean>((resolve) => {
+            page.__lunaApprove = resolve
+          })
+        void page
+          .__lunaTools!.call('preview_fill', { name: 'Alpha, renamed' })
+          .then((answer) => {
+            page.__lunaFilled = answer
+          })
+      })
+      await page.waitForFunction(() => '__lunaApprove' in window)
+
+      // They open B, then approve what was asked for A.
+      await page.getByRole('button', { name: 'Open B' }).click()
+      await expect(name).toHaveValue('Beta')
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaApprove?: (allowed: boolean) => void }
+        ).__lunaApprove?.(true)
+      )
+      await page.waitForFunction(() => '__lunaFilled' in window)
+
+      expect(
+        await page.evaluate(
+          () => (window as Window & { __lunaFilled?: object }).__lunaFilled
+        )
+      ).toMatchObject({ code: 'target_changed', ok: false, target: 'B' })
+      await expect(name).toHaveValue('Beta')
+    })
+
+    // The same holds for a submit waiting for approval: the values of the
+    // item opened while it waited are not sent, even to an agent that read
+    // that item meanwhile, since the person approved the ones of the first.
+    for (const read of [false, true]) {
+      test(`should not submit the item opened while the submit waited for approval${read ? ', read meanwhile' : ''}`, async ({
+        page,
+      }) => {
+        const A = { name: 'Alpha' }
+        await openWith(page, {
+          agent: { target: 'A' },
+          host: { items: { A, B: { name: 'Beta' } } },
+          sections: [
+            { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+          ],
+          value: A,
+        })
+        expect(await call(page, 'preview_read')).toMatchObject({ target: 'A' })
+
+        await page.evaluate(() => {
+          const page = window as Window & {
+            __lunaAllow?: () => Promise<boolean>
+            __lunaApprove?: (allowed: boolean) => void
+            __lunaSubmitted?: object
+            __lunaTools?: Tools
+          }
+          page.__lunaAllow = () =>
+            new Promise<boolean>((resolve) => {
+              page.__lunaApprove = resolve
+            })
+          void page.__lunaTools!.call('preview_submit', {}).then((answer) => {
+            page.__lunaSubmitted = answer
+          })
+        })
+        await page.waitForFunction(() => '__lunaApprove' in window)
+
+        await page.getByRole('button', { name: 'Open B' }).click()
+        await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue(
+          'Beta'
+        )
+        if (read) {
+          expect(await call(page, 'preview_read')).toMatchObject({
+            submit: { status: 'awaiting_approval' },
+            target: 'B',
+          })
+        }
+        await page.evaluate(() =>
+          (
+            window as Window & { __lunaApprove?: (allowed: boolean) => void }
+          ).__lunaApprove?.(true)
+        )
+        await page.waitForFunction(() => '__lunaSubmitted' in window)
+
+        expect(
+          await page.evaluate(
+            () =>
+              (window as Window & { __lunaSubmitted?: object }).__lunaSubmitted
+          )
+        ).toMatchObject({ code: 'target_changed', ok: false, target: 'B' })
+        // Nothing was sent: the wait is taken back.
+        expect((await call(page, 'preview_read')).submit).toEqual({
+          status: 'idle',
+        })
+      })
+    }
+
     // A host that retitles a form it keeps: the definition and the sections
     // stay the same objects, and the tools are titled anew all the same.
     test('should title the tools anew when the host changes only the title', async ({
