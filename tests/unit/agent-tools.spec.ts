@@ -536,6 +536,19 @@ describe('createFormTools', () => {
       expect(fill.description).toContain('A submission needs: email.')
     })
 
+    // Not every form collects data about a person: a form that configures
+    // something needs values, such as a technical key, that a person never
+    // gives, and the fill must not forbid the agent from proposing them.
+    test('should not presume the form asks for personal data, nor forbid a required value the person did not give', () => {
+      const fill = toolNamed(toolsOf().tools, 'fill').description
+
+      expect(fill).not.toContain('personal data')
+      expect(fill).not.toContain('Leave out what they did not give')
+      expect(fill).toContain(
+        'Write what the person asked for and the values it implies, such as a key made from a label; ask them before writing what they did not give, such as what you know about them: fields left out keep their value.'
+      )
+    })
+
     test('should name nothing a submission needs when the submit checks nothing', () => {
       const fields: Fields = [
         { name: 'email', required: true, type: 'input/email' },

@@ -433,9 +433,13 @@ be the one to ask for it, or every field of a custom type with
 left out answers `unknown`, as one that does not exist.
 
 Every field in the schema is one an agent may be tempted to fill with what it
-knows about the person. `<name>_fill` asks for the values the person gave for
-this form and nothing else, but the schema is the real limit: offer only the
-fields the form needs, and leave optional personal data out of the tools.
+knows about the person. `<name>_fill` asks for what the person asked for and
+the values it implies, such as a key made from a label, and to ask the person
+before writing what they did not give, such as what the agent knows about
+them. The same words fit a form about a person and one that configures
+something, whose required technical keys no person types. The schema is still
+the real limit: offer only the fields the form needs, and leave optional
+personal data out of the tools.
 
 ## Building the schema
 

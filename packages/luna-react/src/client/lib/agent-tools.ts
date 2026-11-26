@@ -1289,8 +1289,8 @@ export function createFormTools(
         agent.description,
         [
           'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
-          "Pass in one call the values the person gave for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
-          'Leave out what they did not give, such as personal data you know about them: fields left out keep their value.',
+          "Pass in one call the values for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
+          'Write what the person asked for and the values it implies, such as a key made from a label; ask them before writing what they did not give, such as what you know about them: fields left out keep their value.',
           `It returns the final value of each field that changed, what was skipped and why, and the errors: no need to call ${names.read} after.`,
           'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
           'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
