@@ -39,6 +39,7 @@ import {
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
+  Condition,
   Date as DateField,
   Description,
   Field,
@@ -47,6 +48,7 @@ import type {
   Operator,
   Sections,
   Select,
+  StateEvent,
   WhenRule,
 } from '../type'
 
@@ -187,12 +189,14 @@ const UNREADABLE =
 
 // A `state` event that makes a slot available: shows it, unlocks it, or both.
 // Kept under the slot it reaches, by the name the form resolves the event's
-// target to from `source`, the field whose change fires it.
+// target to from `source`, the field whose change fires it. `when` is its
+// `when` as a condition on the value the agent writes, when it is one.
 type Revealer = Readonly<{
   field: Field
   shows: boolean
   source: string
   unlocks: boolean
+  when?: Condition
 }>
 
 // What the walk carries from one level to the next.
@@ -358,14 +362,14 @@ function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
       return false
     }
 
-    if (slot.hidden && !findRevealer(walk, name, 'shows')) {
+    if (slot.hidden && !revealersOf(walk, name, 'shows').length) {
       return false
     }
 
     return !(
       isField(slot) &&
       slot.disabled &&
-      !findRevealer(walk, name, 'unlocks')
+      !revealersOf(walk, name, 'unlocks').length
     )
   } finally {
     walk.visiting.delete(name)
@@ -394,18 +398,16 @@ function declaredFor(
     : undefined
 }
 
-// A field the agent may write whose change shows, or unlocks, the slot.
-function findRevealer(
+// The fields the agent may write whose change shows, or unlocks, the slot.
+function revealersOf(
   walk: Walk,
   name: string,
   does: 'shows' | 'unlocks'
-): Revealer | undefined {
-  return walk.revealers
-    .get(name)
-    ?.find(
-      (revealer) =>
-        revealer[does] && isWritable(revealer.field, walk, revealer.source)
-    )
+): Revealer[] {
+  return (walk.revealers.get(name) ?? []).filter(
+    (revealer) =>
+      revealer[does] && isWritable(revealer.field, walk, revealer.source)
+  )
 }
 
 // A list as rows. The rendered list always holds `min` rows, one when it
@@ -810,8 +812,8 @@ export function listOptions(choices: readonly Choice[]): string {
     .join(', ')
 }
 
-// What it takes for a slot that is hidden or locked to be written: which
-// field's change makes it available, and that it is required once it is.
+// What it takes for a slot that is hidden or locked to be written: what makes
+// it available, and that it is required once it is.
 function availabilityNotes(
   slot: Field | List,
   walk: Walk,
@@ -819,32 +821,54 @@ function availabilityNotes(
 ): string[] {
   const name = row + slot.name
   const locked = isField(slot) && slot.disabled === true
-  const shows = slot.hidden ? findRevealer(walk, name, 'shows') : undefined
-  const unlocks = locked ? findRevealer(walk, name, 'unlocks') : undefined
+  const shows = slot.hidden ? describeReveal(walk, name, row, 'shows') : ''
+  const unlocks = locked ? describeReveal(walk, name, row, 'unlocks') : ''
   if (!shows && !unlocks) {
     return []
   }
 
-  // A change in a row reaches its own row or one around it, so the field that
-  // fires it is in the slot's row or under it, unless it is outside every
-  // list: a target written as a whole name reaches a row from outside.
-  const sources = [...new Set([shows?.source, unlocks?.source])]
-    .filter((source) => source !== undefined)
-    .map((source) =>
-      anyRow(
-        source.startsWith(row) ? fromRow(row, source.slice(row.length)) : source
-      )
-    )
-  const state =
-    shows && unlocks ? 'Hidden and locked' : shows ? 'Hidden' : 'Locked'
-  const notes = [
-    `${state} until a change to ${sources.join(' or ')} makes it available: send it in the same call.`,
-  ]
+  const until =
+    shows === unlocks
+      ? `Hidden and locked until ${shows}`
+      : shows
+        ? `Hidden until ${shows}${unlocks && ` and locked until ${unlocks}`}`
+        : `Locked until ${unlocks}`
+  const notes = [`${until}: send it in the same call.`]
 
   if (isField(slot) && slot.required) {
     notes.push('Required once it is available.')
   }
   return notes
+}
+
+// What shows, or unlocks, the slot: the values that do it, when every event
+// that does compares the value the agent writes with values of its own, or
+// else a change to each field whose events do it. See `readWhen`.
+function describeReveal(
+  walk: Walk,
+  name: string,
+  row: string,
+  does: 'shows' | 'unlocks'
+): string {
+  // A change in a row reaches its own row or one around it, so the field that
+  // fires it is in the slot's row or under it, unless it is outside every
+  // list: a target written as a whole name reaches a row from outside.
+  const revealers = revealersOf(walk, name, does)
+  const by = revealers.map(({ source }) =>
+    anyRow(
+      source.startsWith(row) ? fromRow(row, source.slice(row.length)) : source
+    )
+  )
+  const values = revealers.map(
+    ({ when }, index) => when && describeWhen(by[index], when)
+  )
+
+  // No revealer, no text.
+  const unique = (texts: readonly (string | false | undefined)[]) =>
+    [...new Set(texts)].join(' or ')
+  return values.every(Boolean)
+    ? unique(values)
+    : `a change to ${unique(by)} makes it available`
 }
 
 // The rules of a field no keyword says. A `custom` the field checks as it is
@@ -855,10 +879,10 @@ function ruleNotes(field: Field, walk: Walk, row: string): string[] {
 
   // A rule in a row reads the fields of its own row. A rule whose operator the
   // form cannot read never holds, so it is not one.
-  const conditions = [validation?.requiredWhen ?? []].flat().flatMap((rule) => {
-    const when = describeWhen(rule)
-    return when ? [fromRow(row, when)] : []
-  })
+  const conditions = [validation?.requiredWhen ?? []]
+    .flat()
+    .map((rule) => describeWhen(fromRow(row, rule.field), rule))
+    .filter((when) => when !== undefined)
   if (conditions.length) {
     notes.push(`Required when ${conditions.join(' or ')}.`)
   }
@@ -891,15 +915,20 @@ const OPERATOR_WORDS: Record<Operator, readonly [words: string, unary?: true]> =
     truthy: ['has a value other than false or 0', true],
   }
 
-function describeWhen(rule: WhenRule): string | undefined {
-  const operator = rule.operator ?? 'eq'
+// A condition on the field `name`, in words: the one place a `requiredWhen`
+// and a `state` event's `when` are written. An operator the form cannot read
+// never holds, so it has none.
+function describeWhen(
+  name: string,
+  { operator = 'eq', value }: Pick<WhenRule, 'operator' | 'value'>
+): string | undefined {
   if (!Object.prototype.hasOwnProperty.call(OPERATOR_WORDS, operator)) {
     return undefined
   }
   const [words, unary] = OPERATOR_WORDS[operator]
-  return unary || rule.value === undefined
-    ? `${rule.field} ${words}`
-    : `${rule.field} ${words} ${JSON.stringify(rule.value)}`
+  return unary || value === undefined
+    ? `${name} ${words}`
+    : `${name} ${words} ${JSON.stringify(value)}`
 }
 
 // A field's title and description, translated, with the notes the walk wrote
@@ -956,6 +985,22 @@ function fits(text: string, length: number): boolean {
   return text.length <= length || Array.from(text).length <= length
 }
 
+// A `when` as the condition it is on the value the agent writes: a string
+// equals it, an array holds it. One with `field` reads a key of the chosen
+// option, and a chips field is matched by its selections: neither is one.
+function readWhen(
+  field: Field,
+  when: StateEvent['when']
+): Condition | undefined {
+  return when === undefined || isChips(field)
+    ? undefined
+    : typeof when !== 'object' || Array.isArray(when)
+      ? { operator: Array.isArray(when) ? 'in' : 'eq', value: when }
+      : when.field === undefined
+        ? when
+        : undefined
+}
+
 // The `state` events that make a slot available, from every field of the
 // form, with their targets resolved the way the form resolves them: a target
 // in a list's row (`items/note`) reaches the row the change happened in, and
@@ -992,7 +1037,13 @@ function collectRevealers(fields: Fields): Map<string, Revealer[]> {
         for (const target of targets) {
           const resolved = resolveTarget(target, source)
           const reaching = revealers.get(resolved) ?? []
-          reaching.push({ field: entry, shows, source, unlocks })
+          reaching.push({
+            field: entry,
+            shows,
+            source,
+            unlocks,
+            when: readWhen(entry, event.when),
+          })
           revealers.set(resolved, reaching)
         }
       }

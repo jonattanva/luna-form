@@ -10,6 +10,7 @@ import type {
   Operator,
   PatternRule,
   Sections,
+  StateEvent,
   WhenRule,
 } from '@/packages/luna-core/src/type'
 
@@ -1090,6 +1091,211 @@ describe('buildToolSchema', () => {
         )?.description
         expect(note).toBe(
           'Hidden until a change to outer.<row>.flag makes it available: send it in the same call.'
+        )
+      })
+    })
+
+    // A `when` the event compares the new value with: the note says which
+    // value makes the slot available, so the agent does not try each one.
+    describe('a field an event makes available for some values', () => {
+      const shownBy = (when: StateEvent['when'], type = 'select') =>
+        propertyOf(
+          [
+            {
+              event: {
+                change: [
+                  {
+                    action: 'state',
+                    state: { hidden: false },
+                    target: 'detail',
+                    when,
+                  },
+                ],
+              },
+              name: 'kind',
+              source: [
+                { label: 'List', value: 'list' },
+                { label: 'Group', value: 'group' },
+              ],
+              type,
+            },
+            { hidden: true, name: 'detail', type: 'input/text' },
+          ],
+          'detail'
+        )?.description
+
+      test('should cite the value a string matches', () => {
+        expect(shownBy('list')).toBe(
+          'Hidden until kind equals "list": send it in the same call.'
+        )
+      })
+
+      test('should cite the values an array matches', () => {
+        expect(shownBy(['list', 'group'])).toBe(
+          'Hidden until kind is one of ["list","group"]: send it in the same call.'
+        )
+      })
+
+      test('should cite a condition in words', () => {
+        expect(shownBy({ operator: 'gt', value: 100 })).toBe(
+          'Hidden until kind is greater than 100: send it in the same call.'
+        )
+        expect(shownBy({ value: 'list' })).toBe(
+          'Hidden until kind equals "list": send it in the same call.'
+        )
+      })
+
+      // `field` reads a key of the chosen option, which the agent does not
+      // write; a chips field is matched by its selections, not by its value.
+      test('should keep the change when the values cannot be cited', () => {
+        const generic =
+          'Hidden until a change to kind makes it available: send it in the same call.'
+        expect(shownBy({ field: 'dial', value: '+56' })).toBe(generic)
+        expect(shownBy('list', 'chips')).toBe(generic)
+        expect(
+          shownBy({ operator: 'between' as Operator, value: 'list' })
+        ).toBe(generic)
+      })
+
+      test("should cite the value of this row's field in a row", () => {
+        expect(
+          propertyOf(
+            [
+              {
+                fields: [
+                  {
+                    event: {
+                      change: [
+                        {
+                          action: 'state',
+                          state: { hidden: false },
+                          target: 'field/data_type',
+                          when: 'list',
+                        },
+                      ],
+                    },
+                    name: 'type',
+                    source: [{ label: 'List', value: 'list' }],
+                    type: 'select',
+                  },
+                  { hidden: true, name: 'data_type', type: 'input/text' },
+                ],
+                name: 'field',
+                type: 'list',
+              },
+            ],
+            'field'
+          )?.items?.properties?.data_type?.description
+        ).toBe(
+          'Hidden until this row\'s type equals "list": send it in the same call.'
+        )
+      })
+
+      test('should cite every event that shows it', () => {
+        const fields = (second: StateEvent['when']): Fields => [
+          {
+            event: {
+              change: [
+                {
+                  action: 'state',
+                  state: { hidden: false },
+                  target: 'detail',
+                  when: 'list',
+                },
+              ],
+            },
+            name: 'kind',
+            type: 'input/text',
+          },
+          {
+            event: {
+              change: [
+                {
+                  action: 'state',
+                  state: { hidden: false },
+                  target: 'detail',
+                  when: second,
+                },
+              ],
+            },
+            name: 'mode',
+            type: 'input/text',
+          },
+          { hidden: true, name: 'detail', type: 'input/text' },
+        ]
+
+        expect(propertyOf(fields('full'), 'detail')?.description).toBe(
+          'Hidden until kind equals "list" or mode equals "full": send it in the same call.'
+        )
+        expect(propertyOf(fields(undefined), 'detail')?.description).toBe(
+          'Hidden until a change to kind or mode makes it available: send it in the same call.'
+        )
+      })
+
+      test('should say what shows it and what unlocks it apart', () => {
+        expect(
+          propertyOf(
+            [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { hidden: false },
+                      target: 'detail',
+                      when: 'list',
+                    },
+                    {
+                      action: 'state',
+                      state: { disabled: false },
+                      target: 'detail',
+                      when: 'group',
+                    },
+                  ],
+                },
+                name: 'kind',
+                type: 'input/text',
+              },
+              {
+                disabled: true,
+                hidden: true,
+                name: 'detail',
+                type: 'input/text',
+              },
+            ],
+            'detail'
+          )?.description
+        ).toBe(
+          'Hidden until kind equals "list" and locked until kind equals "group": send it in the same call.'
+        )
+        expect(
+          propertyOf(
+            [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { disabled: false, hidden: false },
+                      target: 'detail',
+                      when: 'list',
+                    },
+                  ],
+                },
+                name: 'kind',
+                type: 'input/text',
+              },
+              {
+                disabled: true,
+                hidden: true,
+                name: 'detail',
+                type: 'input/text',
+              },
+            ],
+            'detail'
+          )?.description
+        ).toBe(
+          'Hidden and locked until kind equals "list": send it in the same call.'
         )
       })
     })

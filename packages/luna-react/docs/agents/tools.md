@@ -516,7 +516,8 @@ These fields are not in the schema, and the tools refuse them:
 - A `transient` field, and a `readonly` one.
 - A `hidden` or `disabled` field, unless a `state` event that a field the agent
   may write fires shows it or unlocks it. Then it is in the schema, and its
-  description says which field makes it available.
+  description says what makes it available (see
+  [Text the agent reads](#text-the-agent-reads)).
 
 `advanced.agent: false` is for data an agent should not be the one to ask for:
 
@@ -580,6 +581,19 @@ and a field in the rows of a list with `"agent": false` stay out.
   has a value other than false or 0. The last three leave the `value` out,
   since they ignore it. A rule whose operator the form cannot read never
   holds, and is left out.
+- A hidden or locked field says what makes it available. When every `state`
+  event that shows it (or unlocks it) compares the new value with values of its own, the
+  description cites them, in the phrases above: a string `when` as `eq`, an
+  array as `in`, a condition by its operator, such as
+  `Hidden until kind is one of ["list","group"]: send it in the same call.`
+  Several events are joined by `or`. When one of them cannot be put that way,
+  it names the fields whose change does it instead:
+  `Hidden until a change to kind makes it available`. That is an event with no
+  `when`, a condition with `field` (it reads a key of the chosen option), one
+  on a `chips` field (it is matched by its selections), or one whose operator
+  the form cannot read. A field that is both hidden and locked says each, as
+  `Hidden until kind equals "list" and locked until kind equals "group"`, or
+  `Hidden and locked until ...` when the same thing does both.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a
