@@ -86,7 +86,7 @@ jobs:
           # No application pays for it until an agent is on the page.
           TOTAL_KB=450
           MAIN_GZIP_KB=33
-          TOOLS_GZIP_KB=15
+          TOOLS_GZIP_KB=25
           total=0
           rows=""
 

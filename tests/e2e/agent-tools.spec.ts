@@ -1443,6 +1443,24 @@ test.describe(
       ])
     })
 
+    // Several forms on one page: an agent tells their tools apart by title.
+    test("should title the tools after the form's name, or the host's title", async ({
+      page,
+    }) => {
+      const titles = async () => (await list(page)).map((tool) => tool.title)
+      await openWith(page, NAME_ONLY)
+      expect(await titles()).toEqual([
+        'Fill: preview',
+        'Read: preview',
+        'Submit: preview',
+      ])
+
+      await swap(page, { ...NAME_ONLY, agent: { title: 'Question 2' } })
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
     // An agent told of a submission looks for a way to send it.
     test('should speak of no submission, nor read one, when the form is offered without submit', async ({
       page,

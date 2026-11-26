@@ -68,7 +68,9 @@ export type AgentCallRecord = Readonly<{
  * was answered, a refused, cancelled or busy one included; what it throws is
  * logged and changes nothing. `output` is the shape of what the action
  * returns, which the submit answers as `data`: one it does not match is
- * answered all the same, and logged.
+ * answered all the same, and logged. `title` is what the form edits, in the
+ * host's words, that every tool's title names after what it does: `name` when
+ * it is left out or blank.
  */
 export type AgentOptions = Readonly<{
   allow?: (
@@ -80,6 +82,7 @@ export type AgentOptions = Readonly<{
   onCall?: (call: AgentCallRecord) => void
   output?: ObjectSchema
   submit?: boolean
+  title?: string
 }>
 
 /** A schema of an object, as `output` describes what the action returns. */
@@ -1290,6 +1293,9 @@ export function createFormTools(
     }
   }
 
+  // What every title names after what its tool does, so the tools of several
+  // forms on one page are told apart: the host's title, or the form's name.
+  const subject = agent.title?.trim() || agent.name
   const tools: Tool[] = [
     {
       annotations: { untrustedContentHint: true },
@@ -1310,7 +1316,7 @@ export function createFormTools(
       inputSchema: built.schema,
       name: names.fill,
       outputSchema: FILL_OUTPUT,
-      title: 'Fill the form',
+      title: `Fill: ${subject}`,
     },
     {
       annotations: { readOnlyHint: true, untrustedContentHint: true },
@@ -1326,7 +1332,7 @@ export function createFormTools(
       inputSchema: READ_INPUT,
       name: names.read,
       outputSchema: submission.readOutput,
-      title: 'Read the form',
+      title: `Read: ${subject}`,
     },
   ]
 
@@ -1354,7 +1360,7 @@ export function createFormTools(
       },
       name: names.options,
       outputSchema: OPTIONS_OUTPUT,
-      title: 'Find options',
+      title: `Find options: ${subject}`,
     })
   }
 
@@ -1380,7 +1386,7 @@ export function createFormTools(
       inputSchema: SUBMIT_INPUT,
       name: names.submit,
       outputSchema: outcome.submit,
-      title: 'Submit the form',
+      title: `Submit: ${subject}`,
     })
   }
 

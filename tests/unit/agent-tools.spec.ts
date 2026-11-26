@@ -459,6 +459,37 @@ describe('createFormTools', () => {
       expect(warn).toHaveBeenCalledTimes(4)
     })
 
+    // Several forms on one page: an agent tells their tools apart by title.
+    test('should title the tools of two forms apart', () => {
+      const titles = (name: string) =>
+        toolsOf({}, { ...AGENT, name }).tools.map((tool) => tool.title)
+      const question = titles('question')
+      const section = titles('section')
+
+      for (const [index, title] of question.entries()) {
+        expect(title).not.toBe(section[index])
+      }
+      expect(question).toEqual([
+        'Fill: question',
+        'Read: question',
+        'Find options: question',
+        'Submit: question',
+      ])
+    })
+
+    test("should title the tools after the host's title, or the name when it is blank", () => {
+      const titles = (title: string) =>
+        toolsOf({}, { ...AGENT, title }).tools.map((tool) => tool.title)
+
+      expect(titles('Question 2')).toEqual([
+        'Fill: Question 2',
+        'Read: Question 2',
+        'Find options: Question 2',
+        'Submit: Question 2',
+      ])
+      expect(titles(' ')).toEqual(titles('signup'))
+    })
+
     test('should mark what each tool does, and take the fill schema from the form', () => {
       const { tools } = toolsOf()
       const fill = toolNamed(tools, 'fill')

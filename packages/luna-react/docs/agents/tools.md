@@ -43,6 +43,12 @@ field's transforms, change events and validation all run.
   closed with a period before the sentences that follow it. A blank one adds
   nothing.
 
+- **`title`** is what the form edits, in your words and your language, for
+  the title of every tool: what the tool does, then yours, `Fill: Question 2`,
+  `Read: Question 2`, `Find options: Question 2`, `Submit: Question 2`.
+  Without it, or blank, the titles name `name` instead, `Fill: signup`, so the
+  tools of several forms on one page are told apart all the same; give a
+  `title` when `name` is a key no person reads, such as `step_2`.
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
   `action`: sending has effects outside the page. Without it, no tool speaks
   of a submission, so an agent does not look for a way to send the form:
