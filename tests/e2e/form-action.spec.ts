@@ -197,6 +197,35 @@ test.describe('Form action handling', { tag: ['@e2e'] }, () => {
     )
   })
 
+  // The submit reads every name against the lists on screen, a plain record:
+  // a name that starts with one of its inherited members was read as a list,
+  // and the page crashed instead of submitting.
+  test('should submit a field whose name starts with an object member', async ({
+    page,
+  }) => {
+    await inject(
+      page,
+      JSON.stringify({
+        sections: [
+          {
+            fields: [
+              { name: 'toString.1', label: 'Summary', type: 'input/text' },
+            ],
+          },
+        ],
+      })
+    )
+    await page.goto('')
+
+    await page.locator('input[name="toString.1"]').fill('Quarterly report')
+    await page.getByRole('button', { name: 'Submit' }).click()
+    await expect(page.getByText('Form submitted successfully')).toBeVisible()
+    // Submitted as any `notes.1` is.
+    await expect(page.locator('pre code')).toContainText(
+      JSON.stringify({ toString: ['Quarterly report'] }, null, 2)
+    )
+  })
+
   test('should submit form with select fields', async ({ page }) => {
     await inject(
       page,

@@ -1,3 +1,4 @@
+import { hasOwn } from '@luna-form/core'
 import { createAtomStore } from './store-helper'
 import type { ValueSource } from '../../type'
 
@@ -118,7 +119,8 @@ export const heldListRowsAtom = heldRows.atom
 // id the form keeps it under. `to` says which the result uses. A list is found by the name the form gives it, ids and all,
 // so one in a row (`items.<id>.parts`) is found whichever way the row was
 // named. `undefined` when a row is not there, or not named as a row is: a
-// whole number, with no leading zero.
+// whole number, with no leading zero. Only a list the record holds itself
+// counts: `toString.1` is in no list, whatever the record inherits.
 export function translateRows(
   name: string,
   mounted: Readonly<Record<string, MountedList>>,
@@ -134,7 +136,7 @@ export function translateRows(
       ? `${translated}.${segments[index]}`
       : segments[index]
 
-    const list = mounted[key]
+    const list = hasOwn(mounted, key) ? mounted[key] : undefined
     const row = segments[index + 1]
     if (!list || row === undefined) {
       continue
