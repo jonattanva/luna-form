@@ -93,8 +93,7 @@ const definition = (keepValue: boolean) =>
 const chip = (page: Page, name: string) =>
   page.locator('button').filter({ hasText: new RegExp(`^${name}$`) })
 
-// By position, not by name: a row's name carries its stable id, which is not
-// its position once a row before it has been removed.
+// Every row of the inner list, in the order the page shows them.
 const labels = (page: Page) =>
   page.locator('input[name^="field.0.inner."][name$=".label"]')
 

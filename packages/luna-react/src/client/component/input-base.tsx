@@ -283,7 +283,7 @@ export function InputBase(
           onChange={onChange}
         />
       </InputGroup>
-      {formSends && <SubmittedValue name={props.field.name} {...inputProps} />}
+      {formSends && <SubmittedValue name={commonProps.name} {...inputProps} />}
     </>
   ))
 }

@@ -10,7 +10,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 - **`type`** _(string, required)_: Evaluates the type definition exactly to `"list"`.
 - **`label`** _(string, optional)_: The human-readable label (typically rendered as a fieldset legend).
 - **`description`** _(string | object, optional)_: Help text or extra context shown globally just under the legend. Supports **Markdown** (specifically links).
-- **`fields`** _(Array<Field | Column | List>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array. A `list` among them is a list nested inside this one: each row gets its own, named by its path (`groups.0.checks`).
+- **`fields`** _(Array<Field | Column | List>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array. A `list` among them is a list nested inside this one: each row gets its own, named by its path (`groups.0.checks`). Each control of a row carries that path as its `name` attribute, with every row at its position (`groups.1.checks.0.code`), and is renamed when rows before it are removed or the list is assigned new rows, so a script that finds a control by `name` finds the row the page shows.
 
 ---
 

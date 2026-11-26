@@ -155,10 +155,10 @@ test.describe('List field - column layout', { tag: ['@e2e'] }, () => {
 
     await page.getByRole('button', { name: 'Remove Contacts item 1' }).click()
 
-    // Bob keeps his stable id (contacts.1.first) after Alice is removed
-    await expect(page.locator('input[name="contacts.1.first"]')).toHaveValue(
+    // Bob moves up to the first row, and his control is named after it
+    await expect(page.locator('input[name="contacts.0.first"]')).toHaveValue(
       'Bob'
     )
-    await expect(page.locator('input[name="contacts.0.first"]')).toHaveCount(0)
+    await expect(page.locator('input[name="contacts.1.first"]')).toHaveCount(0)
   })
 })

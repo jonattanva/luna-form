@@ -132,8 +132,9 @@ export function useFieldList(
   // Translate consumer-facing paths from this list's stable id to the item's
   // current array position, then delegate the rest to the parent list (nested
   // lists compose: each level rewrites its own segment). The internal naming
-  // (atom keys, DOM names) stays keyed by stable id — only the name emitted to
-  // the consumer is positional, matching the positional value array.
+  // (atom keys, schemas, errors) stays keyed by stable id — the name emitted to
+  // the consumer and the `name` a control carries are positional, matching the
+  // positional value array.
   //
   // `items` itself and not the mirror, because this one is read while
   // rendering: `useHostEntry` translates a leaf's name to ask the host's record

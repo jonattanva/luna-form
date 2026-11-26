@@ -610,6 +610,112 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should name the controls of a row in a nested list by its position', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              fields: [
+                { label: 'Title', name: 'title', type: 'input/text' },
+                {
+                  fields: [{ label: 'Key', name: 'key', type: 'input/text' }],
+                  label: 'Parts',
+                  name: 'parts',
+                  type: 'list',
+                },
+              ],
+              label: 'Groups',
+              name: 'groups',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+      value: {
+        groups: [
+          { parts: [{ key: 'a' }], title: 'A' },
+          { parts: [{ key: 'b' }], title: 'B' },
+        ],
+      },
+    })
+
+    // The name each control carries, in the order the page shows them.
+    const names = () =>
+      page
+        .locator('input[name^="groups."]')
+        .evaluateAll((inputs) =>
+          inputs.map((input) => input.getAttribute('name'))
+        )
+
+    await call(page, 'preview_read')
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'a' }], title: 'A' },
+        { parts: [{ key: 'b' }], title: 'B' },
+        { parts: [{ key: 'c' }, { key: 'd' }], title: 'C' },
+      ],
+    })
+    await expect(page.locator('input[value="d"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+      'groups.2.title',
+      'groups.2.parts.0.key',
+      'groups.2.parts.1.key',
+    ])
+
+    // Twice: the rows an assignment reuses, and the ones it hands out anew.
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'e' }, { key: 'f' }], title: 'E' },
+        { parts: [{ key: 'g' }], title: 'G' },
+      ],
+    })
+    await expect(page.locator('input[value="g"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.0.parts.1.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+    ])
+
+    // A person removes the first row, then the agent sends the rows again.
+    await page.getByRole('button', { name: 'Remove Groups item 1' }).click()
+    await expect(page.locator('input[value="E"]')).toHaveCount(0)
+    expect(await names()).toEqual(['groups.0.title', 'groups.0.parts.0.key'])
+
+    await call(page, 'preview_read')
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'g' }], title: 'G' },
+        { parts: [{ key: 'h' }, { key: 'i' }], title: 'H' },
+      ],
+    })
+    await expect(page.locator('input[value="i"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+      'groups.1.parts.1.key',
+    ])
+
+    // The submit reads the controls by those names, and sends every row.
+    const submitted = await call(page, 'preview_submit')
+    expect((submitted.data as Answer).form).toEqual({
+      groups: [
+        { parts: [{ key: 'g' }], title: 'G' },
+        { parts: [{ key: 'h' }, { key: 'i' }], title: 'H' },
+      ],
+    })
+  })
+
   test('should write a custom type in the shape it declares', async ({
     page,
   }) => {

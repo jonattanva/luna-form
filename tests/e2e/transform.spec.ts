@@ -324,7 +324,7 @@ test.describe('Input Transform', { tag: ['@e2e'] }, () => {
     await expect
       .poll(() => lastEventFor(events, 'keys.0.key')?.value)
       .toBe('customerEmail')
-    await expect(page.locator('input[name="keys.1.key"]')).toHaveValue(
+    await expect(page.locator('input[name="keys.0.key"]')).toHaveValue(
       'customerEmail'
     )
   })

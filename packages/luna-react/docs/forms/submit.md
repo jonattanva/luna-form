@@ -34,8 +34,7 @@ On submit, in this order:
    `advanced.format` says.
 3. **Dotted names are un-flattened.** `basicAuth.username` becomes
    `{ basicAuth: { username } }`, and a numeric segment becomes an array index,
-   so `rules.0.value` rebuilds the list — with the gaps of removed rows closed
-   up.
+   so `rules.0.value` rebuilds the list, its rows in the order they are shown.
 4. **Your `action` is awaited** with that object and the schema.
 5. **`onSuccess` is called** with what the action returned, and the form starts
    over.
@@ -146,6 +145,8 @@ turn this off.
 `defineConfig({ validation: { submit: false } })` skips the parse entirely. The
 action is called with the raw `FormData` and the schema, and nothing is checked,
 reported or cleared on the way — for a form whose action does its own parsing.
+A row's fields arrive under the names their controls carry, the row at its
+position (`rules.0.value`), however many rows were removed before it.
 What it returns ends the submit as it does with validation on: a success calls
 `onSuccess` and starts the form over, a failure shows its `error`, and a throw
 is caught. With no action at all, submitting does nothing.

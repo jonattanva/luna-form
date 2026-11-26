@@ -6,6 +6,7 @@ import { inputErrorAtom } from './error-store'
 import {
   mountedListsAtom,
   pendingListRowsAtom,
+  translateRows,
   type MountedList,
 } from './list-store'
 import { sourceAtom } from './source-store'
@@ -425,49 +426,6 @@ function createFormHost(
   }
 }
 
-// A name with the row of every list in it named the other way: by position,
-// as an agent names it, or by the id the form keeps it under. `to` says which
-// the result uses. A list is found by the name the form gives it, ids and all,
-// so one in a row (`items.<id>.parts`) is found whichever way the row was
-// named. `undefined` when a row is not there, or not named as a row is: a
-// whole number, with no leading zero.
-function translateRows(
-  name: string,
-  mounted: Readonly<Record<string, MountedList>>,
-  to: 'id' | 'position'
-): string | undefined {
-  const segments = name.split('.')
-  let key = ''
-  let translated = ''
-
-  for (let index = 0; index < segments.length; index++) {
-    key = key ? `${key}.${segments[index]}` : segments[index]
-    translated = translated
-      ? `${translated}.${segments[index]}`
-      : segments[index]
-
-    const list = mounted[key]
-    const row = segments[index + 1]
-    if (!list || row === undefined) {
-      continue
-    }
-    if (!/^(0|[1-9]\d*)$/.test(row)) {
-      return undefined
-    }
-
-    const position = to === 'id' ? Number(row) : list.items.indexOf(Number(row))
-    const id = list.items[position]
-    if (id === undefined) {
-      return undefined
-    }
-
-    key = `${key}.${id}`
-    translated = `${translated}.${to === 'id' ? id : position}`
-    index++
-  }
-  return translated
-}
-
 // The options a field's definition gives it, for a field that is not mounted
 // to say which it offers: a leaf of a list, or a field not shown yet.
 function declaredOptions(
@@ -555,8 +513,8 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
   let region: HTMLElement | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
 
-  // The fields marked, by the name of their control, with what the form had
-  // noted of a person's change to it, or to a list it is in, then.
+  // The fields marked, by the name the form keeps them under, with what the
+  // form had noted of a person's change to it, or to a list it is in, then.
   const marked = new Map<string, string>()
   let watched: Store | undefined
   let stop = () => {}
@@ -572,10 +530,19 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
       .map(([key, at]) => `${key}:${at}`)
       .join(' ')
 
+  // A control is named with its rows at their positions, and a field is
+  // marked by the id the form keeps it under: the rows can move between the
+  // mark and the change that takes it off. See `translateRows`.
+  const lists = () => read().store.get(mountedListsAtom)
+
   const clear = (name: string) => {
     marked.delete(name)
+    const shown = translateRows(name, lists(), 'position')
+    if (shown === undefined) {
+      return
+    }
     for (const control of read().formRef.current?.querySelectorAll(
-      `[name="${CSS.escape(name)}"]`
+      `[name="${CSS.escape(shown)}"]`
     ) ?? []) {
       fieldOf(control)?.removeAttribute('data-agent-filled')
     }
@@ -643,17 +610,26 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
 
       // A list's name marks the fields of its rows.
       const touched = store.get(touchedAtom)
+      const mounted = lists()
       const fields = new Set<Element>()
       for (const name of names) {
-        const escaped = CSS.escape(name)
+        const shown = translateRows(name, mounted, 'position')
+        if (shown === undefined) {
+          continue
+        }
+        const escaped = CSS.escape(shown)
         for (const control of form.querySelectorAll(
           `[name="${escaped}"], [name^="${escaped}."]`
         )) {
           const field = fieldOf(control)
           const controlName = control.getAttribute('name')
-          if (field && controlName) {
+          const key =
+            controlName === null
+              ? undefined
+              : translateRows(controlName, mounted, 'id')
+          if (field && key !== undefined) {
             field.setAttribute('data-agent-filled', '')
-            marked.set(controlName, noted(controlName, touched))
+            marked.set(key, noted(key, touched))
             fields.add(field)
           }
         }
