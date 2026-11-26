@@ -7,8 +7,10 @@ import {
 } from '@/packages/luna-core/src/util/tool-schema'
 import type {
   Fields,
+  Operator,
   PatternRule,
   Sections,
+  WhenRule,
 } from '@/packages/luna-core/src/type'
 
 function build(fields: Fields, options?: ToolSchemaOptions) {
@@ -1082,7 +1084,105 @@ describe('buildToolSchema', () => {
           ],
           'vat'
         )?.description
-      ).toBe('Required when kind eq "company".')
+      ).toBe('Required when kind equals "company".')
+    })
+
+    // Typed by every operator, so a new one cannot ship without its words.
+    const phrases: Record<Operator, [WhenRule['value'], string]> = {
+      contains: ['co', 'kind contains "co"'],
+      empty: [undefined, 'kind has no value'],
+      eq: ['co', 'kind equals "co"'],
+      exists: [undefined, 'kind has a value'],
+      gt: [3, 'kind is greater than 3'],
+      gte: [3, 'kind is at least 3'],
+      in: [['a', 'b'], 'kind is one of ["a","b"]'],
+      lt: [3, 'kind is less than 3'],
+      lte: [3, 'kind is at most 3'],
+      neq: ['co', 'kind does not equal "co"'],
+      nin: [['a', 'b'], 'kind is not one of ["a","b"]'],
+      truthy: [undefined, 'kind has a value other than false or 0'],
+    }
+    for (const [operator, [value, words]] of Object.entries(phrases)) {
+      test(`should write the ${operator} operator in words`, () => {
+        expect(
+          propertyOf(
+            [
+              {
+                name: 'vat',
+                type: 'input/text',
+                validation: {
+                  requiredWhen: {
+                    field: 'kind',
+                    operator: operator as Operator,
+                    value,
+                  },
+                },
+              },
+            ],
+            'vat'
+          )?.description
+        ).toBe(`Required when ${words}.`)
+      })
+    }
+
+    test('should not write the value an operator ignores', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: {
+                requiredWhen: { field: 'kind', operator: 'exists', value: 'x' },
+              },
+            },
+          ],
+          'vat'
+        )?.description
+      ).toBe('Required when kind has a value.')
+    })
+
+    test('should equal by default', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: { requiredWhen: { field: 'kind', value: 'co' } },
+            },
+          ],
+          'vat'
+        )?.description
+      ).toBe('Required when kind equals "co".')
+    })
+
+    test('should not describe a rule whose operator the form cannot read', () => {
+      const fields = JSON.parse(
+        JSON.stringify([
+          {
+            name: 'vat',
+            type: 'input/text',
+            validation: {
+              requiredWhen: [
+                { field: 'kind', operator: 'like', value: 'co' },
+                { field: 'size', operator: 'gt', value: 3 },
+              ],
+            },
+          },
+          {
+            name: 'tax',
+            type: 'input/text',
+            validation: {
+              requiredWhen: { field: 'kind', operator: 'like', value: 'co' },
+            },
+          },
+        ])
+      ) as Fields
+      expect(propertyOf(fields, 'vat')?.description).toBe(
+        'Required when size is greater than 3.'
+      )
+      expect(propertyOf(fields, 'tax')).toEqual({ type: 'string' })
     })
 
     test('should say a rule in a row reads its own row', () => {
@@ -1108,7 +1208,7 @@ describe('buildToolSchema', () => {
       ])
       expect(
         result.schema.properties?.items?.items?.properties?.value?.description
-      ).toContain('Required when this row\'s mode eq "strict".')
+      ).toContain('Required when this row\'s mode equals "strict".')
     })
 
     test('should hold no rule only a submit checks when it checks none', () => {
@@ -1137,7 +1237,7 @@ describe('buildToolSchema', () => {
 
       const checked = build(fields).schema.properties
       expect(checked?.vat?.description).toBe(
-        'It must match /^[a-z]{3}$/i. Required when kind eq "company". The form checks more rules for it.'
+        'It must match /^[a-z]{3}$/i. Required when kind equals "company". The form checks more rules for it.'
       )
       expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
 

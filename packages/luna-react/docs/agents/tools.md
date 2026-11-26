@@ -523,7 +523,7 @@ and a field in the rows of a list with `"agent": false` stay out.
 - A note in a list's row holds for each row, so it names no row by its number.
   A field of the same row is this row's, as in
   `Hidden until a change to this row's flag makes it available` or
-  `Required when this row's mode eq "strict".`, in a nested list too. A field
+  `Required when this row's mode equals "strict".`, in a nested list too. A field
   in the rows of a list under it, or a field of a row named from outside the
   list, counts each row as `<row>`, the way the list's routes do:
   `this row's inner.<row>.flag`, `outer.<row>.flag`. A field outside every list
@@ -544,6 +544,15 @@ and a field in the rows of a list with `"agent": false` stay out.
   pattern's translated `message` follows, cut at 200 characters, unless it
   interpolates a value. A pattern carried in the `pattern` keyword is not
   repeated in the description.
+- A `requiredWhen` is written in words, one condition per rule joined by
+  `or`, such as `Required when kind is not one of ["object","array"].` Each
+  [operator](../validation/overview.md#operators) has its phrase: `eq`
+  equals, `neq` does not equal, `in` is one of, `nin` is not one of, `gt` is
+  greater than, `gte` is at least, `lt` is less than, `lte` is at most,
+  `contains` contains, `exists` has a value, `empty` has no value, `truthy`
+  has a value other than false or 0. The last three leave the `value` out,
+  since they ignore it. A rule whose operator the form cannot read never
+  holds, and is left out.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a

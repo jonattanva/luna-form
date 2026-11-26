@@ -44,6 +44,7 @@ import type {
   Field,
   Fields,
   List,
+  Operator,
   Sections,
   Select,
   WhenRule,
@@ -820,13 +821,14 @@ function ruleNotes(field: Field, walk: Walk, row: string): string[] {
   const notes: string[] = []
   const validation = field.validation
 
-  // A rule in a row reads the fields of its own row.
-  const requiredWhen = validation?.requiredWhen
-  if (requiredWhen) {
-    const rules = Array.isArray(requiredWhen) ? requiredWhen : [requiredWhen]
-    notes.push(
-      `Required when ${rules.map((rule) => fromRow(row, describeWhen(rule))).join(' or ')}.`
-    )
+  // A rule in a row reads the fields of its own row. A rule whose operator the
+  // form cannot read never holds, so it is not one.
+  const conditions = [validation?.requiredWhen ?? []].flat().flatMap((rule) => {
+    const when = describeWhen(rule)
+    return when ? [fromRow(row, when)] : []
+  })
+  if (conditions.length) {
+    notes.push(`Required when ${conditions.join(' or ')}.`)
   }
 
   if (validation?.rules?.length || validation?.custom) {
@@ -839,11 +841,33 @@ function ruleNotes(field: Field, walk: Walk, row: string): string[] {
   return notes
 }
 
-function describeWhen(rule: WhenRule): string {
+// Each operator in words, and whether it reads a value: typed by every
+// operator, so a new one cannot be added without what an agent reads for it.
+const OPERATOR_WORDS: Record<Operator, readonly [words: string, unary?: true]> =
+  {
+    contains: ['contains'],
+    empty: ['has no value', true],
+    eq: ['equals'],
+    exists: ['has a value', true],
+    gt: ['is greater than'],
+    gte: ['is at least'],
+    in: ['is one of'],
+    lt: ['is less than'],
+    lte: ['is at most'],
+    neq: ['does not equal'],
+    nin: ['is not one of'],
+    truthy: ['has a value other than false or 0', true],
+  }
+
+function describeWhen(rule: WhenRule): string | undefined {
   const operator = rule.operator ?? 'eq'
-  return rule.value === undefined
-    ? `${rule.field} ${operator}`
-    : `${rule.field} ${operator} ${JSON.stringify(rule.value)}`
+  if (!Object.prototype.hasOwnProperty.call(OPERATOR_WORDS, operator)) {
+    return undefined
+  }
+  const [words, unary] = OPERATOR_WORDS[operator]
+  return unary || rule.value === undefined
+    ? `${rule.field} ${words}`
+    : `${rule.field} ${words} ${JSON.stringify(rule.value)}`
 }
 
 // A field's title and description, translated, with the notes the walk wrote
