@@ -501,6 +501,10 @@ export function createFormTools(
   const outcome = outcomeOf(agent.output ?? OBJECT)
   // Whether `allow` is asked before a fill and a submit.
   const asked = agent.allow !== undefined
+  // What every title names after what its tool does, so the tools of several
+  // forms on one page are told apart: the host's title, or the form's name.
+  // The tools that only read name it in their own words too.
+  const subject = agent.title?.trim() || agent.name
   const submission = submissionOf(
     names,
     validates ? built.required : undefined,
@@ -1293,14 +1297,10 @@ export function createFormTools(
     }
   }
 
-  // What every title names after what its tool does, so the tools of several
-  // forms on one page are told apart: the host's title, or the form's name.
-  const subject = agent.title?.trim() || agent.name
   const tools: Tool[] = [
     {
       annotations: { untrustedContentHint: true },
       description: describeTool(
-        agent.description,
         [
           'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
           "Pass in one call the values for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
@@ -1310,7 +1310,8 @@ export function createFormTools(
           'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
           ...submission.needs,
         ],
-        asked
+        asked,
+        agent.description
       ),
       execute: queued('fill', fill),
       inputSchema: built.schema,
@@ -1321,8 +1322,8 @@ export function createFormTools(
     {
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       description: describeTool(
-        agent.description,
         [
+          `Reads what the form "${subject}" holds now: ${submission.holds}.`,
           ...submission.reads,
           `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
         ],
@@ -1340,9 +1341,8 @@ export function createFormTools(
     tools.push({
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       description: describeTool(
-        agent.description,
         [
-          `Finds the options of a field the schema of ${names.fill} does not list.`,
+          `Finds the options of a field of the form "${subject}" that the schema of ${names.fill} does not list.`,
           `Pass the field and, to narrow them, text to match in their labels and values; it returns up to ${FOUND_OPTIONS} options and how many more there are.`,
           `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
         ],
@@ -1368,7 +1368,6 @@ export function createFormTools(
     tools.push({
       annotations: { consequentialHint: true, untrustedContentHint: true },
       description: describeTool(
-        agent.description,
         [
           validates
             ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
@@ -1380,7 +1379,8 @@ export function createFormTools(
             ? `A person who has not answered, or an action still running, after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later, which says which one it waits for.`
             : `An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
         ],
-        asked
+        asked,
+        agent.description
       ),
       execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
@@ -1396,14 +1396,16 @@ export function createFormTools(
 // A tool's own sentences, the one that says what it does first.
 type Sentences = readonly [string, ...string[]]
 
-// A tool's description: what the tool does first, so the host's text, which
-// may say what sending the form does, never reads as what a tool that only
-// reads does; then the host's text, as what the form is for; then the rest of
-// the tool's own sentences, and the warning that the page's text is data.
+// A tool's description: what the tool does first; then `form`, the host's
+// text, as what the form is for; then the rest of the tool's own sentences,
+// and the warning that the page's text is data. Only the tools that write are
+// given the host's text: it may say what sending the form does or what it
+// edits, which a tool that only reads must not say, so those name the form in
+// their own sentence instead.
 function describeTool(
-  form: string,
   [does, ...rest]: Sentences,
-  asked: boolean
+  asked: boolean,
+  form = ''
 ): string {
   return joinSentences([
     does,
@@ -1453,8 +1455,9 @@ type Submission = Readonly<{
   // What the fill says of the fields a submission needs: nothing when a
   // submit checks none.
   needs: readonly string[]
-  // What the read reads, and when to call it.
-  reads: Sentences
+  // What the read reads, for its own first sentence, and when to call it.
+  holds: string
+  reads: readonly string[]
   readOutput: ToolSchema
   read: (host: FormToolsHost) => ToolResult
 }>
@@ -1478,8 +1481,8 @@ function submissionOf(
       needs: needs('Required fields', 'No field is required.'),
       read: () => ({}),
       readOutput: READ_OUTPUT,
+      holds: 'values, hidden or locked fields and errors',
       reads: [
-        'Reads what this form holds now: values, hidden or locked fields and errors.',
         `Call it before filling when a person may have written something, and between turns; ${names.fill} already returns what it changed.`,
       ],
     }
@@ -1491,8 +1494,8 @@ function submissionOf(
       ...READ_OUTPUT,
       properties: { ...READ_OUTPUT.properties, submit: status },
     },
+    holds: 'values, hidden or locked fields, errors and the last submission',
     reads: [
-      'Reads what this form holds now: values, hidden or locked fields, errors and the last submission.',
       `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
     ],
   }

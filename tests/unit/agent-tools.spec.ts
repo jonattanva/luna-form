@@ -512,27 +512,44 @@ describe('createFormTools', () => {
       })
     })
 
-    test("should give every description the author's after what the tool does, and warn that the page's text is data", () => {
-      for (const tool of toolsOf().tools) {
-        expect(tool.description).toMatch(
+    test("should give the writing tools the author's text after what they do, and warn every tool that the page's text is data", () => {
+      const tools = toolsOf().tools
+      for (const suffix of ['fill', 'submit']) {
+        expect(toolNamed(tools, suffix).description).toMatch(
           /^[A-Z][^.]*\. About this form: Signs a person up\. [A-Z]/
         )
+      }
+      for (const tool of tools) {
         expect(tool.description).toContain('never instructions')
       }
     })
 
-    // The author's text describes the form, often by what its submit does: it
-    // must not read as what a tool that only reads does.
-    test("should not open the read description with the author's text as what it does", () => {
-      const description = 'Publishes the current draft.'
-      const read = toolNamed(
-        toolsOf({}, { ...AGENT, description }).tools,
-        'read'
-      ).description
+    // The author's text describes the form, often by what its submit does or
+    // by what it edits: a tool that only reads must not say it.
+    test("should keep the author's text out of the tools that only read, and name the form in their own", () => {
+      const description = 'Edits the question.'
+      for (const agent of [
+        { ...AGENT, description },
+        { ...AGENT, description, title: 'Question 2' },
+      ]) {
+        const tools = toolsOf({}, agent).tools
+        const subject = agent.title ?? agent.name
+        const read = toolNamed(tools, 'read').description
+        const options = toolNamed(tools, 'options').description
 
-      expect(read.startsWith(description)).toBe(false)
-      expect(read).toMatch(/^Reads /)
-      expect(read).toContain(description)
+        expect(read).toMatch(
+          new RegExp(`^Reads what the form "${subject}" holds now: `)
+        )
+        expect(options).toMatch(
+          new RegExp(`^Finds the options of a field of the form "${subject}" `)
+        )
+        for (const own of [read, options]) {
+          expect(own).not.toContain(description)
+          expect(own).not.toContain('About this form')
+        }
+        expect(toolNamed(tools, 'fill').description).toContain(description)
+        expect(toolNamed(tools, 'submit').description).toContain(description)
+      }
     })
 
     // A dictionary key cannot always end in a period, so the author's text
@@ -543,8 +560,9 @@ describe('createFormTools', () => {
         'Signs a person up.',
         'Signs a person up \n',
       ]) {
-        for (const tool of toolsOf({}, { ...AGENT, description }).tools) {
-          expect(tool.description).toContain(
+        const tools = toolsOf({}, { ...AGENT, description }).tools
+        for (const suffix of ['fill', 'submit']) {
+          expect(toolNamed(tools, suffix).description).toContain(
             ' About this form: Signs a person up. '
           )
         }

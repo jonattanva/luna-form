@@ -27,16 +27,21 @@ field's transforms, change events and validation all run.
   them, unique on the page. Any other name registers nothing and says so in
   the console.
 - **`description`** is what the form is for, in your words, and it is what
-  weighs most in how a model uses the tools. Every tool's description opens
-  with what that tool does, and yours follows as the form's context, so a
-  description that says what sending does is never read as what
-  `<name>_read` does:
+  weighs most in how a model uses the tools. It goes only in the tools that
+  write, `<name>_fill` and `<name>_submit`: each opens with what that tool
+  does, and yours follows as the form's context:
 
   ```text
-  Reads what this form holds now: values, hidden or locked fields, errors and
-  the last submission. About this form: Creates an account with an email and
-  a password. Call it before filling ...
+  Submits this form as its submit button does: every field is validated,
+  then the values are sent. About this form: Creates an account with an
+  email and a password. Call it once ...
   ```
+
+  `<name>_read` and `<name>_options` only read, so a description that says
+  what sending does, or what the form edits, is not in them: they name the
+  form in their own first sentence instead, by `title` or else `name`,
+  `Reads what the form "signup" holds now: ...` and
+  `Finds the options of a field of the form "signup" that ...`.
 
   Write it as trusted text; nothing a person typed goes in it. It need not end
   in a period: one that does not end in `.`, `!`, `?`, `:` or an ellipsis is
@@ -45,7 +50,8 @@ field's transforms, change events and validation all run.
 
 - **`title`** is what the form edits, in your words and your language, for
   the title of every tool: what the tool does, then yours, `Fill: Question 2`,
-  `Read: Question 2`, `Find options: Question 2`, `Submit: Question 2`.
+  `Read: Question 2`, `Find options: Question 2`, `Submit: Question 2`, and
+  for the form the first sentence of `<name>_read` and `<name>_options` names.
   Without it, or blank, the titles name `name` instead, `Fill: signup`, so the
   tools of several forms on one page are told apart all the same; give a
   `title` when `name` is a key no person reads, such as `step_2`.
