@@ -167,9 +167,22 @@ export function ReactiveFormPreview() {
   // and `"throw"` throws.
   const { agent: offered, host, ...formProps } = form
 
+  // A host whose form edits whichever item is open, as a settings panel does
+  // for the item selected: `host.items` holds each item's values by its id,
+  // and opening one hands the form its values in place of the ones it had,
+  // and names it to the agent as the item the form edits. `host.remount`
+  // draws the form anew for each item instead, as a host keying it does.
+  const items = isRecord(host?.items) ? host.items : {}
+  const [opened, setOpened] = useState<string>()
+  function handleOpen(id: string) {
+    const item = items[id]
+    setOpened(id)
+    setValues(isRecord(item) ? item : {})
+  }
+
   // How the preview is offered to an agent. A test changes its name,
-  // description, submit or title in the injected JSON, or offers none with
-  // `"agent": false`, decides what `allow` answers through
+  // description, submit, target or title in the injected JSON, or offers none
+  // with `"agent": false`, decides what `allow` answers through
   // `window.__lunaAllow`, and hears of each call through `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
     () => ({
@@ -180,13 +193,17 @@ export function ReactiveFormPreview() {
           description: offered.description,
         }),
         ...(typeof offered.submit === 'boolean' && { submit: offered.submit }),
+        ...(typeof offered.target === 'string' && {
+          target: offered.target,
+        }),
         ...(typeof offered.title === 'string' && { title: offered.title }),
       }),
+      ...(opened !== undefined && { target: opened }),
       allow: (call, options) =>
         window.__lunaAllow ? window.__lunaAllow(call, options) : true,
       onCall: (call) => window.__lunaOnCall?.(call),
     }),
-    [offered]
+    [offered, opened]
   )
   const nested = host?.nested === true
   const declared = host?.declared === true
@@ -257,6 +274,7 @@ export function ReactiveFormPreview() {
       )}
       {read && (
         <Form
+          key={host?.remount === true ? opened : undefined}
           {...formProps}
           value={formValue}
           config={formConfig}
@@ -267,6 +285,16 @@ export function ReactiveFormPreview() {
         >
           {({ isPending }) => (
             <div className="flex w-full justify-end gap-2">
+              {Object.keys(items).map((id) => (
+                <Button
+                  key={id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpen(id)}
+                >
+                  {`Open ${id}`}
+                </Button>
+              ))}
               <Button type="button" variant="outline" onClick={handleReset}>
                 Reset values
               </Button>

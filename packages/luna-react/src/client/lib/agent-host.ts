@@ -50,8 +50,12 @@ import type { FieldHandle } from '../hook/use-apply'
 
 type Store = ReturnType<typeof useStore>
 
-// What the tools are told of the changes a person makes. See `watchChanges`.
-type Changes = Pick<FormToolsHost, 'isChanged' | 'seen'>
+// What the tools are told of the changes a person makes, and of the item the
+// form edits. See `watchChanges`.
+type Changes = Pick<
+  FormToolsHost,
+  'getTarget' | 'isChanged' | 'isRetargeted' | 'seen'
+>
 
 // What the person is shown of an agent at work. See `showAgent`.
 type Signs = Pick<FormToolsHost, 'filled' | 'using'>
@@ -126,7 +130,7 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
   // the agent was told of the changes a person made.
   const life = new AbortController()
   let queue: Queue | undefined
-  const changes = watchChanges(() => read().store)
+  const changes = watchChanges(read)
   const signs = showAgent(read, life.signal)
 
   // The tools built last, what tells whether a build would give the same ones,
@@ -212,6 +216,9 @@ function createAgentTools(
     }),
     onCall: (call) => read().agent?.onCall?.(call),
     ...(form.agent?.output && { output: form.agent.output }),
+    // Only whether there is one, which the tools describe: which item it
+    // names is read on every call.
+    ...(form.agent?.target !== undefined && { target: form.agent.target }),
     ...(form.agent?.title !== undefined && { title: form.agent.title }),
   }
 
@@ -229,6 +236,7 @@ function createAgentTools(
       agent.submit,
       agent.allow !== undefined,
       agent.output,
+      agent.target !== undefined,
       agent.title,
       form.validates !== false,
       built,
@@ -449,6 +457,11 @@ function declaredOptions(
   return options && flattenOptions(options)
 }
 
+// The item each form, by its name, last told an agent it edits: kept on the
+// page, past the form, since a host can draw the form anew for the item it
+// opens, and the agent that read the last one calls the same tools.
+const toldTargets = new Map<string, string>()
+
 /**
  * What a person changed in a form that the agent was not told of: a field, a
  * value in a row, or a list's rows. What the form notes a person changed is
@@ -456,12 +469,16 @@ function declaredOptions(
  * takes; one that changed since is news to the agent. A success starts the
  * form over on a new store with nothing noted, and what was changed before is
  * gone with what it held.
+ *
+ * And which item the form edits, against the one the agent was told of: a
+ * host that opens another one changes what the tools act on, under the same
+ * names.
  */
-function watchChanges(current: () => Store): Changes {
+function watchChanges(form: () => AgentForm): Changes {
   const told = new Map<string, number>()
   let watched: Store | undefined
   const untold = () => {
-    const store = current()
+    const { store } = form()
     if (store !== watched) {
       watched = store
       told.clear()
@@ -477,13 +494,25 @@ function watchChanges(current: () => Store): Changes {
   const concerns = (key: string, names: readonly string[]) =>
     isUnder(key, names) || names.some((name) => isUnder(name, [key]))
 
+  const getTarget = () => form().agent?.target
+
   return {
+    getTarget,
     isChanged: (name) => untold().some(([key]) => concerns(key, [name])),
+    isRetargeted: () => {
+      const target = getTarget()
+      const last = toldTargets.get(form().agent?.name ?? '')
+      return target !== undefined && last !== undefined && last !== target
+    },
     seen: (names) => {
       for (const [key, at] of untold()) {
         if (concerns(key, names)) {
           told.set(key, at)
         }
+      }
+      const target = getTarget()
+      if (target !== undefined) {
+        toldTargets.set(form().agent?.name ?? '', target)
       }
     },
   }

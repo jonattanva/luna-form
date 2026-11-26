@@ -55,6 +55,12 @@ field's transforms, change events and validation all run.
   Without it, or blank, the titles name `name` instead, `Fill: signup`, so the
   tools of several forms on one page are told apart all the same; give a
   `title` when `name` is a key no person reads, such as `step_2`.
+- **`target`** is which item the form edits now, for a form whose content
+  depends on what is open, such as the settings of the step selected: an id
+  or a fixed label. The tools keep their names when it changes, so every
+  answer says it, and a fill or a submit meant for the item the agent read is
+  refused once another is open. See
+  [A form that edits one item of several](#a-form-that-edits-one-item-of-several).
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
   `action`: sending has effects outside the page. Without it, no tool speaks
   of a submission, so an agent does not look for a way to send the form:
@@ -271,6 +277,7 @@ needs or that is required, and the schema holds no rule only a submit checks (se
 | `refused`        | answer     | `allow` refused the call, or did not answer it  |
 | `busy`           | answer     | Ten calls are waiting already                   |
 | `cancelled`      | answer     | The agent cancelled the call                    |
+| `target_changed` | answer     | The form edits another item than the one read   |
 
 A `refused` call changed nothing, and its `message` says why:
 
@@ -342,6 +349,53 @@ read: the fields a `<name>_read` returned with their values, and every field a
 fill answered with; a row's leaf among them tells the rows moved too. A
 submission that succeeds starts the form over, with nothing a person changed
 in it yet.
+
+## A form that edits one item of several
+
+A form whose content depends on what is open, such as the settings of the
+step selected, offers the same tools whatever it edits: `step_fill` writes to
+the step open when it runs. Name that item with `target`, and change it with
+the item:
+
+```tsx
+<Form
+  key={step.id}
+  sections={sections}
+  config={config}
+  value={step.settings}
+  agent={{ name: 'step', title: step.label, target: step.id }}
+/>
+```
+
+- Every answer, of every tool, has `target`: the item the call acted on, and
+  the `outputSchema` of each tool declares it. The descriptions of
+  `<name>_read`, `<name>_fill` and `<name>_submit` say what it means.
+- A `<name>_read` tells the agent which item the form edits, and so does a
+  `<name>_fill` that runs. Once another is open, the next `<name>_fill` or `<name>_submit` is
+  refused with `target_changed`, changing nothing: what it sends was meant
+  for the item the agent read. The answer names the item open now, and its
+  `message` asks the agent to read the form and to ask its user before it
+  writes to this one:
+
+  ```json
+  {
+    "code": "target_changed",
+    "message": "The form edits another item than the one you last read, so the call changed nothing. Call step_read, and ask your user before you write to this one.",
+    "ok": false,
+    "target": "B"
+  }
+  ```
+
+- After a `<name>_read`, the fill goes on, on the item open now.
+- An agent that has read no item yet is not refused: there is no item it
+  meant.
+- What the agent was told is kept by `name` on the page, past the form: a
+  host that draws the form anew for each item, with a `key`, is held to it
+  the same as one that hands the form the item's values.
+
+Changing `target` alone does not register the tools again: which item it
+names is read on every call, and only whether there is one changes the tools.
+Without `target`, nothing of this is described, answered or refused.
 
 ## What the person sees
 

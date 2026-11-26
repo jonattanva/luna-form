@@ -1505,6 +1505,60 @@ test.describe(
         .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
     })
 
+    // A host whose one form edits whichever item is open: an agent that read
+    // one item and fills after the person opened another is writing to the
+    // wrong one. The host hands the form the item's values, or draws it anew.
+    for (const remount of [false, true]) {
+      test(`should not fill the item opened since the agent read another${remount ? ', the form drawn anew' : ''}`, async ({
+        page,
+      }) => {
+        const A = { name: 'Alpha' }
+        await openWith(page, {
+          agent: { target: 'A' },
+          host: { items: { A, B: { name: 'Beta' } }, remount },
+          sections: [
+            { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+          ],
+          value: A,
+        })
+        const name = page.getByRole('textbox', { name: 'Name' })
+        expect(await call(page, 'preview_read')).toMatchObject({
+          target: 'A',
+          values: { name: 'Alpha' },
+        })
+
+        await page.getByRole('button', { name: 'Open B' }).click()
+        await expect(name).toHaveValue('Beta')
+
+        // Neither written nor sent: both were meant for A.
+        for (const [tool, input] of [
+          ['preview_fill', { name: 'Alpha, renamed' }],
+          ['preview_submit', {}],
+        ] as const) {
+          expect(await call(page, tool, input)).toEqual({
+            code: 'target_changed',
+            message: expect.stringContaining('preview_read'),
+            ok: false,
+            target: 'B',
+          })
+        }
+        await expect(name).toHaveValue('Beta')
+        expect((await call(page, 'preview_read')).submit).toEqual({
+          status: 'idle',
+        })
+
+        // Read, the agent knows it edits B.
+        expect(await call(page, 'preview_read')).toMatchObject({
+          target: 'B',
+          values: { name: 'Beta' },
+        })
+        expect(
+          await call(page, 'preview_fill', { name: 'Beta, renamed' })
+        ).toMatchObject({ ok: true, target: 'B' })
+        await expect(name).toHaveValue('Beta, renamed')
+      })
+    }
+
     // An agent told of a submission looks for a way to send it.
     test('should speak of no submission, nor read one, when the form is offered without submit', async ({
       page,
@@ -2056,6 +2110,35 @@ test.describe(
             : []
         })
         .toEqual(['name', 'city'])
+    })
+
+    // Which item the form edits is read on every call.
+    test('should register nothing again when the host opens another item', async ({
+      page,
+    }) => {
+      await page.addInitScript(countToolChanges)
+      await openWith(page, {
+        ...NAME_ONLY,
+        agent: { target: 'A' },
+        host: { items: { A: { name: 'Alpha' }, B: { name: 'Beta' } } },
+        value: { name: 'Alpha' },
+      })
+      await expect.poll(async () => (await webmcpTools(page)).length).toBe(3)
+      await page.evaluate(() => {
+        ;(window as WebMCPWindow).__toolChanges = 0
+      })
+
+      await page.getByRole('button', { name: 'Open B' }).click()
+      await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue(
+        'Beta'
+      )
+      await page.evaluate(
+        () => new Promise((resolve) => setTimeout(resolve, 800))
+      )
+      expect(
+        await page.evaluate(() => (window as WebMCPWindow).__toolChanges)
+      ).toBe(0)
+      expect(await call(page, 'preview_read')).toMatchObject({ target: 'B' })
     })
 
     test('should keep the tools registered when a submit starts the form over', async ({

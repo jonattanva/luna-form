@@ -126,6 +126,8 @@ type Setup = Readonly<{
   // Validation, by field: a message when the value is wrong.
   rules?: Readonly<Record<string, (value: ToolValue) => string | undefined>>
   submit?: (signal: AbortSignal) => Promise<SubmitStatus>
+  // The item the form edits, in the host's words, until another is opened.
+  target?: string
   values?: Readonly<Record<string, ToolValue>>
 }>
 
@@ -177,6 +179,9 @@ function createForm(setup: Setup = {}) {
   const errors: Record<string, string[]> = {}
   const effects: Array<() => void> = []
   let submitted: SubmitStatus = { status: 'idle' }
+  // The item the form edits, and the one the agent was last told of.
+  let target = setup.target
+  let told: string | undefined
   // What was submitted before a person was asked about the next one.
   let before = submitted
 
@@ -281,7 +286,10 @@ function createForm(setup: Setup = {}) {
       }
     },
     getSubmit: () => submitted,
+    getTarget: () => target,
     isChanged: (name) => changed.has(name),
+    isRetargeted: () =>
+      target !== undefined && told !== undefined && told !== target,
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
     read: (name) => {
@@ -293,6 +301,7 @@ function createForm(setup: Setup = {}) {
       for (const name of names) {
         changed.delete(name)
       }
+      told = target ?? told
     },
     settle: async () => {
       calls.settle++
@@ -333,7 +342,12 @@ function createForm(setup: Setup = {}) {
     },
   }
 
-  return { calls, host, options, values }
+  // The host opens another item: the form edits it from now on.
+  const open = (item: string) => {
+    target = item
+  }
+
+  return { calls, host, open, options, values }
 }
 
 function toolsOf(
@@ -1848,6 +1862,75 @@ describe('createFormTools', () => {
         message:
           'The form has 10 calls waiting: call again once one is answered.',
         ok: false,
+      })
+    })
+  })
+
+  describe('target', () => {
+    const TARGETED: AgentOptions = { ...AGENT, target: 'A' }
+
+    test('should describe the item the form edits only for a host that names it', () => {
+      for (const tool of toolsOf().tools) {
+        expect(tool.description).not.toContain('target')
+        expect(tool.outputSchema.properties).not.toHaveProperty('target')
+      }
+
+      const { tools } = toolsOf({ target: 'A' }, TARGETED)
+      for (const tool of tools) {
+        expect(tool.outputSchema.properties).toHaveProperty('target')
+      }
+      const codes = (suffix: string) =>
+        toolNamed(tools, suffix).outputSchema.properties?.code?.enum
+      expect(codes('fill')).toContain('target_changed')
+      expect(codes('submit')).toContain('target_changed')
+      expect(codes('read')).not.toContain('target_changed')
+      expect(codes('options')).not.toContain('target_changed')
+    })
+
+    test('should name the item in every answer', async () => {
+      const { tools } = toolsOf({ target: 'A' }, TARGETED)
+      expect(await call(tools, 'read')).toMatchObject({ target: 'A' })
+      expect(await call(tools, 'options', { field: 'zone' })).toMatchObject({
+        target: 'A',
+      })
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'A',
+      })
+    })
+
+    test('should refuse a fill and a submit meant for the item the agent read, once another is open', async () => {
+      const { open, tools, values } = toolsOf({ target: 'A' }, TARGETED)
+      await call(tools, 'read')
+      open('B')
+
+      for (const [suffix, input] of [
+        ['fill', { email: 'a@b.co' }],
+        ['submit', {}],
+      ] as const) {
+        expect(await call(tools, suffix, input)).toEqual({
+          code: 'target_changed',
+          message: expect.stringContaining('signup_read'),
+          ok: false,
+          target: 'B',
+        })
+      }
+      expect(values.has('email')).toBe(false)
+      expect((await call(tools, 'read')).submit).toEqual({ status: 'idle' })
+
+      // The read told the agent of B.
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'B',
+      })
+    })
+
+    test('should not refuse an agent told of no item yet', async () => {
+      const { open, tools } = toolsOf({ target: 'A' }, TARGETED)
+      open('B')
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'B',
       })
     })
   })

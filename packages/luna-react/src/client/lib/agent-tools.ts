@@ -71,6 +71,11 @@ export type AgentCallRecord = Readonly<{
  * answered all the same, and logged. `title` is what the form edits, in the
  * host's words, that every tool's title names after what it does: `name` when
  * it is left out or blank.
+ *
+ * `target` is which item the form edits now, for a host whose one form edits
+ * whichever is open: an id or a fixed label, read afresh on every call. Every
+ * answer says it, and a fill or a submit is refused with `target_changed`,
+ * changing nothing, while it is not the one the agent was last told of.
  */
 export type AgentOptions = Readonly<{
   allow?: (
@@ -82,6 +87,7 @@ export type AgentOptions = Readonly<{
   onCall?: (call: AgentCallRecord) => void
   output?: ObjectSchema
   submit?: boolean
+  target?: string
   title?: string
 }>
 
@@ -182,6 +188,8 @@ export type FormToolsHost = Readonly<{
    */
   isDrawing: (name: string, path: string) => boolean
   getSubmit: () => SubmitStatus
+  /** Which item the form edits now, in the host's words. See `target`. */
+  getTarget: () => string | undefined
   /**
    * Records where an agent's submission stands while a person is asked about
    * it, as the last submission `getSubmit` answers. `undefined` takes back an
@@ -213,8 +221,13 @@ export type FormToolsHost = Readonly<{
    */
   isChanged: (name: string) => boolean
   /**
-   * The agent has been told what the fields named hold: what changed in them
-   * before is no longer news to it.
+   * Whether the form edits another item than the one the agent was last told
+   * of, by a read or a fill: one told of none has not read the other.
+   */
+  isRetargeted: () => boolean
+  /**
+   * The agent has been told what the fields named hold, and which item the
+   * form edits: what changed in them before is no longer news to it.
    */
   seen: (names: readonly string[]) => void
   /**
@@ -340,6 +353,34 @@ const FAILURE = {
   message: TEXT,
   ok: ANSWERED,
 } satisfies Record<string, ToolSchema>
+
+// An answer that says which item the form edits, for a host that names it:
+// one from a tool that writes can be refused for it. See `target`.
+function targetedOf(output: ToolSchema, writes: boolean): ToolSchema {
+  return {
+    ...output,
+    properties: {
+      ...output.properties,
+      ...(writes && {
+        code: {
+          ...FAILURE.code,
+          enum: [...FAILURE.code.enum, 'target_changed'],
+        },
+      }),
+      target: { description: 'The item the form edits.', type: 'string' },
+    },
+  }
+}
+
+// What a fill or a submit is refused with while the form edits another item
+// than the one the agent was last told of.
+function retargeted(readTool: string): ToolResult {
+  return {
+    code: 'target_changed',
+    message: `The form edits another item than the one you last read, so the call changed nothing. Call ${readTool}, and ask your user before you write to this one.`,
+    ok: false,
+  }
+}
 
 // What a submission ended with, as the submit answers it and the read reads
 // it: `data` in the shape the author gives what the action returns, the one
@@ -505,6 +546,11 @@ export function createFormTools(
   // forms on one page are told apart: the host's title, or the form's name.
   // The tools that only read name it in their own words too.
   const subject = agent.title?.trim() || agent.name
+  // Whether the host names the item the form edits, which the tools describe:
+  // which one it is, they read on every call.
+  const targeted = agent.target !== undefined
+  const answers = (output: ToolSchema, writes: boolean) =>
+    targeted ? targetedOf(output, writes) : output
   const submission = submissionOf(
     names,
     validates ? built.required : undefined,
@@ -536,6 +582,9 @@ export function createFormTools(
     async (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
       const started = performance.now()
+      // The item the call acted on, which its answer names: the one the form
+      // edits when it ran, or now, for a call that never did.
+      let acted: string | undefined
 
       // After the answer, so a slow log keeps no agent waiting, and with
       // copies, so what it does to them changes no answer.
@@ -556,10 +605,16 @@ export function createFormTools(
       }
 
       try {
-        const output = await new Promise<ToolResult>((answer, fail) => {
+        const answered = await new Promise<ToolResult>((answer, fail) => {
           const work = async () => {
             if (callSignal.aborted) {
               return CANCELLED
+            }
+            acted = host.getTarget()
+            // The one place a call that writes is held to the item the agent
+            // read: what it sends was meant for that one.
+            if ((tool === 'fill' || tool === 'submit') && host.isRetargeted()) {
+              return retargeted(names.read)
             }
             host.using(true)
             try {
@@ -574,6 +629,8 @@ export function createFormTools(
               : queue(work)
           ;(done ?? Promise.resolve(BUSY)).then(answer, fail)
         })
+        const target = acted ?? host.getTarget()
+        const output = target === undefined ? answered : { ...answered, target }
         tell({ output })
         return output
       } catch (error) {
@@ -1308,6 +1365,7 @@ export function createFormTools(
           `It returns what each field it wrote or changed holds now, what was skipped and why, and the errors: no need to call ${names.read} after.`,
           'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
           'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
+          ...(targeted ? [targetSentence('written', names.read)] : []),
           ...submission.needs,
         ],
         asked,
@@ -1316,7 +1374,7 @@ export function createFormTools(
       execute: queued('fill', fill),
       inputSchema: built.schema,
       name: names.fill,
-      outputSchema: FILL_OUTPUT,
+      outputSchema: answers(FILL_OUTPUT, true),
       title: `Fill: ${subject}`,
     },
     {
@@ -1324,6 +1382,7 @@ export function createFormTools(
       description: describeTool(
         [
           `Reads what the form "${subject}" holds now: ${submission.holds}.`,
+          ...(targeted ? [TARGET_READ] : []),
           ...submission.reads,
           `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
         ],
@@ -1332,7 +1391,7 @@ export function createFormTools(
       execute: queued('read', read),
       inputSchema: READ_INPUT,
       name: names.read,
-      outputSchema: submission.readOutput,
+      outputSchema: answers(submission.readOutput, false),
       title: `Read: ${subject}`,
     },
   ]
@@ -1359,7 +1418,7 @@ export function createFormTools(
         type: 'object',
       },
       name: names.options,
-      outputSchema: OPTIONS_OUTPUT,
+      outputSchema: answers(OPTIONS_OUTPUT, false),
       title: `Find options: ${subject}`,
     })
   }
@@ -1375,6 +1434,7 @@ export function createFormTools(
           `Call it once, when ${names.fill} reports ok and skips no field you need.`,
           ...(agent.allow ? ['A person may need to approve it first.'] : []),
           'It returns what the action answered or the errors that stopped it.',
+          ...(targeted ? [targetSentence('sent', names.read)] : []),
           agent.allow
             ? `A person who has not answered, or an action still running, after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later, which says which one it waits for.`
             : `An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
@@ -1385,12 +1445,20 @@ export function createFormTools(
       execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
       name: names.submit,
-      outputSchema: outcome.submit,
+      outputSchema: answers(outcome.submit, true),
       title: `Submit: ${subject}`,
     })
   }
 
   return tools
+}
+
+// What the tools say of the item the form edits, for a host that names it.
+const TARGET_READ =
+  'The form edits one item of several, which target names: the person can open another.'
+
+function targetSentence(done: string, readTool: string): string {
+  return `target names the item the form edits; if code is target_changed, the form edits another item than the one you last read and nothing was ${done}: call ${readTool}, and ask your user before you write to this one.`
 }
 
 // A tool's own sentences, the one that says what it does first.
