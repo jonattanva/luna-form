@@ -33,12 +33,14 @@ import { prepare } from './prepare'
 import {
   collectSourceEvents,
   getOfferedOptions,
+  isPatternRule,
   type FormSchemaOptions,
   withoutDeclarativeRules,
 } from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
+  AssertRule,
   Condition,
   Date as DateField,
   Description,
@@ -46,9 +48,11 @@ import type {
   Fields,
   List,
   Operator,
+  PatternRule,
   Sections,
   Select,
   StateEvent,
+  WhenClause,
   WhenRule,
 } from '../type'
 
@@ -462,7 +466,7 @@ function buildLeaf(field: Field, walk: Walk, row: string): ToolSchema {
 
   notes.push(
     ...availabilityNotes(field, walk, row),
-    ...ruleNotes(checked, walk, row)
+    ...ruleNotes(checked, schema.type, walk, row)
   )
   return withText(schema, field, notes, walk)
 }
@@ -692,15 +696,7 @@ function readPattern(
     !pattern.allowInterpolation &&
     compiles(pattern.regex)
   if (!carried) {
-    const source = pattern.regex.replace(/\\.|\//g, (match) =>
-      match === '/' ? '\\/' : match
-    )
-    const literal = `/${source}/${pattern.flags ?? ''}`
-    notes.push(
-      fits(literal, PATTERN_LENGTH)
-        ? `It must match ${literal}.`
-        : 'It must match a pattern the form checks.'
-    )
+    notes.push(`${describePattern(pattern)}.`)
   }
 
   const message = readText(pattern.message, dictionary, LABEL_LENGTH)
@@ -708,6 +704,18 @@ function readPattern(
     notes.push(message)
   }
   return carried ? pattern.regex : undefined
+}
+
+// A pattern as the note says it, of `validation.pattern` and of a `pattern`
+// assertion alike: its literal when it fits, and named otherwise.
+function describePattern({ flags = '', regex }: PatternRule): string {
+  const source = regex.replace(/\\.|\//g, (match) =>
+    match === '/' ? '\\/' : match
+  )
+  const literal = `/${source}/${flags}`
+  return fits(literal, PATTERN_LENGTH)
+    ? `It must match ${literal}`
+    : 'It must match a pattern the form checks'
 }
 
 function compiles(regex: string): boolean {
@@ -871,14 +879,19 @@ function describeReveal(
     : `a change to ${unique(by)} makes it available`
 }
 
-// The rules of a field no keyword says. A `custom` the field checks as it is
-// written, and the submit again when it checks.
-function ruleNotes(field: Field, walk: Walk, row: string): string[] {
+// The rules of a field no keyword says, each with its message. A `custom` the
+// field checks as it is written, and the submit again when it checks. A rule
+// in a row reads the fields of its own row.
+function ruleNotes(
+  field: Field,
+  type: ToolSchema['type'],
+  walk: Walk,
+  row: string
+): string[] {
   const notes: string[] = []
   const validation = field.validation
 
-  // A rule in a row reads the fields of its own row. A rule whose operator the
-  // form cannot read never holds, so it is not one.
+  // A rule whose operator the form cannot read never holds, so it is not one.
   const conditions = [validation?.requiredWhen ?? []]
     .flat()
     .map((rule) => describeWhen(fromRow(row, rule.field), rule))
@@ -887,14 +900,88 @@ function ruleNotes(field: Field, walk: Walk, row: string): string[] {
     notes.push(`Required when ${conditions.join(' or ')}.`)
   }
 
-  if (validation?.rules?.length || validation?.custom) {
-    notes.push(
-      walk.validates
-        ? 'The form checks more rules for it.'
-        : 'More rules are checked as it is written.'
-    )
+  const rules = [
+    ...[validation?.custom ?? []].flat().map((rule) => {
+      const that = compare(
+        'it',
+        rule.operator,
+        `the value of ${fromRow(row, rule.field)}`
+      )
+      return [
+        that ? `The form checks that ${that}.` : '',
+        rule.message,
+      ] as const
+    }),
+    ...(validation?.rules ?? []).map((rule) => {
+      const when = describeGate(rule.when, row)
+      const what = when === undefined ? '' : describeAssert(rule, type)
+      return [
+        what && `${what}${when && ` when ${when}`}.`,
+        rule.message,
+      ] as const
+    }),
+  ]
+  for (const [said, message] of rules) {
+    // An empty one never fails: no rule. One undefined fails, and is said by
+    // its message alone.
+    if (said !== '') {
+      notes.push(
+        said ?? 'The form checks more rules for it.',
+        readText(message, walk.dictionary, LABEL_LENGTH) ?? ''
+      )
+    }
   }
-  return notes
+  return [...new Set(notes)]
+}
+
+// What an assertion checks, as `runAssert` checks it: `''` for one that
+// never fails, and `undefined` for one that fails every value.
+function describeAssert(
+  { assert, value }: AssertRule,
+  type: ToolSchema['type']
+): string | undefined {
+  const bound = Number(value)
+  switch (assert) {
+    case 'required':
+      return 'Required'
+    case 'oneOf':
+      return Array.isArray(value)
+        ? `One of ${JSON.stringify(value)}`
+        : undefined
+    case 'pattern':
+      return isPatternRule(value) ? describePattern(value) : ''
+    case 'min':
+    case 'max':
+    case 'minItems':
+    case 'maxItems':
+      // A count of items reads a list only.
+      return Number.isNaN(bound) ||
+        (assert.endsWith('Items') && type !== 'array')
+        ? undefined
+        : `${assert.startsWith('min') ? 'At least' : 'At most'} ${bound}${type === 'array' ? ' items' : type === 'string' ? ' characters' : ''}`
+  }
+  return ''
+}
+
+// When an assertion runs, as `whenHolds` reads it: `''` for always, and
+// `undefined` for never, when a condition every one needs, or every one it
+// may take, has an operator the form cannot read.
+function describeGate(
+  when: WhenClause | undefined,
+  row: string
+): string | undefined {
+  const say = (rules: readonly WhenRule[] = []) =>
+    rules.map((rule) => describeWhen(fromRow(row, rule.field), rule))
+  const plain = !when || Array.isArray(when) || 'field' in when
+  const all = say(plain ? [when ?? []].flat() : when.all)
+  const any = plain ? undefined : when.any && say(when.any).filter(Boolean)
+  if (all.includes(undefined) || any?.length === 0) {
+    return undefined
+  }
+  const either = any?.join(' or ')
+  return [...all, any && any.length > 1 && all.length ? `(${either})` : either]
+    .filter(Boolean)
+    .join(' and ')
 }
 
 // Each operator in words, and whether it reads a value: typed by every
@@ -920,15 +1007,29 @@ const OPERATOR_WORDS: Record<Operator, readonly [words: string, unary?: true]> =
 // never holds, so it has none.
 function describeWhen(
   name: string,
-  { operator = 'eq', value }: Pick<WhenRule, 'operator' | 'value'>
+  { operator, value }: Pick<WhenRule, 'operator' | 'value'>
+): string | undefined {
+  return compare(
+    name,
+    operator,
+    value === undefined ? undefined : JSON.stringify(value)
+  )
+}
+
+// `subject` compared with `object` by `operator`, in words, with no object
+// for an operator that reads none.
+function compare(
+  subject: string,
+  operator: Operator = 'eq',
+  object?: string
 ): string | undefined {
   if (!Object.prototype.hasOwnProperty.call(OPERATOR_WORDS, operator)) {
     return undefined
   }
   const [words, unary] = OPERATOR_WORDS[operator]
-  return unary || value === undefined
-    ? `${name} ${words}`
-    : `${name} ${words} ${JSON.stringify(value)}`
+  return unary || object === undefined
+    ? `${subject} ${words}`
+    : `${subject} ${words} ${object}`
 }
 
 // A field's title and description, translated, with the notes the walk wrote

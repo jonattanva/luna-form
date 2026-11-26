@@ -539,7 +539,8 @@ and a field in the rows of a list with `"agent": false` stay out.
 - A field's `title` is its translated label, and its `description` is the
   field's own description followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
-  a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
+  a hidden one, a `requiredWhen`, each rule of `rules` and `custom`, that a
+  required `checkbox` has to be `true`.
   The field's own description, and a custom input's, is closed with a period
   before what follows when it does not end a sentence, as `description` above.
 - A note in a list's row holds for each row, so it names no row by its number.
@@ -581,6 +582,26 @@ and a field in the rows of a list with `"agent": false` stay out.
   has a value other than false or 0. The last three leave the `value` out,
   since they ignore it. A rule whose operator the form cannot read never
   holds, and is left out.
+- Each rule of `rules` and `custom` is written in words, followed by its
+  translated `message`, cut at 200 characters, unless it interpolates a value.
+  An assertion says what passes it: `required` as `Required`, `min` and `max`
+  as `At least 3` or `At most 20`, counted in characters on a field that holds
+  text and in items on one that holds a list, `minItems` and `maxItems` as
+  `At least 2 items` on a field that holds a list, `oneOf` as
+  `One of ["eq","neq"]`, and `pattern` as the literal above. Its `when` follows
+  in the phrases above, the conditions of an array or of `all` joined by `and`
+  and those of `any` by `or`, such as
+  `At least 1 when kind equals "a" and (size has a value or mode equals "b").`
+  A `custom` compares the field with the one it names, as
+  `The form checks that it equals the value of password.` In a row, the fields
+  both name are this row's. A rule that never fails is left out: an `assert`
+  the form does not know, a `pattern` with no pattern, a `custom` whose
+  operator the form cannot read, and a `when` that never holds, since a
+  condition it needs, or every condition its `any` may take, has such an
+  operator. One that fails every value says
+  `The form checks more rules for it.` before its message: a bound that is not
+  a number, `minItems` or `maxItems` on a field that holds no list, and a
+  `oneOf` without a list.
 - A hidden or locked field says what makes it available. When every `state`
   event that shows it (or unlocks it) compares the new value with values of its own, the
   description cites them, in the phrases above: a string `when` as `eq`, an
@@ -597,7 +618,7 @@ and a field in the rows of a list with `"agent": false` stay out.
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a
-  whole number, a required `checkbox`, and a `custom`, whose note says so.
+  whole number, a required `checkbox`, and a `custom`, whose note says it.
 - A field whose `advanced.length` the form cannot read, such as `"min": "x"`,
   has no bounds in the schema, and its description says the form accepts no
   value for it.

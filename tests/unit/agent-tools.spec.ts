@@ -592,7 +592,14 @@ describe('createFormTools', () => {
             "type": "input/text",
             "validation": {
               "pattern": { "flags": "i", "regex": "^[a-z]{3}$" },
-              "rules": [{ "assert": "minItems", "message": "Too few.", "value": 2 }]
+              "rules": [
+                { "assert": "minItems", "message": "Too few.", "value": 2 },
+                { "assert": "required", "message": "Name it.", "when": { "field": "code", "operator": "exists" } },
+                { "assert": "min", "message": "Too short.", "value": 2 },
+                { "assert": "oneOf", "message": "Pick one.", "value": ["a", "b"] },
+                { "assert": "pattern", "message": "Letters.", "value": { "regex": "^[a-z]+$" } }
+              ],
+              "custom": { "field": "code", "operator": "neq", "message": "Not the code." }
             }
           },
           { "advanced": { "length": { "min": "x" } }, "name": "code", "type": "input/text" }

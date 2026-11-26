@@ -6,6 +6,7 @@ import {
   type ToolSchemaOptions,
 } from '@/packages/luna-core/src/util/tool-schema'
 import type {
+  Field,
   Fields,
   Operator,
   PatternRule,
@@ -971,6 +972,72 @@ describe('buildToolSchema', () => {
       const rowOf = (fields: Fields) =>
         propertyOf(fields, 'outer')?.items?.properties
 
+      // Every note a row holds, nested or not: a state event, a requiredWhen,
+      // an assertion's when and a custom rule.
+      test('should name no row by its number in any note', () => {
+        const fields: Fields = [
+          {
+            fields: [
+              {
+                event: reveal('outer/note', { hidden: false }),
+                name: 'flag',
+                type: 'checkbox',
+              },
+              {
+                hidden: true,
+                name: 'note',
+                required: true,
+                type: 'input/text',
+              },
+              {
+                name: 'name',
+                type: 'input/text',
+                validation: {
+                  custom: { field: 'flag', operator: 'neq' },
+                  requiredWhen: { field: 'flag', operator: 'truthy' },
+                  rules: [
+                    {
+                      assert: 'min',
+                      message: 'Too short.',
+                      value: 2,
+                      when: { field: 'flag', operator: 'truthy' },
+                    },
+                  ],
+                },
+              },
+              {
+                fields: [
+                  {
+                    event: reveal('inner/x', { hidden: false }),
+                    name: 'on',
+                    type: 'checkbox',
+                  },
+                  {
+                    hidden: true,
+                    name: 'x',
+                    type: 'input/text',
+                    validation: {
+                      requiredWhen: { field: 'on', operator: 'truthy' },
+                    },
+                  },
+                ],
+                name: 'inner',
+                type: 'list',
+              },
+            ],
+            name: 'outer',
+            type: 'list',
+          },
+        ]
+        const descriptions = JSON.stringify(build(fields).schema).match(
+          /"description":"(?:[^"\\]|\\.)*"/g
+        )
+        expect(descriptions?.length).toBe(5)
+        for (const description of descriptions ?? []) {
+          expect(description).not.toMatch(/\.0\./)
+        }
+      })
+
       test('should name a field of its own row as this row', () => {
         expect(
           rowOf([
@@ -1502,6 +1569,240 @@ describe('buildToolSchema', () => {
       ).toContain('Required when this row\'s mode equals "strict".')
     })
 
+    // Each rule of `rules` and `custom` is said with its message, so the agent
+    // writes a value that passes it instead of learning it from an error.
+    describe('the rules no keyword says', () => {
+      const describeRules = (field: Field) =>
+        propertyOf([field], field.name)?.description
+
+      test('should say each assertion and its message', () => {
+        expect(
+          describeRules({
+            name: 'code',
+            type: 'input/text',
+            validation: {
+              rules: [
+                { assert: 'required', message: 'Name the key' },
+                { assert: 'min', message: 'Too short.', value: 3 },
+                { assert: 'max', message: 'Too long.', value: 20 },
+                {
+                  assert: 'oneOf',
+                  message: 'Choose a valid operator.',
+                  value: ['eq', 'neq'],
+                },
+                {
+                  assert: 'pattern',
+                  message: 'Lowercase letters only.',
+                  value: { flags: 'i', regex: '^[a-z_]+$' },
+                },
+              ],
+            },
+          })
+        ).toBe(
+          'Required. Name the key. At least 3 characters. Too short. At most 20 characters. Too long. One of ["eq","neq"]. Choose a valid operator. It must match /^[a-z_]+$/i. Lowercase letters only.'
+        )
+      })
+
+      test('should measure a bound by what the field holds', () => {
+        expect(
+          describeRules({
+            name: 'port',
+            type: 'input/number',
+            validation: {
+              rules: [{ assert: 'min', message: 'Too low.', value: 1024 }],
+            },
+          })
+        ).toBe('At least 1024. Too low.')
+        expect(
+          describeRules({
+            name: 'tags',
+            source: [
+              { label: 'A', value: 'a' },
+              { label: 'B', value: 'b' },
+            ],
+            type: 'chips',
+            validation: {
+              rules: [
+                { assert: 'minItems', message: 'Pick two.', value: 2 },
+                { assert: 'max', message: 'Pick fewer.', value: 3 },
+              ],
+            },
+          })
+        ).toBe(
+          'Options: a (A), b (B). No option twice. At least 2 items. Pick two. At most 3 items. Pick fewer.'
+        )
+      })
+
+      test('should say when an assertion applies', () => {
+        expect(
+          describeRules({
+            name: 'port',
+            type: 'input/number',
+            validation: {
+              rules: [
+                {
+                  assert: 'required',
+                  message: 'Port is required for custom connections.',
+                  when: { field: 'kind', value: 'custom' },
+                },
+                {
+                  assert: 'max',
+                  message: 'Too high.',
+                  value: 9,
+                  when: [
+                    { field: 'kind', value: 'a' },
+                    { field: 'size', operator: 'gt', value: 2 },
+                  ],
+                },
+                {
+                  assert: 'min',
+                  message: 'Too low.',
+                  value: 1,
+                  when: {
+                    all: [{ field: 'kind', value: 'a' }],
+                    any: [
+                      { field: 'size', operator: 'exists' },
+                      { field: 'mode', value: 'b' },
+                    ],
+                  },
+                },
+              ],
+            },
+          })
+        ).toBe(
+          'Required when kind equals "custom". Port is required for custom connections. At most 9 when kind equals "a" and size is greater than 2. Too high. At least 1 when kind equals "a" and (size has a value or mode equals "b"). Too low.'
+        )
+      })
+
+      test('should compare with the field a custom rule names', () => {
+        expect(
+          describeRules({
+            name: 'confirm',
+            type: 'input/text',
+            validation: {
+              custom: [
+                { field: 'password', message: 'Passwords must match.' },
+                { field: 'start', operator: 'gte' },
+                { field: 'other', operator: 'exists' },
+              ],
+            },
+          })
+        ).toBe(
+          'The form checks that it equals the value of password. Passwords must match. The form checks that it is at least the value of start. The form checks that it has a value.'
+        )
+      })
+
+      test("should read a row's fields as this row's", () => {
+        const items = build([
+          {
+            fields: [
+              {
+                name: 'name',
+                required: true,
+                type: 'input/text',
+                validation: {
+                  custom: { field: 'label', operator: 'neq' },
+                  rules: [
+                    {
+                      assert: 'pattern',
+                      message: 'A technical key.',
+                      value: { regex: '^[a-z_]+$' },
+                      when: { field: 'kind', value: 'key' },
+                    },
+                  ],
+                },
+              },
+            ],
+            name: 'items',
+            type: 'list',
+          },
+        ]).schema.properties?.items
+        expect(items?.items?.properties?.name?.description).toBe(
+          'The form checks that it does not equal the value of this row\'s label. It must match /^[a-z_]+$/ when this row\'s kind equals "key". A technical key.'
+        )
+      })
+
+      // A rule that never fails is none; one that fails every value is, and
+      // is named by its message when what it checks cannot be said.
+      test('should say no rule that never fails, and name one it cannot say', () => {
+        const fields = JSON.parse(
+          JSON.stringify([
+            {
+              name: 'code',
+              type: 'input/text',
+              validation: {
+                custom: { field: 'other', operator: 'like' },
+                rules: [
+                  { assert: 'unknown', message: 'Never.' },
+                  { assert: 'pattern', message: 'No pattern.', value: 3 },
+                  {
+                    assert: 'required',
+                    message: 'Never applies.',
+                    when: { field: 'kind', operator: 'like', value: 'a' },
+                  },
+                  {
+                    assert: 'required',
+                    message: 'Never applies either.',
+                    when: { any: [] },
+                  },
+                ],
+              },
+            },
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: {
+                rules: [
+                  { assert: 'minItems', message: 'Too few.', value: 2 },
+                  { assert: 'min', message: 'No bound.', value: 'x' },
+                  { assert: 'oneOf', message: 'No list.', value: 'a' },
+                ],
+              },
+            },
+          ])
+        ) as Fields
+        expect(propertyOf(fields, 'code')).toEqual({ type: 'string' })
+        expect(propertyOf(fields, 'vat')?.description).toBe(
+          'The form checks more rules for it. Too few. No bound. No list.'
+        )
+      })
+
+      test('should leave out a message that interpolates a value', () => {
+        expect(
+          describeRules({
+            name: 'code',
+            type: 'input/text',
+            validation: {
+              rules: [{ assert: 'min', message: 'At least {min}.', value: 3 }],
+            },
+          })
+        ).toBe('At least 3 characters.')
+      })
+
+      test('should translate the messages', () => {
+        expect(
+          propertyOf(
+            [
+              {
+                name: 'code',
+                type: 'input/text',
+                validation: {
+                  rules: [{ assert: 'required', message: 'code_required' }],
+                },
+              },
+            ],
+            'code',
+            {
+              localization: {
+                lang: 'es',
+                translations: { code_required: 'Escribe la clave.' },
+              },
+            }
+          )?.description
+        ).toBe('Required. Escribe la clave.')
+      })
+    })
+
     test('should hold no rule only a submit checks when it checks none', () => {
       const fields: Fields = [
         {
@@ -1528,7 +1829,7 @@ describe('buildToolSchema', () => {
 
       const checked = build(fields).schema.properties
       expect(checked?.vat?.description).toBe(
-        'It must match /^[a-z]{3}$/i. Required when kind equals "company". The form checks more rules for it.'
+        'It must match /^[a-z]{3}$/i. Required when kind equals "company". The form checks more rules for it. Too few.'
       )
       expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
 
@@ -1538,7 +1839,7 @@ describe('buildToolSchema', () => {
       expect(unchecked?.sku).toEqual({ type: 'string' })
       expect(unchecked?.code?.description).toBe('Required to be true.')
       expect(unchecked?.confirm?.description).toBe(
-        'More rules are checked as it is written.'
+        'The form checks that it equals the value of vat.'
       )
     })
   })
@@ -1630,6 +1931,27 @@ describe('buildToolSchema', () => {
           'items'
         )?.description
       ).toMatch(/^The data group\. Sending the list replaces its rows\./)
+
+      // Written as a message, and on a list inside a row.
+      const inner = build([
+        {
+          fields: [
+            {
+              description: {
+                message: 'Define the fields you expect inside it',
+              },
+              fields: [{ name: 'name', type: 'input/text' }],
+              name: 'fields',
+              type: 'list',
+            },
+          ],
+          name: 'groups',
+          type: 'list',
+        },
+      ]).schema.properties?.groups?.items?.properties?.fields
+      expect(inner?.description).toMatch(
+        /^Define the fields you expect inside it\. Sending the list replaces its rows\./
+      )
     })
 
     // What the host puts in through `#/context/` can hold text people wrote,
