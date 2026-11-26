@@ -408,6 +408,27 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name$=".sku"]')).toHaveValue('X')
   })
 
+  test('should tell what a field holds when it already held the value sent', async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_fill', {
+      country: 'mx',
+      items: [{ sku: 'A1' }],
+    })
+
+    expect(
+      await call(page, 'preview_fill', {
+        country: 'México',
+        'items.0.sku': 'A1',
+      })
+    ).toMatchObject({
+      applied: ['country', 'items.0.sku'],
+      ok: true,
+      values: { country: 'mx', 'items.0.sku': 'A1' },
+    })
+  })
+
   test("should take what a person's submission leaves as no one's change", async ({
     page,
   }) => {

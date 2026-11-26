@@ -248,6 +248,9 @@ type SkipCode = (typeof SKIP_CODES)[number]
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
 
+// Where a value the call wrote or kept is, and how to tell what it holds.
+type Told = Readonly<{ path: string; schema: ToolSchema; target: string }>
+
 // A value a fill is still to write: its schema, the path its definition and
 // options are found by, and whether it is a leaf of a row named by its route.
 type Pending = Readonly<{
@@ -790,11 +793,9 @@ export function createFormTools(
     }
 
     // What the form calls each value written, and the schema it was written
-    // with, to validate it and to tell a list that kept other rows.
-    const written = new Map<
-      string,
-      Readonly<{ schema: ToolSchema; target: string }>
-    >()
+    // with, to validate it, to tell a list that kept other rows and to tell
+    // what it holds.
+    const written = new Map<string, Told>()
 
     // The fixed lists sent with another number of rows than they hold, told
     // as such if their rows have not come by the last round.
@@ -802,10 +803,7 @@ export function createFormTools(
 
     // The values a person changed, left as they are, with what tells
     // what they hold.
-    const kept = new Map<
-      string,
-      Readonly<{ path: string; schema: ToolSchema; target: string }>
-    >()
+    const kept = new Map<string, Told>()
 
     // A field another value shows or unlocks cannot be written until that
     // value has run its course, so the fill goes in rounds: what can be
@@ -903,7 +901,7 @@ export function createFormTools(
         if (taken) {
           pending.delete(name)
           applied.push(name)
-          written.set(name, { schema: entry.schema, target })
+          written.set(name, { path: entry.path, schema: entry.schema, target })
           if ('rows' in held) {
             lists.add(name)
           }
@@ -974,13 +972,23 @@ export function createFormTools(
         revealed.push(name)
       }
     }
-    for (const [name, { path, schema, target }] of kept) {
-      values[name] = present(
-        schema,
-        host.read(target) ?? null,
-        path,
-        host.getField
-      )
+    // What changed during the call, the fields it shows the person as filled.
+    const moved = Object.keys(values)
+
+    // Every value the call wrote is told with what it holds, the ones that
+    // held it already included, and so is every value a person changed.
+    for (const [name, { path, schema, target }] of [...written, ...kept]) {
+      if (
+        kept.has(name) ||
+        (ownProperty(values, name) === undefined && isShown(target))
+      ) {
+        values[name] = present(
+          schema,
+          host.read(target) ?? null,
+          path,
+          host.getField
+        )
+      }
     }
 
     // A list written whole, at the top or in a row, that kept another number
@@ -1027,7 +1035,7 @@ export function createFormTools(
       [...written.values(), ...kept.values()].map(({ target }) => target)
     )
     const changed: string[] = []
-    for (const name of Object.keys(values)) {
+    for (const name of moved) {
       const target = ownProperty(properties, name) ? name : host.resolve(name)
       if (target === undefined) {
         continue
@@ -1291,7 +1299,7 @@ export function createFormTools(
           'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
           "Pass in one call the values for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
           'Write what the person asked for and the values it implies, such as a key made from a label; ask them before writing what they did not give, such as what you know about them: fields left out keep their value.',
-          `It returns the final value of each field that changed, what was skipped and why, and the errors: no need to call ${names.read} after.`,
+          `It returns what each field it wrote or changed holds now, what was skipped and why, and the errors: no need to call ${names.read} after.`,
           'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
           'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
           ...submission.needs,

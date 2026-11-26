@@ -159,9 +159,10 @@ corrected by sending them all, in order, or one leaf by its route.
 }
 ```
 
-- **`values`** holds the final value of every field that changed during the
-  call, the ones a change event filled included (`city`), in the formats of
-  the schema. A list the call did not send whole, holding the same rows, is
+- **`values`** holds what every field in `applied` holds now, one that already
+  held the value sent included, and the final value of every other field that
+  changed during the call, such as one a change event filled (`city`), in the
+  formats of the schema. A list the call did not send whole, holding the same rows, is
   told by the leaves that changed, under their route. A field skipped as
   [`changed`](#a-person-and-an-agent-at-once) is there too, with what it
   holds. A row holds only the fields it shows, as `<name>_read` reads it.

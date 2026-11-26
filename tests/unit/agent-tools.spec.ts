@@ -284,7 +284,10 @@ function createForm(setup: Setup = {}) {
     isChanged: (name) => changed.has(name),
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
-    read: (name) => values.get(name),
+    read: (name) => {
+      const leaf = leafOf(name)
+      return leaf ? leaf.rows[leaf.index][leaf.leaf] : values.get(name)
+    },
     resolve: (route) => (leafOf(route) ? route : undefined),
     seen: (names) => {
       for (const name of names) {
@@ -743,14 +746,32 @@ describe('createFormTools', () => {
       ).toMatchObject({ applied: ['email'], ok: true, skipped: [] })
     })
 
-    test('should report what a value event filled in, and only what changed', async () => {
+    test('should report what a value event filled in, and not a field it left alone', async () => {
       const { tools } = toolsOf({
         fills: { email: () => ['country', 'co'] },
         values: { age: '30', email: 'ada@example.com' },
       })
       const result = await call(tools, 'fill', { email: 'ada@example.com' })
 
-      expect(result.values).toEqual({ country: 'co' })
+      expect(result.values).toEqual({ country: 'co', email: 'ada@example.com' })
+    })
+
+    test('should tell what a field holds when it already held the value sent', async () => {
+      const { calls, tools } = toolsOf({
+        values: { email: 'ada@example.com', items: [{ sku: 'A1' }] },
+      })
+      const result = await call(tools, 'fill', {
+        email: 'ada@example.com',
+        'items.0.sku': 'A1',
+      })
+
+      expect(result).toMatchObject({
+        applied: ['email', 'items.0.sku'],
+        ok: true,
+        values: { email: 'ada@example.com', 'items.0.sku': 'A1' },
+      })
+      // Nothing changed, so nothing is shown to the person as filled.
+      expect(calls.filled).toEqual([])
     })
 
     test('should write a field another value shows in the next round', async () => {
