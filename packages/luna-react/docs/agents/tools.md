@@ -528,9 +528,11 @@ and a field in the rows of a list with `"agent": false` stay out.
 - A `pattern` the schema cannot carry, one with `flags`, with
   `allowInterpolation`, or that does not compile in Unicode mode, is written in
   the description as a literal with its flags, such as
-  `It must match /^[a-z]{3}$/i.`, when that takes 100 characters or fewer. A
-  longer one is never cut, since a part of it would expect something else: the
-  description says `It must match a pattern the form checks.` instead. The
+  `It must match /^[a-z]{3}$/i.`, when that takes 100 characters or fewer,
+  escapes included. A bare `/` is escaped, so `^https?://` reads
+  `/^https?:\/\//`, and one already escaped is left as it is. A longer one is
+  never cut, since a part of it would expect something else: the description
+  says `It must match a pattern the form checks.` instead. The
   pattern's translated `message` follows, cut at 200 characters, unless it
   interpolates a value. A pattern carried in the `pattern` keyword is not
   repeated in the description.

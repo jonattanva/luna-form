@@ -187,7 +187,25 @@ describe('buildToolSchema', () => {
       test('should quote one that lets a template through', () => {
         expect(
           describeContact({ allowInterpolation: true, regex: '^https?://' })
-        ).toBe('It must match /^https?:///.')
+        ).toBe('It must match /^https?:\\/\\//.')
+      })
+
+      // Quoted as a literal writes it: a bare `/` would end the literal early.
+      test('should escape a slash once, and leave an escaped one alone', () => {
+        expect(describeContact({ flags: 'i', regex: '^a\\/b/c$' })).toBe(
+          'It must match /^a\\/b\\/c$/i.'
+        )
+        expect(describeContact({ flags: 'i', regex: '^a\\\\/$' })).toBe(
+          'It must match /^a\\\\\\/$/i.'
+        )
+      })
+
+      // The length is the literal's as the agent reads it, escapes included.
+      test('should count the escapes in the length it quotes', () => {
+        const regex = `${'a'.repeat(96)}/`
+        expect(describeContact({ flags: 'i', regex })).toBe(
+          'It must match a pattern the form checks.'
+        )
       })
     })
 

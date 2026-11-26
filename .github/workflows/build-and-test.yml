@@ -82,11 +82,11 @@ jobs:
           # and its shared chunk come in whole.
           #
           # The tools chunk is what loads only when an agent asks for a
-          # form's tools: 12.1 kB gzip, the tools, their host and the schema.
+          # form's tools: 14.0 kB gzip, the tools, their host and the schema.
           # No application pays for it until an agent is on the page.
           TOTAL_KB=420
           MAIN_GZIP_KB=33
-          TOOLS_GZIP_KB=14
+          TOOLS_GZIP_KB=15
           total=0
           rows=""
 

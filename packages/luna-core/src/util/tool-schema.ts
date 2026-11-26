@@ -628,7 +628,10 @@ function describeText(
 // client that compiles the keyword. The note quotes it as a literal with its
 // flags when it is short, and the author's message for it, so the agent knows
 // what is expected. The literal is not filtered as text that interpolates a
-// value: a quantifier such as `{2,}` would read as a placeholder.
+// value: a quantifier such as `{2,}` would read as a placeholder. A `/` in it
+// is escaped as a literal writes it, and one already escaped is left as it is:
+// an escape is read whole, so its `/` is never taken for a bare one. The
+// length counts the literal as the agent reads it, escapes included.
 function readPattern(
   field: Field,
   notes: string[],
@@ -640,7 +643,10 @@ function readPattern(
   }
 
   if (pattern.flags || pattern.allowInterpolation || !compiles(pattern.regex)) {
-    const literal = `/${pattern.regex}/${pattern.flags ?? ''}`
+    const source = pattern.regex.replace(/\\.|\//g, (match) =>
+      match === '/' ? '\\/' : match
+    )
+    const literal = `/${source}/${pattern.flags ?? ''}`
     notes.push(
       fits(literal, PATTERN_LENGTH)
         ? `It must match ${literal}.`
