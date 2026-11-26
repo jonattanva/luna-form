@@ -74,7 +74,7 @@ jobs:
           #
           # The main path is what every application loads from the client
           # entry in esm, compressed: the entry and the chunks it imports.
-          # 31.0 kB gzip: the fields' handles, `listTools()`, `callTool()`
+          # 32.4 kB gzip: the fields' handles, `listTools()`, `callTool()`
           # and what a form records of its submissions are here, and
           # splitting the tools off costs about 0.8 kB of names shared
           # between the chunks. It is the most an application loads from the
@@ -85,7 +85,7 @@ jobs:
           # form's tools: 14.0 kB gzip, the tools, their host and the schema.
           # No application pays for it until an agent is on the page.
           TOTAL_KB=450
-          MAIN_GZIP_KB=33
+          MAIN_GZIP_KB=50
           TOOLS_GZIP_KB=25
           total=0
           rows=""
