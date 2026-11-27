@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795740799371,
+  "lastUpdate": 1795740832461,
   "repoUrl": "https://github.com/jonattanva/luna-form",
   "entries": {
     "Luna Form core benchmarks": [
@@ -5418,40 +5418,6 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "d9b334973950cd571813b9946166b0bf18d702b8",
-          "message": "Merge pull request #119 from jonattanva/claude/date-strict\n\nfix(date): a rule the form cannot read takes no day",
-          "timestamp": "2026-10-05T12:33:04-05:00",
-          "tree_id": "54065c4acf03e53c8e57555022e984f80854500a",
-          "url": "https://github.com/jonattanva/luna-form/commit/d9b334973950cd571813b9946166b0bf18d702b8"
-        },
-        "date": 1791221662316,
-        "tool": "customSmallerIsBetter",
-        "benches": [
-          {
-            "name": "browser: form load time (50 fields)",
-            "value": 336,
-            "unit": "ms"
-          },
-          {
-            "name": "browser: interaction time (10 fields)",
-            "value": 637,
-            "unit": "ms"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "jonattanva89@gmail.com",
-            "name": "Jonattan",
-            "username": "jonattanva"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
           "id": "4b535b42862833180a0007f81734450e39cebc60",
           "message": "Merge pull request #120 from jonattanva/fix/field-own-disabled\n\ntest(e2e): type only once a select has finished closing",
           "timestamp": "2026-10-05T13:06:16-05:00",
@@ -8916,6 +8882,45 @@ window.BENCHMARK_DATA = {
           {
             "name": "browser: start over after a submit (200 fields)",
             "value": 48.7,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jonattanva89@gmail.com",
+            "name": "Jonattan",
+            "username": "jonattanva"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "12d9df00df48e5390bf9e156665d477fac065ce4",
+          "message": "Merge pull request #217 from jonattanva/claude/agent-tools-integration\n\nAgent tools: clearer notes and descriptions, agent.target, and positional row names",
+          "timestamp": "2026-11-26T19:52:37-05:00",
+          "tree_id": "a45f04abbc19fe0b345b07b2a3a463a622b8ec43",
+          "url": "https://github.com/jonattanva/luna-form/commit/12d9df00df48e5390bf9e156665d477fac065ce4"
+        },
+        "date": 1795740832412,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "browser: form load time (50 fields)",
+            "value": 40.9,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: interaction time (10 fields)",
+            "value": 14.7,
+            "unit": "ms"
+          },
+          {
+            "name": "browser: start over after a submit (200 fields)",
+            "value": 40,
             "unit": "ms"
           }
         ]
