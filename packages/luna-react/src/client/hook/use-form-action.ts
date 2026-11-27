@@ -2,6 +2,11 @@ import { useSetAtom, useStore } from 'jotai'
 import { reportErrorAtom } from '../lib/error-store'
 import { valueAtom } from '../lib/value-store'
 import {
+  mountedListsAtom,
+  translateRows,
+  type MountedList,
+} from '../lib/list-store'
+import {
   startTransition,
   useActionState,
   useCallback,
@@ -106,7 +111,7 @@ export function useFormState<T, F = Record<string, unknown>>(
       // what is sent below is what the schema returns, not what was submitted.
       const values = store.get(valueAtom)
       const form = withHeldOptions(
-        getFormData(formData),
+        byRowId(getFormData(formData), store.get(mountedListsAtom)),
         options.map(({ name, offered }) => ({
           name,
           offered,
@@ -173,6 +178,25 @@ export function useFormState<T, F = Record<string, unknown>>(
   )
 
   return [formAction, state, isPending, onSubmit] as const
+}
+
+// What the form sends, under the names the store and the schema know it by.
+//
+// A control is named with each row at its position, as the consumer sees it,
+// while every field is registered, checked and holding its value under the id
+// its row keeps for as long as it lives. The ids go back in here, once, and the
+// rest of the submit reads one naming. `unflatten` drops them again on the way
+// out: it closes the gaps they leave, so the action is handed rows by position.
+function byRowId(
+  data: Record<string, unknown>,
+  mounted: Readonly<Record<string, MountedList>>
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(data).map(([name, value]) => [
+      translateRows(name, mounted, 'id') ?? name,
+      value,
+    ])
+  )
 }
 
 function buildError(error: unknown, translations?: Record<string, string>) {

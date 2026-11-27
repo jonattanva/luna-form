@@ -26,6 +26,10 @@ export type FieldProps = Readonly<{
   field: Field
   // `context.now`, the instant a timezone select labels its zones for.
   now?: string
+  // The name the field carries in the page, with each row of a list at its
+  // position, which the client passes in. The server, whose rows are at their
+  // positions, leaves it out and the field's own name is used.
+  shown?: string
   style?: Style
   localization?: Localization
 }>
@@ -60,6 +64,7 @@ export function Field(props: FieldProps) {
         errors={errors}
         field={props.field}
         horizontal={horizontal}
+        name={props.shown ?? props.field.name}
       >
         <InputBase
           disabled={disabled}

@@ -17,6 +17,10 @@ import {
   type ToolSchema,
 } from '@/packages/luna-core/src/util/tool-schema'
 import { isField, isList } from '@/packages/luna-core/src/util/is-input'
+import {
+  defineConfig,
+  defineCustomInput,
+} from '@/packages/luna-react/src/config'
 import type { Field, Fields, Option } from '@/packages/luna-core/src/type'
 
 const COUNTRIES: Option[] = [
@@ -122,6 +126,8 @@ type Setup = Readonly<{
   // Validation, by field: a message when the value is wrong.
   rules?: Readonly<Record<string, (value: ToolValue) => string | undefined>>
   submit?: (signal: AbortSignal) => Promise<SubmitStatus>
+  // The item the form edits, in the host's words, until another is opened.
+  target?: string
   values?: Readonly<Record<string, ToolValue>>
 }>
 
@@ -173,6 +179,11 @@ function createForm(setup: Setup = {}) {
   const errors: Record<string, string[]> = {}
   const effects: Array<() => void> = []
   let submitted: SubmitStatus = { status: 'idle' }
+  // The item the form edits, and the one the agent was last told of.
+  let target = setup.target
+  let told: string | undefined
+  // What was submitted before a person was asked about the next one.
+  let before = submitted
 
   const calls = {
     apply: [] as Array<[string, ToolValue, object | undefined]>,
@@ -264,16 +275,33 @@ function createForm(setup: Setup = {}) {
             hidden: false,
             locked: locked.has(name),
           },
+    approval: (approval) => {
+      if (approval?.status === 'awaiting_approval') {
+        before = submitted
+      }
+      if (approval) {
+        submitted = approval
+      } else if (submitted.status === 'awaiting_approval') {
+        submitted = before
+      }
+    },
     getSubmit: () => submitted,
+    getTarget: () => target,
     isChanged: (name) => changed.has(name),
+    isRetargeted: () =>
+      target !== undefined && told !== undefined && told !== target,
     isDrawing: (name) => drawing.has(name),
     locate: (name) => name,
-    read: (name) => values.get(name),
+    read: (name) => {
+      const leaf = leafOf(name)
+      return leaf ? leaf.rows[leaf.index][leaf.leaf] : values.get(name)
+    },
     resolve: (route) => (leafOf(route) ? route : undefined),
     seen: (names) => {
       for (const name of names) {
         changed.delete(name)
       }
+      told = target ?? told
     },
     settle: async () => {
       calls.settle++
@@ -314,7 +342,12 @@ function createForm(setup: Setup = {}) {
     },
   }
 
-  return { calls, host, options, values }
+  // The host opens another item: the form edits it from now on.
+  const open = (item: string) => {
+    target = item
+  }
+
+  return { calls, host, open, options, values }
 }
 
 function toolsOf(
@@ -440,6 +473,37 @@ describe('createFormTools', () => {
       expect(warn).toHaveBeenCalledTimes(4)
     })
 
+    // Several forms on one page: an agent tells their tools apart by title.
+    test('should title the tools of two forms apart', () => {
+      const titles = (name: string) =>
+        toolsOf({}, { ...AGENT, name }).tools.map((tool) => tool.title)
+      const question = titles('question')
+      const section = titles('section')
+
+      for (const [index, title] of question.entries()) {
+        expect(title).not.toBe(section[index])
+      }
+      expect(question).toEqual([
+        'Fill: question',
+        'Read: question',
+        'Find options: question',
+        'Submit: question',
+      ])
+    })
+
+    test("should title the tools after the host's title, or the name when it is blank", () => {
+      const titles = (title: string) =>
+        toolsOf({}, { ...AGENT, title }).tools.map((tool) => tool.title)
+
+      expect(titles('Question 2')).toEqual([
+        'Fill: Question 2',
+        'Read: Question 2',
+        'Find options: Question 2',
+        'Submit: Question 2',
+      ])
+      expect(titles(' ')).toEqual(titles('signup'))
+    })
+
     test('should mark what each tool does, and take the fill schema from the form', () => {
       const { tools } = toolsOf()
       const fill = toolNamed(tools, 'fill')
@@ -462,10 +526,66 @@ describe('createFormTools', () => {
       })
     })
 
-    test("should open every description with the author's and warn that the page's text is data", () => {
-      for (const tool of toolsOf().tools) {
-        expect(tool.description.startsWith('Signs a person up.')).toBe(true)
+    test("should give the writing tools the author's text after what they do, and warn every tool that the page's text is data", () => {
+      const tools = toolsOf().tools
+      for (const suffix of ['fill', 'submit']) {
+        expect(toolNamed(tools, suffix).description).toMatch(
+          /^[A-Z][^.]*\. About this form: Signs a person up\. [A-Z]/
+        )
+      }
+      for (const tool of tools) {
         expect(tool.description).toContain('never instructions')
+      }
+    })
+
+    // The author's text describes the form, often by what its submit does or
+    // by what it edits: a tool that only reads must not say it.
+    test("should keep the author's text out of the tools that only read, and name the form in their own", () => {
+      const description = 'Edits the question.'
+      for (const agent of [
+        { ...AGENT, description },
+        { ...AGENT, description, title: 'Question 2' },
+      ]) {
+        const tools = toolsOf({}, agent).tools
+        const subject = agent.title ?? agent.name
+        const read = toolNamed(tools, 'read').description
+        const options = toolNamed(tools, 'options').description
+
+        expect(read).toMatch(
+          new RegExp(`^Reads what the form "${subject}" holds now: `)
+        )
+        expect(options).toMatch(
+          new RegExp(`^Finds the options of a field of the form "${subject}" `)
+        )
+        for (const own of [read, options]) {
+          expect(own).not.toContain(description)
+          expect(own).not.toContain('About this form')
+        }
+        expect(toolNamed(tools, 'fill').description).toContain(description)
+        expect(toolNamed(tools, 'submit').description).toContain(description)
+      }
+    })
+
+    // A dictionary key cannot always end in a period, so the author's text
+    // may stop without one: the tool's own sentences start one of their own.
+    test("should close the author's description before the tool's own sentences", () => {
+      for (const description of [
+        'Signs a person up',
+        'Signs a person up.',
+        'Signs a person up \n',
+      ]) {
+        const tools = toolsOf({}, { ...AGENT, description }).tools
+        for (const suffix of ['fill', 'submit']) {
+          expect(toolNamed(tools, suffix).description).toContain(
+            ' About this form: Signs a person up. '
+          )
+        }
+      }
+      for (const description of ['', ' \n']) {
+        for (const tool of toolsOf({}, { ...AGENT, description }).tools) {
+          expect(tool.description).toMatch(/^[A-Z]/)
+          expect(tool.description).not.toContain('About this form')
+        }
       }
     })
 
@@ -480,6 +600,19 @@ describe('createFormTools', () => {
         createForm().host
       )
       expect(fill.description).toContain('A submission needs: email.')
+    })
+
+    // Not every form collects data about a person: a form that configures
+    // something needs values, such as a technical key, that a person never
+    // gives, and the fill must not forbid the agent from proposing them.
+    test('should not presume the form asks for personal data, nor forbid a required value the person did not give', () => {
+      const fill = toolNamed(toolsOf().tools, 'fill').description
+
+      expect(fill).not.toContain('personal data')
+      expect(fill).not.toContain('Leave out what they did not give')
+      expect(fill).toContain(
+        'Write what the person asked for and the values it implies, such as a key made from a label; ask them before writing what they did not give, such as what you know about them: fields left out keep their value.'
+      )
     })
 
     test('should name nothing a submission needs when the submit checks nothing', () => {
@@ -498,6 +631,109 @@ describe('createFormTools', () => {
       expect(toolNamed(tools, 'submit').description).toContain(
         'the values are sent unchecked'
       )
+    })
+
+    // An agent told of a submission looks for a way to send it.
+    describe('a form the tools cannot submit', () => {
+      const NO_SUBMIT: AgentOptions = {
+        allow: () => true,
+        description: 'Signs a person up.',
+        name: 'signup',
+      }
+
+      // Nor in what a tool declares it answers: an agent reads that too.
+      test('should not speak of a submission in any description', () => {
+        for (const tool of toolsOf({}, NO_SUBMIT).tools) {
+          expect(tool.description).not.toMatch(/submi/i)
+          expect(JSON.stringify(tool.outputSchema)).not.toMatch(/submi/i)
+        }
+      })
+
+      // The notes of a field's rules are the form's, read with or without a
+      // submit tool.
+      test('should not speak of a submit in the notes of the fields', () => {
+        const fields: Fields = JSON.parse(`[
+          {
+            "name": "vat",
+            "type": "input/text",
+            "validation": {
+              "pattern": { "flags": "i", "regex": "^[a-z]{3}$" },
+              "rules": [
+                { "assert": "minItems", "message": "Too few.", "value": 2 },
+                { "assert": "required", "message": "Name it.", "when": { "field": "code", "operator": "exists" } },
+                { "assert": "min", "message": "Too short.", "value": 2 },
+                { "assert": "oneOf", "message": "Pick one.", "value": ["a", "b"] },
+                { "assert": "pattern", "message": "Letters.", "value": { "regex": "^[a-z]+$" } }
+              ],
+              "custom": { "field": "code", "operator": "neq", "message": "Not the code." }
+            }
+          },
+          { "advanced": { "length": { "min": "x" } }, "name": "code", "type": "input/text" }
+        ]`)
+        const [fill] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host
+        )
+        expect(JSON.stringify(fill.inputSchema)).not.toMatch(/submi/i)
+      })
+
+      test('should name in the fill description the fields required', () => {
+        const fields: Fields = [
+          { name: 'email', required: true, type: 'input/email' },
+          { name: 'name', required: true, type: 'input/text' },
+        ]
+        const [fill] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host
+        )
+        expect(fill.description).toContain('Required fields: email, name.')
+
+        const [none] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields: [{ name: 'name', type: 'input/text' }] }]),
+          createForm().host
+        )
+        expect(none.description).toContain('No field is required.')
+
+        const [unchecked] = createFormTools(
+          NO_SUBMIT,
+          buildToolSchema([{ fields }]),
+          createForm().host,
+          { validates: false }
+        )
+        expect(unchecked.description).not.toMatch(/required/i)
+      })
+
+      test('should read no submission, nor declare one', async () => {
+        const { tools } = toolsOf({}, NO_SUBMIT)
+        const read = toolNamed(tools, 'read')
+
+        expect(await call(tools, 'read', { fields: ['email'] })).toEqual({
+          errors: {},
+          hidden: [],
+          locked: [],
+          values: { email: null },
+        })
+        expect(read.outputSchema.properties).not.toHaveProperty('submit')
+      })
+
+      test('should still speak of the submission, and read it, when the tools submit', async () => {
+        const { tools } = toolsOf()
+        const read = toolNamed(tools, 'read')
+
+        expect(read.description).toContain(
+          'values, hidden or locked fields, errors and the last submission.'
+        )
+        expect(read.description).toContain(
+          'and after signup_submit answered pending;'
+        )
+        expect(read.outputSchema.properties).toHaveProperty('submit')
+        expect(await call(tools, 'read', { fields: ['email'] })).toMatchObject({
+          submit: { status: 'idle' },
+        })
+      })
     })
   })
 
@@ -573,14 +809,32 @@ describe('createFormTools', () => {
       ).toMatchObject({ applied: ['email'], ok: true, skipped: [] })
     })
 
-    test('should report what a value event filled in, and only what changed', async () => {
+    test('should report what a value event filled in, and not a field it left alone', async () => {
       const { tools } = toolsOf({
         fills: { email: () => ['country', 'co'] },
         values: { age: '30', email: 'ada@example.com' },
       })
       const result = await call(tools, 'fill', { email: 'ada@example.com' })
 
-      expect(result.values).toEqual({ country: 'co' })
+      expect(result.values).toEqual({ country: 'co', email: 'ada@example.com' })
+    })
+
+    test('should tell what a field holds when it already held the value sent', async () => {
+      const { calls, tools } = toolsOf({
+        values: { email: 'ada@example.com', items: [{ sku: 'A1' }] },
+      })
+      const result = await call(tools, 'fill', {
+        email: 'ada@example.com',
+        'items.0.sku': 'A1',
+      })
+
+      expect(result).toMatchObject({
+        applied: ['email', 'items.0.sku'],
+        ok: true,
+        values: { email: 'ada@example.com', 'items.0.sku': 'A1' },
+      })
+      // Nothing changed, so nothing is shown to the person as filled.
+      expect(calls.filled).toEqual([])
     })
 
     test('should write a field another value shows in the next round', async () => {
@@ -1282,7 +1536,7 @@ describe('createFormTools', () => {
 
       expect(allow).toHaveBeenCalledWith(
         { tool: 'fill', values: { email: 'ada@example.com' } },
-        { signal: expect.any(AbortSignal) }
+        { deadline: expect.any(Number), signal: expect.any(AbortSignal) }
       )
       expect(calls.apply).toHaveLength(1)
     })
@@ -1346,24 +1600,96 @@ describe('createFormTools', () => {
       expect(calls.apply).toEqual([])
     })
 
-    test('should refuse a call allow never answers once the tools are taken down or after five minutes', async () => {
+    test('should refuse a call allow never answers after five minutes, and say nobody answered', async () => {
       vi.useFakeTimers()
       const allow = () => new Promise<boolean>(() => {})
-      const lifetime = new AbortController()
-      const { tools } = toolsOf({}, { ...AGENT, allow }, lifetime.signal)
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow })
 
-      const first = call(tools, 'fill', { email: 'a@b.co' })
+      const pending = call(tools, 'fill', { email: 'a@b.co' })
       await vi.advanceTimersByTimeAsync(5 * 60_000)
-      expect(await first).toEqual({
+      expect(await pending).toEqual({
         code: 'refused',
-        message: 'The call got no answer from the page.',
+        message:
+          'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
         ok: false,
       })
+      expect(calls.apply).toEqual([])
+    })
 
-      const second = call(tools, 'fill', { email: 'a@b.co' })
+    test('should refuse a call allow never answers once the tools are taken down, and say the form is gone', async () => {
+      const allow = () => new Promise<boolean>(() => {})
+      const lifetime = new AbortController()
+      const { calls, tools } = toolsOf({}, { ...AGENT, allow }, lifetime.signal)
+
+      const pending = call(tools, 'fill', { email: 'a@b.co' })
+      await Promise.resolve()
+      await Promise.resolve()
+      lifetime.abort()
+      expect(await pending).toEqual({
+        code: 'refused',
+        message:
+          'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+        ok: false,
+      })
+      expect(calls.apply).toEqual([])
+    })
+
+    test('should tell apart a call nobody answered, one whose form is gone, one the agent cancelled and one refused', async () => {
+      vi.useFakeTimers()
+      const waiting = () => new Promise<boolean>(() => {})
+      const answers: string[] = []
+
+      const late = toolsOf({}, { ...AGENT, allow: waiting })
+      const expired = call(late.tools, 'fill', { email: 'a@b.co' })
+      await vi.advanceTimersByTimeAsync(5 * 60_000)
+      answers.push(String((await expired).message))
+
+      const lifetime = new AbortController()
+      const gone = toolsOf({}, { ...AGENT, allow: waiting }, lifetime.signal)
+      const closed = call(gone.tools, 'fill', { email: 'a@b.co' })
       await vi.advanceTimersByTimeAsync(0)
       lifetime.abort()
-      expect((await second).code).toBe('refused')
+      answers.push(String((await closed).message))
+
+      const controller = new AbortController()
+      const left = toolsOf({}, { ...AGENT, allow: waiting })
+      const cancelled = call(
+        left.tools,
+        'fill',
+        { email: 'a@b.co' },
+        controller.signal
+      )
+      await vi.advanceTimersByTimeAsync(0)
+      controller.abort()
+      answers.push(String((await cancelled).message))
+
+      const refusing = toolsOf({}, { ...AGENT, allow: () => false })
+      answers.push(
+        String(
+          (await call(refusing.tools, 'fill', { email: 'a@b.co' })).message
+        )
+      )
+
+      expect(new Set(answers).size).toBe(4)
+    })
+
+    test('should hand allow the time its wait ends', async () => {
+      vi.useFakeTimers({ now: 1_000_000 })
+      let handed: number | undefined
+      const { tools } = toolsOf(
+        {},
+        {
+          ...AGENT,
+          allow: (_call, { deadline }) => {
+            handed = deadline
+            return true
+          },
+        }
+      )
+
+      await call(tools, 'fill', { email: 'a@b.co' })
+
+      expect(handed).toBe(1_000_000 + 5 * 60_000)
     })
 
     test('should refuse the call when allow fails', async () => {
@@ -1540,6 +1866,75 @@ describe('createFormTools', () => {
     })
   })
 
+  describe('target', () => {
+    const TARGETED: AgentOptions = { ...AGENT, target: 'A' }
+
+    test('should describe the item the form edits only for a host that names it', () => {
+      for (const tool of toolsOf().tools) {
+        expect(tool.description).not.toContain('target')
+        expect(tool.outputSchema.properties).not.toHaveProperty('target')
+      }
+
+      const { tools } = toolsOf({ target: 'A' }, TARGETED)
+      for (const tool of tools) {
+        expect(tool.outputSchema.properties).toHaveProperty('target')
+      }
+      const codes = (suffix: string) =>
+        toolNamed(tools, suffix).outputSchema.properties?.code?.enum
+      expect(codes('fill')).toContain('target_changed')
+      expect(codes('submit')).toContain('target_changed')
+      expect(codes('read')).not.toContain('target_changed')
+      expect(codes('options')).not.toContain('target_changed')
+    })
+
+    test('should name the item in every answer', async () => {
+      const { tools } = toolsOf({ target: 'A' }, TARGETED)
+      expect(await call(tools, 'read')).toMatchObject({ target: 'A' })
+      expect(await call(tools, 'options', { field: 'zone' })).toMatchObject({
+        target: 'A',
+      })
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'A',
+      })
+    })
+
+    test('should refuse a fill and a submit meant for the item the agent read, once another is open', async () => {
+      const { open, tools, values } = toolsOf({ target: 'A' }, TARGETED)
+      await call(tools, 'read')
+      open('B')
+
+      for (const [suffix, input] of [
+        ['fill', { email: 'a@b.co' }],
+        ['submit', {}],
+      ] as const) {
+        expect(await call(tools, suffix, input)).toEqual({
+          code: 'target_changed',
+          message: expect.stringContaining('signup_read'),
+          ok: false,
+          target: 'B',
+        })
+      }
+      expect(values.has('email')).toBe(false)
+      expect((await call(tools, 'read')).submit).toEqual({ status: 'idle' })
+
+      // The read told the agent of B.
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'B',
+      })
+    })
+
+    test('should not refuse an agent told of no item yet', async () => {
+      const { open, tools } = toolsOf({ target: 'A' }, TARGETED)
+      open('B')
+      expect(await call(tools, 'fill', { email: 'a@b.co' })).toMatchObject({
+        ok: true,
+        target: 'B',
+      })
+    })
+  })
+
   describe('read', () => {
     test('should read the values, what is hidden or locked, the errors and the last submission', async () => {
       const { host, tools } = toolsOf({
@@ -1593,6 +1988,51 @@ describe('createFormTools', () => {
         age: 42,
         items: [{ qty: 3, sku: 'A1' }],
         month: 3,
+      })
+    })
+
+    test("should name the leaves a row does not show as hidden, by their route, a list in a row's too", async () => {
+      const fields: Fields = [
+        {
+          fields: [
+            { name: 'title', type: 'input/text' },
+            {
+              fields: [
+                { name: 'code', type: 'input/text' },
+                { name: 'note', type: 'input/text' },
+              ],
+              name: 'parts',
+              type: 'list',
+            },
+          ],
+          name: 'groups',
+          type: 'list',
+        },
+      ]
+      const form = createForm({
+        absent: [],
+        values: {
+          // The host leaves out what a row does not show.
+          groups: [
+            { parts: [{ code: 'a' }, { code: 'b', note: 'n' }], title: 'A' },
+            { title: 'B' },
+          ],
+        },
+      })
+      const [, read] = createFormTools(
+        AGENT,
+        buildToolSchema([{ fields }]),
+        form.host
+      )
+
+      expect(await read.execute({})).toMatchObject({
+        hidden: ['groups.0.parts.0.note', 'groups.1.parts'],
+        values: {
+          groups: [
+            { parts: [{ code: 'a' }, { code: 'b', note: 'n' }], title: 'A' },
+            { title: 'B' },
+          ],
+        },
       })
     })
 
@@ -1768,8 +2208,115 @@ describe('createFormTools', () => {
           tool: 'submit',
           values: expect.objectContaining({ email: 'ada@example.com' }),
         },
-        { signal: expect.any(AbortSignal) }
+        { deadline: expect.any(Number), signal: expect.any(AbortSignal) }
       )
+    })
+
+    describe('the shape of what the action answers', () => {
+      const ORDER: NonNullable<AgentOptions['output']> = {
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string' },
+          state: { enum: ['open', 'closed'], type: 'string' },
+          tags: { items: { type: 'string' }, type: 'array' },
+          version: { type: 'integer' },
+        },
+        required: ['id'],
+        type: 'object',
+      }
+      const ordered = (data: ToolResult) =>
+        toolsOf(
+          { submit: async () => ({ data, status: 'success' }) },
+          { ...AGENT, output: ORDER }
+        ).tools
+
+      test('should declare the data the author describes, in the submit and in the read', () => {
+        const { tools } = toolsOf({}, { ...AGENT, output: ORDER })
+
+        expect(
+          toolNamed(tools, 'submit').outputSchema.properties?.data
+        ).toEqual(ORDER)
+        expect(
+          toolNamed(tools, 'read').outputSchema.properties?.submit?.properties
+            ?.data
+        ).toEqual(ORDER)
+      })
+
+      test('should declare any object when the author describes none', () => {
+        const { tools } = toolsOf()
+
+        expect(
+          toolNamed(tools, 'submit').outputSchema.properties?.data
+        ).toEqual({ type: 'object' })
+      })
+
+      test('should answer data that matches it, and say nothing', async () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+        const data = { id: 'a1', state: 'open', tags: ['x'], version: 3 }
+
+        expect(await call(ordered(data), 'submit')).toEqual({ data, ok: true })
+        expect(error).not.toHaveBeenCalled()
+      })
+
+      // The action already ran: an answer that is not ok would have the agent
+      // send it again.
+      test('should answer data that does not match it all the same, and log where it breaks', async () => {
+        const cases: readonly (readonly [ToolResult, string])[] = [
+          [{}, 'data.id is missing'],
+          [{ id: 7 }, 'data.id is not a string'],
+          [{ id: 'a1', version: 1.5 }, 'data.version is not an integer'],
+          [
+            { id: 'a1', state: 'lost' },
+            'data.state is not one of open, closed',
+          ],
+          [{ id: 'a1', tags: ['x', 2] }, 'data.tags[1] is not a string'],
+          [{ id: 'a1', note: 'hi' }, 'data.note is not declared'],
+        ]
+        for (const [data, where] of cases) {
+          const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+          const tool = toolNamed(ordered(data), 'submit')
+
+          expect(await tool.execute({})).toEqual({ data, ok: true })
+          expect(error).toHaveBeenCalledWith(
+            '[Luna Form]',
+            `signup_submit answers what the action returned, which does not match agent.output: ${where}.`
+          )
+          error.mockRestore()
+        }
+      })
+    })
+
+    describe('the codes a call can be answered with', () => {
+      const allowed = { ...AGENT, allow: () => true }
+
+      test('should say in the fill and the submit what refused, cancelled and busy mean', () => {
+        const { tools } = toolsOf({}, allowed)
+
+        for (const suffix of ['fill', 'submit']) {
+          const { description } = toolNamed(tools, suffix)
+          expect(description).toMatch(/\brefused\b/)
+          expect(description).toMatch(/\bcancelled\b/)
+          expect(description).toMatch(/\bbusy\b/)
+        }
+        expect(toolNamed(tools, 'submit').description).toContain(
+          'If code is refused, the page did not let the call go on and it changed nothing; busy, 10 calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.'
+        )
+      })
+
+      // Only a call `allow` is asked about can be refused.
+      test('should say what busy and cancelled mean in every tool, and refused in none that cannot be', () => {
+        const { tools } = toolsOf()
+        const reads = toolsOf({}, allowed).tools.filter(
+          ({ name }) => !/_(fill|submit)$/.test(name)
+        )
+
+        for (const { description } of [...tools, ...reads]) {
+          expect(description).toContain(
+            'If code is busy, 10 calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.'
+          )
+          expect(description).not.toMatch(/\brefused\b/)
+        }
+      })
     })
 
     test('should return the error and the field errors of a submission that failed', async () => {
@@ -1806,6 +2353,167 @@ describe('createFormTools', () => {
       expect(submit).toHaveBeenCalledTimes(1)
     })
 
+    describe('while a person approves it', () => {
+      test('should say in its description that a person may approve it first', () => {
+        const without = toolNamed(toolsOf().tools, 'submit').description
+        const approved = toolNamed(
+          toolsOf({}, { ...AGENT, allow: () => true }).tools,
+          'submit'
+        ).description
+
+        expect(without).not.toContain('approve')
+        expect(approved).toContain('A person may need to approve it first.')
+      })
+
+      test('should keep its promise of an answer within 15 seconds', async () => {
+        vi.useFakeTimers()
+        const submit = vi.fn(async (): Promise<SubmitStatus> => ({
+          status: 'success',
+        }))
+        const { tools } = toolsOf(
+          { submit },
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+
+        let answered = false
+        void call(tools, 'submit').then(() => {
+          answered = true
+        })
+        await vi.advanceTimersByTimeAsync(15_000)
+
+        expect(answered).toBe(true)
+        expect(submit).not.toHaveBeenCalled()
+      })
+
+      test('should answer pending past 15 seconds, and send once the person approves', async () => {
+        vi.useFakeTimers()
+        let approve = (_answer: boolean | string) => {}
+        const allow = vi.fn((call: { tool: string }) =>
+          call.tool === 'fill'
+            ? true
+            : new Promise<boolean | string>((resolve) => {
+                approve = resolve
+              })
+        )
+        const { calls, host, tools } = toolsOf(
+          { submit: async () => ({ data: { id: 7 }, status: 'success' }) },
+          { ...AGENT, allow }
+        )
+
+        const first = call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(15_000)
+        const waiting = {
+          message:
+            'The submission waits for a person to approve it: call signup_read for its outcome.',
+          pending: true,
+        }
+        expect(await first).toEqual(waiting)
+        // Not asked again, and nothing written over what the person sees.
+        expect(await call(tools, 'submit')).toEqual(waiting)
+        const filled = call(tools, 'fill', { email: 'ada@example.com' })
+        await vi.advanceTimersByTimeAsync(0)
+        expect(calls.apply).toEqual([])
+        expect(allow).toHaveBeenCalledTimes(1)
+
+        approve(true)
+        vi.useRealTimers()
+        expect((await filled).ok).toBe(true)
+        expect(host.getSubmit()).toEqual({ data: { id: 7 }, status: 'success' })
+      })
+
+      test('should record why a person refused once the agent was answered pending', async () => {
+        vi.useFakeTimers()
+        let refuse = (_answer: string) => {}
+        const submit = vi.fn(async (): Promise<SubmitStatus> => ({
+          status: 'success',
+        }))
+        const { tools } = toolsOf(
+          { submit },
+          {
+            ...AGENT,
+            allow: () =>
+              new Promise<string>((resolve) => {
+                refuse = resolve
+              }),
+          }
+        )
+
+        void call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(15_000)
+        refuse('Not this plan.')
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(
+          (await call(tools, 'read', { fields: ['email'] })).submit
+        ).toEqual({ message: 'Not this plan.', status: 'refused' })
+        expect(submit).not.toHaveBeenCalled()
+      })
+
+      test('should record a person who never answered as a refusal', async () => {
+        vi.useFakeTimers()
+        const { tools } = toolsOf(
+          {},
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+
+        void call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(5 * 60_000)
+
+        expect(
+          (await call(tools, 'read', { fields: ['email'] })).submit
+        ).toEqual({
+          message:
+            'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
+          status: 'refused',
+        })
+      })
+
+      test('should take the wait back when the agent cancels', async () => {
+        const { host, tools } = toolsOf(
+          {},
+          { ...AGENT, allow: () => new Promise<boolean>(() => {}) }
+        )
+        const controller = new AbortController()
+
+        const cancelled = call(tools, 'submit', {}, controller.signal)
+        await vi.waitFor(() =>
+          expect(host.getSubmit().status).toBe('awaiting_approval')
+        )
+        controller.abort()
+
+        expect((await cancelled).code).toBe('cancelled')
+        expect(host.getSubmit()).toEqual({ status: 'idle' })
+      })
+
+      test('should let a read say the submission waits for a person, and until when', async () => {
+        vi.useFakeTimers({ now: 1_000_000 })
+        let handed: number | undefined
+        const { tools } = toolsOf(
+          {},
+          {
+            ...AGENT,
+            allow: (_call, { deadline }) => {
+              handed = deadline
+              return new Promise<boolean>(() => {})
+            },
+          }
+        )
+
+        void call(tools, 'submit')
+        await vi.advanceTimersByTimeAsync(1_000)
+        const read = await Promise.race([
+          call(tools, 'read', { fields: ['email'] }),
+          vi.advanceTimersByTimeAsync(100).then(() => undefined),
+        ])
+
+        expect(handed).toBe(1_000_000 + 5 * 60_000)
+        expect(read?.submit).toEqual({
+          deadline: new Date(1_000_000 + 5 * 60_000).toISOString(),
+          status: 'awaiting_approval',
+        })
+      })
+    })
+
     test('should not submit a call the agent cancelled', async () => {
       const submit = vi.fn(async (): Promise<SubmitStatus> => ({
         status: 'success',
@@ -1819,5 +2527,76 @@ describe('createFormTools', () => {
       )
       expect(submit).not.toHaveBeenCalled()
     })
+  })
+})
+
+// A type its registration closes to agents is left out of the tools in every
+// form, as a password is: nothing tells the agent the field exists, and the
+// tools refuse it, at the top level and in the rows of a list.
+describe('a custom type closed to agents', () => {
+  const Secret = () => null
+  const config = defineConfig({
+    inputs: [defineCustomInput('secret', Secret, { agent: false })],
+  })
+  const fields: Fields = [
+    { name: 'token', type: 'secret' },
+    { name: 'note', type: 'input/text' },
+    {
+      fields: [
+        { name: 'label', type: 'input/text' },
+        { name: 'key', type: 'secret' },
+      ],
+      name: 'keys',
+      type: 'list',
+    },
+  ]
+
+  // As the form builds its tools from its config.
+  function closedTools() {
+    const built = buildToolSchema([{ fields }], { types: config.agentTypes })
+    const form = createForm({
+      absent: [],
+      values: { keys: [{ key: 'k', label: 'a' }], note: 'n', token: 't' },
+    })
+    return { built, ...form, tools: createFormTools(AGENT, built, form.host) }
+  }
+
+  test('should leave the field out of the schema, and never name it', () => {
+    const { built } = closedTools()
+    const properties = built.schema.properties ?? {}
+
+    expect(Object.keys(properties)).toEqual(['note', 'keys'])
+    expect(Object.keys(properties.keys?.items?.properties ?? {})).toEqual([
+      'label',
+    ])
+    expect(JSON.stringify(built.schema)).not.toMatch(/token|"key"|secret/)
+  })
+
+  test('should read nothing of it', async () => {
+    const { tools } = closedTools()
+    const named = await call(tools, 'read', { fields: ['token', 'note'] })
+    expect(Object.keys(named.values as object)).toEqual(['note'])
+
+    const all = await call(tools, 'read')
+    expect(Object.keys(all.values as object)).not.toContain('token')
+    expect(JSON.stringify(all.values)).not.toContain('"key"')
+  })
+
+  test('should refuse to fill it as a field that does not exist', async () => {
+    const { calls, tools } = closedTools()
+    const result = await call(tools, 'fill', {
+      'keys.0.key': 'x',
+      token: 'x',
+    })
+
+    expect(calls.apply).toEqual([])
+    expect(calls.filled).toEqual([])
+    expect(result.skipped).toEqual(
+      ['keys.0.key', 'token'].map((name) => ({
+        code: 'unknown',
+        message: 'No field so named.',
+        name,
+      }))
+    )
   })
 })

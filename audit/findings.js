@@ -179,6 +179,27 @@ window.AUDIT = {
         '<p>Además de repetir todo lo anterior, se revisó el código que entró desde la primera auditoría: <code>interpolateUrl</code> y <code>formatTemplate</code> (las correcciones de BUG-01 y SEC-01), <code>checkDefinition</code>, <code>use-form-action.ts</code> y, con <code>buildToolSchema</code>, lo que <code>docs/agents/tools.md</code> dice de los textos que lee un agente: el título se corta en 200 caracteres, la descripción del autor en 500, y <code>input/password</code> queda fuera del esquema. Ningún componente vuelve a leer markdown después de interpolar: la descripción de una columna se interpola y pasa por <code>formatTemplate</code>, y los títulos de sección y de lista no se interpolan.</p>' +
         '<p>Quedó fuera: las agent tools por WebMCP en un navegador, la entrada de servidor y la hidratación, y el resto de las afirmaciones de <code>docs/</code>. Los <code>new RegExp</code> que arma la librería compilan el <code>pattern</code> del autor, que la documentación presenta como código del autor.</p>',
     },
+    {
+      id: 'audit-2026-11-26',
+      title: 'Auditoría de la rama de agent tools',
+      date: '2026-11-26',
+      summary:
+        '<p>Tercera auditoría de la librería, sobre la rama local <code>claude/agent-tools-integration</code> en <code>1122714</code>, 33 commits sobre <code>main</code> (<code>db43c0b</code>) antes de abrir su PR. La rama cambia sobre todo las agent tools: <code>tool-schema.ts</code>, <code>agent-tools.ts</code>, <code>agent-host.ts</code>, los nombres de las filas por posición, <code>agent.target</code>, <code>advanced.agent</code> como booleano u objeto y <code>data-field-name</code>. Los 20 hallazgos corregidos de las auditorías anteriores siguen corregidos y no había pruebas marcadas como fallo esperado: no hay regresiones. Sigue abierto OPT-02, de la auditoría de pruebas, sin cambios (<code>workers: 1</code> en CI).</p>' +
+        '<p><b>2 hallazgos nuevos: 1 crítico y 1 mejora, los dos traídos por la rama y con su prueba marcada como fallo esperado.</b> Un <code>_fill</code> o un <code>_submit</code> que espera la aprobación de una persona comprueba el item antes de preguntar y no después: si la persona abre otro item mientras tanto, se escriben o se envían en él los valores pensados para el primero, y la respuesta dice que fue el primero (AG-01). Y un nombre de campo que empieza por un miembro heredado (<code>toString.1</code>) tumba la página al enviar, porque el envío pasa ahora cada nombre por <code>translateRows</code>, que lee el registro de listas montadas sin mirar si la propiedad es propia (SEC-02).</p>' +
+        '<div class="table-wrap"><table><thead><tr><th>Medición</th><th>Resultado</th><th>Condiciones</th></tr></thead><tbody>' +
+        '<tr><td>Unitarias</td><td>1445 de 1445, más 3 fallos esperados nuevos</td><td>Vitest, local</td></tr>' +
+        '<tr><td>E2E Chromium y chromium-webmcp sobre <code>next dev</code></td><td>805 de 805</td><td>servidor propio en 3002, carga 4,6 a 8,3 en 11 núcleos</td></tr>' +
+        '<tr><td>E2E Firefox y WebKit sobre <code>next start</code></td><td>1580 de 1580</td><td>servidor propio en 3301</td></tr>' +
+        '<tr><td>Presupuestos de renders (<code>@render</code>)</td><td>13 de 13</td><td>producción con sondas (<code>benchmark:probes --strict</code>, 12 aplicadas), Chromium</td></tr>' +
+        '<tr><td>Bundle: total de todos los archivos</td><td>428,7 de 450 kB (antes 404,0 de 420)</td><td>el cálculo del job <code>bundle-size</code>, después de <code>pnpm build</code></td></tr>' +
+        '<tr><td>Bundle: camino principal, esm, gzip</td><td>32,5 de 50 kB (antes 31,9 de 33)</td><td>el límite subió a 50 kB en esta rama, a pedido</td></tr>' +
+        '<tr><td>Bundle: chunk de agent tools, gzip</td><td>15,4 de 25 kB (antes 12,6 de 14)</td><td></td></tr>' +
+        '<tr><td><code>pnpm benchmark</code></td><td>el más lento, <code>resolveRefs</code> con 20 <code>$ref</code>: 0,0114 ms (antes 0,0086)</td><td>mitata, una corrida, carga 4,6; la rama no toca <code>resolveRefs</code>, se lee como ruido</td></tr>' +
+        '<tr><td><code>pnpm knip</code>, <code>pnpm lint</code>, <code>pnpm typescript</code>, <code>pnpm prettier:check</code></td><td>sin avisos</td><td>después de <code>pnpm build</code></td></tr>' +
+        '</tbody></table></div>' +
+        '<p>Se revisó el código que entró en la rama: la comprobación de <code>target</code> en <code>queued</code> y su memoria por página en <code>watchChanges</code>, <code>translateRows</code> y sus seis llamadas, <code>data-field-name</code> en el cliente y en el servidor, y la sección «A form that edits one item of several» de <code>docs/agents/tools.md</code>, cuya frase «the item the call acted on» no se cumple con AG-01. Las pruebas de AG-01 corren en los tres navegadores sobre <code>next dev</code>.</p>' +
+        '<p>Quedó fuera: el resto de las afirmaciones nuevas de <code>docs/agents/tools.md</code> (417 líneas cambiadas), que las sesiones de cada cambio corrieron antes de escribirlas; la accesibilidad, que la rama no toca salvo la región viva de las marcas, ya existente; y la comparación de <code>pnpm benchmark</code> con <code>main</code> en la misma máquina.</p>',
+    },
   ],
   findings: [
     {
@@ -1172,6 +1193,77 @@ window.AUDIT = {
           label: 'Corrección',
           audit: 'audit-2026-11-19',
           html: '<p>Commit <code>a3d5139</code> en la rama <code>claude/s-02-unused-exports</code>, desde <code>main</code> en <code>1df3fd4</code>, integrado en el <a href="https://github.com/jonattanva/luna-form/pull/177">PR #177</a> (<code>3496fc9</code>). <code>Apply</code> y <code>Submission</code> dejan de exportarse, y <code>@types/react-dom</code> sale de <code>luna-react</code> (el editor conserva el suyo). <b>Antes:</b> <code>knip</code> los informaba con y sin build. <b>Después:</b> no los informa en ninguno de los dos estados. El JavaScript construido es idéntico byte a byte (10 archivos, mismo md5 antes y después); cambian solo los <code>.d.ts</code>. Pasan build, <code>pnpm lint</code>, <code>pnpm typescript</code> y las 1268 unitarias, con una instalación limpia: una primera prueba falló al construir el editor (<code>tslib</code> sin resolver) porque <code>pnpm remove</code> dejó los enlaces a medias, y con <code>node_modules</code> nuevo pasa. Sin e2e: no cambia nada de lo que corre en el navegador.</p>',
+        },
+      ],
+    },
+    {
+      code: 'AG-01',
+      title:
+        'Un _fill o un _submit que espera aprobación escribe o envía en el item que se abrió mientras esperaba, y responde que fue el anterior',
+      sev: 'crit',
+      cat: 'agentes',
+      st: 'corregido',
+      stLabel: 'Corregido en c61fe00',
+      audit: 'audit-2026-11-26',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/src/client/lib/agent-tools.ts:613</code> (<code>queued</code>): <code>acted = host.getTarget()</code> y <code>host.isRetargeted()</code> se leen una vez, antes de <code>run</code>. <code>run</code> espera a <code>allow</code> en <code>:810</code> (fill) y <code>:1316</code> (submit), y después escribe o envía sin volver a mirar el item.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: "<p>Un formulario con <code>agent.target: 'A'</code> y <code>allow</code>, que el host usa para el item abierto. El agente lee A y pide un fill. Mientras la persona tiene la aprobación delante, abre B, y luego aprueba. El fill escribe en B el valor pensado para A (el campo de B queda en <code>Alpha, renamed</code>) y responde <code>{ ok: true, target: 'A' }</code>. Con <code>_submit</code> pasa lo mismo: se envían los valores de B y la respuesta dice <code>target: 'A'</code>. Es justo lo que <code>target</code> vino a impedir, en el caso en que una persona tiene más tiempo para cambiar de item: <code>allow</code> espera hasta 5 minutos. Y contradice <code>docs/agents/tools.md</code>: «Every answer, of every tool, has <code>target</code>: the item the call acted on».</p>",
+        },
+        {
+          label: 'Prueba',
+          html: "<p><code>tests/e2e/agent-tools.spec.ts</code> :: <code>should not fill the item opened while the fill waited for approval</code> y <code>should not submit the item opened while the submit waited for approval</code>, sobre <code>/reactive</code> con <code>host.items</code> y <code>window.__lunaAllow</code>, marcadas <code>test.fail</code>. Sin la marca fallan por la razón que dicen, con <code>{ ok: true, target: 'A' }</code> donde se espera <code>target_changed</code>, en Chromium, Firefox y WebKit sobre <code>next dev</code>.</p>",
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-26',
+          html: "<p>Commit <code>c61fe00</code> en <code>claude/ag-01-approval-target-e1a52e</code>, sobre <code>ead2777</code>, sin push. <code>queued</code> le pasa a cada herramienta un <code>ask</code> ligado a la llamada, que después del sí de <code>allow</code> comprueba que el item abierto sigue siendo el del inicio de la llamada; si cambió, rechaza con <code>target_changed</code> y la respuesta nombra el item abierto ahora. Un submit rechazado así retira su <code>awaiting_approval</code>. El <code>message</code> pasa a decir «than the one this call was meant for», y <code>docs/agents/tools.md</code> lo cuenta en «A form that edits one item of several» y «Waiting for a person». <b>Antes:</b> las dos pruebas fallaban con <code>{ ok: true, target: 'A' }</code> y B quedaba con <code>Alpha, renamed</code>. <b>Después:</b> responden <code>{ code: 'target_changed', ok: false, target: 'B' }</code>, B conserva <code>Beta</code> y no se envía nada; un caso nuevo cubre al agente que lee B durante la espera. Mutaciones: con solo <code>isRetargeted</code> falla ese caso, y sin retirar la espera fallan los dos del submit. Pasan 1450 unitarias, 809 e2e de Chromium y chromium-webmcp sobre <code>next dev</code>, 1588 de Firefox y WebKit sobre <code>next start</code> y 13 presupuestos de render. Bundle con build limpio: total 429,2 de 450 kB, principal 32,5 de 50 kB gzip, chunk de agent tools 15,5 de 25 kB gzip.</p>",
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 2.</b> AG-01. <b>Crear primero:</b> las dos pruebas de arriba, sin <code>.fail</code>. <b>Antes:</b> el item se comprueba antes de <code>allow</code>, y la respuesta lleva el item de ese momento. <b>Después:</b> la misma comprobación, en el único lugar donde vive, se hace también cuando <code>allow</code> respondió y antes de escribir o enviar, y la respuesta lleva el item sobre el que actuó de verdad; una aprobación para A no escribe en B. <b>Mejora esperada:</b> ningún valor cae en un item que el agente no leyó, y la frase de <code>tools.md</code> vuelve a ser cierta.</p>',
+        },
+      ],
+    },
+    {
+      code: 'SEC-02',
+      title:
+        'Un nombre de campo que empieza por un miembro heredado (toString.1) tumba la página al enviar',
+      sev: 'mejora',
+      sevNote: 'la página entera cae, pero solo con nombres poco comunes',
+      cat: 'seguridad',
+      st: 'corregido',
+      stLabel: 'Corregido en ead2777',
+      audit: 'audit-2026-11-26',
+      sections: [
+        {
+          label: 'Dónde',
+          html: '<p><code>packages/luna-react/src/client/lib/list-store.ts:137</code> (<code>translateRows</code>): <code>const list = mounted[key]</code> sobre <code>mountedListsAtom</code>, un registro con prototipo (<code>createAtomStore</code> parte de <code>{}</code>). Lo llaman <code>use-form-action.ts:196</code> (<code>byRowId</code>, en cada envío), <code>use-input-core.ts:106</code> y <code>agent-host.ts:370</code>, <code>:372</code>, <code>:585</code>, <code>:659</code> y <code>:668</code>.</p>',
+        },
+        {
+          label: 'Qué pasa',
+          html: '<p>Para un nombre como <code>constructor.0</code>, <code>toString.1</code> o <code>hasOwnProperty.0.x</code>, <code>mounted[key]</code> devuelve el miembro heredado, que no tiene <code>items</code>, y <code>translateRows</code> lanza <code>TypeError: Cannot read properties of undefined</code> en vez de dejar el nombre como está. En el navegador, un formulario en <code>/</code> con un campo <code>toString.1</code> se rellena bien y al enviarlo la página entera cae («This page couldn’t load»). En <code>main</code> la función existía solo dentro de <code>agent-host.ts</code>; esta rama la mueve a <code>list-store.ts</code> y la pone en el camino de cada envío (<code>8229ce4</code>).</p>',
+        },
+        {
+          label: 'Riesgo',
+          html: '<p>Bajo. No lee ni escribe nada del prototipo: solo lanza. Lo puede provocar quien escribe la definición, o una definición que llega de fuera, con un nombre de campo que empieza por un miembro de <code>Object.prototype</code> seguido de un número.</p>',
+        },
+        {
+          label: 'Prueba',
+          html: '<p><code>tests/unit/translate-rows.spec.ts</code> :: <code>should leave %s as written, as no list is there</code>, con <code>constructor.0</code>, <code>toString.1</code> y <code>hasOwnProperty.0.x</code>, marcada <code>test.fails</code>; sin la marca falla con el <code>TypeError</code>. El envío se comprobó con una prueba de una sola vez en Chromium sobre <code>next dev</code>, que no quedó en la suite.</p>',
+        },
+        {
+          label: 'Corrección',
+          audit: 'audit-2026-11-26',
+          html: '<p>Commit <code>ead2777</code> en <code>claude/sec-02-own-lists-6ab655</code>, sobre <code>1122714</code>, sin push. <code>translateRows</code> lee <code>hasOwn(mounted, key) ? mounted[key] : undefined</code>, con el <code>hasOwn</code> de <code>luna-core/src/util/extract.ts</code>, ahora exportado (el paquete es privado). La guarda va en la función y no en el registro: un registro sin prototipo se pierde en cada <code>{ ...current }</code> de <code>createEntryAtom</code>, y así cubre las seis llamadas. <b>Antes:</b> la prueba fallaba con el <code>TypeError</code> en sus 3 casos, y enviar <code>toString.1</code> tumbaba la página. <b>Después:</b> 5 de 5, y la e2e nueva de <code>tests/e2e/form-action.spec.ts</code> envía <code>{"toString": ["Quarterly report"]}</code>, la misma forma que un <code>notes.1</code>; <code>constructor.0</code> ya no tumba la página y sigue fuera del envío con el aviso de <code>[Luna Form]</code> que documenta <code>docs/setup.md</code>. Pasan 1450 unitarias, 806 e2e de Chromium y chromium-webmcp, 1582 de Firefox y WebKit y 13 presupuestos de render.</p>',
+        },
+        {
+          label: 'Plan de corrección',
+          html: '<p><b>Fase 1.</b> SEC-02. <b>Crear primero:</b> la prueba de arriba, sin <code>.fails</code>. <b>Antes:</b> <code>translateRows</code> lee <code>mounted[key]</code> con prototipo. <b>Después:</b> lee solo propiedades propias (<code>ownProperty</code>, como ya hacen <code>agent-tools.ts</code> y <code>extract.ts</code>), así que un nombre que no está en ninguna lista sale como entró. <b>Mejora esperada:</b> ningún nombre de campo tumba el envío.</p>',
         },
       ],
     },

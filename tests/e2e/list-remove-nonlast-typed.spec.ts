@@ -28,7 +28,7 @@ const ITEMS = JSON.stringify({
   ],
 })
 
-/** Three rows typed in: A, B and C, at stable ids 0, 1 and 2. */
+/** Three rows typed in: A, B and C, at positions 0, 1 and 2. */
 async function typeThreeRows(page: Page) {
   await inject(page, ITEMS)
   await page.goto('/reactive')
@@ -59,8 +59,8 @@ test.describe(
 
       await page.getByRole('button', { name: 'Remove Items item 1' }).click()
 
-      await expect(page.locator('input[name="items.1.value"]')).toHaveValue('B')
-      await expect(page.locator('input[name="items.2.value"]')).toHaveValue('C')
+      await expect(page.locator('input[name="items.0.value"]')).toHaveValue('B')
+      await expect(page.locator('input[name="items.1.value"]')).toHaveValue('C')
 
       const payload = await submit(page)
       await expect(payload).toContainText('"value": "B"')
@@ -74,7 +74,7 @@ test.describe(
       await page.getByRole('button', { name: 'Remove Items item 2' }).click()
 
       await expect(page.locator('input[name="items.0.value"]')).toHaveValue('A')
-      await expect(page.locator('input[name="items.2.value"]')).toHaveValue('C')
+      await expect(page.locator('input[name="items.1.value"]')).toHaveValue('C')
 
       const payload = await submit(page)
       await expect(payload).toContainText('"value": "A"')

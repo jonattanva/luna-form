@@ -1,4 +1,4 @@
-import { composeListValue } from './compose-list-value'
+import { composeListValue, itemKey, type ListRows } from './compose-list-value'
 import { isUnder } from './store-helper'
 import { createFormTools, createQueue, type Queue } from './agent-tools'
 import { fieldStateAtom } from './state-store'
@@ -6,6 +6,7 @@ import { inputErrorAtom } from './error-store'
 import {
   mountedListsAtom,
   pendingListRowsAtom,
+  translateRows,
   type MountedList,
 } from './list-store'
 import { sourceAtom } from './source-store'
@@ -17,11 +18,13 @@ import {
   getTimezones,
   isColumn,
   isList,
+  DATA_FIELD_NAME,
   isObject,
   isSelectTimezone,
   isString,
   prepare,
   translateBuiltIn,
+  type AgentTypes,
   type Definition,
   type Field,
   type Fields,
@@ -29,13 +32,13 @@ import {
   type Localization,
   type Option,
   type Sections,
-  type ToolSchema,
 } from '@luna-form/core'
 import { registerTools } from './model-context'
 import type { RefObject } from 'react'
 import type { useStore } from 'jotai'
 import type {
   AgentOptions,
+  Approval,
   FormToolsHost,
   SubmitStatus,
   Tool,
@@ -48,8 +51,12 @@ import type { FieldHandle } from '../hook/use-apply'
 
 type Store = ReturnType<typeof useStore>
 
-// What the tools are told of the changes a person makes. See `watchChanges`.
-type Changes = Pick<FormToolsHost, 'isChanged' | 'seen'>
+// What the tools are told of the changes a person makes, and of the item the
+// form edits. See `watchChanges`.
+type Changes = Pick<
+  FormToolsHost,
+  'getTarget' | 'isChanged' | 'isRetargeted' | 'seen'
+>
 
 // What the person is shown of an agent at work. See `showAgent`.
 type Signs = Pick<FormToolsHost, 'filled' | 'using'>
@@ -57,16 +64,20 @@ type Signs = Pick<FormToolsHost, 'filled' | 'using'>
 /** The last submission as the form keeps it, before it is told to an agent. */
 export type Submitted = Readonly<{
   data?: Record<string, unknown>
+  deadline?: string
   error?: FormStateError
+  message?: string
   status: SubmitStatus['status']
 }>
 
 /**
  * What a form records of its submissions, for the tools to submit it and hear
  * how it went. `wait` answers with the outcome of the submission about to
- * start. See `useSubmission`.
+ * start; `approval` records where an agent's stands while a person decides on
+ * it. See `useSubmission`.
  */
 type Submission = Readonly<{
+  approval: (approval?: Approval) => void
   formRef: RefObject<HTMLFormElement | null>
   getStatus: () => Submitted
   wait: () => Promise<Submitted>
@@ -95,8 +106,8 @@ export type AgentForm = Readonly<{
   sections: Sections
   store: Store
   submission?: Submission
-  // The schema each custom type declares for agents. See `defineCustomInput`.
-  types?: Readonly<Record<string, ToolSchema>>
+  // What each custom type says to agents. See `defineCustomInput`.
+  types?: AgentTypes
   // Whether a submit checks the values: `validation.submit`.
   validates?: boolean
 }>
@@ -120,7 +131,7 @@ export function createAgentRuntime(read: () => AgentForm): AgentRuntime {
   // the agent was told of the changes a person made.
   const life = new AbortController()
   let queue: Queue | undefined
-  const changes = watchChanges(() => read().store)
+  const changes = watchChanges(read)
   const signs = showAgent(read, life.signal)
 
   // The tools built last, what tells whether a build would give the same ones,
@@ -196,12 +207,20 @@ function createAgentTools(
     name: form.agent?.name ?? '',
     // Sending needs a form that does something with it.
     submit: form.agent?.submit === true && form.submission !== undefined,
-    // The host's latest, whichever it was when the tools were built.
-    allow: (call, allowOptions) => {
-      const allow = read().agent?.allow
-      return allow ? allow(call, allowOptions) : true
-    },
+    // The host's latest, whichever it was when the tools were built. Only
+    // when it has one: the tools say a person may approve a submission.
+    ...(form.agent?.allow && {
+      allow: (call, allowOptions) => {
+        const allow = read().agent?.allow
+        return allow ? allow(call, allowOptions) : true
+      },
+    }),
     onCall: (call) => read().agent?.onCall?.(call),
+    ...(form.agent?.output && { output: form.agent.output }),
+    // Only whether there is one, which the tools describe: which item it
+    // names is read on every call.
+    ...(form.agent?.target !== undefined && { target: form.agent.target }),
+    ...(form.agent?.title !== undefined && { title: form.agent.title }),
   }
 
   const host = createFormHost(
@@ -216,6 +235,10 @@ function createAgentTools(
       agent.name,
       agent.description,
       agent.submit,
+      agent.allow !== undefined,
+      agent.output,
+      agent.target !== undefined,
+      agent.title,
       form.validates !== false,
       built,
     ]),
@@ -317,6 +340,8 @@ function createFormHost(
 
     getSubmit: () => toSubmitStatus(read().submission?.getStatus(), store()),
 
+    approval: (approval) => read().submission?.approval(approval),
+
     // What the form holds, against what the page drew: rows a list has not
     // taken yet, a field a `state` event shows with no handle yet, or one it
     // unlocks with its handle still locked. A field its own definition makes
@@ -350,9 +375,33 @@ function createFormHost(
       const mounted = lists()
       const list = mounted[name]
       const values = store().get(valueAtom)
-      return list
-        ? composeListValue(name, list, { mounted, values }).map(toRow)
-        : toToolValue(values[name])
+      if (!list) {
+        return toToolValue(values[name])
+      }
+
+      // A leaf its row does not show has no handle, and is left out as a
+      // submit leaves it out: a list in a row too. A collapsed row still shows
+      // its leaves.
+      const handles = getHandles()
+      const shown = (key: string, rows: MountedList, held: ListRows) =>
+        held.map((row, index): ToolRow => {
+          const id = rows.items[index]
+          return Object.fromEntries(
+            Object.entries(row).flatMap(([leaf, value]) => {
+              const at = id === undefined ? '' : itemKey(key, id, leaf)
+              const inner = mounted[at]
+              if (inner && Array.isArray(value)) {
+                return [[leaf, shown(at, inner, value)]]
+              }
+              return handles.has(at) ? [[leaf, toToolValue(value)]] : []
+            })
+          )
+        })
+      return shown(
+        name,
+        list,
+        composeListValue(name, list, { mounted, values })
+      )
     },
 
     settle: () => settle(store, getHandles),
@@ -388,49 +437,6 @@ function createFormHost(
   }
 }
 
-// A name with the row of every list in it named the other way: by position,
-// as an agent names it, or by the id the form keeps it under. `to` says which
-// the result uses. A list is found by the name the form gives it, ids and all,
-// so one in a row (`items.<id>.parts`) is found whichever way the row was
-// named. `undefined` when a row is not there, or not named as a row is: a
-// whole number, with no leading zero.
-function translateRows(
-  name: string,
-  mounted: Readonly<Record<string, MountedList>>,
-  to: 'id' | 'position'
-): string | undefined {
-  const segments = name.split('.')
-  let key = ''
-  let translated = ''
-
-  for (let index = 0; index < segments.length; index++) {
-    key = key ? `${key}.${segments[index]}` : segments[index]
-    translated = translated
-      ? `${translated}.${segments[index]}`
-      : segments[index]
-
-    const list = mounted[key]
-    const row = segments[index + 1]
-    if (!list || row === undefined) {
-      continue
-    }
-    if (!/^(0|[1-9]\d*)$/.test(row)) {
-      return undefined
-    }
-
-    const position = to === 'id' ? Number(row) : list.items.indexOf(Number(row))
-    const id = list.items[position]
-    if (id === undefined) {
-      return undefined
-    }
-
-    key = `${key}.${id}`
-    translated = `${translated}.${to === 'id' ? id : position}`
-    index++
-  }
-  return translated
-}
-
 // The options a field's definition gives it, for a field that is not mounted
 // to say which it offers: a leaf of a list, or a field not shown yet.
 function declaredOptions(
@@ -452,6 +458,11 @@ function declaredOptions(
   return options && flattenOptions(options)
 }
 
+// The item each form, by its name, last told an agent it edits: kept on the
+// page, past the form, since a host can draw the form anew for the item it
+// opens, and the agent that read the last one calls the same tools.
+const toldTargets = new Map<string, string>()
+
 /**
  * What a person changed in a form that the agent was not told of: a field, a
  * value in a row, or a list's rows. What the form notes a person changed is
@@ -459,12 +470,16 @@ function declaredOptions(
  * takes; one that changed since is news to the agent. A success starts the
  * form over on a new store with nothing noted, and what was changed before is
  * gone with what it held.
+ *
+ * And which item the form edits, against the one the agent was told of: a
+ * host that opens another one changes what the tools act on, under the same
+ * names.
  */
-function watchChanges(current: () => Store): Changes {
+function watchChanges(form: () => AgentForm): Changes {
   const told = new Map<string, number>()
   let watched: Store | undefined
   const untold = () => {
-    const store = current()
+    const { store } = form()
     if (store !== watched) {
       watched = store
       told.clear()
@@ -480,13 +495,25 @@ function watchChanges(current: () => Store): Changes {
   const concerns = (key: string, names: readonly string[]) =>
     isUnder(key, names) || names.some((name) => isUnder(name, [key]))
 
+  const getTarget = () => form().agent?.target
+
   return {
+    getTarget,
     isChanged: (name) => untold().some(([key]) => concerns(key, [name])),
+    isRetargeted: () => {
+      const target = getTarget()
+      const last = toldTargets.get(form().agent?.name ?? '')
+      return target !== undefined && last !== undefined && last !== target
+    },
     seen: (names) => {
       for (const [key, at] of untold()) {
         if (concerns(key, names)) {
           told.set(key, at)
         }
+      }
+      const target = getTarget()
+      if (target !== undefined) {
+        toldTargets.set(form().agent?.name ?? '', target)
       }
     },
   }
@@ -506,7 +533,9 @@ const ANNOUNCE_DELAY = 100
  * - `data-agent-active` on the `<form>` while a call runs;
  * - `data-agent-filled` on the field (`[data-slot="field"]`) of each value a
  *   fill changed, or that its change events did, until the person changes it
- *   or the rows of a list it is in;
+ *   or the rows of a list it is in. The field is found by the name it carries
+ *   itself (`data-field-name`), never by its control's: a custom type need not
+ *   render a `name`;
  * - a polite live region in the form that says how many fields a fill
  *   filled, in the form's language.
  *
@@ -518,13 +547,24 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
   let region: HTMLElement | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
 
-  // The fields marked, by the name of their control, with what the form had
-  // noted of a person's change to it, or to a list it is in, then.
+  // The fields marked, by the name the form keeps them under, with what the
+  // form had noted of a person's change to it, or to a list it is in, then.
   const marked = new Map<string, string>()
   let watched: Store | undefined
   let stop = () => {}
 
-  const fieldOf = (control: Element) => control.closest('[data-slot="field"]')
+  // The field of a name, and with `rows`, the fields of a list's rows too.
+  const fieldsOf = (name: string, rows = false) => {
+    const escaped = CSS.escape(name)
+    const own = `[data-slot="field"][${DATA_FIELD_NAME}="${escaped}"]`
+    return (
+      read().formRef.current?.querySelectorAll(
+        rows
+          ? `${own}, [data-slot="field"][${DATA_FIELD_NAME}^="${escaped}."]`
+          : own
+      ) ?? []
+    )
+  }
 
   const noted = (
     name: string,
@@ -535,12 +575,19 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
       .map(([key, at]) => `${key}:${at}`)
       .join(' ')
 
+  // A field carries its name with its rows at their positions, as its control
+  // does, and is marked by the id the form keeps it under: the rows can move
+  // between the mark and the change that takes it off. See `translateRows`.
+  const lists = () => read().store.get(mountedListsAtom)
+
   const clear = (name: string) => {
     marked.delete(name)
-    for (const control of read().formRef.current?.querySelectorAll(
-      `[name="${CSS.escape(name)}"]`
-    ) ?? []) {
-      fieldOf(control)?.removeAttribute('data-agent-filled')
+    const shown = translateRows(name, lists(), 'position')
+    if (shown === undefined) {
+      return
+    }
+    for (const field of fieldsOf(shown)) {
+      field.removeAttribute('data-agent-filled')
     }
   }
 
@@ -606,17 +653,22 @@ function showAgent(read: () => AgentForm, signal: AbortSignal): Signs {
 
       // A list's name marks the fields of its rows.
       const touched = store.get(touchedAtom)
+      const mounted = lists()
       const fields = new Set<Element>()
       for (const name of names) {
-        const escaped = CSS.escape(name)
-        for (const control of form.querySelectorAll(
-          `[name="${escaped}"], [name^="${escaped}."]`
-        )) {
-          const field = fieldOf(control)
-          const controlName = control.getAttribute('name')
-          if (field && controlName) {
+        const shown = translateRows(name, mounted, 'position')
+        if (shown === undefined) {
+          continue
+        }
+        for (const field of fieldsOf(shown, true)) {
+          const fieldName = field.getAttribute(DATA_FIELD_NAME)
+          const key =
+            fieldName === null
+              ? undefined
+              : translateRows(fieldName, mounted, 'id')
+          if (key !== undefined) {
             field.setAttribute('data-agent-filled', '')
-            marked.set(controlName, noted(controlName, touched))
+            marked.set(key, noted(key, touched))
             fields.add(field)
           }
         }
@@ -702,6 +754,10 @@ function toSubmitStatus(
   if (submitted.status !== 'error') {
     return {
       ...(submitted.data && { data: toToolResult(submitted.data) }),
+      ...(submitted.deadline !== undefined && {
+        deadline: submitted.deadline,
+      }),
+      ...(submitted.message !== undefined && { message: submitted.message }),
       status: submitted.status,
     }
   }

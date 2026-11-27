@@ -1,10 +1,11 @@
 import { Field as Component } from '../../../component/field/field'
 import { FieldError } from '../../../component/field/field-error'
-import { memo, useMemo } from 'react'
+import { memo, use, useMemo } from 'react'
 import { fieldStateAtom } from '../../lib/state-store'
 import { inputErrorAtom } from '../../lib/error-store'
 import { useEntryAtom } from '../../hook/use-entry-atom'
 import { useAtomValue } from 'jotai'
+import { ListPathContext } from '../../context/list-path-context'
 import type { FieldProps } from '../../../component/field/field'
 
 /**
@@ -24,6 +25,9 @@ import type { FieldProps } from '../../../component/field/field'
 function FieldWithMeta(props: FieldProps) {
   const state = useAtomValue(useEntryAtom(fieldStateAtom, props.field.name))
   const errors = useAtomValue(useEntryAtom(inputErrorAtom, props.field.name))
+  // The name the field carries in the page, with each row at its position, as
+  // its control's `name` is. Its identity changes only when rows around it move.
+  const translateListPath = use(ListPathContext)
 
   // A `state` event that sets `disabled` replaces what the field declares, in
   // either direction, for as long as its condition holds, and the declaration
@@ -46,7 +50,13 @@ function FieldWithMeta(props: FieldProps) {
   }
 
   return (
-    <Component {...props} error={FieldError} errors={errors} field={field} />
+    <Component
+      {...props}
+      error={FieldError}
+      errors={errors}
+      field={field}
+      shown={translateListPath(props.field.name)}
+    />
   )
 }
 

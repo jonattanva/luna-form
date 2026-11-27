@@ -1,3 +1,4 @@
+import { hasOwn } from '@luna-form/core'
 import { createAtomStore } from './store-helper'
 import type { ValueSource } from '../../type'
 
@@ -112,3 +113,47 @@ export const mountedListsAtom = mountedLists.atom
 const heldRows = createAtomStore<readonly number[]>()
 
 export const heldListRowsAtom = heldRows.atom
+
+// A name with the row of every list in it named the other way: by position,
+// as an agent, a consumer and a control's `name` attribute name it, or by the
+// id the form keeps it under. `to` says which the result uses. A list is found by the name the form gives it, ids and all,
+// so one in a row (`items.<id>.parts`) is found whichever way the row was
+// named. `undefined` when a row is not there, or not named as a row is: a
+// whole number, with no leading zero. Only a list the record holds itself
+// counts: `toString.1` is in no list, whatever the record inherits.
+export function translateRows(
+  name: string,
+  mounted: Readonly<Record<string, MountedList>>,
+  to: 'id' | 'position'
+): string | undefined {
+  const segments = name.split('.')
+  let key = ''
+  let translated = ''
+
+  for (let index = 0; index < segments.length; index++) {
+    key = key ? `${key}.${segments[index]}` : segments[index]
+    translated = translated
+      ? `${translated}.${segments[index]}`
+      : segments[index]
+
+    const list = hasOwn(mounted, key) ? mounted[key] : undefined
+    const row = segments[index + 1]
+    if (!list || row === undefined) {
+      continue
+    }
+    if (!/^(0|[1-9]\d*)$/.test(row)) {
+      return undefined
+    }
+
+    const position = to === 'id' ? Number(row) : list.items.indexOf(Number(row))
+    const id = list.items[position]
+    if (id === undefined) {
+      return undefined
+    }
+
+    key = `${key}.${id}`
+    translated = `${translated}.${to === 'id' ? id : position}`
+    index++
+  }
+  return translated
+}

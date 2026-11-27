@@ -1,10 +1,19 @@
 import { describe, expect, test } from 'vitest'
 import {
   buildToolSchema,
+  joinSentences,
   type ToolSchema,
   type ToolSchemaOptions,
 } from '@/packages/luna-core/src/util/tool-schema'
-import type { Fields, Sections } from '@/packages/luna-core/src/type'
+import type {
+  Field,
+  Fields,
+  Operator,
+  PatternRule,
+  Sections,
+  StateEvent,
+  WhenRule,
+} from '@/packages/luna-core/src/type'
 
 function build(fields: Fields, options?: ToolSchemaOptions) {
   return buildToolSchema([{ fields }], options)
@@ -58,6 +67,138 @@ function reveal(target: string, state: { disabled?: false; hidden?: false }) {
 }
 
 describe('buildToolSchema', () => {
+  // A section's legend names a field the form draws without a label, when it
+  // is the one field the section holds. Of several, it names none.
+  describe('section text', () => {
+    const ending: Field = {
+      name: 'ending',
+      source: [
+        { label: 'A message', value: 'message' },
+        { label: 'A redirect', value: 'redirect' },
+      ],
+      type: 'radio',
+    }
+
+    const sectionOf = (fields: Fields) =>
+      buildToolSchema([
+        {
+          description: 'What the person sees after sending.',
+          fields,
+          title: 'When they finish',
+        },
+      ]).schema.properties
+
+    test("should name the one unlabelled field of a section by the section's text", () => {
+      expect(sectionOf([ending])?.ending).toEqual({
+        description:
+          'What the person sees after sending. Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        title: 'When they finish',
+        type: 'string',
+      })
+    })
+
+    test('should keep the description of its own and take the title only', () => {
+      expect(
+        sectionOf([{ ...ending, description: 'Pick one.' }])?.ending
+          ?.description
+      ).toBe('Pick one. Options: message (A message), redirect (A redirect).')
+      expect(
+        sectionOf([{ ...ending, description: 'Pick one.' }])?.ending?.title
+      ).toBe('When they finish')
+    })
+
+    test('should keep the label of its own', () => {
+      expect(sectionOf([{ ...ending, label: 'Ending' }])?.ending).toEqual({
+        description: 'Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        title: 'Ending',
+        type: 'string',
+      })
+    })
+
+    test('should name none of several unlabelled fields of a section', () => {
+      const properties = sectionOf([
+        ending,
+        { name: 'note', type: 'input/text' },
+      ])
+      expect(properties?.ending).toEqual({
+        description: 'Options: message (A message), redirect (A redirect).',
+        enum: ['message', 'redirect'],
+        type: 'string',
+      })
+      expect(properties?.note).toEqual({ type: 'string' })
+    })
+
+    // The section names whatever it holds, a field the agent may not write
+    // too: a password beside it.
+    test('should count a field kept from agents among those of the section', () => {
+      expect(
+        sectionOf([
+          { name: 'note', type: 'input/text' },
+          { name: 'secret', type: 'input/password' },
+        ])?.note
+      ).toEqual({ type: 'string' })
+    })
+
+    test('should read the fields of a column as fields of the section', () => {
+      expect(
+        sectionOf([
+          { fields: [{ name: 'note', type: 'input/text' }], type: 'column' },
+        ])?.note?.title
+      ).toBe('When they finish')
+    })
+
+    test('should name a list alone in its section', () => {
+      expect(
+        sectionOf([
+          {
+            fields: [{ label: 'Item', name: 'item', type: 'input/text' }],
+            name: 'items',
+            type: 'list',
+          },
+        ])?.items?.title
+      ).toBe('When they finish')
+    })
+
+    test('should leave out a section title that interpolates a value', () => {
+      expect(
+        buildToolSchema([
+          {
+            fields: [{ name: 'note', type: 'input/text' }],
+            title: 'For {context.name}',
+          },
+        ]).schema.properties?.note
+      ).toEqual({ type: 'string' })
+    })
+
+    test("should translate the section's text", () => {
+      const properties = buildToolSchema(
+        [
+          {
+            description: 'finish_help',
+            fields: [{ name: 'note', type: 'input/text' }],
+            title: 'finish_title',
+          },
+        ],
+        {
+          localization: {
+            lang: 'es',
+            translations: {
+              finish_help: 'Lo que ve al enviar.',
+              finish_title: 'Al terminar',
+            },
+          },
+        }
+      ).schema.properties
+      expect(properties?.note).toEqual({
+        description: 'Lo que ve al enviar.',
+        title: 'Al terminar',
+        type: 'string',
+      })
+    })
+  })
+
   describe('text', () => {
     test('should describe a text field as a string with its label as title', () => {
       expect(
@@ -110,7 +251,183 @@ describe('buildToolSchema', () => {
         'code'
       )
       expect(code?.pattern).toBeUndefined()
-      expect(code?.description).toContain('pattern')
+      expect(code?.description).toBe('It must match /^[a-z]{3}$/i.')
+    })
+
+    // A pattern left to the note still has to say what it expects: an
+    // address checked case-insensitively on an `input/text`, with no
+    // `format: email`, is only known by its rule.
+    describe('a pattern only mentioned', () => {
+      const email = '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$'
+      const describeContact = (
+        pattern: PatternRule,
+        translations?: Record<string, string>
+      ) =>
+        propertyOf(
+          [{ name: 'contact', type: 'input/text', validation: { pattern } }],
+          'contact',
+          { localization: { translations } }
+        )?.description
+
+      test('should quote it with its flags and its message', () => {
+        expect(
+          describeContact({
+            flags: 'i',
+            message: 'Enter an email address, such as ana@example.com',
+            regex: email,
+          })
+        ).toBe(
+          `It must match /${email}/i. Enter an email address, such as ana@example.com`
+        )
+      })
+
+      test('should quote it alone when it has no message', () => {
+        expect(describeContact({ flags: 'i', regex: email })).toBe(
+          `It must match /${email}/i.`
+        )
+      })
+
+      // A part of a pattern would expect something else: one too long to
+      // quote is named, and its message still says what it wants.
+      test('should name one too long to quote, and keep its message', () => {
+        const regex = `^${'[a-z]'.repeat(20)}$`
+        expect(describeContact({ flags: 'i', regex })).toBe(
+          'It must match a pattern the form checks.'
+        )
+        expect(
+          describeContact({ flags: 'i', message: 'Twenty letters.', regex })
+        ).toBe('It must match a pattern the form checks. Twenty letters.')
+      })
+
+      test('should translate its message', () => {
+        expect(
+          describeContact(
+            { flags: 'i', message: 'invalid_code', regex: '^[a-z]{3}$' },
+            { invalid_code: 'Three letters.' }
+          )
+        ).toBe('It must match /^[a-z]{3}$/i. Three letters.')
+      })
+
+      // The agent would read the placeholder. The pattern is quoted all the
+      // same: its quantifier `{3}` is no placeholder.
+      test('should leave out a message that interpolates a value', () => {
+        expect(
+          describeContact({
+            flags: 'i',
+            message: 'Not like {contact}',
+            regex: '^[a-z]{3}$',
+          })
+        ).toBe('It must match /^[a-z]{3}$/i.')
+      })
+
+      test('should quote one that lets a template through', () => {
+        expect(
+          describeContact({ allowInterpolation: true, regex: '^https?://' })
+        ).toBe('It must match /^https?:\\/\\//.')
+      })
+
+      // Quoted as a literal writes it: a bare `/` would end the literal early.
+      test('should escape a slash once, and leave an escaped one alone', () => {
+        expect(describeContact({ flags: 'i', regex: '^a\\/b/c$' })).toBe(
+          'It must match /^a\\/b\\/c$/i.'
+        )
+        expect(describeContact({ flags: 'i', regex: '^a\\\\/$' })).toBe(
+          'It must match /^a\\\\\\/$/i.'
+        )
+      })
+
+      // The length is the literal's as the agent reads it, escapes included.
+      test('should count the escapes in the length it quotes', () => {
+        const regex = `${'a'.repeat(96)}/`
+        expect(describeContact({ flags: 'i', regex })).toBe(
+          'It must match a pattern the form checks.'
+        )
+      })
+    })
+
+    // The keyword holds the pattern, and its message what it is for.
+    test('should say the message of a pattern the keyword carries', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'code',
+              type: 'input/text',
+              validation: {
+                pattern: { message: 'Three capitals.', regex: '^[A-Z]{3}$' },
+              },
+            },
+          ],
+          'code'
+        )
+      ).toEqual({
+        description: 'Three capitals.',
+        pattern: '^[A-Z]{3}$',
+        type: 'string',
+      })
+    })
+
+    // The submit checks a pattern against the text of any field: a number
+    // as typed, a day as picked, the value of a type the host declares. Only
+    // a field typed as text takes it as a keyword.
+    test('should quote the pattern of a field not typed as text', () => {
+      const pattern: PatternRule = {
+        message: 'Four digits.',
+        regex: '^\\d{4}$',
+      }
+      const result = build(
+        [
+          { name: 'pin', type: 'input/number', validation: { pattern } },
+          { name: 'zone', type: 'select/timezone', validation: { pattern } },
+          { name: 'phone', type: 'phone', validation: { pattern } },
+        ],
+        { types: { phone: { type: 'string' } } }
+      )
+      const note = 'It must match /^\\d{4}$/. Four digits.'
+
+      expect(result.schema.properties?.pin).toEqual({
+        description: note,
+        type: 'integer',
+      })
+      expect(result.schema.properties?.zone?.description).toContain(note)
+      expect(result.schema.properties?.zone?.pattern).toBeUndefined()
+      expect(result.schema.properties?.phone).toEqual({
+        description: note,
+        type: 'string',
+      })
+    })
+
+    // A pattern checks text only: a box, a list of chips, the two days of a
+    // range or an object never break it.
+    test('should not speak of a pattern a value of its type never meets', () => {
+      const pattern: PatternRule = { regex: '^\\d{4}$' }
+      const point: ToolSchema = {
+        properties: { x: { type: 'number' } },
+        type: 'object',
+      }
+      const result = build(
+        [
+          { name: 'terms', type: 'input/checkbox', validation: { pattern } },
+          {
+            name: 'tags',
+            source: [{ label: 'A', value: 'a' }],
+            type: 'chips',
+            validation: { pattern },
+          },
+          {
+            advanced: { mode: 'range' },
+            name: 'stay',
+            type: 'input/date',
+            validation: { pattern },
+          },
+          { name: 'spot', type: 'point', validation: { pattern } },
+        ],
+        { types: { point } }
+      )
+
+      for (const property of Object.values(result.schema.properties ?? {})) {
+        expect(property.description ?? '').not.toContain('It must match')
+      }
     })
 
     // JSON Schema reads a pattern in Unicode mode, where an escape such as
@@ -307,6 +624,30 @@ describe('buildToolSchema', () => {
       expect(result.schema.properties?.many?.type).toBe('string')
       expect(result.schema.properties?.many?.enum).toBeUndefined()
       expect(result.lookup).toEqual(['many'])
+    })
+
+    // The schema of a field looked up holds no `enum`: nothing else tells an
+    // agent that the label it found is enough, and not only the value.
+    test('should say that an option looked up is taken by its value or its label', () => {
+      const lookedUp =
+        'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.'
+      const many = Array.from({ length: 26 }, (_, index) => ({
+        label: `Option ${index}`,
+        value: `${index}`,
+      }))
+      const { properties } = build([
+        { name: 'many', source: many, type: 'select' },
+        {
+          name: 'city',
+          source: { url: 'https://example.com/cities' },
+          type: 'select',
+        },
+        { name: 'tags', source: many, type: 'chips' },
+      ]).schema
+
+      expect(properties?.many?.description).toBe(lookedUp)
+      expect(properties?.city?.description).toBe(lookedUp)
+      expect(properties?.tags?.description).toBe(`${lookedUp} No option twice.`)
     })
 
     test('should look up options that are fetched or that an event installs', () => {
@@ -596,6 +937,131 @@ describe('buildToolSchema', () => {
       ).toEqual(['kept'])
     })
 
+    // As a password: in every form, at the top level and in the rows of a
+    // list, and the definition has no way to open it again.
+    test('should leave out a field of a type its registration keeps from agents', () => {
+      const result = build(
+        [
+          { name: 'token', type: 'secret' },
+          {
+            fields: [
+              { name: 'key', type: 'secret' },
+              { name: 'label', type: 'input/text' },
+            ],
+            name: 'keys',
+            type: 'list',
+          },
+          { name: 'kept', type: 'input/text' },
+        ],
+        { types: { secret: false } }
+      )
+
+      expect(Object.keys(result.schema.properties ?? {})).toEqual([
+        'keys',
+        'kept',
+      ])
+      expect(
+        Object.keys(result.schema.properties?.keys?.items?.properties ?? {})
+      ).toEqual(['label'])
+    })
+
+    // `true` is what a form imported from JSON can say alongside `false`, and
+    // it is the same as saying nothing: it opens nothing kept from agents.
+    test('should read advanced.agent true as if it were left out', () => {
+      const fields = (agent?: true): Fields => [
+        { advanced: { agent }, name: 'password', type: 'input/password' },
+        { advanced: { agent }, name: 'token', type: 'secret' },
+        {
+          advanced: { agent },
+          fields: [
+            { advanced: { agent }, name: 'key', type: 'secret' },
+            { advanced: { agent }, name: 'pin', type: 'input/password' },
+            { advanced: { agent }, name: 'label', type: 'input/text' },
+          ],
+          name: 'keys',
+          type: 'list',
+        },
+        { advanced: { agent }, name: 'kept', type: 'input/text' },
+      ]
+      const options = { types: { secret: false } } as const
+
+      const result = build(fields(true), options)
+      expect(result).toEqual(build(fields(), options))
+      expect(Object.keys(result.schema.properties ?? {})).toEqual([
+        'keys',
+        'kept',
+      ])
+      expect(
+        Object.keys(result.schema.properties?.keys?.items?.properties ?? {})
+      ).toEqual(['label'])
+    })
+
+    test('should still leave out what says advanced.agent false beside true', () => {
+      expect(
+        namesOf([
+          { advanced: { agent: true }, name: 'kept', type: 'input/text' },
+          { advanced: { agent: false }, name: 'document', type: 'input/text' },
+          {
+            advanced: { agent: false },
+            fields: [
+              { advanced: { agent: true }, name: 'leaf', type: 'input/text' },
+            ],
+            name: 'rows',
+            type: 'list',
+          },
+        ])
+      ).toEqual(['kept'])
+    })
+
+    // Written as an object, `agent` says the same with `exclude`: `true` as
+    // `false` does, and `false` or nothing as leaving the key out.
+    test('should read advanced.agent exclude as advanced.agent false', () => {
+      const fields = (
+        agent: boolean | { description?: string; exclude?: boolean }
+      ): Fields => [
+        { advanced: { agent }, name: 'document', type: 'input/text' },
+        {
+          advanced: { agent },
+          fields: [{ name: 'leaf', type: 'input/text' }],
+          name: 'rows',
+          type: 'list',
+        },
+        { name: 'kept', type: 'input/text' },
+      ]
+
+      expect(build(fields({ exclude: true }))).toEqual(build(fields(false)))
+      expect(namesOf(fields({ exclude: true }))).toEqual(['kept'])
+      expect(build(fields({ exclude: false }))).toEqual(build(fields(true)))
+      expect(build(fields({}))).toEqual(build(fields(true)))
+
+      // Nor does it open what is kept from agents.
+      expect(
+        namesOf([
+          {
+            advanced: { agent: { exclude: false } },
+            name: 'pin',
+            type: 'input/password',
+          },
+        ])
+      ).toEqual([])
+    })
+
+    test('should leave out a field that only a field of a type kept from agents shows', () => {
+      const schema = build(
+        [
+          {
+            event: reveal('detail', { hidden: false }),
+            name: 'token',
+            type: 'secret',
+          },
+          { hidden: true, name: 'detail', type: 'input/text' },
+        ],
+        { types: { secret: false } }
+      ).schema
+      expect(schema.properties).toEqual({})
+      expect(JSON.stringify(schema)).not.toContain('token')
+    })
+
     test('should keep a hidden field that an event shows, and say so', () => {
       const result = build([
         {
@@ -613,7 +1079,7 @@ describe('buildToolSchema', () => {
       ])
 
       expect(result.schema.properties?.frequency?.description).toBe(
-        'Options: weekly (Weekly). Hidden until a change to newsletter makes it available: send it in the same call. Required once it is available.'
+        'Options: weekly (Weekly). Shown for some values of newsletter: send it in the same call. Required while it is available.'
       )
       expect(result.required).toEqual([])
     })
@@ -638,7 +1104,7 @@ describe('buildToolSchema', () => {
       ])
 
       expect(result.schema.properties?.cardNumber?.description).toBe(
-        'Hidden and locked until a change to paymentMethod makes it available: send it in the same call. Required once it is available.'
+        'Shown and unlocked for some values of paymentMethod: send it in the same call. Required while it is available.'
       )
       expect(result.required).toEqual([])
     })
@@ -663,6 +1129,405 @@ describe('buildToolSchema', () => {
           'items'
         )?.items?.properties?.note
       ).toBeDefined()
+    })
+
+    // The event fires in every row, and reaches the row it fired in: the note
+    // names no row by its number.
+    describe('a field a change in a row makes available', () => {
+      const rowOf = (fields: Fields) =>
+        propertyOf(fields, 'outer')?.items?.properties
+
+      // Every note a row holds, nested or not: a state event, a requiredWhen,
+      // an assertion's when and a custom rule.
+      test('should name no row by its number in any note', () => {
+        const fields: Fields = [
+          {
+            fields: [
+              {
+                event: reveal('outer/note', { hidden: false }),
+                name: 'flag',
+                type: 'checkbox',
+              },
+              {
+                hidden: true,
+                name: 'note',
+                required: true,
+                type: 'input/text',
+              },
+              {
+                name: 'name',
+                type: 'input/text',
+                validation: {
+                  custom: { field: 'flag', operator: 'neq' },
+                  requiredWhen: { field: 'flag', operator: 'truthy' },
+                  rules: [
+                    {
+                      assert: 'min',
+                      message: 'Too short.',
+                      value: 2,
+                      when: { field: 'flag', operator: 'truthy' },
+                    },
+                  ],
+                },
+              },
+              {
+                fields: [
+                  {
+                    event: reveal('inner/x', { hidden: false }),
+                    name: 'on',
+                    type: 'checkbox',
+                  },
+                  {
+                    hidden: true,
+                    name: 'x',
+                    type: 'input/text',
+                    validation: {
+                      requiredWhen: { field: 'on', operator: 'truthy' },
+                    },
+                  },
+                ],
+                name: 'inner',
+                type: 'list',
+              },
+            ],
+            name: 'outer',
+            type: 'list',
+          },
+        ]
+        const descriptions = JSON.stringify(build(fields).schema).match(
+          /"description":"(?:[^"\\]|\\.)*"/g
+        )
+        expect(descriptions?.length).toBe(5)
+        for (const description of descriptions ?? []) {
+          expect(description).not.toMatch(/\.0\./)
+        }
+      })
+
+      test('should name a field of its own row as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  event: reveal('outer/note', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+                { hidden: true, name: 'note', type: 'input/text' },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.note?.description
+        ).toBe(
+          "Shown for some values of this row's flag: send it in the same call."
+        )
+      })
+
+      test('should name a field of its own row in a nested list as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  fields: [
+                    {
+                      event: reveal('inner/note', { disabled: false }),
+                      name: 'flag',
+                      type: 'checkbox',
+                    },
+                    { disabled: true, name: 'note', type: 'input/text' },
+                  ],
+                  name: 'inner',
+                  type: 'list',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.inner?.items?.properties?.note?.description
+        ).toBe(
+          "Unlocked for some values of this row's flag: send it in the same call."
+        )
+      })
+
+      test('should name a field of its own row that shows a nested list as this row', () => {
+        expect(
+          rowOf([
+            {
+              fields: [
+                {
+                  event: reveal('outer/inner', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+                {
+                  fields: [{ name: 'item', type: 'input/text' }],
+                  hidden: true,
+                  name: 'inner',
+                  type: 'list',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+          ])?.inner?.description
+        ).toContain("Shown for some values of this row's flag")
+      })
+
+      test('should name a field of a nested row by any of its rows', () => {
+        const note = rowOf([
+          {
+            fields: [
+              {
+                fields: [
+                  {
+                    event: reveal('outer/note', { hidden: false }),
+                    name: 'flag',
+                    type: 'checkbox',
+                  },
+                ],
+                name: 'inner',
+                type: 'list',
+              },
+              { hidden: true, name: 'note', type: 'input/text' },
+            ],
+            name: 'outer',
+            type: 'list',
+          },
+        ])?.note?.description
+        expect(note).toBe(
+          "Shown for some values of this row's inner.<row>.flag: send it in the same call."
+        )
+      })
+
+      test('should name a field of a row by any of its rows from outside the list', () => {
+        const note = propertyOf(
+          [
+            {
+              fields: [
+                {
+                  event: reveal('summary', { hidden: false }),
+                  name: 'flag',
+                  type: 'checkbox',
+                },
+              ],
+              name: 'outer',
+              type: 'list',
+            },
+            { hidden: true, name: 'summary', type: 'input/text' },
+          ],
+          'summary'
+        )?.description
+        expect(note).toBe(
+          'Shown for some values of outer.<row>.flag: send it in the same call.'
+        )
+      })
+    })
+
+    // A `when` the event compares the new value with: the note says which
+    // value makes the slot available, so the agent does not try each one.
+    describe('a field an event makes available for some values', () => {
+      const shownBy = (when: StateEvent['when'], type = 'select') =>
+        propertyOf(
+          [
+            {
+              event: {
+                change: [
+                  {
+                    action: 'state',
+                    state: { hidden: false },
+                    target: 'detail',
+                    when,
+                  },
+                ],
+              },
+              name: 'kind',
+              source: [
+                { label: 'List', value: 'list' },
+                { label: 'Group', value: 'group' },
+              ],
+              type,
+            },
+            { hidden: true, name: 'detail', type: 'input/text' },
+          ],
+          'detail'
+        )?.description
+
+      test('should cite the value a string matches', () => {
+        expect(shownBy('list')).toBe(
+          'Shown while kind equals "list": send it in the same call.'
+        )
+      })
+
+      test('should cite the values an array matches', () => {
+        expect(shownBy(['list', 'group'])).toBe(
+          'Shown while kind is one of ["list","group"]: send it in the same call.'
+        )
+      })
+
+      test('should cite a condition in words', () => {
+        expect(shownBy({ operator: 'gt', value: 100 })).toBe(
+          'Shown while kind is greater than 100: send it in the same call.'
+        )
+        expect(shownBy({ value: 'list' })).toBe(
+          'Shown while kind equals "list": send it in the same call.'
+        )
+      })
+
+      // `field` reads a key of the chosen option, which the agent does not
+      // write; a chips field is matched by its selections, not by its value.
+      test('should keep the change when the values cannot be cited', () => {
+        const generic =
+          'Shown for some values of kind: send it in the same call.'
+        expect(shownBy({ field: 'dial', value: '+56' })).toBe(generic)
+        expect(shownBy('list', 'chips')).toBe(generic)
+        expect(
+          shownBy({ operator: 'between' as Operator, value: 'list' })
+        ).toBe(generic)
+      })
+
+      test("should cite the value of this row's field in a row", () => {
+        expect(
+          propertyOf(
+            [
+              {
+                fields: [
+                  {
+                    event: {
+                      change: [
+                        {
+                          action: 'state',
+                          state: { hidden: false },
+                          target: 'field/data_type',
+                          when: 'list',
+                        },
+                      ],
+                    },
+                    name: 'type',
+                    source: [{ label: 'List', value: 'list' }],
+                    type: 'select',
+                  },
+                  { hidden: true, name: 'data_type', type: 'input/text' },
+                ],
+                name: 'field',
+                type: 'list',
+              },
+            ],
+            'field'
+          )?.items?.properties?.data_type?.description
+        ).toBe(
+          'Shown while this row\'s type equals "list": send it in the same call.'
+        )
+      })
+
+      test('should cite every event that shows it', () => {
+        const fields = (second: StateEvent['when']): Fields => [
+          {
+            event: {
+              change: [
+                {
+                  action: 'state',
+                  state: { hidden: false },
+                  target: 'detail',
+                  when: 'list',
+                },
+              ],
+            },
+            name: 'kind',
+            type: 'input/text',
+          },
+          {
+            event: {
+              change: [
+                {
+                  action: 'state',
+                  state: { hidden: false },
+                  target: 'detail',
+                  when: second,
+                },
+              ],
+            },
+            name: 'mode',
+            type: 'input/text',
+          },
+          { hidden: true, name: 'detail', type: 'input/text' },
+        ]
+
+        expect(propertyOf(fields('full'), 'detail')?.description).toBe(
+          'Shown while kind equals "list" or mode equals "full": send it in the same call.'
+        )
+        expect(propertyOf(fields(undefined), 'detail')?.description).toBe(
+          'Shown for some values of kind or mode: send it in the same call.'
+        )
+      })
+
+      test('should say what shows it and what unlocks it apart', () => {
+        expect(
+          propertyOf(
+            [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { hidden: false },
+                      target: 'detail',
+                      when: 'list',
+                    },
+                    {
+                      action: 'state',
+                      state: { disabled: false },
+                      target: 'detail',
+                      when: 'group',
+                    },
+                  ],
+                },
+                name: 'kind',
+                type: 'input/text',
+              },
+              {
+                disabled: true,
+                hidden: true,
+                name: 'detail',
+                type: 'input/text',
+              },
+            ],
+            'detail'
+          )?.description
+        ).toBe(
+          'Shown while kind equals "list" and unlocked while kind equals "group": send it in the same call.'
+        )
+        expect(
+          propertyOf(
+            [
+              {
+                event: {
+                  change: [
+                    {
+                      action: 'state',
+                      state: { disabled: false, hidden: false },
+                      target: 'detail',
+                      when: 'list',
+                    },
+                  ],
+                },
+                name: 'kind',
+                type: 'input/text',
+              },
+              {
+                disabled: true,
+                hidden: true,
+                name: 'detail',
+                type: 'input/text',
+              },
+            ],
+            'detail'
+          )?.description
+        ).toBe(
+          'Shown and unlocked while kind equals "list": send it in the same call.'
+        )
+      })
     })
 
     // From outside the row, the form resolves `items/discount` to the
@@ -740,7 +1605,105 @@ describe('buildToolSchema', () => {
           ],
           'vat'
         )?.description
-      ).toBe('Required when kind eq "company".')
+      ).toBe('Required when kind equals "company".')
+    })
+
+    // Typed by every operator, so a new one cannot ship without its words.
+    const phrases: Record<Operator, [WhenRule['value'], string]> = {
+      contains: ['co', 'kind contains "co"'],
+      empty: [undefined, 'kind has no value'],
+      eq: ['co', 'kind equals "co"'],
+      exists: [undefined, 'kind has a value'],
+      gt: [3, 'kind is greater than 3'],
+      gte: [3, 'kind is at least 3'],
+      in: [['a', 'b'], 'kind is one of ["a","b"]'],
+      lt: [3, 'kind is less than 3'],
+      lte: [3, 'kind is at most 3'],
+      neq: ['co', 'kind does not equal "co"'],
+      nin: [['a', 'b'], 'kind is not one of ["a","b"]'],
+      truthy: [undefined, 'kind has a value other than false or 0'],
+    }
+    for (const [operator, [value, words]] of Object.entries(phrases)) {
+      test(`should write the ${operator} operator in words`, () => {
+        expect(
+          propertyOf(
+            [
+              {
+                name: 'vat',
+                type: 'input/text',
+                validation: {
+                  requiredWhen: {
+                    field: 'kind',
+                    operator: operator as Operator,
+                    value,
+                  },
+                },
+              },
+            ],
+            'vat'
+          )?.description
+        ).toBe(`Required when ${words}.`)
+      })
+    }
+
+    test('should not write the value an operator ignores', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: {
+                requiredWhen: { field: 'kind', operator: 'exists', value: 'x' },
+              },
+            },
+          ],
+          'vat'
+        )?.description
+      ).toBe('Required when kind has a value.')
+    })
+
+    test('should equal by default', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: { requiredWhen: { field: 'kind', value: 'co' } },
+            },
+          ],
+          'vat'
+        )?.description
+      ).toBe('Required when kind equals "co".')
+    })
+
+    test('should not describe a rule whose operator the form cannot read', () => {
+      const fields = JSON.parse(
+        JSON.stringify([
+          {
+            name: 'vat',
+            type: 'input/text',
+            validation: {
+              requiredWhen: [
+                { field: 'kind', operator: 'like', value: 'co' },
+                { field: 'size', operator: 'gt', value: 3 },
+              ],
+            },
+          },
+          {
+            name: 'tax',
+            type: 'input/text',
+            validation: {
+              requiredWhen: { field: 'kind', operator: 'like', value: 'co' },
+            },
+          },
+        ])
+      ) as Fields
+      expect(propertyOf(fields, 'vat')?.description).toBe(
+        'Required when size is greater than 3.'
+      )
+      expect(propertyOf(fields, 'tax')).toEqual({ type: 'string' })
     })
 
     test('should say a rule in a row reads its own row', () => {
@@ -766,7 +1729,241 @@ describe('buildToolSchema', () => {
       ])
       expect(
         result.schema.properties?.items?.items?.properties?.value?.description
-      ).toContain('Required when this row\'s mode eq "strict".')
+      ).toContain('Required when this row\'s mode equals "strict".')
+    })
+
+    // Each rule of `rules` and `custom` is said with its message, so the agent
+    // writes a value that passes it instead of learning it from an error.
+    describe('the rules no keyword says', () => {
+      const describeRules = (field: Field) =>
+        propertyOf([field], field.name)?.description
+
+      test('should say each assertion and its message', () => {
+        expect(
+          describeRules({
+            name: 'code',
+            type: 'input/text',
+            validation: {
+              rules: [
+                { assert: 'required', message: 'Name the key' },
+                { assert: 'min', message: 'Too short.', value: 3 },
+                { assert: 'max', message: 'Too long.', value: 20 },
+                {
+                  assert: 'oneOf',
+                  message: 'Choose a valid operator.',
+                  value: ['eq', 'neq'],
+                },
+                {
+                  assert: 'pattern',
+                  message: 'Lowercase letters only.',
+                  value: { flags: 'i', regex: '^[a-z_]+$' },
+                },
+              ],
+            },
+          })
+        ).toBe(
+          'Required. Name the key. At least 3 characters. Too short. At most 20 characters. Too long. One of ["eq","neq"]. Choose a valid operator. It must match /^[a-z_]+$/i. Lowercase letters only.'
+        )
+      })
+
+      test('should measure a bound by what the field holds', () => {
+        expect(
+          describeRules({
+            name: 'port',
+            type: 'input/number',
+            validation: {
+              rules: [{ assert: 'min', message: 'Too low.', value: 1024 }],
+            },
+          })
+        ).toBe('At least 1024. Too low.')
+        expect(
+          describeRules({
+            name: 'tags',
+            source: [
+              { label: 'A', value: 'a' },
+              { label: 'B', value: 'b' },
+            ],
+            type: 'chips',
+            validation: {
+              rules: [
+                { assert: 'minItems', message: 'Pick two.', value: 2 },
+                { assert: 'max', message: 'Pick fewer.', value: 3 },
+              ],
+            },
+          })
+        ).toBe(
+          'Options: a (A), b (B). No option twice. At least 2 items. Pick two. At most 3 items. Pick fewer.'
+        )
+      })
+
+      test('should say when an assertion applies', () => {
+        expect(
+          describeRules({
+            name: 'port',
+            type: 'input/number',
+            validation: {
+              rules: [
+                {
+                  assert: 'required',
+                  message: 'Port is required for custom connections.',
+                  when: { field: 'kind', value: 'custom' },
+                },
+                {
+                  assert: 'max',
+                  message: 'Too high.',
+                  value: 9,
+                  when: [
+                    { field: 'kind', value: 'a' },
+                    { field: 'size', operator: 'gt', value: 2 },
+                  ],
+                },
+                {
+                  assert: 'min',
+                  message: 'Too low.',
+                  value: 1,
+                  when: {
+                    all: [{ field: 'kind', value: 'a' }],
+                    any: [
+                      { field: 'size', operator: 'exists' },
+                      { field: 'mode', value: 'b' },
+                    ],
+                  },
+                },
+              ],
+            },
+          })
+        ).toBe(
+          'Required when kind equals "custom". Port is required for custom connections. At most 9 when kind equals "a" and size is greater than 2. Too high. At least 1 when kind equals "a" and (size has a value or mode equals "b"). Too low.'
+        )
+      })
+
+      test('should compare with the field a custom rule names', () => {
+        expect(
+          describeRules({
+            name: 'confirm',
+            type: 'input/text',
+            validation: {
+              custom: [
+                { field: 'password', message: 'Passwords must match.' },
+                { field: 'start', operator: 'gte' },
+                { field: 'other', operator: 'exists' },
+              ],
+            },
+          })
+        ).toBe(
+          'The form checks that it equals the value of password. Passwords must match. The form checks that it is at least the value of start. The form checks that it has a value.'
+        )
+      })
+
+      test("should read a row's fields as this row's", () => {
+        const items = build([
+          {
+            fields: [
+              {
+                name: 'name',
+                required: true,
+                type: 'input/text',
+                validation: {
+                  custom: { field: 'label', operator: 'neq' },
+                  rules: [
+                    {
+                      assert: 'pattern',
+                      message: 'A technical key.',
+                      value: { regex: '^[a-z_]+$' },
+                      when: { field: 'kind', value: 'key' },
+                    },
+                  ],
+                },
+              },
+            ],
+            name: 'items',
+            type: 'list',
+          },
+        ]).schema.properties?.items
+        expect(items?.items?.properties?.name?.description).toBe(
+          'The form checks that it does not equal the value of this row\'s label. It must match /^[a-z_]+$/ when this row\'s kind equals "key". A technical key.'
+        )
+      })
+
+      // A rule that never fails is none; one that fails every value is, and
+      // is named by its message when what it checks cannot be said.
+      test('should say no rule that never fails, and name one it cannot say', () => {
+        const fields = JSON.parse(
+          JSON.stringify([
+            {
+              name: 'code',
+              type: 'input/text',
+              validation: {
+                custom: { field: 'other', operator: 'like' },
+                rules: [
+                  { assert: 'unknown', message: 'Never.' },
+                  { assert: 'pattern', message: 'No pattern.', value: 3 },
+                  {
+                    assert: 'required',
+                    message: 'Never applies.',
+                    when: { field: 'kind', operator: 'like', value: 'a' },
+                  },
+                  {
+                    assert: 'required',
+                    message: 'Never applies either.',
+                    when: { any: [] },
+                  },
+                ],
+              },
+            },
+            {
+              name: 'vat',
+              type: 'input/text',
+              validation: {
+                rules: [
+                  { assert: 'minItems', message: 'Too few.', value: 2 },
+                  { assert: 'min', message: 'No bound.', value: 'x' },
+                  { assert: 'oneOf', message: 'No list.', value: 'a' },
+                ],
+              },
+            },
+          ])
+        ) as Fields
+        expect(propertyOf(fields, 'code')).toEqual({ type: 'string' })
+        expect(propertyOf(fields, 'vat')?.description).toBe(
+          'The form checks more rules for it. Too few. No bound. No list.'
+        )
+      })
+
+      test('should leave out a message that interpolates a value', () => {
+        expect(
+          describeRules({
+            name: 'code',
+            type: 'input/text',
+            validation: {
+              rules: [{ assert: 'min', message: 'At least {min}.', value: 3 }],
+            },
+          })
+        ).toBe('At least 3 characters.')
+      })
+
+      test('should translate the messages', () => {
+        expect(
+          propertyOf(
+            [
+              {
+                name: 'code',
+                type: 'input/text',
+                validation: {
+                  rules: [{ assert: 'required', message: 'code_required' }],
+                },
+              },
+            ],
+            'code',
+            {
+              localization: {
+                lang: 'es',
+                translations: { code_required: 'Escribe la clave.' },
+              },
+            }
+          )?.description
+        ).toBe('Required. Escribe la clave.')
+      })
     })
 
     test('should hold no rule only a submit checks when it checks none', () => {
@@ -795,7 +1992,7 @@ describe('buildToolSchema', () => {
 
       const checked = build(fields).schema.properties
       expect(checked?.vat?.description).toBe(
-        'It must match a pattern the submit checks. Required when kind eq "company". The submit checks more rules for it.'
+        'It must match /^[a-z]{3}$/i. Required when kind equals "company". The form checks more rules for it. Too few.'
       )
       expect(checked?.sku).toEqual({ pattern: '^[A-Z]{3}$', type: 'string' })
 
@@ -805,7 +2002,7 @@ describe('buildToolSchema', () => {
       expect(unchecked?.sku).toEqual({ type: 'string' })
       expect(unchecked?.code?.description).toBe('Required to be true.')
       expect(unchecked?.confirm?.description).toBe(
-        'More rules are checked as it is written.'
+        'The form checks that it equals the value of vat.'
       )
     })
   })
@@ -840,6 +2037,84 @@ describe('buildToolSchema', () => {
         title: 'País',
         type: 'string',
       })
+    })
+
+    // A dictionary key cannot always end in a period, so the author's text
+    // may stop without one: the notes start a sentence of their own.
+    test("should close the author's description before the notes", () => {
+      const describe = (description: string) =>
+        propertyOf(
+          [
+            {
+              description,
+              name: 'code',
+              type: 'input/text',
+              validation: { pattern: { flags: 'i', regex: '^[a-z]{3}$' } },
+            },
+          ],
+          'code'
+        )?.description
+
+      const note = 'It must match /^[a-z]{3}$/i.'
+      expect(describe('Already approved in your account')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Already approved in your account.')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Already approved in your account  ')).toBe(
+        `Already approved in your account. ${note}`
+      )
+      expect(describe('Which one?')).toBe(`Which one? ${note}`)
+      expect(describe('   ')).toBe(note)
+
+      const rating: ToolSchema = {
+        description: 'From one to five',
+        type: 'integer',
+      }
+      expect(
+        propertyOf(
+          [{ description: 'How you rate it', name: 'stars', type: 'rating' }],
+          'stars',
+          { types: { rating } }
+        )?.description
+      ).toBe('How you rate it. From one to five')
+
+      // A list's description too, before the note on its rows.
+      expect(
+        propertyOf(
+          [
+            {
+              description: 'The data group',
+              fields: [{ name: 'sku', type: 'input/text' }],
+              name: 'items',
+              type: 'list',
+            },
+          ],
+          'items'
+        )?.description
+      ).toMatch(/^The data group\. Sending the list replaces its rows\./)
+
+      // Written as a message, and on a list inside a row.
+      const inner = build([
+        {
+          fields: [
+            {
+              description: {
+                message: 'Define the fields you expect inside it',
+              },
+              fields: [{ name: 'name', type: 'input/text' }],
+              name: 'fields',
+              type: 'list',
+            },
+          ],
+          name: 'groups',
+          type: 'list',
+        },
+      ]).schema.properties?.groups?.items?.properties?.fields
+      expect(inner?.description).toMatch(
+        /^Define the fields you expect inside it\. Sending the list replaces its rows\./
+      )
     })
 
     // What the host puts in through `#/context/` can hold text people wrote,
@@ -905,6 +2180,92 @@ describe('buildToolSchema', () => {
           'nickname'
         )
       ).toEqual({ type: 'string' })
+    })
+
+    // A name such as `required` can read as a yes or no to an agent while it
+    // holds a message: the author tells the agent what it is, and the person
+    // reads only the label and the description drawn for them.
+    test('should give the agent the description of advanced.agent after the field own', () => {
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: {
+                agent: { description: 'The message shown when it is empty' },
+              },
+              label: 'If it is left empty',
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+          'required'
+        )
+      ).toEqual({
+        description: 'The message shown when it is empty',
+        title: 'If it is left empty',
+        type: 'string',
+      })
+
+      // After the field's own, closed with a period, and before the notes.
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: {
+                agent: { description: 'Pass the value, not the label' },
+              },
+              description: 'Shown under the field',
+              name: 'code',
+              source: [{ label: 'One', value: 'one' }],
+              type: 'select',
+            },
+          ],
+          'code'
+        )?.description
+      ).toBe(
+        'Shown under the field. Pass the value, not the label. Options: one (One).'
+      )
+
+      // On a list, before the note on its rows.
+      expect(
+        propertyOf(
+          [
+            {
+              advanced: { agent: { description: 'The rows of the message' } },
+              fields: [{ name: 'line', type: 'input/text' }],
+              name: 'lines',
+              type: 'list',
+            },
+          ],
+          'lines'
+        )?.description
+      ).toMatch(/^The rows of the message\. Sending the list replaces/)
+    })
+
+    test('should translate, cut and leave out an interpolated description of advanced.agent', () => {
+      const describe = (description: string, options?: ToolSchemaOptions) =>
+        propertyOf(
+          [
+            {
+              advanced: { agent: { description } },
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+          'required',
+          options
+        )?.description
+
+      expect(
+        describe('required_agent', {
+          localization: {
+            lang: 'es',
+            translations: { required_agent: 'El mensaje si queda vacío.' },
+          },
+        })
+      ).toBe('El mensaje si queda vacío.')
+      expect(describe('a'.repeat(600))).toBe(`${'a'.repeat(497)}...`)
+      expect(describe('Shown to {value}')).toBeUndefined()
     })
 
     test('should take the schema a custom type declares', () => {
@@ -983,7 +2344,7 @@ describe('buildToolSchema', () => {
       ]`)
       const { properties } = build(fields).schema
       const unreadable =
-        'The form cannot read its bounds, so the submit refuses any value for it.'
+        'The form cannot read its bounds, so it accepts no value for it.'
 
       expect(properties?.code).toEqual({
         description: unreadable,
@@ -1059,5 +2420,46 @@ describe('buildToolSchema', () => {
       const again = JSON.stringify(build(structuredClone(fields)).schema)
       expect(again).toBe(once)
     })
+  })
+})
+
+describe('joinSentences', () => {
+  test('should close a piece that does not end a sentence before the next', () => {
+    expect(joinSentences(['Signs a person up', 'Fills this form.'])).toBe(
+      'Signs a person up. Fills this form.'
+    )
+    expect(joinSentences(['Own', 'From the schema', 'A note.'])).toBe(
+      'Own. From the schema. A note.'
+    )
+  })
+
+  test('should leave a piece that already ends a sentence as it is', () => {
+    for (const piece of [
+      'Signs up.',
+      'Signs up!',
+      'Signs up?',
+      'Pick one:',
+      'Signs up...',
+      'Signs up\u2026',
+      'Say "signs up."',
+      '(Signs up.)',
+      '\u767b\u9332\u3057\u307e\u3059\u3002',
+    ]) {
+      expect(joinSentences([piece, 'Next.'])).toBe(`${piece} Next.`)
+    }
+  })
+
+  test('should trim each piece and leave out a blank or missing one', () => {
+    expect(joinSentences([' Signs up \n', undefined, '', '  ', 'Next.'])).toBe(
+      'Signs up. Next.'
+    )
+    expect(joinSentences([undefined, 'Next.'])).toBe('Next.')
+    expect(joinSentences([])).toBe('')
+  })
+
+  test('should keep the last piece as it was written', () => {
+    expect(joinSentences(['Next.', 'Signs a person up'])).toBe(
+      'Next. Signs a person up'
+    )
   })
 })

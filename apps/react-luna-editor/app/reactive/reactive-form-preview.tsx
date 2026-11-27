@@ -22,6 +22,13 @@ declare global {
     // what it is told of each call they answered.
     __lunaAllow?: AgentOptions['allow']
     __lunaOnCall?: AgentOptions['onCall']
+    // Sets the shape of what the preview's action returns and nothing else:
+    // the definition, and the sections the form is handed, keep their
+    // identity.
+    __lunaOutput?: (output: AgentOptions['output']) => void
+    // Retitles the preview's tools and nothing else: the definition, and the
+    // sections the form is handed, keep their identity.
+    __lunaRetitle?: (title: string) => void
     __lunaTools?: Readonly<{ call: typeof callTool; list: typeof listTools }>
   }
 }
@@ -167,8 +174,45 @@ export function ReactiveFormPreview() {
   // and `"throw"` throws.
   const { agent: offered, host, ...formProps } = form
 
+  // A host whose form edits whichever item is open, as a settings panel does
+  // for the item selected: `host.items` holds each item's values by its id,
+  // and opening one hands the form its values in place of the ones it had,
+  // and names it to the agent as the item the form edits. `host.remount`
+  // draws the form anew for each item instead, as a host keying it does.
+  const items = isRecord(host?.items) ? host.items : {}
+  const [opened, setOpened] = useState<string>()
+  function handleOpen(id: string) {
+    const item = items[id]
+    setOpened(id)
+    setValues(isRecord(item) ? item : {})
+  }
+
+  // A title set through `window.__lunaRetitle`, over the injected one.
+  const [retitled, setRetitled] = useState<string>()
+  useEffect(() => {
+    window.__lunaRetitle = setRetitled
+    return () => {
+      if (window.__lunaRetitle === setRetitled) {
+        delete window.__lunaRetitle
+      }
+    }
+  }, [])
+
+  // The shape of what the action returns, set through `window.__lunaOutput`.
+  const [output, setOutput] = useState<AgentOptions['output']>()
+  useEffect(() => {
+    window.__lunaOutput = setOutput
+    return () => {
+      if (window.__lunaOutput === setOutput) {
+        delete window.__lunaOutput
+      }
+    }
+  }, [])
+
   // How the preview is offered to an agent. A test changes its name,
-  // description or submit in the injected JSON, or offers none with
+  // description, submit, target or title in the injected JSON, the title
+  // alone through `window.__lunaRetitle`, or the shape of what its action
+  // returns through `window.__lunaOutput`, or offers none with
   // `"agent": false`, decides what `allow` answers through
   // `window.__lunaAllow`, and hears of each call through `window.__lunaOnCall`.
   const agent = useMemo<AgentOptions>(
@@ -180,12 +224,19 @@ export function ReactiveFormPreview() {
           description: offered.description,
         }),
         ...(typeof offered.submit === 'boolean' && { submit: offered.submit }),
+        ...(typeof offered.target === 'string' && {
+          target: offered.target,
+        }),
+        ...(typeof offered.title === 'string' && { title: offered.title }),
       }),
+      ...(opened !== undefined && { target: opened }),
+      ...(retitled !== undefined && { title: retitled }),
+      ...(output && { output }),
       allow: (call, options) =>
         window.__lunaAllow ? window.__lunaAllow(call, options) : true,
       onCall: (call) => window.__lunaOnCall?.(call),
     }),
-    [offered]
+    [offered, opened, output, retitled]
   )
   const nested = host?.nested === true
   const declared = host?.declared === true
@@ -256,6 +307,7 @@ export function ReactiveFormPreview() {
       )}
       {read && (
         <Form
+          key={host?.remount === true ? opened : undefined}
           {...formProps}
           value={formValue}
           config={formConfig}
@@ -266,6 +318,16 @@ export function ReactiveFormPreview() {
         >
           {({ isPending }) => (
             <div className="flex w-full justify-end gap-2">
+              {Object.keys(items).map((id) => (
+                <Button
+                  key={id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpen(id)}
+                >
+                  {`Open ${id}`}
+                </Button>
+              ))}
               <Button type="button" variant="outline" onClick={handleReset}>
                 Reset values
               </Button>

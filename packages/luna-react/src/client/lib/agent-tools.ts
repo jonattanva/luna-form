@@ -10,6 +10,7 @@ import {
   isTargetOf,
   getTimeFormat,
   isTime,
+  joinSentences,
   listOptions,
   logger,
   toNativeTime,
@@ -62,20 +63,36 @@ export type AgentCallRecord = Readonly<{
  * How a form is offered to an agent. `allow` answers `true` to go on, or
  * `false` or the reason to refuse, which the agent is given; its `signal` is
  * aborted when the agent cancels the call, when the tools are taken down, or
- * after five minutes. `onCall` is told of every call once it was answered,
- * a refused, cancelled or busy one included; what it throws is logged and
- * changes nothing.
+ * at `deadline`: five minutes after it was asked, in milliseconds since the
+ * epoch, as `Date.now()` counts them. `onCall` is told of every call once it
+ * was answered, a refused, cancelled or busy one included; what it throws is
+ * logged and changes nothing. `output` is the shape of what the action
+ * returns, which the submit answers as `data`: one it does not match is
+ * answered all the same, and logged. `title` is what the form edits, in the
+ * host's words, that every tool's title names after what it does: `name` when
+ * it is left out or blank.
+ *
+ * `target` is which item the form edits now, for a host whose one form edits
+ * whichever is open: an id or a fixed label, read afresh on every call. Every
+ * answer says it, and a fill or a submit is refused with `target_changed`,
+ * changing nothing, while it is not the one the agent was last told of.
  */
 export type AgentOptions = Readonly<{
   allow?: (
     call: AgentCall,
-    options: Readonly<{ signal: AbortSignal }>
+    options: Readonly<{ deadline: number; signal: AbortSignal }>
   ) => boolean | string | Promise<boolean | string>
   description: string
   name: string
   onCall?: (call: AgentCallRecord) => void
+  output?: ObjectSchema
   submit?: boolean
+  target?: string
+  title?: string
 }>
+
+/** A schema of an object, as `output` describes what the action returns. */
+type ObjectSchema = ToolSchema & Readonly<{ type: 'object' }>
 
 type ToolAnnotations = Readonly<{
   consequentialHint?: boolean
@@ -109,15 +126,33 @@ export type FieldStatus = Readonly<{
   locked: boolean
 }>
 
-const SUBMIT_STATES = ['idle', 'pending', 'success', 'error'] as const
+const SUBMIT_STATES = [
+  'idle',
+  'awaiting_approval',
+  'refused',
+  'pending',
+  'success',
+  'error',
+] as const
 
-/** The last submission: `pending` while it runs. */
+/**
+ * The last submission: `awaiting_approval` while a person decides on it, until
+ * `deadline`, and `refused` with `message` when they did not approve it; then
+ * `pending` while it runs.
+ */
 export type SubmitStatus = Readonly<{
   data?: ToolResult
+  deadline?: string
   error?: ToolResult
   errors?: Readonly<Record<string, readonly string[]>>
+  message?: string
   status: (typeof SUBMIT_STATES)[number]
 }>
+
+/** Where an agent's submission stands while `allow` is asked about it. */
+export type Approval =
+  | Readonly<{ deadline: string; status: 'awaiting_approval' }>
+  | Readonly<{ message: string; status: 'refused' }>
 
 /**
  * What the tools read and write a form through, by the names the tool schema
@@ -153,6 +188,14 @@ export type FormToolsHost = Readonly<{
    */
   isDrawing: (name: string, path: string) => boolean
   getSubmit: () => SubmitStatus
+  /** Which item the form edits now, in the host's words. See `target`. */
+  getTarget: () => string | undefined
+  /**
+   * Records where an agent's submission stands while a person is asked about
+   * it, as the last submission `getSubmit` answers. `undefined` takes back an
+   * `awaiting_approval` still recorded, for a call the agent cancelled.
+   */
+  approval: (approval?: Approval) => void
   /**
    * The name a row's leaf has in the form, from its route by position:
    * `items.3.sku` to the name of the fourth row's `sku`. `undefined` when the
@@ -178,8 +221,13 @@ export type FormToolsHost = Readonly<{
    */
   isChanged: (name: string) => boolean
   /**
-   * The agent has been told what the fields named hold: what changed in them
-   * before is no longer news to it.
+   * Whether the form edits another item than the one the agent was last told
+   * of, by a read or a fill: one told of none has not read the other.
+   */
+  isRetargeted: () => boolean
+  /**
+   * The agent has been told what the fields named hold, and which item the
+   * form edits: what changed in them before is no longer news to it.
    */
   seen: (names: readonly string[]) => void
   /**
@@ -215,6 +263,18 @@ const SKIP_CODES = [
 type SkipCode = (typeof SKIP_CODES)[number]
 
 type Skip = Readonly<{ code: SkipCode; message: string; name: string }>
+
+// What a tool is handed for one call: `answer` answers it before its work is
+// done, and `ask` asks a person about the values it writes or sends, and
+// answers why it must not, if it must not.
+type Call = Readonly<{
+  answer: (output: ToolResult) => void
+  ask: (values: ToolResult) => Promise<ToolResult | undefined>
+  signal: AbortSignal
+}>
+
+// Where a value the call wrote or kept is, and how to tell what it holds.
+type Told = Readonly<{ path: string; schema: ToolSchema; target: string }>
 
 // A value a fill is still to write: its schema, the path its definition and
 // options are found by, and whether it is a leaf of a row named by its route.
@@ -302,20 +362,63 @@ const FAILURE = {
   message: TEXT,
   ok: ANSWERED,
 } satisfies Record<string, ToolSchema>
-// What a submission ended with, as the submit and the read answer it.
-const OUTCOME = {
-  data: OBJECT,
-  error: OBJECT,
-  errors: ERRORS,
-} satisfies Record<string, ToolSchema>
 
-const SUBMIT_STATUS: ToolSchema = {
-  properties: {
-    ...OUTCOME,
-    status: { enum: SUBMIT_STATES, type: 'string' },
-  },
-  required: ['status'],
-  type: 'object',
+// An answer that says which item the form edits, for a host that names it:
+// one from a tool that writes can be refused for it. See `target`.
+function targetedOf(output: ToolSchema, writes: boolean): ToolSchema {
+  return {
+    ...output,
+    properties: {
+      ...output.properties,
+      ...(writes && {
+        code: {
+          ...FAILURE.code,
+          enum: [...FAILURE.code.enum, 'target_changed'],
+        },
+      }),
+      target: { description: 'The item the form edits.', type: 'string' },
+    },
+  }
+}
+
+// What a fill or a submit is refused with while the form edits another item
+// than the one it was meant for: the one the agent was last told of, or, once
+// a person approved it, the one it started on.
+function retargeted(readTool: string): ToolResult {
+  return {
+    code: 'target_changed',
+    message: `The form edits another item than the one this call was meant for, so the call changed nothing. Call ${readTool}, and ask your user before you write to this one.`,
+    ok: false,
+  }
+}
+
+// What a submission ended with, as the submit answers it and the read reads
+// it: `data` in the shape the author gives what the action returns, the one
+// place it is declared.
+function outcomeOf(data: ToolSchema): Readonly<{
+  status: ToolSchema
+  submit: ToolSchema
+}> {
+  const outcome = { data, error: OBJECT, errors: ERRORS }
+  return {
+    status: {
+      properties: {
+        ...outcome,
+        deadline: {
+          description:
+            'While it awaits approval: when the wait for the person ends, in ISO 8601.',
+          type: 'string',
+        },
+        status: { enum: SUBMIT_STATES, type: 'string' },
+      },
+      required: ['status'],
+      type: 'object',
+    },
+    submit: {
+      properties: { ...FAILURE, ...outcome, pending: ANSWERED },
+      type: 'object',
+    },
+  }
 }
 
 // The fields a fill reports something of, each with a code from `codes`.
@@ -359,18 +462,17 @@ const READ_INPUT: ToolSchema = {
   type: 'object',
 }
 
-const READ_OUTPUT: ToolSchema = {
+const READ_OUTPUT = {
   properties: {
     ...FAILURE,
     errors: ERRORS,
     hidden: NAMES,
     locked: NAMES,
     more: MORE,
-    submit: SUBMIT_STATUS,
     values: OBJECT,
   },
   type: 'object',
-}
+} satisfies ToolSchema
 
 const OPTIONS_OUTPUT: ToolSchema = {
   properties: {
@@ -391,15 +493,6 @@ const OPTIONS_OUTPUT: ToolSchema = {
 const SUBMIT_INPUT: ToolSchema = {
   additionalProperties: false,
   properties: {},
-  type: 'object',
-}
-
-const SUBMIT_OUTPUT: ToolSchema = {
-  properties: {
-    ...FAILURE,
-    ...OUTCOME,
-    pending: ANSWERED,
-  },
   type: 'object',
 }
 
@@ -431,7 +524,8 @@ export function createFormTools(
   host: FormToolsHost,
   form: Readonly<{
     // The types whose schema the host declares: no rule of the form checks a
-    // value against it, so the tools do. See `defineCustomInput`.
+    // value against it, so the tools do. A type it keeps from agents is named
+    // too, and never written. See `defineCustomInput`.
     declared?: ReadonlySet<string>
     queue?: Queue
     signal?: AbortSignal
@@ -452,8 +546,26 @@ export function createFormTools(
     fill: `${agent.name}_fill`,
     options: `${agent.name}_options`,
     read: `${agent.name}_read`,
-    submit: `${agent.name}_submit`,
+    // Only when the tools submit the form: the one place that decides it.
+    ...(agent.submit && { submit: `${agent.name}_submit` }),
   }
+  const outcome = outcomeOf(agent.output ?? OBJECT)
+  // Whether `allow` is asked before a fill and a submit.
+  const asked = agent.allow !== undefined
+  // What every title names after what its tool does, so the tools of several
+  // forms on one page are told apart: the host's title, or the form's name.
+  // The tools that only read name it in their own words too.
+  const subject = agent.title?.trim() || agent.name
+  // Whether the host names the item the form edits, which the tools describe:
+  // which one it is, they read on every call.
+  const targeted = agent.target !== undefined
+  const answers = (output: ToolSchema, writes: boolean) =>
+    targeted ? targetedOf(output, writes) : output
+  const submission = submissionOf(
+    names,
+    validates ? built.required : undefined,
+    outcome.status
+  )
 
   const properties = built.schema.properties ?? {}
   const fields = Object.keys(properties)
@@ -462,17 +574,26 @@ export function createFormTools(
   const queue = form.queue ?? createQueue()
 
   // Every call goes through the queue, and finds out there whether the agent
-  // gave up while it waited.
+  // gave up while it waited. `answer` answers a call before its work is done:
+  // the calls after it wait for that work all the same. While a submission
+  // waits for a person, who decides on what the form holds then, only a fill
+  // waits behind it: the other calls write nothing, and are answered at once.
   //
   // What each call was answered is told to `onCall`, once it was.
   const queued =
     (
       tool: AgentCallRecord['tool'],
-      run: (input: ToolJson, signal: AbortSignal) => Promise<ToolResult>
+      run: (input: ToolJson, call: Call) => Promise<ToolResult>
     ): Tool['execute'] =>
     async (input, options) => {
       const callSignal = options?.signal ?? new AbortController().signal
       const started = performance.now()
+      // The item the call acted on, which its answer names: the one the form
+      // edits when it ran, or now, for a call that never did.
+      let acted: string | undefined
+      // A call that writes is held to an item: the one the agent read, when
+      // it starts, and the one it started on, once a person approved it.
+      const writes = tool === 'fill' || tool === 'submit' ? tool : undefined
 
       // After the answer, so a slow log keeps no agent waiting, and with
       // copies, so what it does to them changes no answer.
@@ -493,17 +614,51 @@ export function createFormTools(
       }
 
       try {
-        const output = await (queue(async () => {
-          if (callSignal.aborted) {
-            return CANCELLED
+        const answered = await new Promise<ToolResult>((answer, fail) => {
+          const work = async () => {
+            if (callSignal.aborted) {
+              return CANCELLED
+            }
+            acted = host.getTarget()
+            // The one place a call that writes is held to the item the agent
+            // read: what it sends was meant for that one.
+            if (writes && host.isRetargeted()) {
+              return retargeted(names.read)
+            }
+            host.using(true)
+            try {
+              return await run(input, {
+                answer,
+                ask: async (values) => {
+                  if (!writes) {
+                    return undefined
+                  }
+                  const refused = await askAllow(writes, values, callSignal)
+                  // While a person decides, they may open another item: what
+                  // they approved was meant for the one the call started on.
+                  if (refused || host.getTarget() === acted) {
+                    return refused
+                  }
+                  acted = host.getTarget()
+                  if (writes === 'submit') {
+                    host.approval()
+                  }
+                  return retargeted(names.read)
+                },
+                signal: callSignal,
+              })
+            } finally {
+              host.using(false)
+            }
           }
-          host.using(true)
-          try {
-            return await run(input, callSignal)
-          } finally {
-            host.using(false)
-          }
-        }) ?? BUSY)
+          const done =
+            tool !== 'fill' && host.getSubmit().status === 'awaiting_approval'
+              ? work()
+              : queue(work)
+          ;(done ?? Promise.resolve(BUSY)).then(answer, fail)
+        })
+        const target = acted ?? host.getTarget()
+        const output = target === undefined ? answered : { ...answered, target }
         tell({ output })
         return output
       } catch (error) {
@@ -512,7 +667,11 @@ export function createFormTools(
       }
     }
 
-  const ask = async (
+  // Asks `allow` about a call until `ALLOW_TIMEOUT` has passed: the one place
+  // its deadline is set. A submit is recorded as the last submission while it
+  // is asked, until that deadline, and as refused when it is; one the agent
+  // cancelled takes back the wait it recorded.
+  const askAllow = async (
     tool: AgentCall['tool'],
     values: ToolResult,
     callSignal: AbortSignal
@@ -521,50 +680,82 @@ export function createFormTools(
       return undefined
     }
 
-    const limit = linkSignals([callSignal, signal], ALLOW_TIMEOUT)
+    const deadline = Date.now() + ALLOW_TIMEOUT
+    const limit = linkSignals(
+      { cancelled: callSignal, closed: signal },
+      ALLOW_TIMEOUT
+    )
+    if (tool === 'submit') {
+      host.approval({
+        deadline: new Date(deadline).toISOString(),
+        status: 'awaiting_approval',
+      })
+    }
     try {
-      // A page whose `allow` fails has not said yes. One that says yes at
-      // once is not waited for.
-      let asked: ReturnType<NonNullable<AgentOptions['allow']>> | typeof FAILED
-      try {
-        asked = agent.allow({ tool, values }, { signal: limit.signal })
-      } catch (error) {
-        logger.error('The agent call was refused: allow failed.', error)
-        asked = FAILED
-      }
-      if (asked === true) {
+      const refused = await refusalOf(
+        agent.allow,
+        { tool, values },
+        { deadline, signal: limit.signal }
+      )
+      if (refused === undefined) {
         return undefined
       }
-
-      const answer = await Promise.race([
-        Promise.resolve(asked).catch((error: Error) => {
-          logger.error('The agent call was refused: allow failed.', error)
-          return FAILED
-        }),
-        whenAborted(limit.signal),
-      ])
-
-      if (answer === true) {
-        return undefined
-      }
-      if (callSignal.aborted) {
+      const ending = limit.ending()
+      if (ending === 'cancelled') {
+        if (tool === 'submit') {
+          host.approval()
+        }
         return CANCELLED
       }
-      return {
-        code: 'refused',
-        message:
-          typeof answer === 'string' && answer !== ''
-            ? answer
-            : answer === ABORTED
-              ? 'The call got no answer from the page.'
-              : answer === FAILED
-                ? 'The page could not answer the call.'
-                : 'The page refused the call.',
-        ok: false,
+      const message =
+        refused === ABORTED ? UNANSWERED[ending ?? 'expired'] : refused
+      if (tool === 'submit') {
+        host.approval({ message, status: 'refused' })
       }
+      return { code: 'refused', message, ok: false }
     } finally {
       limit.dispose()
     }
+  }
+
+  // Waits for what `allow` answers, until its signal is aborted: `undefined`
+  // for a yes, `ABORTED` for no answer, and why it was refused otherwise. A
+  // page whose `allow` fails has not said yes. One that says yes at once is
+  // not waited for.
+  const refusalOf = async (
+    allow: NonNullable<AgentOptions['allow']>,
+    call: AgentCall,
+    options: Parameters<NonNullable<AgentOptions['allow']>>[1]
+  ): Promise<string | typeof ABORTED | undefined> => {
+    let asked: ReturnType<typeof allow> | typeof FAILED
+    try {
+      asked = allow(call, options)
+    } catch (error) {
+      logger.error('The agent call was refused: allow failed.', error)
+      asked = FAILED
+    }
+    if (asked === true) {
+      return undefined
+    }
+
+    const answer = await Promise.race([
+      Promise.resolve(asked).catch((error: Error) => {
+        logger.error('The agent call was refused: allow failed.', error)
+        return FAILED
+      }),
+      whenAborted(options.signal),
+    ])
+    if (answer === true) {
+      return undefined
+    }
+    if (answer === ABORTED) {
+      return ABORTED
+    }
+    return typeof answer === 'string' && answer !== ''
+      ? answer
+      : answer === FAILED
+        ? 'The page could not answer the call.'
+        : 'The page refused the call.'
   }
 
   // `name` is the field in the form the value goes to, whose options are the
@@ -638,13 +829,13 @@ export function createFormTools(
 
   const fill = async (
     input: ToolJson,
-    callSignal: AbortSignal
+    { ask, signal: callSignal }: Call
   ): Promise<ToolResult> => {
     if (!isToolObject(input)) {
       return invalidInput('Pass an object of values keyed by field name.')
     }
 
-    const refused = await ask('fill', input, callSignal)
+    const refused = await ask(input)
     if (refused) {
       return refused
     }
@@ -694,11 +885,9 @@ export function createFormTools(
     }
 
     // What the form calls each value written, and the schema it was written
-    // with, to validate it and to tell a list that kept other rows.
-    const written = new Map<
-      string,
-      Readonly<{ schema: ToolSchema; target: string }>
-    >()
+    // with, to validate it, to tell a list that kept other rows and to tell
+    // what it holds.
+    const written = new Map<string, Told>()
 
     // The fixed lists sent with another number of rows than they hold, told
     // as such if their rows have not come by the last round.
@@ -706,10 +895,7 @@ export function createFormTools(
 
     // The values a person changed, left as they are, with what tells
     // what they hold.
-    const kept = new Map<
-      string,
-      Readonly<{ path: string; schema: ToolSchema; target: string }>
-    >()
+    const kept = new Map<string, Told>()
 
     // A field another value shows or unlocks cannot be written until that
     // value has run its course, so the fill goes in rounds: what can be
@@ -807,7 +993,7 @@ export function createFormTools(
         if (taken) {
           pending.delete(name)
           applied.push(name)
-          written.set(name, { schema: entry.schema, target })
+          written.set(name, { path: entry.path, schema: entry.schema, target })
           if ('rows' in held) {
             lists.add(name)
           }
@@ -878,13 +1064,23 @@ export function createFormTools(
         revealed.push(name)
       }
     }
-    for (const [name, { path, schema, target }] of kept) {
-      values[name] = present(
-        schema,
-        host.read(target) ?? null,
-        path,
-        host.getField
-      )
+    // What changed during the call, the fields it shows the person as filled.
+    const moved = Object.keys(values)
+
+    // Every value the call wrote is told with what it holds, the ones that
+    // held it already included, and so is every value a person changed.
+    for (const [name, { path, schema, target }] of [...written, ...kept]) {
+      if (
+        kept.has(name) ||
+        (ownProperty(values, name) === undefined && isShown(target))
+      ) {
+        values[name] = present(
+          schema,
+          host.read(target) ?? null,
+          path,
+          host.getField
+        )
+      }
     }
 
     // A list written whole, at the top or in a row, that kept another number
@@ -931,7 +1127,7 @@ export function createFormTools(
       [...written.values(), ...kept.values()].map(({ target }) => target)
     )
     const changed: string[] = []
-    for (const name of Object.keys(values)) {
+    for (const name of moved) {
       const target = ownProperty(properties, name) ? name : host.resolve(name)
       if (target === undefined) {
         continue
@@ -989,6 +1185,7 @@ export function createFormTools(
         locked.push(name)
       }
       values[name] = readField(name)
+      hidden.push(...hiddenLeaves(name, properties[name], values[name]))
     }
 
     // Told what they hold: a field hidden is not.
@@ -998,7 +1195,7 @@ export function createFormTools(
       hidden,
       locked,
       ...(known.length > page.length && { more: known.length - page.length }),
-      submit: host.getSubmit(),
+      ...submission.read(host),
       values,
     }
   }
@@ -1012,7 +1209,10 @@ export function createFormTools(
     name: string,
     callSignal: AbortSignal
   ): Promise<readonly Option[] | string> => {
-    const limit = linkSignals([callSignal, signal], OPTIONS_WAIT)
+    const limit = linkSignals(
+      { cancelled: callSignal, closed: signal },
+      OPTIONS_WAIT
+    )
     const ended = whenAborted(limit.signal)
     let waited = false
     try {
@@ -1060,7 +1260,7 @@ export function createFormTools(
 
   const options = async (
     input: ToolJson,
-    callSignal: AbortSignal
+    { signal: callSignal }: Call
   ): Promise<ToolResult> => {
     if (
       !isToolObject(input) ||
@@ -1120,95 +1320,120 @@ export function createFormTools(
     }
   }
 
+  // The person's answer and the action share one wait: past it the agent is
+  // answered pending, and both go on. The calls after it wait for the person,
+  // so nothing is written over what they approve, but not for the action.
   const submit = async (
     _input: ToolJson,
-    callSignal: AbortSignal
+    { answer, ask, signal: callSignal }: Call
   ): Promise<ToolResult> => {
-    // A submission running -- this tool's or a person's -- is not sent again.
-    if (host.getSubmit().status === 'pending') {
-      return pendingAnswer(names.read)
+    // A submission waiting or running -- this tool's or a person's -- is not
+    // sent again.
+    if (isSubmitting(host.getSubmit())) {
+      return pendingAnswer(host.getSubmit(), names.read)
     }
 
-    const refused = await ask('submit', readShown(), callSignal)
-    if (refused) {
-      return refused
-    }
-    if (callSignal.aborted) {
-      return CANCELLED
-    }
+    const timeout = linkSignals({}, SUBMIT_TIMEOUT)
+    try {
+      void whenAborted(timeout.signal).then(() =>
+        answer(pendingAnswer(host.getSubmit(), names.read))
+      )
 
-    const timeout = linkSignals([], SUBMIT_TIMEOUT)
-    const outcome = await Promise.race([
-      host.submit(callSignal),
-      whenAborted(timeout.signal),
-    ]).finally(timeout.dispose)
+      if (agent.allow) {
+        const refused = await ask(readShown())
+        if (refused) {
+          return refused
+        }
+        // A person submitted it while they decided.
+        if (host.getSubmit().status === 'pending') {
+          return pendingAnswer(host.getSubmit(), names.read)
+        }
+      }
+      if (callSignal.aborted) {
+        host.approval()
+        return CANCELLED
+      }
 
-    if (outcome === ABORTED || outcome.status === 'pending') {
-      return pendingAnswer(names.read)
-    }
-    if (outcome.status === 'success') {
-      return { data: outcome.data ?? {}, ok: true }
-    }
-    return {
-      ...(outcome.error && { error: outcome.error }),
-      errors: outcome.errors ?? {},
-      ok: false,
+      const submitted = await Promise.race([
+        host.submit(callSignal),
+        whenAborted(timeout.signal),
+      ])
+      if (submitted === ABORTED || submitted.status === 'pending') {
+        return pendingAnswer(host.getSubmit(), names.read)
+      }
+      if (submitted.status === 'success') {
+        const data = submitted.data ?? {}
+        const wrong = agent.output && mismatch(agent.output, data, 'data')
+        if (wrong) {
+          logger.error(
+            `${names.submit} answers what the action returned, which does not match agent.output: ${wrong}.`
+          )
+        }
+        return { data, ok: true }
+      }
+      return {
+        ...(submitted.error && { error: submitted.error }),
+        errors: submitted.errors ?? {},
+        ok: false,
+      }
+    } finally {
+      timeout.dispose()
     }
   }
 
   const tools: Tool[] = [
     {
       annotations: { untrustedContentHint: true },
-      description: [
-        agent.description,
-        'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
-        "Pass in one call the values the person gave for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
-        'Leave out what they did not give, such as personal data you know about them: fields left out keep their value.',
-        `It returns the final value of each field that changed, what was skipped and why, and the errors: no need to call ${names.read} after.`,
-        'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
-        'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
-        ...(validates
-          ? [
-              built.required.length > 0
-                ? `A submission needs: ${built.required.join(', ')}.`
-                : 'No field is needed to submit.',
-            ]
-          : []),
-        UNTRUSTED,
-      ].join(' '),
+      description: describeTool(
+        [
+          'Fills this form as a person would: each field takes its value through its own logic, and one it cannot take is reported, not written.',
+          "Pass in one call the values for this form, keyed by field name, in the schema's formats; a field another value reveals can go in the same call.",
+          'Write what the person asked for and the values it implies, such as a key made from a label; ask them before writing what they did not give, such as what you know about them: fields left out keep their value.',
+          `It returns what each field it wrote or changed holds now, what was skipped and why, and the errors: no need to call ${names.read} after.`,
+          'ok is false when a value is not written or breaks a rule; a hidden or locked field is listed in skipped but leaves ok true.',
+          'A field a person changed since you last read it is not written over: it is skipped as changed, and values has what it holds.',
+          ...(targeted ? [targetSentence('written', names.read)] : []),
+          ...submission.needs,
+        ],
+        asked,
+        agent.description
+      ),
       execute: queued('fill', fill),
       inputSchema: built.schema,
       name: names.fill,
-      outputSchema: FILL_OUTPUT,
-      title: 'Fill the form',
+      outputSchema: answers(FILL_OUTPUT, true),
+      title: `Fill: ${subject}`,
     },
     {
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: [
-        agent.description,
-        'Reads what this form holds now: values, hidden or locked fields, errors and the last submission.',
-        `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
-        `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
-        UNTRUSTED,
-      ].join(' '),
+      description: describeTool(
+        [
+          `Reads what the form "${subject}" holds now: ${submission.holds}.`,
+          ...(targeted ? [TARGET_READ] : []),
+          ...submission.reads,
+          `It reads up to ${READ_FIELDS} fields per call: name the rest in fields.`,
+        ],
+        false
+      ),
       execute: queued('read', read),
       inputSchema: READ_INPUT,
       name: names.read,
-      outputSchema: READ_OUTPUT,
-      title: 'Read the form',
+      outputSchema: answers(submission.readOutput, false),
+      title: `Read: ${subject}`,
     },
   ]
 
   if (lookup.size > 0) {
     tools.push({
       annotations: { readOnlyHint: true, untrustedContentHint: true },
-      description: [
-        agent.description,
-        `Finds the options of a field the schema of ${names.fill} does not list.`,
-        `Pass the field and, to narrow them, text to match in their labels and values; it returns up to ${FOUND_OPTIONS} options and how many more there are.`,
-        `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
-        UNTRUSTED,
-      ].join(' '),
+      description: describeTool(
+        [
+          `Finds the options of a field of the form "${subject}" that the schema of ${names.fill} does not list.`,
+          `Pass the field and, to narrow them, text to match in their labels and values; it returns up to ${FOUND_OPTIONS} options and how many more there are.`,
+          `Options that depend on other fields follow their current values: fill those first, with ${names.fill}, which returns what it changed.`,
+        ],
+        false
+      ),
       execute: queued('options', options),
       inputSchema: {
         additionalProperties: false,
@@ -1220,38 +1445,95 @@ export function createFormTools(
         type: 'object',
       },
       name: names.options,
-      outputSchema: OPTIONS_OUTPUT,
-      title: 'Find options',
+      outputSchema: answers(OPTIONS_OUTPUT, false),
+      title: `Find options: ${subject}`,
     })
   }
 
-  if (agent.submit) {
+  if (names.submit) {
     tools.push({
       annotations: { consequentialHint: true, untrustedContentHint: true },
-      description: [
-        agent.description,
-        validates
-          ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
-          : "Submits this form as its submit button does: the values are sent unchecked, and checking them is left to the form's action.",
-        `Call it once, when ${names.fill} reports ok and skips no field you need.`,
-        `It returns what the action answered or the errors that stopped it. An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
-        UNTRUSTED,
-      ].join(' '),
+      description: describeTool(
+        [
+          validates
+            ? 'Submits this form as its submit button does: every field is validated, then the values are sent.'
+            : "Submits this form as its submit button does: the values are sent unchecked, and checking them is left to the form's action.",
+          `Call it once, when ${names.fill} reports ok and skips no field you need.`,
+          ...(agent.allow ? ['A person may need to approve it first.'] : []),
+          'It returns what the action answered or the errors that stopped it.',
+          ...(targeted ? [targetSentence('sent', names.read)] : []),
+          agent.allow
+            ? `A person who has not answered, or an action still running, after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later, which says which one it waits for.`
+            : `An action still running after ${SUBMIT_TIMEOUT / 1000} seconds answers pending: call ${names.read} later.`,
+        ],
+        asked,
+        agent.description
+      ),
       execute: queued('submit', submit),
       inputSchema: SUBMIT_INPUT,
       name: names.submit,
-      outputSchema: SUBMIT_OUTPUT,
-      title: 'Submit the form',
+      outputSchema: answers(outcome.submit, true),
+      title: `Submit: ${subject}`,
     })
   }
 
   return tools
 }
 
+// What the tools say of the item the form edits, for a host that names it.
+const TARGET_READ =
+  'The form edits one item of several, which target names: the person can open another.'
+
+function targetSentence(done: string, readTool: string): string {
+  return `target names the item the form edits; if code is target_changed, the form edits another item than the one the call was meant for and nothing was ${done}: call ${readTool}, and ask your user before you write to this one.`
+}
+
+// A tool's own sentences, the one that says what it does first.
+type Sentences = readonly [string, ...string[]]
+
+// A tool's description: what the tool does first; then `form`, the host's
+// text, as what the form is for; then the rest of the tool's own sentences,
+// and the warning that the page's text is data. Only the tools that write are
+// given the host's text: it may say what sending the form does or what it
+// edits, which a tool that only reads must not say, so those name the form in
+// their own sentence instead.
+function describeTool(
+  [does, ...rest]: Sentences,
+  asked: boolean,
+  form = ''
+): string {
+  return joinSentences([
+    does,
+    form.trim() === '' ? undefined : `About this form: ${form}`,
+    ...rest,
+    codesOf(asked),
+    UNTRUSTED,
+  ])
+}
+
+// What the codes a call can be answered with mean: every call waits in the
+// form's line and can be cancelled, and one `allow` is asked about can be
+// refused, for any of the reasons `askAllow` gives.
+function codesOf(asked: boolean): string {
+  const others = `busy, ${QUEUE_LIMIT} calls were waiting: call again once one is answered; cancelled, the call was stopped. message says more.`
+  return asked
+    ? `If code is refused, the page did not let the call go on and it changed nothing; ${others}`
+    : `If code is ${others}`
+}
+
 const CANCELLED: ToolResult = {
   code: 'cancelled',
   message: 'The call was cancelled before it changed anything.',
   ok: false,
+}
+
+// What a call `allow` did not answer is told, by why its wait ended: the
+// agent cancelling it is answered `CANCELLED` instead.
+const UNANSWERED: Readonly<Record<Exclude<Ending, 'cancelled'>, string>> = {
+  closed:
+    'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+  expired:
+    'Nobody answered in time, so the call changed nothing. Ask your user before you try again.',
 }
 
 const BUSY: ToolResult = {
@@ -1264,9 +1546,69 @@ function invalidInput(message: string): ToolResult {
   return { code: 'invalid_type', message, ok: false }
 }
 
-function pendingAnswer(readTool: string): ToolResult {
+type Submission = Readonly<{
+  // What the fill says of the fields a submission needs: nothing when a
+  // submit checks none.
+  needs: readonly string[]
+  // What the read reads, for its own first sentence, and when to call it.
+  holds: string
+  reads: readonly string[]
+  readOutput: ToolSchema
+  read: (host: FormToolsHost) => ToolResult
+}>
+
+// What the tools say of a submission and read of it, from the submit tool
+// when there is one: a form the tools cannot submit is described and read
+// without one, since an agent told of a submission looks for a way to send
+// it. `required` is what a submit needs, `undefined` when it checks nothing;
+// `status` is how the read reads the last submission.
+function submissionOf(
+  names: Readonly<{ fill: string; submit?: string }>,
+  required: readonly string[] | undefined,
+  status: ToolSchema
+): Submission {
+  const needs = (some: string, none: string) =>
+    required === undefined
+      ? []
+      : [required.length > 0 ? `${some}: ${required.join(', ')}.` : none]
+  if (names.submit === undefined) {
+    return {
+      needs: needs('Required fields', 'No field is required.'),
+      read: () => ({}),
+      readOutput: READ_OUTPUT,
+      holds: 'values, hidden or locked fields and errors',
+      reads: [
+        `Call it before filling when a person may have written something, and between turns; ${names.fill} already returns what it changed.`,
+      ],
+    }
+  }
   return {
-    message: `The submission is still running: call ${readTool} for its outcome.`,
+    needs: needs('A submission needs', 'No field is needed to submit.'),
+    read: (host) => ({ submit: host.getSubmit() }),
+    readOutput: {
+      ...READ_OUTPUT,
+      properties: { ...READ_OUTPUT.properties, submit: status },
+    },
+    holds: 'values, hidden or locked fields, errors and the last submission',
+    reads: [
+      `Call it before filling when a person may have written something, between turns, and after ${names.submit} answered pending; ${names.fill} already returns what it changed.`,
+    ],
+  }
+}
+
+// A submission a person still decides on, or one still running.
+function isSubmitting(submitted: SubmitStatus): boolean {
+  return (
+    submitted.status === 'awaiting_approval' || submitted.status === 'pending'
+  )
+}
+
+function pendingAnswer(submitted: SubmitStatus, readTool: string): ToolResult {
+  return {
+    message:
+      submitted.status === 'awaiting_approval'
+        ? `The submission waits for a person to approve it: call ${readTool} for its outcome.`
+        : `The submission is still running: call ${readTool} for its outcome.`,
     pending: true,
   }
 }
@@ -1312,29 +1654,49 @@ function whenAborted(signal: AbortSignal) {
   })
 }
 
-// One signal aborted by any of the ones given, or after `timeout`.
+// Why a wait ended: the agent cancelled the call, the form's tools were taken
+// down, or its time ran out.
+const ENDINGS = ['cancelled', 'closed', 'expired'] as const
+type Ending = (typeof ENDINGS)[number]
+
+// One signal aborted by any of the ones given, or after `timeout`. `ending`
+// says which ended it first, by the name it was given under; `undefined`
+// while it runs.
 function linkSignals(
-  signals: ReadonlyArray<AbortSignal | undefined>,
+  signals: Readonly<Partial<Record<Ending, AbortSignal>>>,
   timeout: number
 ) {
   const controller = new AbortController()
-  const abort = () => controller.abort()
-  const timer = setTimeout(abort, timeout)
-
-  for (const signal of signals) {
-    if (signal?.aborted) {
-      abort()
+  let ending: Ending | undefined
+  const end = (why: Ending) => {
+    if (!controller.signal.aborted) {
+      ending = why
+      controller.abort()
     }
-    signal?.addEventListener('abort', abort, { once: true })
   }
+
+  const timer = setTimeout(() => end('expired'), timeout)
+  const listeners = ENDINGS.flatMap((why) => {
+    const signal = signals[why]
+    if (!signal) {
+      return []
+    }
+    const listener = () => end(why)
+    if (signal.aborted) {
+      listener()
+    }
+    signal.addEventListener('abort', listener, { once: true })
+    return [{ listener, signal }]
+  })
 
   return {
     dispose: () => {
       clearTimeout(timer)
-      for (const signal of signals) {
-        signal?.removeEventListener('abort', abort)
+      for (const { listener, signal } of listeners) {
+        signal.removeEventListener('abort', listener)
       }
     },
+    ending: () => ending,
     signal: controller.signal,
   }
 }
@@ -1396,6 +1758,28 @@ function present(
   }
 
   return value
+}
+
+// The leaves of a list's rows that a row does not hold, under their route:
+// the form leaves out what a row does not show, a list in a row included.
+function hiddenLeaves(
+  name: string,
+  schema: ToolSchema | undefined,
+  value: ToolJson
+): string[] {
+  const leaves = schema?.items?.properties
+  if (!isRowsOf(schema) || !leaves || !isToolList(value)) {
+    return []
+  }
+  return value.flatMap((row, index) =>
+    isToolObject(row)
+      ? Object.entries(leaves).flatMap(([leaf, inner]) => {
+          const route = `${name}.${index}.${leaf}`
+          const held = ownProperty(row, leaf)
+          return held === undefined ? [route] : hiddenLeaves(route, inner, held)
+        })
+      : []
+  )
 }
 
 // The errors of the fields named, and of the leaves of the lists among them.
@@ -1884,4 +2268,60 @@ function isToolList(
 
 function isToolObject(value: ToolJson | undefined): value is ToolResult {
   return typeof value === 'object' && value !== null && !isToolList(value)
+}
+
+const TYPED: Readonly<
+  Record<ToolSchema['type'], (value: ToolJson) => boolean>
+> = {
+  array: isToolList,
+  boolean: (value) => typeof value === 'boolean',
+  integer: (value) => Number.isInteger(value),
+  number: (value) => typeof value === 'number',
+  object: isToolObject,
+  string: isString,
+}
+
+// Where a value first breaks a schema the author gives, by its path, or
+// `undefined` when it keeps it: its type, its enum, an object's required and
+// declared properties, and an array's items.
+function mismatch(
+  schema: ToolSchema,
+  value: ToolJson,
+  at: string
+): string | undefined {
+  if (!TYPED[schema.type](value)) {
+    return `${at} is not ${/^[aeiou]/.test(schema.type) ? 'an' : 'a'} ${schema.type}`
+  }
+  if (schema.enum && !(isString(value) && schema.enum.includes(value))) {
+    return `${at} is not one of ${schema.enum.join(', ')}`
+  }
+  if (isToolList(value)) {
+    const items = schema.items
+    return items
+      ? value
+          .map((item, index) => mismatch(items, item, `${at}[${index}]`))
+          .find((found) => found !== undefined)
+      : undefined
+  }
+  if (!isToolObject(value)) {
+    return undefined
+  }
+  const missing = schema.required?.find(
+    (name) => ownProperty(value, name) === undefined
+  )
+  if (missing !== undefined) {
+    return `${at}.${missing} is missing`
+  }
+  for (const [name, inner] of Object.entries(value)) {
+    const property = ownProperty(schema.properties ?? {}, name)
+    const found = property
+      ? mismatch(property, inner, `${at}.${name}`)
+      : schema.additionalProperties === false
+        ? `${at}.${name} is not declared`
+        : undefined
+    if (found) {
+      return found
+    }
+  }
+  return undefined
 }

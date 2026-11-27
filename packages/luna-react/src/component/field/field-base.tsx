@@ -1,4 +1,4 @@
-import { DATA_INVALID, DATA_READONLY } from '@luna-form/core'
+import { DATA_FIELD_NAME, DATA_INVALID, DATA_READONLY } from '@luna-form/core'
 import { twMerge } from 'tailwind-merge'
 
 export type FieldLayoutProps = {
@@ -8,6 +8,7 @@ export type FieldLayoutProps = {
   isCheckbox?: boolean
   isReversed?: boolean
   isClickable?: boolean
+  name?: string
 }
 
 export function FieldBase(
@@ -24,6 +25,7 @@ export function FieldBase(
     <div
       data-slot="field"
       data-clickable={props.isClickable ? 'true' : 'false'}
+      {...(props.name && { [DATA_FIELD_NAME]: props.name })}
       {...(errors && { [DATA_INVALID]: 'true' })}
       {...(props.disabled && { [DATA_READONLY]: 'true' })}
       data-orientation={props.orientation}

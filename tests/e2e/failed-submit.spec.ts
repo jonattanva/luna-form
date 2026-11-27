@@ -111,10 +111,11 @@ test.describe('A failed submit', { tag: ['@e2e'] }, () => {
     await page.locator('input[name="items.2.value"]').fill('C')
 
     // Removing a row that is not the last parts each survivor's stable id from
-    // its position: B is row 1 at position 0, C is row 2 at position 1.
+    // its position: B is row 1 at position 0, C is row 2 at position 1, and
+    // each control is named by its position.
     await page.getByRole('button', { name: 'Remove Items item 1' }).click()
-    const second = page.locator('input[name="items.1.value"]')
-    const third = page.locator('input[name="items.2.value"]')
+    const second = page.locator('input[name="items.0.value"]')
+    const third = page.locator('input[name="items.1.value"]')
     await expect(second).toHaveValue('B')
     await expect(third).toHaveValue('C')
 

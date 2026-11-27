@@ -26,17 +26,82 @@ field's transforms, change events and validation all run.
   `signup_options`, `signup_submit`. Letters, digits, `_` and `-`, up to 56 of
   them, unique on the page. Any other name registers nothing and says so in
   the console.
-- **`description`** is what the form is for, in your words: it opens the
-  description of every tool, and it is what weighs most in how a model uses
-  them. Write it as trusted text; nothing a person typed goes in it.
+- **`description`** is what the form is for, in your words, and it is what
+  weighs most in how a model uses the tools. It goes only in the tools that
+  write, `<name>_fill` and `<name>_submit`: each opens with what that tool
+  does, and yours follows as the form's context:
+
+  ```text
+  Submits this form as its submit button does: every field is validated,
+  then the values are sent. About this form: Creates an account with an
+  email and a password. Call it once ...
+  ```
+
+  `<name>_read` and `<name>_options` only read, so a description that says
+  what sending does, or what the form edits, is not in them: they name the
+  form in their own first sentence instead, by `title` or else `name`,
+  `Reads what the form "signup" holds now: ...` and
+  `Finds the options of a field of the form "signup" that ...`.
+
+  Write it as trusted text; nothing a person typed goes in it. It need not end
+  in a period: one that does not end in `.`, `!`, `?`, `:` or an ellipsis is
+  closed with a period before the sentences that follow it. A blank one adds
+  nothing.
+
+- **`title`** is what the form edits, in your words and your language, for
+  the title of every tool: what the tool does, then yours, `Fill: Question 2`,
+  `Read: Question 2`, `Find options: Question 2`, `Submit: Question 2`, and
+  for the form the first sentence of `<name>_read` and `<name>_options` names.
+  Without it, or blank, the titles name `name` instead, `Fill: signup`, so the
+  tools of several forms on one page are told apart all the same; give a
+  `title` when `name` is a key no person reads, such as `step_2`.
+- **`target`** is which item the form edits now, for a form whose content
+  depends on what is open, such as the settings of the step selected: an id
+  or a fixed label. The tools keep their names when it changes, so every
+  answer says it, and a fill or a submit meant for the item the agent read is
+  refused once another is open. See
+  [A form that edits one item of several](#a-form-that-edits-one-item-of-several).
 - **`submit`** offers `<name>_submit`. Off by default, and only with an
-  `action`: sending has effects outside the page.
-- **`allow(call, { signal })`** is asked before a fill and before a submit,
-  never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
+  `action`: sending has effects outside the page. Without it, no tool speaks
+  of a submission, so an agent does not look for a way to send the form:
+  `<name>_fill` names the fields required (`Required fields: email.`) instead
+  of what a submission needs, and `<name>_read` answers no `submit`.
+- **`output`** is the shape of the `data` your action returns, so an agent
+  knows what a submission answers before it sends one. With `submit`, it is
+  the `data` that the `outputSchema` of `<name>_submit` declares, and the
+  `submit.data` of `<name>_read`'s; without it both declare any object. It is
+  a schema with `type: 'object'`, in the keywords of
+  [What every consumer reads](#what-every-consumer-reads):
+
+  ```ts
+  output: {
+    type: 'object',
+    properties: { id: { type: 'string' }, version: { type: 'integer' } },
+    required: ['id'],
+  }
+  ```
+
+  When `<name>_submit` answers data that breaks it, a development build names
+  where in the console: a value of another type, one outside its `enum`, a
+  `required` property missing, one not declared under
+  `additionalProperties: false`, or an array item that breaks `items`. Bounds,
+  such as `minimum` or `pattern`, are not checked. The answer goes out all the
+  same, `{ ok: true, data }`: the action already ran, and an answer that is not
+  `ok` would have the agent send the form again. `data` is always an object,
+  `{}` when the action returns none, so a `required` property is missing then.
+
+- **`allow(call, { signal, deadline })`** is asked before a fill and before a
+  submit, never before a read. `call` is `{ tool: 'fill' | 'submit', values }`.
   Answer `true` to go on, or `false` or the reason to refuse, which the agent
-  is given; a promise is waited for, as while a person confirms. `signal` is
-  aborted when the agent cancels, when the form unmounts, or after five
-  minutes, and the call is refused then. An `allow` that throws refuses it.
+  is given; a promise is waited for, as while a person confirms. `deadline`
+  is when the wait ends: five minutes after `allow` is asked, in milliseconds
+  since the epoch, as `Date.now()` counts them, so a countdown shown to the
+  person is the one that decides. `signal` is aborted when the agent cancels,
+  when the form unmounts, or at `deadline`: the first is answered `cancelled`,
+  and the other two are refused with a message that says which it was (see
+  [Codes](#codes)). An `allow` that throws refuses it.
+  A form with `allow` tells the agent that a person may need to approve a
+  submission first; see [Waiting for a person](#waiting-for-a-person).
 - **`onCall(call)`** is told of every call once it was answered, to audit
   what an agent asked and what it got, a call that wrote nothing included:
   `{ tool, input, output, duration }`, with `tool` one of `fill`, `read`,
@@ -112,12 +177,13 @@ corrected by sending them all, in order, or one leaf by its route.
 }
 ```
 
-- **`values`** holds the final value of every field that changed during the
-  call, the ones a change event filled included (`city`), in the formats of
-  the schema. A list the call did not send whole, holding the same rows, is
+- **`values`** holds what every field in `applied` holds now, one that already
+  held the value sent included, and the final value of every other field that
+  changed during the call, such as one a change event filled (`city`), in the
+  formats of the schema. A list the call did not send whole, holding the same rows, is
   told by the leaves that changed, under their route. A field skipped as
   [`changed`](#a-person-and-an-agent-at-once) is there too, with what it
-  holds.
+  holds. A row holds only the fields it shows, as `<name>_read` reads it.
 - **`skipped`** holds what was not written, with a [code](#codes).
 - **`errors`** name a row's leaf by its route too: `items.2.quantity`.
 - A time is written and read back as the schema gives it, `HH:mm`, or
@@ -133,16 +199,39 @@ corrected by sending them all, in order, or one leaf by its route.
 ### `<name>_read`
 
 Takes `{ fields? }` and answers what the form holds now: `values`, the fields
-`hidden` and `locked`, the `errors` on screen, and `submit`, the last
-submission (`idle`, `pending`, `success` with its `data`, or `error`). Up to
-100 fields a call; `more` says how many are left to ask for.
+`hidden` and `locked`, the `errors` on screen, and, when the form offers
+`<name>_submit`, `submit`, the last submission (`idle`, `awaiting_approval` with its `deadline`, `refused` with
+its `message`, `pending`, `success` with its `data`, or `error`). Up to 100
+fields a call; `more` says how many are left to ask for.
+
+A field that is not on the form is in `hidden` and not in `values`, as a
+submit leaves it out. A row's field that its row does not show is the same:
+it is in `hidden` by its route, and its row in `values` does not hold it. A
+row of a collapsed list still shows its fields.
+
+```json
+{
+  "hidden": ["body.0.mode", "body.1.value"],
+  "values": {
+    "body": [
+      { "kind": "text", "value": "a" },
+      { "kind": "group", "mode": "all" }
+    ]
+  }
+}
+```
 
 ### `<name>_options`
 
 Offered when a field's options are not in the schema. Takes
 `{ field, text? }` and answers up to 50 `items` whose label or value contains
 `text`, and `more`. A list's leaf is named through its first row,
-`items.0.product`.
+`items.0.product`. Either the `value` or the `label` of an item it answers
+is a value `<name>_fill` takes for the field: `"caribe"` picks the option
+`{ "label": "Caribe", "value": "r-02" }`. A text that is exactly an option's
+value picks that option, even when it is another option's label too; a text
+that reads as the label or value of more than one once case and accents are
+set aside is skipped as `invalid_option`, with the options it could mean.
 
 A field whose options are fetched answers with them once they arrive: the tool
 waits up to five seconds for the field's own request, and asks for nothing
@@ -160,14 +249,16 @@ Submits the form as its submit button does: the same validation, action,
 pending state and start over (see [Submit](../forms/submit.md)). A success is
 answered once the form has started over, so a `<name>_read` right after it
 reads what the form holds then. Answers `{ ok: true, data }` with what the
-action returned, `{ ok: false, error, errors }` when it failed, or
-`{ pending: true }` when a submission is still running or the action takes
-more than 15 seconds; `<name>_read` gives the outcome later.
+action returned, in the shape [`output`](#tools-for-agents) declares,
+`{ ok: false, error, errors }` when it failed, or
+`{ pending: true }` when a submission is still running or waits for a person,
+or when the person and the action take more than 15 seconds between them;
+`<name>_read` gives the outcome later.
 
 With [`validation.submit: false`](../forms/submit.md#turning-submit-validation-off)
 the values are sent unchecked, and the descriptions say so: `<name>_submit`
 leaves the checking to the action, `<name>_fill` names no field a submission
-needs, and the schema holds no rule only a submit checks (see
+needs or that is required, and the schema holds no rule only a submit checks (see
 [Text the agent reads](#text-the-agent-reads)).
 
 ### Codes
@@ -183,13 +274,67 @@ needs, and the schema holds no rule only a submit checks (see
 | `locked`         | `skipped`  | The field is disabled or read-only              |
 | `rows_fixed`     | `skipped`  | A fixed list sent with another number of rows   |
 | `rows_adjusted`  | `adjusted` | The list kept another number of rows            |
-| `refused`        | answer     | `allow` refused the call                        |
+| `refused`        | answer     | `allow` refused the call, or did not answer it  |
 | `busy`           | answer     | Ten calls are waiting already                   |
 | `cancelled`      | answer     | The agent cancelled the call                    |
+| `target_changed` | answer     | The form edits another item than the one meant  |
 
-A form answers its calls one at a time, in the order they come. Every tool
+A `refused` call changed nothing, and its `message` says why:
+
+| Why                               | `message`                                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `allow` answered a reason         | That reason, as it was given                                                                          |
+| `allow` answered `false`          | `The page refused the call.`                                                                          |
+| `allow` threw                     | `The page could not answer the call.`                                                                 |
+| No answer by `deadline`           | `Nobody answered in time, so the call changed nothing. Ask your user before you try again.`           |
+| The form unmounted while it asked | `The form is no longer on the page, so the call changed nothing. Ask your user before you try again.` |
+
+Every description says what the codes of the answer mean, in one sentence
+before the warning that the page's text is data. `busy` and `cancelled` can
+answer any call, so every tool says:
+
+```text
+If code is busy, 10 calls were waiting: call again once one is answered;
+cancelled, the call was stopped. message says more.
+```
+
+Only a call `allow` is asked about can be refused, so in a form with `allow`,
+`<name>_fill` and `<name>_submit` open the same sentence with `refused`, in
+words that hold for every reason above:
+
+```text
+If code is refused, the page did not let the call go on and it changed
+nothing; busy, 10 calls were waiting: ...
+```
+
+A form answers its calls one at a time, in the order they come, except while
+a submission waits for a person (below). Every tool
 declares an `outputSchema`, and what an agent can correct comes back in the
 answer with a `code`, never as an error thrown.
+
+## Waiting for a person
+
+With `allow`, the description of `<name>_submit` says that a person may need
+to approve it first, so the agent can tell its user why it waits. While
+`allow` has not answered a submit:
+
+- `<name>_read` answers at once, with
+  `submit: { status: 'awaiting_approval', deadline }`: the `deadline` `allow`
+  was given, as an ISO 8601 time such as `'2026-11-25T12:39:42.000Z'`.
+  So does a second `<name>_submit`, with `{ pending: true }` and a message
+  that says it waits for a person; it is not asked about again.
+- A `<name>_fill` waits in line until the person answers, so nothing is
+  written over the values they decide on.
+- Past 15 seconds, `<name>_submit` answers `{ pending: true }` and the wait
+  goes on: once the person approves, the form is submitted, and
+  `<name>_read` reads `pending`, then the outcome.
+- When the person refuses, or does not answer by the deadline,
+  `<name>_read` reads `{ status: 'refused', message }`, with the `message`
+  the refused call is answered with (see [Codes](#codes)). A submit the agent cancels while
+  it waits leaves the last submission as it was.
+- With `target`, a call the person approves after another item was opened
+  writes or sends nothing: see
+  [A form that edits one item of several](#a-form-that-edits-one-item-of-several).
 
 ## A person and an agent at once
 
@@ -208,6 +353,59 @@ fill answered with; a row's leaf among them tells the rows moved too. A
 submission that succeeds starts the form over, with nothing a person changed
 in it yet.
 
+## A form that edits one item of several
+
+A form whose content depends on what is open, such as the settings of the
+step selected, offers the same tools whatever it edits: `step_fill` writes to
+the step open when it runs. Name that item with `target`, and change it with
+the item:
+
+```tsx
+<Form
+  key={step.id}
+  sections={sections}
+  config={config}
+  value={step.settings}
+  agent={{ name: 'step', title: step.label, target: step.id }}
+/>
+```
+
+- Every answer, of every tool, has `target`: the item the call acted on, and
+  the `outputSchema` of each tool declares it. The descriptions of
+  `<name>_read`, `<name>_fill` and `<name>_submit` say what it means.
+- A `<name>_read` tells the agent which item the form edits, and so does a
+  `<name>_fill` that runs. Once another is open, the next `<name>_fill` or `<name>_submit` is
+  refused with `target_changed`, changing nothing: what it sends was meant
+  for the item the agent read. The answer names the item open now, and its
+  `message` asks the agent to read the form and to ask its user before it
+  writes to this one:
+
+  ```json
+  {
+    "code": "target_changed",
+    "message": "The form edits another item than the one this call was meant for, so the call changed nothing. Call step_read, and ask your user before you write to this one.",
+    "ok": false,
+    "target": "B"
+  }
+  ```
+
+- After a `<name>_read`, the fill goes on, on the item open now.
+- A call that waits for a person is held to the item it started on: once
+  `allow` approves it, a `<name>_fill` or `<name>_submit` is refused the same
+  way if another item is open, since what the person approved was meant for
+  the first. A submit is refused even when the agent read the item open now
+  while it waited. A refused submit takes back its wait: `<name>_read` reads
+  the last submission as it was before.
+- An agent that has read no item yet is not refused: there is no item it
+  meant.
+- What the agent was told is kept by `name` on the page, past the form: a
+  host that draws the form anew for each item, with a `key`, is held to it
+  the same as one that hands the form the item's values.
+
+Changing `target` alone does not register the tools again: which item it
+names is read on every call, and only whether there is one changes the tools.
+Without `target`, nothing of this is described, answered or refused.
+
 ## What the person sees
 
 The form shows the person an agent at work, through attributes for your CSS;
@@ -220,7 +418,10 @@ it brings no style of its own.
   person changes that field, or adds or removes a row of a list it is in. A
   value the field already held is not marked. A field drawn again, when a value
   hides and shows it, or a form started over after a success, comes back
-  without it.
+  without it. The field is the one whose `data-field-name` is the value's name
+  (see [Styling hooks](../structure/layout.md#styling-hooks)), so a
+  [custom input](../fields/custom-inputs.md) is marked whether or not it
+  renders a `name`.
 - A polite live region inside the form says how many fields a fill filled, in
   the form's language: `An agent filled 3 fields`.
 
@@ -306,13 +507,18 @@ Labels, values and options come from the page, and a person or a remote
 source may have written them: every tool is marked `untrustedContentHint` and
 says so in its description. Leave a field out of the tools with
 [`advanced.agent: false`](#what-an-agent-cannot-write) when an agent should not
-be the one to ask for it; a password is always left out, and a field left out
-answers `unknown`, as one that does not exist.
+be the one to ask for it, or every field of a custom type with
+[`agent: false`](#custom-types); a password is always left out, and a field
+left out answers `unknown`, as one that does not exist.
 
 Every field in the schema is one an agent may be tempted to fill with what it
-knows about the person. `<name>_fill` asks for the values the person gave for
-this form and nothing else, but the schema is the real limit: offer only the
-fields the form needs, and leave optional personal data out of the tools.
+knows about the person. `<name>_fill` asks for what the person asked for and
+the values it implies, such as a key made from a label, and to ask the person
+before writing what they did not give, such as what the agent knows about
+them. The same words fit a form about a person and one that configures
+something, whose required technical keys no person types. The schema is still
+the real limit: offer only the fields the form needs, and leave optional
+personal data out of the tools.
 
 ## Building the schema
 
@@ -383,11 +589,15 @@ describes it once, by the first of them an agent may write, and lists it in
 These fields are not in the schema, and the tools refuse them:
 
 - `input/password`, always.
-- A field or a list with `"advanced": { "agent": false }`.
+- A field or a list with `"advanced": { "agent": false }`, or
+  `"advanced": { "agent": { "exclude": true } }`.
+- A field of a type registered with `agent: false`, always (see
+  [Custom types](#custom-types)).
 - A `transient` field, and a `readonly` one.
 - A `hidden` or `disabled` field, unless a `state` event that a field the agent
   may write fires shows it or unlocks it. Then it is in the schema, and its
-  description says which field makes it available.
+  description says what makes it available (see
+  [Text the agent reads](#text-the-agent-reads)).
 
 `advanced.agent: false` is for data an agent should not be the one to ask for:
 
@@ -400,18 +610,132 @@ These fields are not in the schema, and the tools refuse them:
 }
 ```
 
+`"agent": true` is the same as leaving the key out. It keeps nothing back and
+opens nothing: a password, a field of a type registered with `agent: false`,
+and a field in the rows of a list with `"agent": false` stay out.
+
+`agent` can also be an object, to tell the agent what a field is without
+drawing it for the person. `exclude: true` in it says what `false` does, and
+`false` or no `exclude` what `true` does: it opens nothing either.
+`description` is text only the agent reads, for a field whose name or label
+could mislead it, such as a field named `required` that holds the message
+shown when an answer is left empty:
+
+```json
+{
+  "label": "If it is left empty",
+  "name": "required",
+  "type": "input/text",
+  "advanced": {
+    "agent": {
+      "description": "The message shown when the answer is left empty"
+    }
+  }
+}
+```
+
+The form never draws it, nor puts it on an element of the page. In the
+schema it follows the field's own description, before the notes (see
+[Text the agent reads](#text-the-agent-reads)).
+
 ## Text the agent reads
 
 - A field's `title` is its translated label, and its `description` is the
-  field's own description followed by what JSON Schema cannot say: option
+  field's own description, then the `description` of its `advanced.agent`,
+  followed by what JSON Schema cannot say: option
   labels, a number's step, a date's bounds and reserved days, which field shows
-  a hidden one, a `requiredWhen`, that a required `checkbox` has to be `true`.
+  a hidden one, a `requiredWhen`, each rule of `rules` and `custom`, that a
+  required `checkbox` has to be `true`.
+  The field's own description, the one of its `advanced.agent`, and a custom
+  input's, is closed with a period before what follows when it does not end a
+  sentence, as `description` above.
+- A field or a list without a `label` that is the only one its
+  [section](../structure/sections.md) holds, a column's fields counted among
+  the section's, takes the section's translated `title`, and its
+  `description` when it has none of its own. Of several in a section, none
+  takes them, and a field kept from agents counts among them.
+- A note in a list's row holds for each row, so it names no row by its number.
+  A field of the same row is this row's, as in
+  `Shown for some values of this row's flag` or
+  `Required when this row's mode equals "strict".`, in a nested list too. A field
+  in the rows of a list under it, or a field of a row named from outside the
+  list, counts each row as `<row>`, the way the list's routes do:
+  `this row's inner.<row>.flag`, `outer.<row>.flag`. A field outside every list
+  is named as it is.
+- A field listed in `lookup` has no `enum`, so its description points to
+  `<name>_options` and says that an option is passed by its value or its
+  label. A field whose options are listed does not say it: its `enum` holds
+  the values only, and a client that checks the input against the schema
+  would refuse a label, although `<name>_fill` takes one.
+- A `pattern` goes in the `pattern` keyword only on a field written as text:
+  `input`, `input/text`, `input/tel`, `input/email`, `textarea`, and a type
+  `types` gives no schema for. Even there, one with `flags`, with
+  `allowInterpolation`, or that does not compile in Unicode mode is not
+  carried. Every other pattern is written in the description as a literal with
+  its flags, such as `It must match /^[a-z]{3}$/i.`, when that takes 100
+  characters or fewer, escapes included. A bare `/` is escaped, so
+  `^https?://` reads `/^https?:\/\//`, and one already escaped is left as it
+  is. A longer one is never cut, since a part of it would expect something
+  else: the description says `It must match a pattern the form checks.`
+  instead. The submit checks a pattern against any field that holds text, so a
+  number, a day, a time, an option, a month, a year, a time zone and a type
+  `types` describes as a `string`, `number` or `integer` say theirs this way.
+  A field whose schema is a `boolean`, an `array` or an `object` says nothing
+  of one. The pattern's translated `message` follows, in the keyword's case
+  too, cut at 200 characters, unless it interpolates a value. A pattern carried
+  in the keyword is not repeated in the description.
+- A `requiredWhen` is written in words, one condition per rule joined by
+  `or`, such as `Required when kind is not one of ["object","array"].` Each
+  [operator](../validation/overview.md#operators) has its phrase: `eq`
+  equals, `neq` does not equal, `in` is one of, `nin` is not one of, `gt` is
+  greater than, `gte` is at least, `lt` is less than, `lte` is at most,
+  `contains` contains, `exists` has a value, `empty` has no value, `truthy`
+  has a value other than false or 0. The last three leave the `value` out,
+  since they ignore it. A rule whose operator the form cannot read never
+  holds, and is left out.
+- Each rule of `rules` and `custom` is written in words, followed by its
+  translated `message`, cut at 200 characters, unless it interpolates a value.
+  An assertion says what passes it: `required` as `Required`, `min` and `max`
+  as `At least 3` or `At most 20`, counted in characters on a field that holds
+  text and in items on one that holds a list, `minItems` and `maxItems` as
+  `At least 2 items` on a field that holds a list, `oneOf` as
+  `One of ["eq","neq"]`, and `pattern` as the literal above. Its `when` follows
+  in the phrases above, the conditions of an array or of `all` joined by `and`
+  and those of `any` by `or`, such as
+  `At least 1 when kind equals "a" and (size has a value or mode equals "b").`
+  A `custom` compares the field with the one it names, as
+  `The form checks that it equals the value of password.` In a row, the fields
+  both name are this row's. A rule that never fails is left out: an `assert`
+  the form does not know, a `pattern` with no pattern, a `custom` whose
+  operator the form cannot read, and a `when` that never holds, since a
+  condition it needs, or every condition its `any` may take, has such an
+  operator. One that fails every value says
+  `The form checks more rules for it.` before its message: a bound that is not
+  a number, `minItems` or `maxItems` on a field that holds no list, and a
+  `oneOf` without a list.
+- A hidden or locked field says what makes it available, as a rule that holds
+  whatever the form holds: the schema is built from the definition, so the
+  note reads the same while the field is hidden and once it is shown. Whether
+  it is hidden or locked right now is what `<name>_read` answers. When every
+  `state` event that shows it (or unlocks it) compares the new value with
+  values of its own, the description cites them, in the phrases above: a
+  string `when` as `eq`, an array as `in`, a condition by its operator, such as
+  `Shown while kind is one of ["list","group"]: send it in the same call.`
+  Several events are joined by `or`. When one of them cannot be put that way,
+  it names the fields whose values do it instead:
+  `Shown for some values of kind`. That is an event with no `when`, a
+  condition with `field` (it reads a key of the chosen option), one on a
+  `chips` field (it is matched by its selections), or one whose operator the
+  form cannot read. A field that is both hidden and locked says each, as
+  `Shown while kind equals "list" and unlocked while kind equals "group"`, or
+  `Shown and unlocked while ...` when the same thing does both. A required one
+  adds `Required while it is available.`
 - A submit that checks nothing leaves out of the schema what only a submit
   checks: a `requiredWhen`, a `rules`, a `pattern`, in a keyword or in a note.
   The rest stays, since the field checks it as it is written: its bounds, a
-  whole number, a required `checkbox`, and a `custom`, whose note says so.
+  whole number, a required `checkbox`, and a `custom`, whose note says it.
 - A field whose `advanced.length` the form cannot read, such as `"min": "x"`,
-  has no bounds in the schema, and its description says the submit refuses any
+  has no bounds in the schema, and its description says the form accepts no
   value for it.
 - A label or a description that interpolates a value, with a
   [`{placeholder}`](../interpolation/overview.md), is left out: the agent would
@@ -433,10 +757,10 @@ The schema uses only these keywords: `type`, `properties`, `required`,
 `maxLength`, `minItems`, `maxItems`, `pattern`, `format`, `title` and
 `description`. There is no `oneOf`, `const`, `$ref` or `multipleOf`: one of the
 model APIs reads a subset of OpenAPI that does not document them. A pattern goes
-in only when it has no flags and compiles in Unicode mode, the way JSON Schema
-reads it; any other pattern is checked on submit and only mentioned in the
-description. A form whose submit checks nothing has neither (see
-[Text the agent reads](#text-the-agent-reads)).
+in only on a field written as text, when it has no flags and compiles in
+Unicode mode, the way JSON Schema reads it; any other pattern is checked on
+submit and written in the description. A form whose submit checks nothing has
+neither (see [Text the agent reads](#text-the-agent-reads)).
 
 The same definition in the same language gives the same schema, byte for byte:
 nothing in it depends on the time or on what a person typed. A tool registered
@@ -476,11 +800,31 @@ component as one. Use the same keywords as the rest of the schema
   too, and it replaces the one the library would give.
 - The last registration of a type is the one that counts, schema included.
 
-Calling `buildToolSchema` yourself, pass the same schemas as `types`:
+A type no agent should write, such as a secret, a connection picker or a JSON
+editor, is closed with `agent: false`:
+
+```ts
+defineCustomInput('secret', SecretInput, { agent: false })
+```
+
+Every field of it is left out of the tools of every form, as a password is, in
+the rows of a list too: it is not in the schema, `<name>_read` returns nothing
+of it, and `<name>_fill` answers `unknown` when an agent names it. A field that
+only a field of it shows or unlocks is left out with it. Nothing in the
+definition opens it again: `"advanced": { "agent": true }` is the same as
+leaving the key out. A built-in type
+registered this way is closed too, and the last registration of a type decides
+it, as it does a schema.
+
+Calling `buildToolSchema` yourself, pass the same schemas as `types`, and
+`false` for a closed type:
 
 ```ts
 buildToolSchema(sections, {
-  types: { rating: { maximum: 5, minimum: 1, type: 'integer' } },
+  types: {
+    rating: { maximum: 5, minimum: 1, type: 'integer' },
+    secret: false,
+  },
 })
 ```
 

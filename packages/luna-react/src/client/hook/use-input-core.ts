@@ -7,6 +7,8 @@ import {
   heldListRowsAtom,
   mountedListsAtom,
   pendingListRowsAtom,
+  translateRows,
+  type MountedList,
 } from '../lib/list-store'
 import {
   appliedAutoFillAtom,
@@ -91,13 +93,21 @@ export type InputCoreProps = Readonly<{
 //
 // Read off the document instead of tracked in state because the field that
 // receives an auto-fill is rendered by a different component than the source
-// that sends it, and `name` is the one identifier both sides agree on: it is
-// the atom key, and `buildCommon` puts the same string on the element.
+// that sends it. The element carries the field's name with each row at its
+// position, the name a consumer reads, so the key the store holds is put the
+// same way before comparing. See `translateRows`.
 //
 // No guard for a missing `document`: both callers reach this from an event
 // handler or an effect, neither of which runs while rendering on the server.
-function isFieldFocused(name: string) {
-  return document.activeElement?.getAttribute('name') === name
+function isFieldFocused(
+  name: string,
+  mounted: Readonly<Record<string, MountedList>>
+) {
+  const shown = translateRows(name, mounted, 'position')
+  return (
+    shown !== undefined &&
+    document.activeElement?.getAttribute('name') === shown
+  )
 }
 
 export function useInputCore(
@@ -115,8 +125,9 @@ export function useInputCore(
   const [, startTransition] = useTransition()
 
   // Translates consumer-facing names from the list's stable id to the item's
-  // current position (identity outside lists). Consumed unconditionally: the
-  // context value has a stable identity, so this never triggers re-renders.
+  // current position (identity outside lists). Its identity changes when the
+  // rows of a list around this field move, and only then: exactly when the
+  // name the control carries has to change with them.
   const translateListPath = use(ListPathContext)
 
   const { setValue, value, setSource } = deps
@@ -145,8 +156,14 @@ export function useInputCore(
 
   const placeholder = translate(props.commonProps.placeholder, translations)
 
+  // The control is named the way the consumer names the field: with each row
+  // at its position, not by the id the store keeps it under. Anything that
+  // finds a control by `name` -- a host's script, a test, `FormData` -- then
+  // finds the row it sees, whatever rows were added, removed or assigned
+  // before it. The submit puts the ids back; see `useFormState`.
   const commonProps = {
     ...props.commonProps,
+    name: translateListPath(props.field.name),
     placeholder,
   }
 
@@ -567,7 +584,7 @@ export function useInputCore(
           // typed next lands behind it -- `customeremail` + `customer_email`.
           // `onBlur` releases this the moment they leave the field, so the
           // auto-fill is postponed, never dropped (Bug C).
-          if (isFieldFocused(newTarget)) {
+          if (isFieldFocused(newTarget, store.get(mountedListsAtom))) {
             setPendingAutoFill({ target: newTarget, value: transformed })
             return
           }

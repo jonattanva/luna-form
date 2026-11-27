@@ -10,7 +10,16 @@ type Answer = Record<string, unknown>
 
 type Tools = Readonly<{
   call: (name: string, input: object) => Promise<Answer>
-  list: () => Promise<Array<Readonly<{ name: string; inputSchema: Answer }>>>
+  list: () => Promise<
+    Array<
+      Readonly<{
+        description: string
+        inputSchema: Answer
+        name: string
+        outputSchema: Answer
+      }>
+    >
+  >
 }>
 
 const COUNTRIES = `[
@@ -399,6 +408,27 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(page.locator('input[name$=".sku"]')).toHaveValue('X')
   })
 
+  test('should tell what a field holds when it already held the value sent', async ({
+    page,
+  }) => {
+    await open(page)
+    await call(page, 'preview_fill', {
+      country: 'mx',
+      items: [{ sku: 'A1' }],
+    })
+
+    expect(
+      await call(page, 'preview_fill', {
+        country: 'México',
+        'items.0.sku': 'A1',
+      })
+    ).toMatchObject({
+      applied: ['country', 'items.0.sku'],
+      ok: true,
+      values: { country: 'mx', 'items.0.sku': 'A1' },
+    })
+  })
+
   test("should take what a person's submission leaves as no one's change", async ({
     page,
   }) => {
@@ -478,6 +508,68 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     await expect(sku).toHaveAttribute('data-agent-filled')
     await page.getByRole('button', { name: 'Add item' }).click()
     await expect(sku).not.toHaveAttribute('data-agent-filled')
+  })
+
+  test('should mark the field of a custom type with no name in the page', async ({
+    page,
+  }) => {
+    // `input/expression` is an editable `div`: nothing in the page carries the
+    // field's name, so the form has to find its field by its own.
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            { label: 'Subject', name: 'subject', type: 'input/expression' },
+            { label: 'Message', name: 'message', type: 'textarea' },
+            {
+              fields: [
+                { label: 'Note', name: 'note', type: 'input/expression' },
+              ],
+              label: 'Lines',
+              name: 'lines',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+    const fieldOf = (label: string) =>
+      page
+        .getByRole('textbox', { name: label })
+        .first()
+        .locator('xpath=ancestor::*[@data-slot="field"][1]')
+
+    await call(page, 'preview_fill', { message: 'Body', subject: 'Hello' })
+    await expect(page.getByRole('textbox', { name: 'Subject' })).toHaveText(
+      'Hello'
+    )
+    // The field carries its name, for the host to find it by.
+    await expect(fieldOf('Subject')).toHaveAttribute(
+      'data-field-name',
+      'subject'
+    )
+    await expect(fieldOf('Subject')).toHaveAttribute('data-agent-filled')
+    await expect(fieldOf('Message')).toHaveAttribute('data-agent-filled')
+    await expect(page.locator('[aria-live="polite"]')).toHaveText(
+      'An agent filled 2 fields'
+    )
+
+    // The person's change takes the mark off that field alone.
+    await page.getByRole('textbox', { name: 'Subject' }).click()
+    await page.keyboard.type('!')
+    await expect(fieldOf('Subject')).not.toHaveAttribute('data-agent-filled')
+    await expect(fieldOf('Message')).toHaveAttribute('data-agent-filled')
+
+    // A list's rows are marked by the list's name.
+    await call(page, 'preview_fill', { lines: [{ note: 'First' }] })
+    await expect(fieldOf('Note')).toHaveAttribute(
+      'data-field-name',
+      'lines.0.note'
+    )
+    await expect(fieldOf('Note')).toHaveAttribute('data-agent-filled')
+    await page.getByRole('textbox', { name: 'Note' }).click()
+    await page.keyboard.type('!')
+    await expect(fieldOf('Note')).not.toHaveAttribute('data-agent-filled')
   })
 
   test('should tell the host who made each change', async ({ page }) => {
@@ -601,6 +693,117 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should name the controls of a row in a nested list by its position', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              fields: [
+                { label: 'Title', name: 'title', type: 'input/text' },
+                {
+                  fields: [{ label: 'Key', name: 'key', type: 'input/text' }],
+                  label: 'Parts',
+                  name: 'parts',
+                  type: 'list',
+                },
+              ],
+              label: 'Groups',
+              name: 'groups',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+      value: {
+        groups: [
+          { parts: [{ key: 'a' }], title: 'A' },
+          { parts: [{ key: 'b' }], title: 'B' },
+        ],
+      },
+    })
+
+    // The name each control carries, in the order the page shows them, and
+    // that its field carries the same one.
+    const names = () =>
+      page.locator('input[name^="groups."]').evaluateAll((inputs) =>
+        inputs.map((input) => {
+          const name = input.getAttribute('name')
+          const field = input
+            .closest('[data-slot="field"]')
+            ?.getAttribute('data-field-name')
+          return field === name ? name : `${name} in field ${field}`
+        })
+      )
+
+    await call(page, 'preview_read')
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'a' }], title: 'A' },
+        { parts: [{ key: 'b' }], title: 'B' },
+        { parts: [{ key: 'c' }, { key: 'd' }], title: 'C' },
+      ],
+    })
+    await expect(page.locator('input[value="d"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+      'groups.2.title',
+      'groups.2.parts.0.key',
+      'groups.2.parts.1.key',
+    ])
+
+    // Twice: the rows an assignment reuses, and the ones it hands out anew.
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'e' }, { key: 'f' }], title: 'E' },
+        { parts: [{ key: 'g' }], title: 'G' },
+      ],
+    })
+    await expect(page.locator('input[value="g"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.0.parts.1.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+    ])
+
+    // A person removes the first row, then the agent sends the rows again.
+    await page.getByRole('button', { name: 'Remove Groups item 1' }).click()
+    await expect(page.locator('input[value="E"]')).toHaveCount(0)
+    expect(await names()).toEqual(['groups.0.title', 'groups.0.parts.0.key'])
+
+    await call(page, 'preview_read')
+    await call(page, 'preview_fill', {
+      groups: [
+        { parts: [{ key: 'g' }], title: 'G' },
+        { parts: [{ key: 'h' }, { key: 'i' }], title: 'H' },
+      ],
+    })
+    await expect(page.locator('input[value="i"]')).toBeVisible()
+    expect(await names()).toEqual([
+      'groups.0.title',
+      'groups.0.parts.0.key',
+      'groups.1.title',
+      'groups.1.parts.0.key',
+      'groups.1.parts.1.key',
+    ])
+
+    // The submit reads the controls by those names, and sends every row.
+    const submitted = await call(page, 'preview_submit')
+    expect((submitted.data as Answer).form).toEqual({
+      groups: [
+        { parts: [{ key: 'g' }], title: 'G' },
+        { parts: [{ key: 'h' }, { key: 'i' }], title: 'H' },
+      ],
+    })
+  })
+
   test('should write a custom type in the shape it declares', async ({
     page,
   }) => {
@@ -637,6 +840,56 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     })
   })
 
+  test('should leave out a custom type its registration keeps from agents', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            { label: 'Token', name: 'token', type: 'secret' },
+            { label: 'Note', name: 'note', type: 'input/text' },
+            {
+              fields: [{ label: 'Key', name: 'key', type: 'secret' }],
+              label: 'Keys',
+              name: 'keys',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+
+    const [fill] = await list(page)
+    expect(Object.keys(fill.inputSchema.properties as object)).toEqual([
+      'note',
+      'keys',
+    ])
+    expect(JSON.stringify(fill)).not.toMatch(/token|"key"|secret/i)
+
+    await page.locator('input[name="token"]').fill('t')
+    await page.locator('input[name="keys.0.key"]').fill('k')
+    expect(
+      (await call(page, 'preview_read', { fields: ['token', 'note'] })).values
+    ).toEqual({ note: null })
+    expect(JSON.stringify(await call(page, 'preview_read'))).not.toMatch(
+      /token|"key"|"t"|"k"/
+    )
+
+    expect(
+      await call(page, 'preview_fill', { 'keys.0.key': 'x', token: 'x' })
+    ).toMatchObject({
+      ok: false,
+      skipped: [
+        { code: 'unknown', name: 'keys.0.key' },
+        { code: 'unknown', name: 'token' },
+      ],
+    })
+    await expect(page.locator('input[name="token"]')).toHaveValue('t')
+    await expect(page.locator('input[name="keys.0.key"]')).toHaveValue('k')
+    await expect(page.locator('[data-agent-filled]')).toHaveCount(0)
+  })
+
   test('should validate what it wrote once, and show the errors on the page', async ({
     page,
   }) => {
@@ -667,6 +920,164 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
       submit: { status: 'idle' },
       values: { card: null, name: 'Grace', nickname: 'Grace' },
     })
+  })
+
+  // A name such as `required` can read as a yes or no while the field holds a
+  // message: what `advanced.agent` describes reaches the agent, and the
+  // person reads the label and the description drawn for them only.
+  test('should tell the agent the description of advanced.agent, and draw it nowhere', async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              advanced: {
+                agent: { description: 'The message shown when it is empty' },
+              },
+              description: 'Leave it blank for the default',
+              label: 'If it is left empty',
+              name: 'required',
+              type: 'input/text',
+            },
+          ],
+        },
+      ],
+    })
+    const fill = (await list(page)).find(({ name }) => name === 'preview_fill')
+    const properties = fill?.inputSchema.properties as Record<
+      string,
+      Readonly<{ description?: string; title?: string }>
+    >
+
+    expect(properties.required).toEqual({
+      description:
+        'Leave it blank for the default. The message shown when it is empty',
+      title: 'If it is left empty',
+      type: 'string',
+    })
+    const form = page.locator('form')
+    await expect(
+      form.getByRole('textbox', { name: 'If it is left empty' })
+    ).toBeVisible()
+    await expect(form.getByText('Leave it blank for the default')).toBeVisible()
+    await expect(form).not.toContainText('The message shown when it is empty')
+    await expect(form.locator('[agent]')).toHaveCount(0)
+  })
+
+  // The schema is built from the definition, not from what the form holds:
+  // a note on a field an event shows says the rule, true while it is shown
+  // as much as while it is hidden.
+  test('should say what shows a field as a rule, true once it is shown', async ({
+    page,
+  }) => {
+    await open(page)
+    const describe = async () => {
+      const fill = (await list(page)).find(
+        ({ name }) => name === 'preview_fill'
+      )
+      const properties = fill?.inputSchema.properties as Record<
+        string,
+        Readonly<{ description?: string }>
+      >
+      return [properties.frequency.description, properties.card.description]
+    }
+    const before = await describe()
+
+    expect(await call(page, 'preview_fill', { plan: 'pro' })).toMatchObject({
+      ok: true,
+    })
+    await expect(
+      page.getByRole('combobox', { name: 'Frequency' })
+    ).toBeVisible()
+    expect(
+      await call(page, 'preview_read', { fields: ['frequency', 'card'] })
+    ).toMatchObject({ hidden: [], locked: [] })
+
+    expect(await describe()).toEqual(before)
+    expect(before).toEqual([
+      'Options: weekly (Weekly), monthly (Monthly). Shown while plan equals "pro": send it in the same call.',
+      'Unlocked while plan equals "pro": send it in the same call.',
+    ])
+  })
+
+  test("should read a row's hidden fields as hidden, under their route", async ({
+    page,
+  }) => {
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              fields: [
+                {
+                  event: {
+                    change: [
+                      {
+                        action: 'state',
+                        state: { hidden: false },
+                        target: 'body/mode',
+                        when: 'group',
+                      },
+                      {
+                        action: 'state',
+                        state: { hidden: true },
+                        target: 'body/value',
+                        when: 'group',
+                      },
+                    ],
+                  },
+                  label: 'Kind',
+                  name: 'kind',
+                  source: [
+                    { label: 'Text', value: 'text' },
+                    { label: 'Group', value: 'group' },
+                  ],
+                  type: 'select',
+                },
+                { label: 'Value', name: 'value', type: 'input/text' },
+                {
+                  hidden: true,
+                  label: 'Mode',
+                  name: 'mode',
+                  source: [
+                    { label: 'Any', value: 'any' },
+                    { label: 'All', value: 'all' },
+                  ],
+                  type: 'select',
+                },
+              ],
+              label: 'Body',
+              name: 'body',
+              type: 'list',
+            },
+          ],
+        },
+      ],
+    })
+
+    await call(page, 'preview_fill', {
+      body: [
+        { kind: 'text', value: 'a' },
+        { kind: 'group', mode: 'all' },
+      ],
+    })
+
+    // As a field hidden at the top: named in hidden, left out of values, as
+    // the submit leaves it out.
+    const read = await call(page, 'preview_read')
+    expect(read).toMatchObject({
+      hidden: ['body.0.mode', 'body.1.value'],
+      values: {
+        body: [
+          { kind: 'text', value: 'a' },
+          { kind: 'group', mode: 'all' },
+        ],
+      },
+    })
+    const submitted = await call(page, 'preview_submit')
+    expect((submitted.data as Answer).form).toEqual(read.values)
   })
 
   test('should tell the host of every call, with what it was answered', async ({
@@ -768,6 +1179,61 @@ test.describe('Agent tools', { tag: ['@e2e'] }, () => {
     expect(await call(page, 'preview_options', { field: 'city' })).toEqual({
       items: [{ label: 'Bogotá', value: 'bog' }],
     })
+  })
+
+  test('should take an option fetched by its label, as its description says', async ({
+    page,
+  }) => {
+    await page.route('**/api/regions', (route) =>
+      route.fulfill({
+        body: JSON.stringify([
+          { label: 'Andes', value: 'r-01' },
+          { label: 'Caribe', value: 'r-02' },
+        ]),
+        contentType: 'application/json',
+      })
+    )
+    await openWith(page, {
+      sections: [
+        {
+          fields: [
+            {
+              label: 'Region',
+              name: 'region',
+              source: { url: '/api/regions' },
+              type: 'select',
+            },
+          ],
+        },
+      ],
+    })
+
+    const fill = (await list(page)).find((tool) => tool.name === 'preview_fill')
+    expect(fill?.inputSchema).toMatchObject({
+      properties: {
+        region: {
+          description:
+            'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.',
+        },
+      },
+    })
+
+    expect(await call(page, 'preview_options', { field: 'region' })).toEqual({
+      items: [
+        { label: 'Andes', value: 'r-01' },
+        { label: 'Caribe', value: 'r-02' },
+      ],
+    })
+    expect(
+      await call(page, 'preview_fill', { region: 'caribe' })
+    ).toMatchObject({
+      applied: ['region'],
+      ok: true,
+      values: { region: 'r-02' },
+    })
+    await expect(page.getByRole('combobox', { name: 'Region' })).toHaveText(
+      'Caribe'
+    )
   })
 
   test('should find time zones by name', async ({ page }) => {
@@ -941,6 +1407,115 @@ test.describe(
       await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
     })
 
+    test('should tell the agent the form is gone when it leaves the page while allow is asked', async ({
+      page,
+    }) => {
+      await open(page)
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: () => Promise<boolean>
+          __lunaFilled?: Answer
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = () => new Promise<boolean>(() => {})
+        void page
+          .__lunaTools!.call('preview_fill', { name: 'Ada' })
+          .then((answer) => {
+            page.__lunaFilled = answer
+          })
+      })
+
+      // Another page of the app, without a reload: the form unmounts and the
+      // call still waiting is answered.
+      await page.evaluate(() =>
+        (
+          window as Window & {
+            next: { router: { push: (href: string) => void } }
+          }
+        ).next.router.push('/')
+      )
+      await expect(page).not.toHaveURL(/\/reactive$/)
+
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => (window as Window & { __lunaFilled?: Answer }).__lunaFilled
+          )
+        )
+        .toEqual({
+          code: 'refused',
+          message:
+            'The form is no longer on the page, so the call changed nothing. Ask your user before you try again.',
+          ok: false,
+        })
+    })
+
+    test('should say a submission waits for a person until when, and answer within 15 seconds while it does', async ({
+      page,
+    }) => {
+      await open(page)
+      expect((await list(page)).at(-1)?.description).toContain(
+        'A person may need to approve it first.'
+      )
+
+      // A person who has not answered yet. The page's clock is the test's from
+      // here: no real wait of 15 seconds.
+      await page.clock.install()
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: (
+            call: object,
+            options: { deadline: number }
+          ) => Promise<boolean>
+          __lunaAsked?: number
+          __lunaDeadline?: number
+          __lunaSubmitted?: Answer
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = (_call, { deadline }) => {
+          page.__lunaDeadline = deadline
+          return new Promise<boolean>(() => {})
+        }
+        page.__lunaAsked = Date.now()
+        void page.__lunaTools!.call('preview_submit', {}).then((answer) => {
+          page.__lunaSubmitted = answer
+        })
+      })
+
+      // The host is told when the wait ends, five minutes after it asked, and
+      // the agent reads the same time.
+      const { submit } = await call(page, 'preview_read')
+      const { asked, deadline, read } = await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAsked?: number
+          __lunaDeadline?: number
+        }
+        return {
+          asked: page.__lunaAsked ?? 0,
+          deadline: page.__lunaDeadline ?? 0,
+          read: Date.now(),
+        }
+      })
+      expect(deadline).toBeGreaterThanOrEqual(asked + 5 * 60_000)
+      expect(deadline).toBeLessThanOrEqual(read + 5 * 60_000)
+      expect(submit).toEqual({
+        deadline: new Date(deadline).toISOString(),
+        status: 'awaiting_approval',
+      })
+      await page.clock.runFor(15_000)
+      expect(
+        await page.evaluate(
+          () =>
+            (window as Window & { __lunaSubmitted?: Answer }).__lunaSubmitted
+        )
+      ).toEqual({
+        message:
+          'The submission waits for a person to approve it: call preview_read for its outcome.',
+        pending: true,
+      })
+      await expect(page.getByText('Form submitted successfully')).toHaveCount(0)
+    })
+
     test('should offer the options tool only when a field needs it, and return 50 at most', async ({
       page,
     }) => {
@@ -977,6 +1552,276 @@ test.describe(
         'preview_fill',
         'preview_read',
       ])
+    })
+
+    // Several forms on one page: an agent tells their tools apart by title.
+    test("should title the tools after the form's name, or the host's title", async ({
+      page,
+    }) => {
+      const titles = async () => (await list(page)).map((tool) => tool.title)
+      await openWith(page, NAME_ONLY)
+      expect(await titles()).toEqual([
+        'Fill: preview',
+        'Read: preview',
+        'Submit: preview',
+      ])
+
+      await swap(page, { ...NAME_ONLY, agent: { title: 'Question 2' } })
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
+    // A host whose one form edits whichever item is open: an agent that read
+    // one item and fills after the person opened another is writing to the
+    // wrong one. The host hands the form the item's values, or draws it anew.
+    for (const remount of [false, true]) {
+      test(`should not fill the item opened since the agent read another${remount ? ', the form drawn anew' : ''}`, async ({
+        page,
+      }) => {
+        const A = { name: 'Alpha' }
+        await openWith(page, {
+          agent: { target: 'A' },
+          host: { items: { A, B: { name: 'Beta' } }, remount },
+          sections: [
+            { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+          ],
+          value: A,
+        })
+        const name = page.getByRole('textbox', { name: 'Name' })
+        expect(await call(page, 'preview_read')).toMatchObject({
+          target: 'A',
+          values: { name: 'Alpha' },
+        })
+
+        await page.getByRole('button', { name: 'Open B' }).click()
+        await expect(name).toHaveValue('Beta')
+
+        // Neither written nor sent: both were meant for A.
+        for (const [tool, input] of [
+          ['preview_fill', { name: 'Alpha, renamed' }],
+          ['preview_submit', {}],
+        ] as const) {
+          expect(await call(page, tool, input)).toEqual({
+            code: 'target_changed',
+            message: expect.stringContaining('preview_read'),
+            ok: false,
+            target: 'B',
+          })
+        }
+        await expect(name).toHaveValue('Beta')
+        expect((await call(page, 'preview_read')).submit).toEqual({
+          status: 'idle',
+        })
+
+        // Read, the agent knows it edits B.
+        expect(await call(page, 'preview_read')).toMatchObject({
+          target: 'B',
+          values: { name: 'Beta' },
+        })
+        expect(
+          await call(page, 'preview_fill', { name: 'Beta, renamed' })
+        ).toMatchObject({ ok: true, target: 'B' })
+        await expect(name).toHaveValue('Beta, renamed')
+      })
+    }
+
+    // A person who opens another item while a fill waits for their approval
+    // has the form edit that one: what they approve was meant for the first.
+    test('should not fill the item opened while the fill waited for approval', async ({
+      page,
+    }) => {
+      const A = { name: 'Alpha' }
+      await openWith(page, {
+        agent: { target: 'A' },
+        host: { items: { A, B: { name: 'Beta' } } },
+        sections: [
+          { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+        ],
+        value: A,
+      })
+      const name = page.getByRole('textbox', { name: 'Name' })
+      expect(await call(page, 'preview_read')).toMatchObject({ target: 'A' })
+
+      // The person has the approval in front of them and has not answered.
+      await page.evaluate(() => {
+        const page = window as Window & {
+          __lunaAllow?: () => Promise<boolean>
+          __lunaApprove?: (allowed: boolean) => void
+          __lunaFilled?: object
+          __lunaTools?: Tools
+        }
+        page.__lunaAllow = () =>
+          new Promise<boolean>((resolve) => {
+            page.__lunaApprove = resolve
+          })
+        void page
+          .__lunaTools!.call('preview_fill', { name: 'Alpha, renamed' })
+          .then((answer) => {
+            page.__lunaFilled = answer
+          })
+      })
+      await page.waitForFunction(() => '__lunaApprove' in window)
+
+      // They open B, then approve what was asked for A.
+      await page.getByRole('button', { name: 'Open B' }).click()
+      await expect(name).toHaveValue('Beta')
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaApprove?: (allowed: boolean) => void }
+        ).__lunaApprove?.(true)
+      )
+      await page.waitForFunction(() => '__lunaFilled' in window)
+
+      expect(
+        await page.evaluate(
+          () => (window as Window & { __lunaFilled?: object }).__lunaFilled
+        )
+      ).toMatchObject({ code: 'target_changed', ok: false, target: 'B' })
+      await expect(name).toHaveValue('Beta')
+    })
+
+    // The same holds for a submit waiting for approval: the values of the
+    // item opened while it waited are not sent, even to an agent that read
+    // that item meanwhile, since the person approved the ones of the first.
+    for (const read of [false, true]) {
+      test(`should not submit the item opened while the submit waited for approval${read ? ', read meanwhile' : ''}`, async ({
+        page,
+      }) => {
+        const A = { name: 'Alpha' }
+        await openWith(page, {
+          agent: { target: 'A' },
+          host: { items: { A, B: { name: 'Beta' } } },
+          sections: [
+            { fields: [{ label: 'Name', name: 'name', type: 'input/text' }] },
+          ],
+          value: A,
+        })
+        expect(await call(page, 'preview_read')).toMatchObject({ target: 'A' })
+
+        await page.evaluate(() => {
+          const page = window as Window & {
+            __lunaAllow?: () => Promise<boolean>
+            __lunaApprove?: (allowed: boolean) => void
+            __lunaSubmitted?: object
+            __lunaTools?: Tools
+          }
+          page.__lunaAllow = () =>
+            new Promise<boolean>((resolve) => {
+              page.__lunaApprove = resolve
+            })
+          void page.__lunaTools!.call('preview_submit', {}).then((answer) => {
+            page.__lunaSubmitted = answer
+          })
+        })
+        await page.waitForFunction(() => '__lunaApprove' in window)
+
+        await page.getByRole('button', { name: 'Open B' }).click()
+        await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue(
+          'Beta'
+        )
+        if (read) {
+          expect(await call(page, 'preview_read')).toMatchObject({
+            submit: { status: 'awaiting_approval' },
+            target: 'B',
+          })
+        }
+        await page.evaluate(() =>
+          (
+            window as Window & { __lunaApprove?: (allowed: boolean) => void }
+          ).__lunaApprove?.(true)
+        )
+        await page.waitForFunction(() => '__lunaSubmitted' in window)
+
+        expect(
+          await page.evaluate(
+            () =>
+              (window as Window & { __lunaSubmitted?: object }).__lunaSubmitted
+          )
+        ).toMatchObject({ code: 'target_changed', ok: false, target: 'B' })
+        // Nothing was sent: the wait is taken back.
+        expect((await call(page, 'preview_read')).submit).toEqual({
+          status: 'idle',
+        })
+      })
+    }
+
+    // A host that retitles a form it keeps: the definition and the sections
+    // stay the same objects, and the tools are titled anew all the same.
+    test('should title the tools anew when the host changes only the title', async ({
+      page,
+    }) => {
+      const titles = async () => (await list(page)).map((tool) => tool.title)
+      await openWith(page, NAME_ONLY)
+      expect(await titles()).toEqual([
+        'Fill: preview',
+        'Read: preview',
+        'Submit: preview',
+      ])
+
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaRetitle?: (title: string) => void }
+        ).__lunaRetitle?.('Question 2')
+      )
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
+    // A host that changes what its action returns on a form it keeps: the
+    // definition and the sections stay the same objects, and `_submit`
+    // declares the new shape all the same.
+    test('should declare the new output when the host changes only the output', async ({
+      page,
+    }) => {
+      const data = async () =>
+        (await list(page)).find((tool) => tool.name === 'preview_submit')
+          ?.outputSchema.properties
+      await openWith(page, NAME_ONLY)
+      expect(await data()).toHaveProperty('data', { type: 'object' })
+
+      await page.evaluate(
+        (output) =>
+          (
+            window as Window & { __lunaOutput?: (output: object) => void }
+          ).__lunaOutput?.(output),
+        OUTPUT
+      )
+      await expect.poll(data).toHaveProperty('data', OUTPUT)
+    })
+
+    // An agent told of a submission looks for a way to send it.
+    test('should speak of no submission, nor read one, when the form is offered without submit', async ({
+      page,
+    }) => {
+      await openWith(page, {
+        agent: { description: 'Signs a person up.', submit: false },
+        sections: [
+          {
+            fields: [
+              {
+                label: 'Name',
+                name: 'name',
+                required: true,
+                type: 'input/text',
+              },
+            ],
+          },
+        ],
+      })
+      const tools = await list(page)
+      for (const tool of tools) {
+        expect(tool.description).not.toMatch(/submi/i)
+      }
+      expect(tools[0].description).toContain('Required fields: name.')
+      expect(tools[1].outputSchema.properties).not.toHaveProperty('submit')
+      expect(await call(page, 'preview_read')).toEqual({
+        errors: {},
+        hidden: [],
+        locked: [],
+        values: { name: null },
+      })
     })
 
     test('should answer pending while a submission a person started is running', async ({
@@ -1357,7 +2202,10 @@ function schemaOf(schema: string | Answer): Answer {
   return typeof schema === 'string' ? JSON.parse(schema) : schema
 }
 
-type WebMCPWindow = Window & { __toolChanges?: number }
+type WebMCPWindow = Window & {
+  __submitOutput?: Readonly<Record<string, object>>
+  __toolChanges?: number
+}
 
 // Counts what WebMCP tells the page about its tools changing.
 function countToolChanges() {
@@ -1368,6 +2216,32 @@ function countToolChanges() {
   modelContext?.addEventListener('toolchange', () => {
     counted.__toolChanges = (counted.__toolChanges ?? 0) + 1
   })
+}
+
+// Keeps the `properties` of the `outputSchema` the page last registered its
+// submit tool with.
+function recordSubmitOutput() {
+  type Registered = Readonly<{
+    name: string
+    outputSchema?: Readonly<{ properties?: Readonly<Record<string, object>> }>
+  }>
+  const modelContext = (
+    document as Document & {
+      modelContext?: {
+        registerTool: (tool: Registered, options?: object) => Promise<void>
+      }
+    }
+  ).modelContext
+  if (!modelContext) {
+    return
+  }
+  const registerTool = modelContext.registerTool.bind(modelContext)
+  modelContext.registerTool = (tool, options) => {
+    if (tool.name.endsWith('_submit')) {
+      ;(window as WebMCPWindow).__submitOutput = tool.outputSchema?.properties
+    }
+    return registerTool(tool, options)
+  }
 }
 
 function webmcpTools(page: Page) {
@@ -1400,6 +2274,13 @@ async function swap(page: Page, form: object) {
     },
     JSON.stringify(JSON.stringify(form, null, 2))
   )
+}
+
+// What a host says its action returns, for the tests that change it alone.
+const OUTPUT = {
+  properties: { id: { type: 'string' } },
+  required: ['id'],
+  type: 'object',
 }
 
 const NAME_ONLY = {
@@ -1499,6 +2380,35 @@ test.describe(
         .toEqual(['name', 'city'])
     })
 
+    // Which item the form edits is read on every call.
+    test('should register nothing again when the host opens another item', async ({
+      page,
+    }) => {
+      await page.addInitScript(countToolChanges)
+      await openWith(page, {
+        ...NAME_ONLY,
+        agent: { target: 'A' },
+        host: { items: { A: { name: 'Alpha' }, B: { name: 'Beta' } } },
+        value: { name: 'Alpha' },
+      })
+      await expect.poll(async () => (await webmcpTools(page)).length).toBe(3)
+      await page.evaluate(() => {
+        ;(window as WebMCPWindow).__toolChanges = 0
+      })
+
+      await page.getByRole('button', { name: 'Open B' }).click()
+      await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue(
+        'Beta'
+      )
+      await page.evaluate(
+        () => new Promise((resolve) => setTimeout(resolve, 800))
+      )
+      expect(
+        await page.evaluate(() => (window as WebMCPWindow).__toolChanges)
+      ).toBe(0)
+      expect(await call(page, 'preview_read')).toMatchObject({ target: 'B' })
+    })
+
     test('should keep the tools registered when a submit starts the form over', async ({
       page,
     }) => {
@@ -1532,6 +2442,56 @@ test.describe(
       await expect
         .poll(async () => (await webmcpTools(page)).map((tool) => tool.name))
         .toEqual(['renamed_fill', 'renamed_read', 'renamed_submit'])
+    })
+
+    test('should register the tools anew when the host changes only the title', async ({
+      page,
+    }) => {
+      const titles = () =>
+        page.evaluate(async () => {
+          const modelContext = (
+            document as Document & {
+              modelContext: Readonly<{
+                getTools: () => Promise<Array<Readonly<{ title?: string }>>>
+              }>
+            }
+          ).modelContext
+          return (await modelContext.getTools()).map((tool) => tool.title)
+        })
+      await openWith(page, NAME_ONLY)
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: preview', 'Read: preview', 'Submit: preview'])
+
+      await page.evaluate(() =>
+        (
+          window as Window & { __lunaRetitle?: (title: string) => void }
+        ).__lunaRetitle?.('Question 2')
+      )
+      await expect
+        .poll(titles)
+        .toEqual(['Fill: Question 2', 'Read: Question 2', 'Submit: Question 2'])
+    })
+
+    // The browser does not hand an `outputSchema` back through `getTools()`,
+    // so the test reads what the page registers.
+    test('should register the tools anew when the host changes only the output', async ({
+      page,
+    }) => {
+      await page.addInitScript(recordSubmitOutput)
+      const data = () =>
+        page.evaluate(() => (window as WebMCPWindow).__submitOutput?.data)
+      await openWith(page, NAME_ONLY)
+      await expect.poll(data).toEqual({ type: 'object' })
+
+      await page.evaluate(
+        (output) =>
+          (
+            window as Window & { __lunaOutput?: (output: object) => void }
+          ).__lunaOutput?.(output),
+        OUTPUT
+      )
+      await expect.poll(data).toEqual(OUTPUT)
     })
 
     test('should register nothing under a name some consumer would refuse', async ({

@@ -189,8 +189,8 @@ test.describe('What the browser does not send', { tag: ['@e2e'] }, () => {
     })
   })
 
-  // A row names its fields by the row's stable id, and the value has to travel
-  // under that name all the same.
+  // A row's hidden input carries the row in its name, and the value has to
+  // travel under that name all the same.
   test('should submit a read-only field inside a list row', async ({
     page,
   }) => {

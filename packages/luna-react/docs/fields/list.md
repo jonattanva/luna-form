@@ -10,7 +10,7 @@ The `list` field type in Luna Form acts as an iterative array structure, enablin
 - **`type`** _(string, required)_: Evaluates the type definition exactly to `"list"`.
 - **`label`** _(string, optional)_: The human-readable label (typically rendered as a fieldset legend).
 - **`description`** _(string | object, optional)_: Help text or extra context shown globally just under the legend. Supports **Markdown** (specifically links).
-- **`fields`** _(Array<Field | Column | List>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array. A `list` among them is a list nested inside this one: each row gets its own, named by its path (`groups.0.checks`).
+- **`fields`** _(Array<Field | Column | List>, required)_: The nested structure defining what underlying standard HTML inputs are repeated for each iteration in the array. A `list` among them is a list nested inside this one: each row gets its own, named by its path (`groups.0.checks`). Each control of a row carries that path as its `name` attribute, with every row at its position (`groups.1.checks.0.code`), and is renamed when rows before it are removed or the list is assigned new rows, so a script that finds a control by `name` finds the row the page shows.
 
 ---
 
@@ -31,7 +31,7 @@ The `advanced` property customizes structural interaction rules and layout rende
   Collapsing only hides a row: its fields keep their values, still validate and are still submitted, and a submit that fails on one of them opens the row so the error can be seen.
 - **`fixed`** _(boolean)_: The list keeps the rows it has. It renders no add button and no remove control, and every row stays editable. Reach for it when the rows are created somewhere else and this form only corrects them.
   It says nothing about how many rows are valid: that is still `length`, read the same way by the schema, and the rows a list opens with are still clamped to `min`. A fixed list that opens with no rows needs `"length": { "min": 0 }`, or it opens with an empty one it cannot remove.
-- **`agent`** _(`false`)_: Leaves the list, and every row it holds, out of the tools an AI agent fills the form with. See [Tools for agents](../agents/tools.md).
+- **`agent`** _(boolean | { description?: string, exclude?: boolean })_: If `false`, leaves the list, and every row it holds, out of the tools an AI agent fills the form with, whatever its fields say. `true` is the same as leaving the key out. As an object, `exclude: true` says what `false` does, and `description` is text only the agent reads, after the list's own description; the form never draws it. See [Tools for agents](../agents/tools.md#what-an-agent-cannot-write).
 - **`keepValue`** _(boolean)_: If `true`, hiding the list leaves the values behind instead of taking them. A list holds nothing under its own name, so declaring it here is a statement about the rows: it covers every value they hold, and showing the list again gives the rows back as they were -- a list inside another list's row included. See [Keeping a value through a hide](../events/change.md#keeping-a-value-through-a-hide).
 
 ### Collapsed Previews (`preview` object)

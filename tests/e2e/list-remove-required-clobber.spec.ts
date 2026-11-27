@@ -7,7 +7,8 @@ type ValueChange = { name: string; type?: string; value: unknown }
 // three items. The `required` leaf is a built-in `select/active` carrying a
 // `defaultValue` ("false"). After removing a NON-last item without editing
 // anything, the surviving items keep stable ids [0, 2]; the trailing survivor
-// "Mobile Phone" shifts to array position 1 but stays DOM-named `field.2.*`.
+// "Mobile Phone" shifts to array position 1: its controls are named `field.1.*`,
+// while the store, and the ids of its controls, keep `field.2.*`.
 //
 // The parent compacts the emitted array, so the re-passed `value.field` only has
 // indices [0, 1]. When the shifted survivor is expanded, its `required` resolves
@@ -149,7 +150,7 @@ test.describe(
       await page.getByRole('button', { name: 'Expand Field 2' }).click()
 
       // Sanity: leaf fields WITHOUT a defaultValue keep their hydrated value.
-      await expect(page.locator('input[name="field.2.label"]')).toHaveValue(
+      await expect(page.locator('input[name="field.1.label"]')).toHaveValue(
         'Mobile Phone'
       )
 
@@ -175,7 +176,7 @@ test.describe(
       await expect(cards).toHaveCount(2)
 
       // Sanity: the trailing survivor is "Mobile Phone" (stable id 2).
-      await expect(page.locator('input[name="field.2.label"]')).toHaveValue(
+      await expect(page.locator('input[name="field.1.label"]')).toHaveValue(
         'Mobile Phone'
       )
 

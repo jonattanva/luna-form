@@ -35,6 +35,15 @@ defineCustomInput('rating', Rating, {
 })
 ```
 
+`agent: false` keeps every field of the type out of the tools instead, in every
+form, as a password is: for a type no agent should write, such as a secret or a
+reference to another record. Nothing in a form's JSON opens it again. See
+[Custom types](../agents/tools.md#custom-types).
+
+```ts
+defineCustomInput('secret', SecretInput, { agent: false })
+```
+
 **The lookup is an exact string match.** There is no prefix resolution: naming a
 field `people/picker` does not fall back to `people`, and naming it
 `select/mine` does not fall back to `select`. `defineConfig` writes one entry per

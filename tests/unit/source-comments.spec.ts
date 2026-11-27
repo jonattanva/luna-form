@@ -27,6 +27,7 @@ const NOT_A_MODULE = new Set([
   'aria-errormessage',
   'data-agent-active',
   'data-agent-filled',
+  'data-field-name',
   'react-server',
 ])
 

@@ -1,4 +1,5 @@
 import type {
+  AgentTypes,
   AriaAttributes,
   BaseConfig,
   CommonProps,
@@ -32,8 +33,9 @@ export type Children = (props: {
 
 export type InputConfig<T extends React.ElementType> = {
   // The value an agent writes into a field of these types, for a type no
-  // built-in one describes. See `defineCustomInput`.
-  agent?: InputAgentOptions
+  // built-in one describes, or `false` to keep every field of them from
+  // agents. See `defineCustomInput`.
+  agent?: InputAgentOptions | false
   types: string | string[]
   input: React.ComponentProps<T>
 }
@@ -50,8 +52,9 @@ export type InputAgentOptions = Readonly<{
 export type AlertProps = Readonly<FormStateError>
 
 export type Config = BaseConfig<React.ComponentProps<React.ElementType>> & {
-  // The schema each custom type declares for agents, by type.
-  agentTypes?: Readonly<Record<string, ToolSchema>>
+  // What each custom type says to agents, by type: the schema it declares,
+  // or `false` for one kept from them.
+  agentTypes?: AgentTypes
   alert?: React.ComponentType<AlertProps>
 }
 

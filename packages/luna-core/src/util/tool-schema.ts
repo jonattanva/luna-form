@@ -33,19 +33,26 @@ import { prepare } from './prepare'
 import {
   collectSourceEvents,
   getOfferedOptions,
+  isPatternRule,
   type FormSchemaOptions,
   withoutDeclarativeRules,
 } from './schema'
 import { isInterpolated } from './string'
 import { translateOptional } from './translate'
 import type {
+  AssertRule,
+  Condition,
   Date as DateField,
-  Description,
   Field,
   Fields,
   List,
+  Operator,
+  PatternRule,
+  Section,
   Sections,
   Select,
+  StateEvent,
+  WhenClause,
   WhenRule,
 } from '../type'
 
@@ -76,14 +83,19 @@ export type ToolSchema = Readonly<{
 
 export type ToolSchemaOptions = FormSchemaOptions &
   Readonly<{
-    // The schema of each custom type, by type, for the fields no built-in type
-    // describes. Without one such a field takes text.
-    types?: Readonly<Record<string, ToolSchema>>
+    // What each type its registration speaks for says to agents, by type: the
+    // schema of what an agent writes into a field of it, for a type no
+    // built-in one describes, or `false` for a type kept from agents in every
+    // form. Without either such a field takes text.
+    types?: AgentTypes
     // Whether a submit checks the values against the form's rules:
     // `validation.submit`. When it does not, the schema holds no rule only a
     // submit checks.
     validates?: boolean
   }>
+
+/** What a registration says to agents of each type, by type. */
+export type AgentTypes = Readonly<Record<string, ToolSchema | false>>
 
 export type ToolSchemaResult = Readonly<{
   // The lists that keep the rows they have, by their whole name, through the
@@ -117,30 +129,78 @@ const INLINE_OPTIONS = 25
 const LABEL_LENGTH = 200
 const DESCRIPTION_LENGTH = 500
 const OPTIONS_LENGTH = 1000
+// A pattern only the note can carry is quoted up to this length, and named
+// otherwise: it comes from the definition, and is never cut, since a part of
+// it would expect something else.
+const PATTERN_LENGTH = 100
 
+// A field looked up is a `string` with no `enum`, so a label passes the schema
+// as a value does, and the fill takes either. A field whose options are listed
+// keeps to its `enum`, which holds the values only.
 const LOOKUP =
-  'Its options are not listed here: find them with the options tool of this form.'
+  'Its options are not listed here: find them with the options tool of this form. Pass an option by its value or its label.'
+
+// What closes a sentence: `.`, `!`, `?`, `:`, an ellipsis, or their ideographic
+// and full-width forms, before any quote or bracket that closes with it.
+const SENTENCE_END =
+  /[.!?:\u2026\u3002\uff01\uff1f\uff1a]["'\u2019\u201d\u00bb)\]]*$/u
+
+/**
+ * Text for an agent, from the host's and the form's: each piece in turn, one
+ * that does not end a sentence closed with a period before the next, so a
+ * host's text, which a dictionary key may leave open, never runs into the
+ * sentence after it. A blank or missing piece is left out, and the last one is
+ * kept as it was written.
+ */
+export function joinSentences(pieces: readonly (string | undefined)[]): string {
+  const kept = pieces
+    .map((piece) => piece?.trim() ?? '')
+    .filter((piece) => piece !== '')
+  return kept
+    .map((piece, index) =>
+      index === kept.length - 1 || SENTENCE_END.test(piece)
+        ? piece
+        : `${piece}.`
+    )
+    .join(' ')
+}
 
 // What a schema cannot declare: a key for one leaf of one row. `name` is the
 // list's whole name, through the first row of a list it is in.
 function describeRoutes(name: string): string {
-  const route = name.replace(/\.0\./g, '.<row>.')
-  return `Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: ${route}.<row>.<field>.`
+  return `Sending the list replaces its rows. To write one field of one row, send its route instead, the row counted from 0: ${anyRow(name)}.<row>.<field>.`
+}
+
+// A whole name the walk wrote through the first row of each list, with each
+// row as any row: what a note says holds in each of them.
+function anyRow(name: string): string {
+  return name.replace(/\.0\./g, '.<row>.')
+}
+
+// How a note on a slot of the row `row` (`items.0.`, or nothing at the top)
+// names a field of that row, by its path from it: as this row's, since what
+// the note says holds in each row, never through a row number.
+function fromRow(row: string, path: string): string {
+  return row === '' ? path : `this row's ${path}`
 }
 
 // A bound the form cannot read refuses whatever is written, and lets an
 // optional field through only empty.
+// Said of the form, not of a submit: an agent offered no submit tool reads
+// it too.
 const UNREADABLE =
-  'The form cannot read its bounds, so the submit refuses any value for it.'
+  'The form cannot read its bounds, so it accepts no value for it.'
 
 // A `state` event that makes a slot available: shows it, unlocks it, or both.
 // Kept under the slot it reaches, by the name the form resolves the event's
-// target to from `source`, the field whose change fires it.
+// target to from `source`, the field whose change fires it. `when` is its
+// `when` as a condition on the value the agent writes, when it is one.
 type Revealer = Readonly<{
   field: Field
   shows: boolean
   source: string
   unlocks: boolean
+  when?: Condition
 }>
 
 // What the walk carries from one level to the next.
@@ -151,8 +211,10 @@ type Walk = Readonly<{
   lookup: Set<string>
   // By the slot they reach.
   revealers: ReadonlyMap<string, readonly Revealer[]>
+  // The section that names a slot drawn without a label: the one slot of it.
+  sections: ReadonlyMap<Field | List, Section>
   sourceTargets: ReadonlySet<string>
-  types?: Readonly<Record<string, ToolSchema>>
+  types?: AgentTypes
   validates: boolean
   // The slots whose writability is being decided, so that two fields that
   // reveal each other answer no instead of asking forever.
@@ -188,8 +250,18 @@ export function buildToolSchema(
   sections: Sections,
   options: ToolSchemaOptions = {}
 ): ToolSchemaResult {
+  const named = new Map<Field | List, Section>()
   const fields = prepare(sections, options.definition, options.context).flatMap(
-    (section) => prepare(section.fields)
+    (section) => {
+      const entries = prepare(section.fields)
+      const [only, ...rest] = entries.flatMap((entry) =>
+        isColumn(entry) ? prepare(entry.fields) : [entry]
+      )
+      if (only && !rest.length && !only.label) {
+        named.set(only, section)
+      }
+      return entries
+    }
   )
 
   const sources = collectSourceEvents(fields)
@@ -199,6 +271,7 @@ export function buildToolSchema(
     lang: options.localization?.lang,
     lookup: new Set(),
     revealers: collectRevealers(fields),
+    sections: named,
     sourceTargets: new Set(sources.keys()),
     types: options.types,
     validates: options.validates !== false,
@@ -244,7 +317,7 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
 
       const described = properties.has(entry.name)
       if (isList(entry)) {
-        const list = buildList(entry, walk, name)
+        const list = buildList(entry, walk, prefix)
         if (!described) {
           properties.set(entry.name, list.schema)
         }
@@ -255,7 +328,7 @@ function buildLevel(fields: Fields, walk: Walk, prefix: string): Level {
       }
 
       if (!described) {
-        properties.set(entry.name, buildLeaf(entry, walk, name))
+        properties.set(entry.name, buildLeaf(entry, walk, prefix))
       }
       // A field nothing shows or unlocks yet is not required yet, as the submit
       // reads it. Its note says when it will be.
@@ -298,43 +371,62 @@ function isWritable(slot: Field | List, walk: Walk, name: string): boolean {
 function decideWritable(slot: Field | List, walk: Walk, name: string): boolean {
   walk.visiting.add(name)
   try {
-    if (slot.advanced?.agent === false) {
+    if (isKeptFromAgents(slot, walk.types)) {
       return false
     }
 
-    if (
-      isField(slot) &&
-      (isPassword(slot) || slot.advanced?.transient || slot.readonly)
-    ) {
+    if (isField(slot) && (slot.advanced?.transient || slot.readonly)) {
       return false
     }
 
-    if (slot.hidden && !findRevealer(walk, name, 'shows')) {
+    if (slot.hidden && !revealersOf(walk, name, 'shows').length) {
       return false
     }
 
     return !(
       isField(slot) &&
       slot.disabled &&
-      !findRevealer(walk, name, 'unlocks')
+      !revealersOf(walk, name, 'unlocks').length
     )
   } finally {
     walk.visiting.delete(name)
   }
 }
 
-// A field the agent may write whose change shows, or unlocks, the slot.
-function findRevealer(
+// Whether no agent is to know the slot exists, whatever the form does with
+// it: a password, a slot its definition keeps from agents, or one of a type
+// its registration does. Nothing in the definition opens one again.
+function isKeptFromAgents(slot: Field | List, types?: AgentTypes): boolean {
+  const agent = slot.advanced?.agent
+  return (
+    agent === false ||
+    (typeof agent === 'object' && agent.exclude === true) ||
+    (isField(slot) && isPassword(slot)) ||
+    declaredFor(types, slot.type) === false
+  )
+}
+
+// What the registration of a type says to agents. Only a type it names
+// itself: `toString` is no schema.
+function declaredFor(
+  types: AgentTypes | undefined,
+  type: string
+): ToolSchema | false | undefined {
+  return types && Object.prototype.hasOwnProperty.call(types, type)
+    ? types[type]
+    : undefined
+}
+
+// The fields the agent may write whose change shows, or unlocks, the slot.
+function revealersOf(
   walk: Walk,
   name: string,
   does: 'shows' | 'unlocks'
-): Revealer | undefined {
-  return walk.revealers
-    .get(name)
-    ?.find(
-      (revealer) =>
-        revealer[does] && isWritable(revealer.field, walk, revealer.source)
-    )
+): Revealer[] {
+  return (walk.revealers.get(name) ?? []).filter(
+    (revealer) =>
+      revealer[does] && isWritable(revealer.field, walk, revealer.source)
+  )
 }
 
 // A list as rows. The rendered list always holds `min` rows, one when it
@@ -343,9 +435,10 @@ function findRevealer(
 function buildList(
   list: List,
   walk: Walk,
-  name: string
+  row: string
 ): Readonly<{ required: boolean; schema: ToolSchema }> {
-  const row = buildLevel(list.fields, walk, `${name}.0.`)
+  const name = row + list.name
+  const rows = buildLevel(list.fields, walk, `${name}.0.`)
   const { max, min } = getListBounds(list)
 
   const notes: string[] = []
@@ -354,14 +447,14 @@ function buildList(
     notes.push('It keeps the rows it has: send each of them, in order.')
   }
   notes.push(describeRoutes(name))
-  notes.push(...availabilityNotes(list, walk, name))
+  notes.push(...availabilityNotes(list, walk, row))
 
   const schema = withText(
     {
       items: {
         additionalProperties: false,
-        properties: Object.fromEntries(row.properties),
-        ...(row.required.size > 0 && { required: [...row.required] }),
+        properties: Object.fromEntries(rows.properties),
+        ...(rows.required.size > 0 && { required: [...rows.required] }),
         type: 'object',
       },
       ...(Number.isFinite(max) && { maxItems: max }),
@@ -374,38 +467,70 @@ function buildList(
   )
 
   return {
-    required: !list.hidden && min > 0 && row.required.size > 0,
+    required: !list.hidden && min > 0 && rows.required.size > 0,
     schema,
   }
 }
 
-function buildLeaf(field: Field, walk: Walk, name: string): ToolSchema {
+function buildLeaf(field: Field, walk: Walk, row: string): ToolSchema {
+  const name = row + field.name
   // A submit that checks nothing has none of the rules only a submit checks.
   const checked = walk.validates ? field : withoutDeclarativeRules(field)
   const notes: string[] = []
   const schema = describeValue(checked, walk, name, notes)
 
   notes.push(
-    ...availabilityNotes(field, walk, name),
-    ...ruleNotes(checked, walk, name !== field.name)
+    ...availabilityNotes(field, walk, row),
+    ...ruleNotes(checked, schema.type, walk, row)
   )
   return withText(schema, field, notes, walk)
 }
 
-// The value a field holds, by type. The order matters where types overlap:
-// `select/month` is a `select` too, and `chips/day` a `chips`.
+// The values the form holds as text, or a number it reads as text: the ones a
+// pattern reads.
+const TEXTUAL: ReadonlySet<ToolSchema['type']> = new Set([
+  'integer',
+  'number',
+  'string',
+])
+
+// The value a field holds, by type, with its pattern: the one place that
+// says it. The submit checks a pattern against the text of any field, so a
+// field typed as text carries it in its schema, and any other the agent
+// writes text or a number into says it in its note. A box, a list, a range
+// or an object never holds text a pattern reads.
 function describeValue(
   field: Field,
   walk: Walk,
   name: string,
   notes: string[]
 ): ToolSchema {
+  const typed = describeTyped(field, walk, name, notes)
+  if (!typed) {
+    const text = describeText(field, notes, walk.dictionary)
+    return isEmail(field) ? { ...text, format: 'email' } : text
+  }
+  if (TEXTUAL.has(typed.type)) {
+    readPattern(field, notes, walk.dictionary, false)
+  }
+  return typed
+}
+
+// The value of a field not typed as text, by type: `undefined` for one that
+// is. The order matters where types overlap: `select/month` is a `select`
+// too, and `chips/day` a `chips`.
+function describeTyped(
+  field: Field,
+  walk: Walk,
+  name: string,
+  notes: string[]
+): ToolSchema | undefined {
   // A type the host declares a schema for is described by it, a built-in one
-  // too: the host knows what its own component takes. Only a type it names
-  // itself: `toString` is no schema.
-  const types = walk.types
-  if (types && Object.prototype.hasOwnProperty.call(types, field.type)) {
-    return types[field.type]
+  // too: the host knows what its own component takes. One it keeps from
+  // agents never reaches here.
+  const declared = declaredFor(walk.types, field.type)
+  if (declared) {
+    return declared
   }
 
   // A required checkbox is a box someone has to tick: the submit takes `true`
@@ -429,10 +554,6 @@ function describeValue(
       pattern: seconds ? '^\\d{2}:\\d{2}:\\d{2}$' : '^\\d{2}:\\d{2}$',
       type: 'string',
     }
-  }
-
-  if (isEmail(field)) {
-    return { ...describeText(field, notes), format: 'email' }
   }
 
   if (isNumber(field)) {
@@ -481,7 +602,7 @@ function describeValue(
     return describeChoice(field, walk, name, notes)
   }
 
-  return describeText(field, notes)
+  return undefined
 }
 
 function describeDate(field: DateField, notes: string[]): ToolSchema {
@@ -540,12 +661,16 @@ function describeNumber(field: Field, notes: string[]): ToolSchema {
   }
 }
 
-function describeText(field: Field, notes: string[]): ToolSchema {
+function describeText(
+  field: Field,
+  notes: string[],
+  dictionary: Record<string, string> | undefined
+): ToolSchema {
   const { max, min, unreadable } = buildLengthLimits(field)
   if (unreadable) {
     notes.push(UNREADABLE)
   }
-  const pattern = readPattern(field, notes)
+  const pattern = readPattern(field, notes, dictionary, true)
   return {
     ...(!unreadable && min !== undefined && { minLength: min }),
     ...(!unreadable && max !== undefined && { maxLength: max }),
@@ -554,20 +679,58 @@ function describeText(field: Field, notes: string[]): ToolSchema {
   }
 }
 
-// A field's pattern, when JSON Schema can carry it: a regular expression with
-// no flags that compiles in Unicode mode, which is how JSON Schema reads one.
-// Any other pattern is checked on submit and only mentioned here.
-function readPattern(field: Field, notes: string[]): string | undefined {
+// A field's pattern, as the `pattern` keyword when `keyword` lets the schema
+// carry it and JSON Schema can: a regular expression with no flags that
+// compiles in Unicode mode, which is how JSON Schema reads one. Its message
+// goes in the note either way, as what the pattern is for.
+// Any other pattern is checked on submit and written in the note instead: a
+// flag such as `i` has no place in the keyword, a pattern that lets a
+// template through (`allowInterpolation`) takes values the keyword would
+// refuse, and one written for JavaScript without `u`, such as `\#`, breaks a
+// client that compiles the keyword. The note quotes it as a literal with its
+// flags when it is short, and the author's message for it, so the agent knows
+// what is expected. The literal is not filtered as text that interpolates a
+// value: a quantifier such as `{2,}` would read as a placeholder. A `/` in it
+// is escaped as a literal writes it, and one already escaped is left as it is:
+// an escape is read whole, so its `/` is never taken for a bare one. The
+// length counts the literal as the agent reads it, escapes included.
+function readPattern(
+  field: Field,
+  notes: string[],
+  dictionary: Record<string, string> | undefined,
+  keyword: boolean
+): string | undefined {
   const pattern = field.validation?.pattern
   if (!pattern) {
     return undefined
   }
 
-  if (pattern.flags || pattern.allowInterpolation || !compiles(pattern.regex)) {
-    notes.push('It must match a pattern the submit checks.')
-    return undefined
+  const carried =
+    keyword &&
+    !pattern.flags &&
+    !pattern.allowInterpolation &&
+    compiles(pattern.regex)
+  if (!carried) {
+    notes.push(`${describePattern(pattern)}.`)
   }
-  return pattern.regex
+
+  const message = readText(pattern.message, dictionary, LABEL_LENGTH)
+  if (message) {
+    notes.push(message)
+  }
+  return carried ? pattern.regex : undefined
+}
+
+// A pattern as the note says it, of `validation.pattern` and of a `pattern`
+// assertion alike: its literal when it fits, and named otherwise.
+function describePattern({ flags = '', regex }: PatternRule): string {
+  const source = regex.replace(/\\.|\//g, (match) =>
+    match === '/' ? '\\/' : match
+  )
+  const literal = `/${source}/${flags}`
+  return fits(literal, PATTERN_LENGTH)
+    ? `It must match ${literal}`
+    : 'It must match a pattern the form checks'
 }
 
 function compiles(regex: string): boolean {
@@ -672,88 +835,252 @@ export function listOptions(choices: readonly Choice[]): string {
     .join(', ')
 }
 
-// What it takes for a slot that is hidden or locked to be written: which
-// field's change makes it available, and that it is required once it is.
+// What it takes for a slot that is hidden or locked to be written: what shows
+// or unlocks it, and that it is required while it is available. Said as a
+// rule, not as a state: the schema is built from the definition, so the same
+// note is read while the slot is hidden and once it is shown.
 function availabilityNotes(
   slot: Field | List,
   walk: Walk,
-  name: string
+  row: string
 ): string[] {
+  const name = row + slot.name
   const locked = isField(slot) && slot.disabled === true
-  const shows = slot.hidden ? findRevealer(walk, name, 'shows') : undefined
-  const unlocks = locked ? findRevealer(walk, name, 'unlocks') : undefined
+  const shows = slot.hidden ? describeReveal(walk, name, row, 'shows') : ''
+  const unlocks = locked ? describeReveal(walk, name, row, 'unlocks') : ''
   if (!shows && !unlocks) {
     return []
   }
 
-  const sources = [...new Set([shows?.source, unlocks?.source])].filter(
-    (source) => source !== undefined
-  )
-  const state =
-    shows && unlocks ? 'Hidden and locked' : shows ? 'Hidden' : 'Locked'
-  const notes = [
-    `${state} until a change to ${sources.join(' or ')} makes it available: send it in the same call.`,
-  ]
+  const rule =
+    shows === unlocks
+      ? `Shown and unlocked ${shows}`
+      : shows
+        ? `Shown ${shows}${unlocks && ` and unlocked ${unlocks}`}`
+        : `Unlocked ${unlocks}`
+  const notes = [`${rule}: send it in the same call.`]
 
   if (isField(slot) && slot.required) {
-    notes.push('Required once it is available.')
+    notes.push('Required while it is available.')
   }
   return notes
 }
 
-// The rules of a field no keyword says. A `custom` the field checks as it is
-// written, and the submit again when it checks.
-function ruleNotes(field: Field, walk: Walk, inRow: boolean): string[] {
+// When the slot is shown, or unlocked: while the values that do it are
+// written, when every event that does compares the value the agent writes with
+// values of its own, or else for some values of each field whose events do it.
+// See `readWhen`.
+function describeReveal(
+  walk: Walk,
+  name: string,
+  row: string,
+  does: 'shows' | 'unlocks'
+): string {
+  // A change in a row reaches its own row or one around it, so the field that
+  // fires it is in the slot's row or under it, unless it is outside every
+  // list: a target written as a whole name reaches a row from outside.
+  const revealers = revealersOf(walk, name, does)
+  const by = revealers.map(({ source }) =>
+    anyRow(
+      source.startsWith(row) ? fromRow(row, source.slice(row.length)) : source
+    )
+  )
+  const values = revealers.map(
+    ({ when }, index) => when && describeWhen(by[index], when)
+  )
+
+  // No revealer, no text.
+  const unique = (texts: readonly (string | false | undefined)[]) =>
+    [...new Set(texts)].join(' or ')
+  return values.every(Boolean)
+    ? `while ${unique(values)}`
+    : `for some values of ${unique(by)}`
+}
+
+// The rules of a field no keyword says, each with its message. A `custom` the
+// field checks as it is written, and the submit again when it checks. A rule
+// in a row reads the fields of its own row.
+function ruleNotes(
+  field: Field,
+  type: ToolSchema['type'],
+  walk: Walk,
+  row: string
+): string[] {
   const notes: string[] = []
   const validation = field.validation
 
-  // A rule in a row reads the fields of its own row.
-  const requiredWhen = validation?.requiredWhen
-  if (requiredWhen) {
-    const rules = Array.isArray(requiredWhen) ? requiredWhen : [requiredWhen]
-    const scope = inRow ? "this row's " : ''
-    notes.push(
-      `Required when ${rules.map((rule) => scope + describeWhen(rule)).join(' or ')}.`
-    )
+  // A rule whose operator the form cannot read never holds, so it is not one.
+  const conditions = [validation?.requiredWhen ?? []]
+    .flat()
+    .map((rule) => describeWhen(fromRow(row, rule.field), rule))
+    .filter((when) => when !== undefined)
+  if (conditions.length) {
+    notes.push(`Required when ${conditions.join(' or ')}.`)
   }
 
-  if (validation?.rules?.length || validation?.custom) {
-    notes.push(
-      walk.validates
-        ? 'The submit checks more rules for it.'
-        : 'More rules are checked as it is written.'
-    )
+  const rules = [
+    ...[validation?.custom ?? []].flat().map((rule) => {
+      const that = compare(
+        'it',
+        rule.operator,
+        `the value of ${fromRow(row, rule.field)}`
+      )
+      return [
+        that ? `The form checks that ${that}.` : '',
+        rule.message,
+      ] as const
+    }),
+    ...(validation?.rules ?? []).map((rule) => {
+      const when = describeGate(rule.when, row)
+      const what = when === undefined ? '' : describeAssert(rule, type)
+      return [
+        what && `${what}${when && ` when ${when}`}.`,
+        rule.message,
+      ] as const
+    }),
+  ]
+  for (const [said, message] of rules) {
+    // An empty one never fails: no rule. One undefined fails, and is said by
+    // its message alone.
+    if (said !== '') {
+      notes.push(
+        said ?? 'The form checks more rules for it.',
+        readText(message, walk.dictionary, LABEL_LENGTH) ?? ''
+      )
+    }
   }
-  return notes
+  return [...new Set(notes)]
 }
 
-function describeWhen(rule: WhenRule): string {
-  const operator = rule.operator ?? 'eq'
-  return rule.value === undefined
-    ? `${rule.field} ${operator}`
-    : `${rule.field} ${operator} ${JSON.stringify(rule.value)}`
+// What an assertion checks, as `runAssert` checks it: `''` for one that
+// never fails, and `undefined` for one that fails every value.
+function describeAssert(
+  { assert, value }: AssertRule,
+  type: ToolSchema['type']
+): string | undefined {
+  const bound = Number(value)
+  switch (assert) {
+    case 'required':
+      return 'Required'
+    case 'oneOf':
+      return Array.isArray(value)
+        ? `One of ${JSON.stringify(value)}`
+        : undefined
+    case 'pattern':
+      return isPatternRule(value) ? describePattern(value) : ''
+    case 'min':
+    case 'max':
+    case 'minItems':
+    case 'maxItems':
+      // A count of items reads a list only.
+      return Number.isNaN(bound) ||
+        (assert.endsWith('Items') && type !== 'array')
+        ? undefined
+        : `${assert.startsWith('min') ? 'At least' : 'At most'} ${bound}${type === 'array' ? ' items' : type === 'string' ? ' characters' : ''}`
+  }
+  return ''
 }
 
-// A field's title and description, translated, with the notes the walk wrote
-// for it after its own description. Text that interpolates a value is left
-// out: the agent would read the placeholder, or a value someone typed.
+// When an assertion runs, as `whenHolds` reads it: `''` for always, and
+// `undefined` for never, when a condition every one needs, or every one it
+// may take, has an operator the form cannot read.
+function describeGate(
+  when: WhenClause | undefined,
+  row: string
+): string | undefined {
+  const say = (rules: readonly WhenRule[] = []) =>
+    rules.map((rule) => describeWhen(fromRow(row, rule.field), rule))
+  const plain = !when || Array.isArray(when) || 'field' in when
+  const all = say(plain ? [when ?? []].flat() : when.all)
+  const any = plain ? undefined : when.any && say(when.any).filter(Boolean)
+  if (all.includes(undefined) || any?.length === 0) {
+    return undefined
+  }
+  const either = any?.join(' or ')
+  return [...all, any && any.length > 1 && all.length ? `(${either})` : either]
+    .filter(Boolean)
+    .join(' and ')
+}
+
+// Each operator in words, and whether it reads a value: typed by every
+// operator, so a new one cannot be added without what an agent reads for it.
+const OPERATOR_WORDS: Record<Operator, readonly [words: string, unary?: true]> =
+  {
+    contains: ['contains'],
+    empty: ['has no value', true],
+    eq: ['equals'],
+    exists: ['has a value', true],
+    gt: ['is greater than'],
+    gte: ['is at least'],
+    in: ['is one of'],
+    lt: ['is less than'],
+    lte: ['is at most'],
+    neq: ['does not equal'],
+    nin: ['is not one of'],
+    truthy: ['has a value other than false or 0', true],
+  }
+
+// A condition on the field `name`, in words: the one place a `requiredWhen`
+// and a `state` event's `when` are written. An operator the form cannot read
+// never holds, so it has none.
+function describeWhen(
+  name: string,
+  { operator, value }: Pick<WhenRule, 'operator' | 'value'>
+): string | undefined {
+  return compare(
+    name,
+    operator,
+    value === undefined ? undefined : JSON.stringify(value)
+  )
+}
+
+// `subject` compared with `object` by `operator`, in words, with no object
+// for an operator that reads none.
+function compare(
+  subject: string,
+  operator: Operator = 'eq',
+  object?: string
+): string | undefined {
+  if (!Object.prototype.hasOwnProperty.call(OPERATOR_WORDS, operator)) {
+    return undefined
+  }
+  const [words, unary] = OPERATOR_WORDS[operator]
+  return unary || object === undefined
+    ? `${subject} ${words}`
+    : `${subject} ${words} ${object}`
+}
+
+// A field's title and description, translated, with what its `advanced.agent`
+// tells only the agent after its own description, and the notes the walk wrote
+// for it after both. A slot drawn without a label, alone in its section, takes
+// the section's title, and its description when it has none.
+// Text that interpolates a value is left out: the agent would read the
+// placeholder, or a value someone typed.
 function withText(
   schema: ToolSchema,
-  slot: Readonly<{ description?: Description; label?: string }>,
+  slot: Field | List,
   notes: readonly string[],
   walk: Walk
 ): ToolSchema {
-  const title = readText(slot.label, walk.dictionary, LABEL_LENGTH)
+  const section = walk.sections.get(slot)
+  const description = slot.description ?? section?.description
+  const title = readText(
+    slot.label ?? section?.title,
+    walk.dictionary,
+    LABEL_LENGTH
+  )
   const own = readText(
-    typeof slot.description === 'string'
-      ? slot.description
-      : slot.description?.message,
+    typeof description === 'string' ? description : description?.message,
     walk.dictionary,
     DESCRIPTION_LENGTH
   )
-  const text = [own, schema.description, ...notes]
-    .filter((part) => part !== undefined && part !== '')
-    .join(' ')
+  const agent = slot.advanced?.agent
+  const told = readText(
+    typeof agent === 'object' ? agent.description : undefined,
+    walk.dictionary,
+    DESCRIPTION_LENGTH
+  )
+  const text = joinSentences([own, told, schema.description, ...notes])
 
   return {
     ...schema,
@@ -788,6 +1115,22 @@ function clip(text: string, length: number): string {
 // fewer UTF-16 units than code points, so a short one is not split to count.
 function fits(text: string, length: number): boolean {
   return text.length <= length || Array.from(text).length <= length
+}
+
+// A `when` as the condition it is on the value the agent writes: a string
+// equals it, an array holds it. One with `field` reads a key of the chosen
+// option, and a chips field is matched by its selections: neither is one.
+function readWhen(
+  field: Field,
+  when: StateEvent['when']
+): Condition | undefined {
+  return when === undefined || isChips(field)
+    ? undefined
+    : typeof when !== 'object' || Array.isArray(when)
+      ? { operator: Array.isArray(when) ? 'in' : 'eq', value: when }
+      : when.field === undefined
+        ? when
+        : undefined
 }
 
 // The `state` events that make a slot available, from every field of the
@@ -826,7 +1169,13 @@ function collectRevealers(fields: Fields): Map<string, Revealer[]> {
         for (const target of targets) {
           const resolved = resolveTarget(target, source)
           const reaching = revealers.get(resolved) ?? []
-          reaching.push({ field: entry, shows, source, unlocks })
+          reaching.push({
+            field: entry,
+            shows,
+            source,
+            unlocks,
+            when: readWhen(entry, event.when),
+          })
           revealers.set(resolved, reaching)
         }
       }

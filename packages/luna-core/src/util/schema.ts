@@ -1361,7 +1361,7 @@ function sizeOf(value: unknown): number {
   return 0
 }
 
-function isPatternRule(value: unknown): value is PatternRule {
+export function isPatternRule(value: unknown): value is PatternRule {
   return isObject(value) && 'regex' in value
 }
 
